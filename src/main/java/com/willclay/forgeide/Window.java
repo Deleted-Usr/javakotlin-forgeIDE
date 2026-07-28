@@ -9,7 +9,13 @@ public class Window extends JFrame
     private JTextArea codeEditor = new JTextArea();
     private JTextArea consoleOutput = new JTextArea(12,80);
 
+    public static final String TARGET_PATH = "ForgeIDE Code Files" + File.separator + "temp";
+    public static final String SRC_DIR = "ForgeIDE Code Files" + File.separator + "temp" + File.separator + "src";
+    public static final String BIN_DIR = "ForgeIDE Code Files" + File.separator + "temp" + File.separator + "out";
+
     public static final String FILE_NAME = "TempProgram.java";
+
+    public static final String PATH_FILE = TARGET_PATH + File.separator + FILE_NAME;
 
     //private FileCompiler compiler = new FileCompiler();
 
@@ -68,18 +74,26 @@ public class Window extends JFrame
                 "}"
         );
 
+        codeEditor.setTabSize(4);
+
         add(new JScrollPane(codeEditor), BorderLayout.CENTER);
     }
 
     public void executePipeline(String file) throws IOException, InterruptedException
     {
-        // Save text to a local file.
+        // 1. Ensure both directories exist
+        File srcDir = new File(SRC_DIR);
+        File binDir = new File(BIN_DIR);
+        if (!srcDir.exists()) srcDir.mkdirs();
+        if (!binDir.exists()) binDir.mkdirs();
+
+        // 2. Save text to the source directory
         BufferedWriter bw = new BufferedWriter(new FileWriter(file));
         bw.write(codeEditor.getText());
         bw.close();
 
-        // Compile via the javac executable
-        ProcessBuilder compileBuilder = new ProcessBuilder("javac", file);
+        // 3. Compile via javac using the "-d" flag to redirect .class output
+        ProcessBuilder compileBuilder = new ProcessBuilder("javac", "-d", BIN_DIR, file);
         compileBuilder.redirectErrorStream(true);
 
         Process compileProcess = compileBuilder.start();
@@ -92,8 +106,9 @@ public class Window extends JFrame
         }
         consoleOutput.append("Compilation Successful.\nRunning...\n\n");
 
-        // Execute via the JVM Runtime Launcher
+        // 4. Execute via java runtime launcher from the bin directory
         ProcessBuilder runBuilder = new ProcessBuilder("java", "TempProgram");
+        runBuilder.directory(binDir); // Change working directory to where the .class file sits
         runBuilder.redirectErrorStream(true);
 
         Process runProcess = runBuilder.start();

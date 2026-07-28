@@ -4,7 +4,6 @@ import javax.swing.*;
 
 // TODO
 //  - Separate Swing UI from the IDE backend
-//  -
 
 public class Main
 {
