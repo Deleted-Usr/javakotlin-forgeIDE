@@ -1,0 +1,138 @@
+# ============================================================
+#  Forge — .gitignore
+#  Rule of thumb: commit what a human writes, ignore what a
+#  machine derives from it. All .java files are COMMITTED.
+# ============================================================
+
+# ---------- Compiled output ----------
+*.class
+target/
+build/
+out/
+bin/
+classes/
+
+# ---------- Packaged artifacts ----------
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+
+# ...EXCEPT the build-tool wrappers, which must be committed so
+# a fresh clone can build without a preinstalled Maven/Gradle.
+!gradle/wrapper/gradle-wrapper.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# ---------- Build-tool local state ----------
+.gradle/
+!gradle/wrapper/gradle-wrapper.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.properties.local
+local.properties
+dependency-reduced-pom.xml
+
+# ============================================================
+#  IDE-PROJECT-SPECIFIC — read the comments before editing
+# ============================================================
+
+# ---------- Test fixture projects ----------
+# Sample projects your tests open are REAL projects, so their
+# build output has to be ignored explicitly and narrowly.
+# Their sources are committed — that's the point of a fixture.
+src/test/resources/fixtures/**/target/
+src/test/resources/fixtures/**/build/
+src/test/resources/fixtures/**/out/
+src/test/resources/fixtures/**/.gradle/
+
+# ---------- Precompiled .class fixtures ----------
+# The ASM classpath indexer needs real .class files to parse.
+# Generating them at test time is fragile, so commit a few.
+#
+# NOTE: this negation only works because no PARENT directory of
+# this path is ignored. Git cannot re-include a file whose
+# parent dir is excluded — if you ever add `fixtures/` or
+# `classes/` as a rule above, this line silently stops working.
+!src/test/resources/fixtures/binary/**/*.class
+!src/test/resources/fixtures/binary/**/*.jar
+
+# ---------- Line-ending / encoding fixtures ----------
+# See .gitattributes — these need `-text` there, not a rule here.
+
+# ---------- Downloaded language server ----------
+# JDT LS is a few hundred MB, fetched on first run.
+# Ideally it lives in ~/.forge/servers, but ignore in-repo too.
+servers/
+jdtls/
+*.jdtls-workspace/
+
+# ---------- Your own IDE's per-project state ----------
+# Forge writes layout, open tabs, caret positions here.
+.forge/
+# If you later decide run configurations SHOULD be shared
+# across machines, uncomment the negation below:
+# !.forge/runConfigurations/
+
+# ---------- Local indexes / caches ----------
+*.index
+.forge-cache/
+
+# ============================================================
+#  Developer tooling (the IDE you build Forge IN)
+# ============================================================
+
+# IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse / VS Code
+.settings/
+.classpath
+.project
+.vscode/
+
+# Editors
+*.swp
+*.swo
+*~
+\#*\#
+.\#*
+
+# ============================================================
+#  Runtime noise
+# ============================================================
+
+*.log
+logs/
+hs_err_pid*
+replay_pid*
+*.hprof
+*.jfr
+core.*
+
+# ============================================================
+#  OS cruft
+# ============================================================
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ============================================================
+#  Secrets — never commit
+# ============================================================
+
+*.env
+.env.local
+secrets.properties
+*.keystore
+*.jks
+*.pem
