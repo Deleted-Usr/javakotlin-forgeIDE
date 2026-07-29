@@ -43,6 +43,14 @@ public class Window extends JFrame
         });
         topPanel.add(runButton, BorderLayout.WEST);
 
+JButton loadButton = new JButton("Load File");
+loadButton.addActionListener(e -> loadFile());
+topPanel.add(loadButton, BorderLayout.EAST);
+
+JButton saveButton = new JButton("Save File");
+savebutton.addActionListener(e -> saveFile());
+topPanel.add(saveButton, BorderLayout.EAST);
+
         // Bottom Panel
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(new JLabel(" Console Output:"), BorderLayout.NORTH);
@@ -126,5 +134,15 @@ public class Window extends JFrame
         {
             consoleOutput.append(line + "\n");
         }
+    }
+
+    private void loadFile()
+    {
+
+    }
+
+    private void saveFile()
+    {
+
     }
 }
