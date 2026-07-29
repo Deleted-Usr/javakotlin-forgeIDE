@@ -1,6 +1,8 @@
 package main.java.com.willclay.forgeide;
 
 import javax.swing.*;
+import java.awt.*;
+import java.io.IOException;
 
 // TODO
 //  - Separate Swing UI from the IDE backend
