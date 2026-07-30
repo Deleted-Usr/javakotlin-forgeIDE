@@ -19,7 +19,7 @@ public class Window extends JFrame
 
     public static final String FILE_NAME = "TempProgram.java";
 
-    public static final String PATH_FILE = SRC_DIR + File.separator + FILE_NAME;
+    public static final String PATH_FILE = BIN_DIR + File.separator + FILE_NAME;
 
     //private FileCompiler compiler = new FileCompiler();
 
@@ -50,7 +50,7 @@ public class Window extends JFrame
             try
             {
                 //compiler.compile(codeEditor, FILE_NAME);
-                executePipeline(PATH_FILE);
+                executePipeline(FILE_NAME);
             }
             catch (IOException | InterruptedException ex)
             {
@@ -158,7 +158,6 @@ public class Window extends JFrame
     private void loadFile()
     {
         JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Load Java File");
 
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Java Source Files (*.java)", "java");
         chooser.setFileFilter(filter);
@@ -168,39 +167,37 @@ public class Window extends JFrame
         if (response == JFileChooser.APPROVE_OPTION)
         {
             File selectedFile = chooser.getSelectedFile();
-            String filePath = selectedFile.getAbsolutePath();
             System.out.println(selectedFile.getAbsolutePath());
 
-            if (!filePath.toLowerCase().endsWith(".java"))
-            {
-                DialogFactory.showErrorMessage(this, "File is not a Java Source");
-            }
-
-            try (BufferedReader br = new BufferedReader(new FileReader(selectedFile)))
+            try (BufferedReader reader = new BufferedReader(new FileReader(selectedFile)))
             {
                 codeEditor.setText(""); // Clear the editor in prep for new text.
 
                 String line;
-                while ((line = br.readLine()) != null)
+                while ((line = reader.readLine()) != null)
                 {
                     codeEditor.append(line + "\n");
                 }
             }
             catch (IOException e)
             {
-                DialogFactory.showErrorMessage(this, "Failed to Load File: " + e.getMessage());
+                System.out.println("Error reading file: " + e.getMessage());
             }
         }
         else
         {
-            DialogFactory.showErrorMessage(this, "File Selection Cancelled by the User");
+            JOptionPane.showMessageDialog(
+                    this,
+                    "File Selection was Cancelled by the User",
+                    "File Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
         }
     }
 
     private void saveFile()
     {
         JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Save Java File");
 
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Java Source Files (*.java)", "java");
         chooser.setFileFilter(filter);
@@ -217,19 +214,33 @@ public class Window extends JFrame
                 selectedFile = new File(filePath + ".java");
             }
 
-            try (BufferedWriter bw = new BufferedWriter(new FileWriter(selectedFile)))
+            try
             {
-                codeEditor.write(bw); // writes the contents of the editor to the selected file in plain text.
-                DialogFactory.showInfoMessage(this, "File Saved Successfully!");
+                String code = codeEditor.getText();
+
+                BufferedReader br = new BufferedReader(new StringReader(code));
+                BufferedWriter bw = new BufferedWriter(new FileWriter(selectedFile));
+
+                String line;
+                while ((line = br.readLine()) != null)
+                {
+                    System.out.println(code);
+                    bw.write(line + "\n");
+                }
             }
             catch (IOException e)
             {
-                DialogFactory.showErrorMessage(this, "Failed to Save File: " + e.getMessage());
+
             }
         }
         else
         {
-            DialogFactory.showErrorMessage(this, "File Selection Cancelled by the User");
+            JOptionPane.showMessageDialog(
+                    this,
+                    "File Selection was Cancelled by the User",
+                    "File Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
         }
     }
 }
