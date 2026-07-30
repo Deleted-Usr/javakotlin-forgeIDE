@@ -6,6 +6,9 @@ import java.io.IOException;
 
 // TODO
 //  - Separate Swing UI from the IDE backend
+//  - Use a JTabbedPane for the Code Editor Viewport
+//  - Use a JToggleButton for compiler options
+//  - Use JMenus for the Toolbar and Items
 
 public class Main
 {
