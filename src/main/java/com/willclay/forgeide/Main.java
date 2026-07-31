@@ -1,5 +1,7 @@
 package main.java.com.willclay.forgeide;
 
+import com.formdev.flatlaf.FlatDarkLaf;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
@@ -16,11 +18,26 @@ public class Main
     {
         SwingUtilities.invokeLater(() ->
         {
+            FlatDarkLaf.setup();
+            //applySystemLaF();
+
             Window w = new Window("Forge IDE");
             w.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
             w.setSize(800, 600);
             w.setVisible(true);
         });
+    }
+
+    private static void applySystemLaF()
+    {
+        try
+        {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        }
+        catch (Exception _)
+        {
+
+        }
     }
 }
