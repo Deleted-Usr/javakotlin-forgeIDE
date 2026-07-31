@@ -1,4 +1,6 @@
-package main.java.com.willclay.forgeide;
+package main.java.com.willclay.forgeide.compiler;
+
+import main.java.com.willclay.forgeide.ui.Window;
 
 import javax.swing.*;
 import javax.tools.*;
