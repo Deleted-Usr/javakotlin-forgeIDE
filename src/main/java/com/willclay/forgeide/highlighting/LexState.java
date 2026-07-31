@@ -1,4 +1,4 @@
-package main.java.com.willclay.forgeide;
+package main.java.com.willclay.forgeide.highlighting;
 
 /**
  * The state the lexer can be in when it crosses a line boundary. This is the

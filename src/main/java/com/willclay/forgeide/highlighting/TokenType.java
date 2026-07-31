@@ -1,4 +1,4 @@
-package main.java.com.willclay.forgeide;
+package main.java.com.willclay.forgeide.highlighting;
 
 /**
  * The categories the lexer can emit. Keep this list purely lexical — anything

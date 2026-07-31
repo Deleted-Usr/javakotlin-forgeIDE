@@ -1,4 +1,4 @@
-package main.java.com.willclay.forgeide;
+package main.java.com.willclay.forgeide.highlighting;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -45,7 +45,7 @@ public class SyntaxHighlighterBasic
         StyleConstants.setItalic(commentStyle, true);
 
         defaultStyle = new SimpleAttributeSet();
-        StyleConstants.setForeground(defaultStyle, Color.BLACK);
+        StyleConstants.setForeground(defaultStyle, Color.WHITE);
         StyleConstants.setBold(defaultStyle, false);
         StyleConstants.setItalic(defaultStyle, false);
     }

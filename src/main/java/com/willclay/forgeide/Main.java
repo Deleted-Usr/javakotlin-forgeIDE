@@ -1,10 +1,9 @@
 package main.java.com.willclay.forgeide;
 
-import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.*;
+import main.java.com.willclay.forgeide.ui.Window;
 
 import javax.swing.*;
-import java.awt.*;
-import java.io.IOException;
 
 // TODO
 //  - Separate Swing UI from the IDE backend
@@ -19,10 +18,10 @@ public class Main
     {
         SwingUtilities.invokeLater(() ->
         {
-            FlatDarkLaf.setup();
+            FlatLightLaf.setup();
             //applySystemLaF();
 
-            Window w = new Window("Forge IDE");
+            main.java.com.willclay.forgeide.ui.Window w = new Window("Forge IDE");
             w.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
             w.setSize(800, 600);

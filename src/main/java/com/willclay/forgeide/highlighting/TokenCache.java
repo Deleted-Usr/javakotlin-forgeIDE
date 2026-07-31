@@ -1,4 +1,4 @@
-package main.java.com.willclay.forgeide;
+package main.java.com.willclay.forgeide.highlighting;
 
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
