@@ -1,7 +1,7 @@
-package main.java.com.willclay.forgeide;
+package com.willclay.forgeide;
 
 import com.formdev.flatlaf.FlatDarkLaf;
-import main.java.com.willclay.forgeide.ui.Window;
+import com.willclay.forgeide.ui.Window;
 
 import javax.swing.*;
 import java.awt.*;
@@ -30,6 +30,9 @@ import java.awt.*;
 
 public class Main
 {
+    private static final int INITIAL_WIDTH = 1100;
+    private static final int INITIAL_HEIGHT = 700;
+
     public static void main(String[] args) // The Entry Point for the Program
     {
         SwingUtilities.invokeLater(() ->
@@ -41,8 +44,9 @@ public class Main
             Window w = new Window("Forge IDE");
 
             w.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            w.setLocationRelativeTo(null);
 
-            w.setSize(800, 600);
+            w.setSize(INITIAL_WIDTH, INITIAL_HEIGHT);
             w.setVisible(true);
         });
     }
@@ -53,8 +57,7 @@ public class Main
         try
         {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        }
-        catch (Exception _)
+        } catch (Exception _)
         {
 
         }

@@ -1,4 +1,4 @@
-package main.java.com.willclay.forgeide.highlighting;
+package com.willclay.forgeide.highlighting;
 
 import java.util.List;
 import java.util.Set;
@@ -10,12 +10,13 @@ import java.util.Set;
  * the state this line ends in, which is what makes the whole thing incremental.
  *
  * Not thread safe — it holds scan position in fields. Give each thread its own
- * instance if you later move parsing off the EDT.
+ * instance if lexing is later moved off the EDT.
  */
 public final class Lexer
 {
     // true/false/null are technically literals rather than keywords in the JLS,
-    // but every editor colours them the same way, so they live here.
+    // and var/record/sealed/permits/yield are contextual keywords, but every
+    // editor colours them the same way, so they all live here.
     private static final Set<String> KEYWORDS = Set.of(
             "abstract", "assert", "boolean", "break", "byte", "case", "catch",
             "char", "class", "const", "continue", "default", "do", "double",
@@ -30,6 +31,9 @@ public final class Lexer
 
     private static final String OPERATOR_CHARS = "+-*/%=!<>&|^~?:";
     private static final String PUNCTUATION_CHARS = "(){}[];,.";
+
+    private static final int COMMENT_DELIMITER_LENGTH = 2;      // "/*" and "*/"
+    private static final int TEXT_BLOCK_DELIMITER_LENGTH = 3;   // three double quotes
 
     private CharSequence text;
     private int pos;
@@ -85,32 +89,12 @@ public final class Lexer
 
         if (c == '/' && pos + 1 < len)
         {
-            char next = text.charAt(pos + 1);
-
-            if (next == '/')
-            {
-                add(out, TokenType.COMMENT, pos, len - pos);
-                pos = len;
-                return LexState.NORMAL;
-            }
-            if (next == '*')
-            {
-                int start = pos;
-                pos += 2;
-                return blockCommentBody(out, start);
-            }
+            return scanSlash(out);
         }
 
         if (c == '"')
         {
-            if (pos + 2 < len && text.charAt(pos + 1) == '"' && text.charAt(pos + 2) == '"')
-            {
-                int start = pos;
-                pos += 3;
-                return textBlockBody(out, start);
-            }
-            scanQuoted(out, '"', TokenType.STRING);
-            return LexState.NORMAL;
+            return scanDoubleQuoted(out);
         }
 
         if (c == '\'')
@@ -121,10 +105,7 @@ public final class Lexer
 
         if (c == '@' && pos + 1 < len && Character.isJavaIdentifierStart(text.charAt(pos + 1)))
         {
-            int start = pos;
-            pos++;
-            while (pos < len && Character.isJavaIdentifierPart(text.charAt(pos))) pos++;
-            add(out, TokenType.ANNOTATION, start, pos - start);
+            scanAnnotation(out);
             return LexState.NORMAL;
         }
 
@@ -142,9 +123,7 @@ public final class Lexer
 
         if (OPERATOR_CHARS.indexOf(c) >= 0)
         {
-            int start = pos;
-            while (pos < len && OPERATOR_CHARS.indexOf(text.charAt(pos)) >= 0) pos++;
-            add(out, TokenType.OPERATOR, start, pos - start);
+            scanRunOf(out, OPERATOR_CHARS, TokenType.OPERATOR);
             return LexState.NORMAL;
         }
 
@@ -155,10 +134,66 @@ public final class Lexer
             return LexState.NORMAL;
         }
 
-        // Anything else is not valid Java at this position.
+        // Anything else is not valid Java at this position
         add(out, TokenType.ERROR, pos, 1);
         pos++;
         return LexState.NORMAL;
+    }
+
+    /** A '/' with at least one character after it: line comment, block comment, or operator. */
+    private LexState scanSlash(List<Token> out)
+    {
+        char next = text.charAt(pos + 1);
+
+        if (next == '/')
+        {
+            // A line comment always runs to the end of the line, so there is
+            // nothing left to scan afterwards.
+            add(out, TokenType.COMMENT, pos, len - pos);
+            pos = len;
+            return LexState.NORMAL;
+        }
+
+        if (next == '*')
+        {
+            int start = pos;
+            pos += COMMENT_DELIMITER_LENGTH;
+            return blockCommentBody(out, start);
+        }
+
+        scanRunOf(out, OPERATOR_CHARS, TokenType.OPERATOR);
+        return LexState.NORMAL;
+    }
+
+    /** Either a text block or an ordinary string literal. */
+    private LexState scanDoubleQuoted(List<Token> out)
+    {
+        if (isTextBlockDelimiterAt(pos))
+        {
+            int start = pos;
+            pos += TEXT_BLOCK_DELIMITER_LENGTH;
+            return textBlockBody(out, start);
+        }
+
+        scanQuoted(out, '"', TokenType.STRING);
+        return LexState.NORMAL;
+    }
+
+    private boolean isTextBlockDelimiterAt(int index)
+    {
+        return index + TEXT_BLOCK_DELIMITER_LENGTH <= len
+                && text.charAt(index) == '"'
+                && text.charAt(index + 1) == '"'
+                && text.charAt(index + 2) == '"';
+    }
+
+    private void scanAnnotation(List<Token> out)
+    {
+        int start = pos;
+        pos++; // the '@'
+        while (pos < len && Character.isJavaIdentifierPart(text.charAt(pos))) pos++;
+
+        add(out, TokenType.ANNOTATION, start, pos - start);
     }
 
     /**
@@ -172,8 +207,9 @@ public final class Lexer
         while (pos < len && Character.isJavaIdentifierPart(text.charAt(pos))) pos++;
 
         String word = text.subSequence(start, pos).toString();
-        add(out, KEYWORDS.contains(word) ? TokenType.KEYWORD : TokenType.IDENTIFIER,
-                start, pos - start);
+        TokenType type = KEYWORDS.contains(word) ? TokenType.KEYWORD : TokenType.IDENTIFIER;
+
+        add(out, type, start, pos - start);
     }
 
     /**
@@ -194,7 +230,7 @@ public final class Lexer
             {
                 pos++;
             }
-            else if ((c == '+' || c == '-') && pos > start && isExponentMarker(text.charAt(pos - 1)))
+            else if (isExponentSign(c, start))
             {
                 pos++;
             }
@@ -207,9 +243,14 @@ public final class Lexer
         add(out, TokenType.NUMBER, start, pos - start);
     }
 
-    private boolean isExponentMarker(char c)
+    /** True for the '+' or '-' in forms like 1e-9 or 0x1p+3 */
+    private boolean isExponentSign(char c, int numberStart)
     {
-        return c == 'e' || c == 'E' || c == 'p' || c == 'P';
+        if (c != '+' && c != '-') return false;
+        if (pos <= numberStart) return false;
+
+        char previous = text.charAt(pos - 1);
+        return previous == 'e' || previous == 'E' || previous == 'p' || previous == 'P';
     }
 
     /**
@@ -255,33 +296,39 @@ public final class Lexer
         {
             if (text.charAt(pos) == '*' && pos + 1 < len && text.charAt(pos + 1) == '/')
             {
-                pos += 2;
+                pos += COMMENT_DELIMITER_LENGTH;
                 add(out, TokenType.COMMENT, tokenStart, pos - tokenStart);
                 return LexState.NORMAL;
             }
             pos++;
         }
-
         add(out, TokenType.COMMENT, tokenStart, pos - tokenStart);
         return LexState.IN_BLOCK_COMMENT;
     }
 
+    /** @param tokenStart see {@link #blockCommentBody(List, int)} */
     private LexState textBlockBody(List<Token> out, int tokenStart)
     {
         while (pos < len)
         {
-            if (text.charAt(pos) == '"' && pos + 2 < len
-                    && text.charAt(pos + 1) == '"' && text.charAt(pos + 2) == '"')
+            if (isTextBlockDelimiterAt(pos))
             {
-                pos += 3;
+                pos +=  TEXT_BLOCK_DELIMITER_LENGTH;
                 add(out, TokenType.STRING, tokenStart, pos - tokenStart);
                 return LexState.NORMAL;
             }
             pos++;
         }
-
         add(out, TokenType.STRING, tokenStart, pos - tokenStart);
         return LexState.IN_TEXT_BLOCK;
+    }
+
+    private void scanRunOf(List<Token> out, String characters, TokenType type)
+    {
+        int start = pos;
+        while (pos < len && characters.indexOf(text.charAt(pos)) >= 0)  pos++;
+
+        add(out, type, start, pos - start);
     }
 
     private void add(List<Token> out, TokenType type, int start, int length)
