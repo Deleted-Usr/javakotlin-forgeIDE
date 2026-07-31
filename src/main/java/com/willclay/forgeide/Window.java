@@ -1,14 +1,19 @@
 package main.java.com.willclay.forgeide;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.text.*;
 import java.awt.*;
 import java.io.*;
 
 public class Window extends JFrame
 {
-    private JTextArea codeEditor = new JTextArea();
-    private JTextArea consoleOutput = new JTextArea(12,80);
+    private JTextPane codeEditor = new JTextPane();
+    private JTextArea consoleOutput = new JTextArea(12, 80);
+
+    private SyntaxHighlighterBasic sh = new SyntaxHighlighterBasic();
 
     private File fontFile;
     private Font editorFont;
@@ -91,19 +96,75 @@ public class Window extends JFrame
     public void setCodeEditor()
     {
         codeEditor.setFont(editorFont.deriveFont(Font.PLAIN, 14));
+
+        // JTextPane has no setTabSize(int) — tab stops live in the paragraph attributes.
+        setTabSize(codeEditor, 4);
+
         codeEditor.setText( // Set the default text of the editor
                 "public class TempProgram\n" +
-                "{\n" +
-                "    public static void main(String[] args)\n" +
-                "    {\n" +
-                "        System.out.println(\"Hello, World!\");\n" +
-                "    }\n" +
-                "}"
+                        "{\n" +
+                        "    public static void main(String[] args)\n" +
+                        "    {\n" +
+                        "        System.out.println(\"Hello, World!\");\n" +
+                        "    }\n" +
+                        "}"
         );
 
-        codeEditor.setTabSize(4);
+        // Re-highlight whenever the text changes.
+        // changedUpdate is deliberately left empty: it fires when *attributes*
+        // change, which is exactly what the highlighter does — reacting to it
+        // would cause infinite recursion.
+        codeEditor.getDocument().addDocumentListener(new DocumentListener()
+        {
+            @Override
+            public void insertUpdate(DocumentEvent e) { scheduleHighlight(); }
 
-        add(new JScrollPane(codeEditor), BorderLayout.CENTER);
+            @Override
+            public void removeUpdate(DocumentEvent e) { scheduleHighlight(); }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) { }
+        });
+
+        // JTextPane line-wraps by default. Nesting it in a BorderLayout panel
+        // lets it keep its preferred width so the scroll pane gives you a
+        // horizontal scrollbar instead, matching JTextArea's default behaviour.
+        JPanel noWrapPanel = new JPanel(new BorderLayout());
+        noWrapPanel.add(codeEditor, BorderLayout.CENTER);
+
+        add(new JScrollPane(noWrapPanel), BorderLayout.CENTER);
+
+        scheduleHighlight(); // colour the starting text
+    }
+
+    /**
+     * Document mutation is not allowed from inside a document event, so the
+     * highlight pass is deferred to the end of the event queue.
+     */
+    private void scheduleHighlight()
+    {
+        SwingUtilities.invokeLater(() -> sh.applyHighlighting(codeEditor));
+    }
+
+    /**
+     * JTextPane equivalent of JTextArea.setTabSize(int).
+     * Applied to the document's DEFAULT_STYLE so new paragraphs inherit it.
+     * Call this after setFont().
+     */
+    private void setTabSize(JTextPane pane, int charactersPerTab)
+    {
+        FontMetrics fm = pane.getFontMetrics(pane.getFont());
+        int tabWidth = fm.charWidth('m') * charactersPerTab;
+
+        TabStop[] tabStops = new TabStop[60];
+        for (int i = 0; i < tabStops.length; i++)
+        {
+            tabStops[i] = new TabStop((i + 1) * tabWidth);
+        }
+
+        StyledDocument doc = pane.getStyledDocument();
+        Style defaultStyle = doc.getStyle(StyleContext.DEFAULT_STYLE);
+        StyleConstants.setTabSet(defaultStyle, new TabSet(tabStops));
     }
 
     public void executePipeline(String file) throws IOException, InterruptedException
@@ -174,17 +235,27 @@ public class Window extends JFrame
             if (!filePath.toLowerCase().endsWith(".java"))
             {
                 DialogFactory.showErrorMessage(this, "File is not a Java Source");
+                return;
             }
 
             try (BufferedReader br = new BufferedReader(new FileReader(selectedFile)))
             {
-                codeEditor.setText(""); // Clear the editor in prep for new text.
+                // JTextPane has no append(String). Build the contents first and
+                // hand them over in a single setText call — this is also far
+                // faster, since it triggers one highlight pass instead of one
+                // per line. Do NOT use codeEditor.read(): it installs a brand
+                // new Document, which would drop the DocumentListener and the
+                // tab stops configured above.
+                StringBuilder contents = new StringBuilder();
 
                 String line;
                 while ((line = br.readLine()) != null)
                 {
-                    codeEditor.append(line + "\n");
+                    contents.append(line).append("\n");
                 }
+
+                codeEditor.setText(contents.toString());
+                codeEditor.setCaretPosition(0);
             }
             catch (IOException e)
             {
@@ -219,7 +290,9 @@ public class Window extends JFrame
 
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(selectedFile)))
             {
-                codeEditor.write(bw); // writes the contents of the editor to the selected file in plain text.
+                // write(Writer) is inherited from JTextComponent, so this still
+                // works on a JTextPane and still emits plain text.
+                codeEditor.write(bw);
                 DialogFactory.showInfoMessage(this, "File Saved Successfully!");
             }
             catch (IOException e)

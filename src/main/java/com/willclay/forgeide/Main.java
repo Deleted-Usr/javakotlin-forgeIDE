@@ -11,6 +11,7 @@ import java.io.IOException;
 //  - Use a JTabbedPane for the Code Editor Viewport
 //  - Use a JToggleButton for compiler options
 //  - Use JMenus for the Toolbar and Items
+//  - File paths in their own class or enum??
 
 public class Main
 {
