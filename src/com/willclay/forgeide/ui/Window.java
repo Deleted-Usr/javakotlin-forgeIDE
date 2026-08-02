@@ -22,7 +22,7 @@ import java.io.*;
  * that is all it does. Every piece of behaviour lives in the component that
  * owns it — highlighting in CodeEditorPanel, file dialogs in EditorFileActions,
  * the build in RunTask.
- *
+ * <p>
  * TODO - swap the editor for a JTabbedPane of CodeEditorPanels, one per file.
  */
 public class Window extends JFrame

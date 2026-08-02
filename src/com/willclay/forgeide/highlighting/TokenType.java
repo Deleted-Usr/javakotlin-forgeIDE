@@ -1,22 +1,29 @@
 package com.willclay.forgeide.highlighting;
 
 /**
- * The categories the lexer can emit.
- *
- * This list is purely lexical — anything that needs to know what a name
- * <em>means</em> (field vs local, class vs method) belongs to a later semantic
- * pass, not here.
+ * The categories the editor can colour.
+ * <p>
+ * Deliberately coarse: every category here is one a regular expression can
+ * recognise on its own, without knowing what came before it in the file. The
+ * moment a category needs context — "is this identifier a local variable or a
+ * field?" — it belongs to a parser, not to this highlighter.
  */
 public enum TokenType
 {
+    /** Anything the lexer did not claim: identifiers, operators, punctuation. */
+    PLAIN,
+
     KEYWORD,
-    IDENTIFIER,
-    NUMBER,
+
+    /** true, false, null. Separate from KEYWORD only so a theme can split them. */
+    LITERAL,
+
+    /** A capitalised identifier. A convention, not a fact — see JavaLexer. */
+    TYPE,
+
     STRING,
-    CHAR,
+    CHARACTER,
+    NUMBER,
     COMMENT,
-    ANNOTATION,
-    OPERATOR,
-    PUNCTUATION,
-    ERROR
+    ANNOTATION
 }

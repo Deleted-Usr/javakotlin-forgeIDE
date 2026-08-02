@@ -20,7 +20,7 @@ import java.awt.*;
 // WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
 // WARNING: Restricted methods will be blocked in a future release unless native access is enabled
 //
-// This is not a compiler error, a runtime error, or a FlatLaF bug. It is a warning introduced in Java 24+ regarding
+// This is not a compiler error, a runtime error, or a FlatLaF bug. It is a warning introduced in Java 24+ regarding the
 // Foreign Function & Memory (FFM) API and native library access.
 //
 // FlatLaF uses a small native library to provide platform-specific features like window decorations and windows-specific
@@ -37,7 +37,6 @@ public class Main
     {
         SwingUtilities.invokeLater(() ->
         {
-            // TODO - Use FlatLaF look and Feel
             FlatDarkLaf.setup();
             //setLookAndFeel();
 
@@ -51,15 +50,17 @@ public class Main
         });
     }
 
-    static void setLookAndFeel()
-
+    private static void setLookAndFeel()
     {
         try
         {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception _)
+        }
+        catch (Exception _)
         {
-
+            // The default swing look and feel is fine if the user is not on Windows.
         }
     }
+
+    // https://share.google/aimode/qekCZWzrAal7bXaSR
 }

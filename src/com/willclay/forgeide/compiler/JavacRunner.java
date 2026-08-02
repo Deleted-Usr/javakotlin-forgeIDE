@@ -1,7 +1,5 @@
 package com.willclay.forgeide.compiler;
 
-import javax.tools.JavaCompiler;
-import javax.tools.ToolProvider;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
