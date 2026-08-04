@@ -1,0 +1,180 @@
+package com.willclay.forgeide.actions;
+
+import com.willclay.forgeide.actions.build.BuildProjectAction;
+import com.willclay.forgeide.actions.build.CleanProjectAction;
+import com.willclay.forgeide.actions.build.RunAction;
+import com.willclay.forgeide.actions.edit.RedoAction;
+import com.willclay.forgeide.actions.edit.TextEditAction;
+import com.willclay.forgeide.actions.edit.UndoAction;
+import com.willclay.forgeide.actions.file.CloseProjectAction;
+import com.willclay.forgeide.actions.file.ExitAction;
+import com.willclay.forgeide.actions.file.NewFileAction;
+import com.willclay.forgeide.actions.file.NewProjectAction;
+import com.willclay.forgeide.actions.file.OpenFileAction;
+import com.willclay.forgeide.actions.file.OpenProjectAction;
+import com.willclay.forgeide.actions.file.SaveAction;
+import com.willclay.forgeide.actions.file.SaveAllAction;
+import com.willclay.forgeide.actions.file.SaveAsAction;
+import com.willclay.forgeide.actions.help.AboutAction;
+import com.willclay.forgeide.actions.view.ResetLayoutAction;
+import com.willclay.forgeide.actions.view.ToggleViewAction;
+import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.ui.WorkbenchPanel;
+
+import javax.swing.JTextPane;
+import java.awt.event.KeyEvent;
+
+/**
+ * Every command in the IDE, created once and handed out on request.
+ * <p>
+ * This is the piece that makes the menu bar and the toolbar stop duplicating
+ * each other. Neither of them creates an action; both ask here, both get the
+ * same object back, and so both show the same label and the same enabled state
+ * forever after.
+ * <p>
+ * Nothing in here knows what a menu is. It could be handed to a command
+ * palette, a keyboard-shortcut editor or a test just as easily.
+ * <p>
+ * TODO - if this grows past a screenful, split it into per-area managers
+ *        (FileActions, BuildActions...) that this one composes. The call sites
+ *        do not have to change for that.
+ */
+public final class ActionManager
+{
+    // --- File --- //
+    private final NewProjectAction newProject;
+    private final OpenProjectAction openProject;
+    private final CloseProjectAction closeProject;
+    private final NewFileAction newFile;
+    private final OpenFileAction openFile;
+    private final SaveAction save;
+    private final SaveAsAction saveAs;
+    private final SaveAllAction saveAll;
+    private final ExitAction exit;
+
+    // --- Edit --- //
+    private final UndoAction undo;
+    private final RedoAction redo;
+    private final TextEditAction cut;
+    private final TextEditAction copy;
+    private final TextEditAction paste;
+    private final TextEditAction delete;
+    private final TextEditAction selectAll;
+
+    // --- Build --- //
+    private final RunAction run;
+    private final BuildProjectAction buildProject;
+    private final CleanProjectAction cleanProject;
+
+    // --- View --- //
+    private final ToggleViewAction toggleProjectTree;
+    private final ToggleViewAction toggleConsole;
+    private final ToggleViewAction toggleToolBar;
+    private final ResetLayoutAction resetLayout;
+
+    // --- Help --- //
+    private final AboutAction about;
+
+    public ActionManager(UIContext context)
+    {
+        WorkbenchPanel workbench = context.getWorkbench();
+
+        newProject = new NewProjectAction(context);
+        openProject = new OpenProjectAction(context);
+        closeProject = new CloseProjectAction(context);
+        newFile = new NewFileAction(context);
+        openFile = new OpenFileAction(context);
+
+        // Save needs Save As to fall back to, so Save As is built first.
+        saveAs = new SaveAsAction(context);
+        save = new SaveAction(context, saveAs);
+        saveAll = new SaveAllAction(context);
+        exit = new ExitAction(context);
+
+        undo = new UndoAction(context);
+        redo = new RedoAction(context);
+
+        cut = new TextEditAction("Cut", Shortcuts.menu(KeyEvent.VK_X), context.getEditor(), JTextPane::cut);
+        copy = new TextEditAction("Copy", Shortcuts.menu(KeyEvent.VK_C), context.getEditor(), JTextPane::copy);
+        paste = new TextEditAction("Paste", Shortcuts.menu(KeyEvent.VK_V), context.getEditor(), JTextPane::paste);
+
+        // No accelerator on Delete on purpose. A menu accelerator is caught
+        // before the focused component sees the key, so binding the Delete key
+        // here would stop it deleting the character in front of the caret —
+        // the menu would have quietly broken the editor.
+        delete = new TextEditAction("Delete", null, context.getEditor(), pane -> pane.replaceSelection(""));
+        selectAll = new TextEditAction("Select All", Shortcuts.menu(KeyEvent.VK_A), context.getEditor(), JTextPane::selectAll);
+
+        // this::setBuildRunning is resolved when it is called, not now, so it
+        // is safe to hand out before the fields it touches are assigned.
+        run = new RunAction(context, this::setBuildRunning);
+        buildProject = new BuildProjectAction(context, this::setBuildRunning);
+        cleanProject = new CleanProjectAction(context);
+
+        toggleProjectTree = new ToggleViewAction("Project Explorer", null, true, workbench::setProjectTreeVisible);
+        toggleConsole = new ToggleViewAction("Console", null, true, workbench::setConsoleVisible);
+        toggleToolBar = new ToggleViewAction("Toolbar", null, true, workbench::setToolBarVisible);
+        resetLayout = new ResetLayoutAction(context, toggleProjectTree, toggleConsole, toggleToolBar);
+
+        about = new AboutAction(context);
+    }
+
+    /**
+     * One call, and the Run and Build items grey out in the menu, on the
+     * toolbar, and as shortcuts — because in all three places they are these
+     * same two objects.
+     */
+    public void setBuildRunning(boolean running)
+    {
+        run.setEnabled(!running);
+        buildProject.setEnabled(!running);
+    }
+
+    public NewProjectAction getNewProjectAction() { return newProject; }
+
+    public OpenProjectAction getOpenProjectAction() { return openProject; }
+
+    public CloseProjectAction getCloseProjectAction() { return closeProject; }
+
+    public NewFileAction getNewFileAction() { return newFile; }
+
+    public OpenFileAction getOpenFileAction() { return openFile; }
+
+    public SaveAction getSaveAction() { return save; }
+
+    public SaveAsAction getSaveAsAction() { return saveAs; }
+
+    public SaveAllAction getSaveAllAction() { return saveAll; }
+
+    public ExitAction getExitAction() { return exit; }
+
+    public UndoAction getUndoAction() { return undo; }
+
+    public RedoAction getRedoAction() { return redo; }
+
+    public TextEditAction getCutAction() { return cut; }
+
+    public TextEditAction getCopyAction() { return copy; }
+
+    public TextEditAction getPasteAction() { return paste; }
+
+    public TextEditAction getDeleteAction() { return delete; }
+
+    public TextEditAction getSelectAllAction() { return selectAll; }
+
+    public RunAction getRunAction() { return run; }
+
+    public BuildProjectAction getBuildProjectAction() { return buildProject; }
+
+    public CleanProjectAction getCleanProjectAction() { return cleanProject; }
+
+    public ToggleViewAction getToggleProjectTreeAction() { return toggleProjectTree; }
+
+    public ToggleViewAction getToggleConsoleAction() { return toggleConsole; }
+
+    public ToggleViewAction getToggleToolBarAction() { return toggleToolBar; }
+
+    public ResetLayoutAction getResetLayoutAction() { return resetLayout; }
+
+    public AboutAction getAboutAction() { return about; }
+}

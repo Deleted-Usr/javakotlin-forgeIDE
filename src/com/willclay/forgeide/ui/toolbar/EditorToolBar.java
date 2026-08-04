@@ -1,41 +1,36 @@
 package com.willclay.forgeide.ui.toolbar;
 
-import javax.swing.*;
+import com.willclay.forgeide.actions.ActionManager;
+import com.willclay.forgeide.ui.Utils;
+
+import javax.swing.Box;
+import javax.swing.JToolBar;
 
 /**
- * The strip of buttons across the top.
- *
- * Takes callbacks rather than reaching back into Window, so it has no idea what
- * running or saving actually involves.
- *
- * TODO - move these onto a JMenuBar as well, and turn the compiler options into
- *        JToggleButtons once there are any.
+ * The strip of buttons across the top — the handful of commands worth reaching
+ * for constantly, next to a menu bar that lists everything.
+ * <p>
+ * There are no listeners left in this class. It used to take a Runnable per
+ * button and wire each one up; now it takes the shared actions and adds them,
+ * which is why nothing here has to be told that a build has started before Run
+ * greys out.
+ * <p>
+ * TODO - turn the compiler options into JToggleButtons once there are any. A
+ *        toggle backed by an Action with SELECTED_KEY works the same way the
+ *        View menu's tick boxes do.
  */
 public final class EditorToolBar extends JToolBar
 {
-    private final JButton runButton = new JButton("\u25B6 Run Code");
-
-    public EditorToolBar(Runnable onRun, Runnable onSave, Runnable onOpen)
+    public EditorToolBar(ActionManager actions)
     {
         setFloatable(false);
 
-        runButton.addActionListener(e -> onRun.run());
-        add(runButton);
+        Utils.addToolBarButton(this, actions.getRunAction(), "▶ Run Code");
+        Utils.addToolBarButton(this, actions.getBuildProjectAction(), "⚒ Build");
 
         add(Box.createHorizontalGlue()); // pushes the file buttons to the right
 
-        JButton saveButton = new JButton("Save File");
-        saveButton.addActionListener(e -> onSave.run());
-        add(saveButton);
-
-        JButton loadButton = new JButton("Load File");
-        loadButton.addActionListener(e -> onOpen.run());
-        add(loadButton);
-    }
-
-    /** Disabled while a build is in flight so two cannot overlap. */
-    public void setRunEnabled(boolean enabled)
-    {
-        runButton.setEnabled(enabled);
+        Utils.addToolBarButton(this, actions.getSaveAction(), "Save File");
+        Utils.addToolBarButton(this, actions.getOpenFileAction(), "Load File");
     }
 }

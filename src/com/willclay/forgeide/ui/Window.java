@@ -1,27 +1,31 @@
 package com.willclay.forgeide.ui;
 
+import com.willclay.forgeide.actions.ActionManager;
 import com.willclay.forgeide.compiler.JavacRunner;
-import com.willclay.forgeide.highlighting.*;
 import com.willclay.forgeide.project.ProjectPaths;
 import com.willclay.forgeide.project.SourceTemplates;
+import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.ui.dialogs.FileDialogs;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 import com.willclay.forgeide.ui.editor.ConsolePanel;
 import com.willclay.forgeide.ui.editor.ProjectTreePanel;
-import com.willclay.forgeide.ui.editor.RunTask;
 import com.willclay.forgeide.ui.fonts.EditorFonts;
-import com.willclay.forgeide.ui.toolbar.EditorFileActions;
+import com.willclay.forgeide.ui.menu.EditorMenuBar;
 import com.willclay.forgeide.ui.toolbar.EditorToolBar;
+import com.willclay.forgeide.workspace.Workspace;
 
-import javax.swing.*;
-import javax.swing.text.*;
-import java.awt.*;
-import java.io.*;
+import javax.swing.JFrame;
+import java.awt.Font;
 
 /**
- * The main frame: it builds the layout and wires the components together, and
- * that is all it does. Every piece of behaviour lives in the component that
- * owns it — highlighting in CodeEditorPanel, file dialogs in EditorFileActions,
- * the build in RunTask.
+ * The main frame, and now only the composition root: it creates the parts, puts
+ * them in a {@link UIContext}, and lets the {@link ActionManager} build
+ * everything that can be clicked.
+ * <p>
+ * Note what is <em>not</em> here any more. There is no runCode method, no save
+ * handler, no Runnable being threaded through three constructors. The frame no
+ * longer knows that compiling exists — it knows that actions exist, and where
+ * to hang them.
  * <p>
  * TODO - swap the editor for a JTabbedPane of CodeEditorPanels, one per file.
  */
@@ -30,56 +34,63 @@ public class Window extends JFrame
     private static final float EDITOR_FONT_SIZE = 14f;
     private static final float CONSOLE_FONT_SIZE = 12f;
 
-    /** Fraction of the extra height the editor takes when the window grows. */
-    private static final double EDITOR_RESIZE_WEIGHT = 0.75;
+    private final String baseTitle;
 
     private final CodeEditorPanel editor;
     private final ConsolePanel console;
-    private final EditorFileActions fileActions;
-    private final EditorToolBar toolBar;
+    private final WorkbenchPanel workbench;
+    private final Workspace workspace = new Workspace();
 
     private final JavacRunner compiler = new JavacRunner(ProjectPaths.SOURCE_DIR, ProjectPaths.OUTPUT_DIR);
 
     public Window(String title)
     {
         super(title);
+        this.baseTitle = title;
 
         Font editorFont = EditorFonts.load(EDITOR_FONT_SIZE);
 
         editor = new CodeEditorPanel(editorFont);
         console = new ConsolePanel(editorFont.deriveFont(CONSOLE_FONT_SIZE));
-        fileActions = new EditorFileActions(this, editor);
-        toolBar = new EditorToolBar(this::runCode, fileActions::save, fileActions::open);
+        workbench = new WorkbenchPanel(new ProjectTreePanel(ProjectPaths.WORKSPACE_DIR), editor, console);
 
-        add(toolBar, BorderLayout.NORTH);
-        add(buildWorkspace(), BorderLayout.CENTER);
+        // The context has to exist before the actions, the actions before the
+        // toolbar, and the toolbar lives in the workbench — hence setToolBar
+        // rather than a constructor argument. See WorkbenchPanel.
+        UIContext context = new UIContext(
+                this, editor, console, workbench, compiler, workspace, new FileDialogs(this));
 
-        editor.setText(SourceTemplates.scratchClass());
+        ActionManager actions = new ActionManager(context);
+
+        setJMenuBar(new EditorMenuBar(actions));
+        workbench.setToolBar(new EditorToolBar(actions));
+
+        add(workbench);
+
+        wireStateToTitle();
+        openScratchFile();
     }
 
     /**
-     * Project tree beside the editor, console underneath both. Split panes
-     * rather than BorderLayout.SOUTH so the console can be dragged to whatever
-     * height the user wants.
+     * Every edit marks the workspace dirty, and every change to the workspace
+     * redraws the title. Two one-line subscriptions, and the asterisk in the
+     * title bar takes care of itself from then on.
      */
-    private JSplitPane buildWorkspace()
+    private void wireStateToTitle()
     {
-        JSplitPane treeAndEditor = new JSplitPane(
-                JSplitPane.HORIZONTAL_SPLIT, new ProjectTreePanel(ProjectPaths.WORKSPACE_DIR), editor
-        );
-        treeAndEditor.setResizeWeight(0); // The editor absorbs any extra width
-
-        JSplitPane workspace = new JSplitPane(JSplitPane.VERTICAL_SPLIT, treeAndEditor, console);
-        workspace.setResizeWeight(EDITOR_RESIZE_WEIGHT);
-
-        return workspace;
+        editor.addTextChangeListener(workspace::markModified);
+        workspace.addChangeListener(this::updateTitle);
     }
 
-    private void runCode()
+    /** Same ordering rule the file actions follow: contents first, state second. */
+    private void openScratchFile()
     {
-        console.clear();
-        toolBar.setRunEnabled(false);
+        editor.setText(SourceTemplates.scratchClass());
+        workspace.reset();
+    }
 
-        new RunTask(compiler, console, editor.getText(), () -> toolBar.setRunEnabled(true)).execute();
+    private void updateTitle()
+    {
+        setTitle(baseTitle + " — " + workspace.getDisplayName());
     }
 }

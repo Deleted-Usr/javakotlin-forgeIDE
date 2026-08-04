@@ -1,7 +1,5 @@
 package com.willclay.forgeide.ui.fonts;
 
-import com.willclay.forgeide.ui.DialogFactory;
-
 import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Path;

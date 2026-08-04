@@ -9,6 +9,8 @@ import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.UndoableEditEvent;
+import javax.swing.text.AbstractDocument;
 import javax.swing.text.Element;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
@@ -16,9 +18,15 @@ import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 import javax.swing.text.TabSet;
 import javax.swing.text.TabStop;
+import javax.swing.undo.CannotRedoException;
+import javax.swing.undo.CannotUndoException;
+import javax.swing.undo.UndoManager;
+import javax.swing.undo.UndoableEdit;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The code editor: a non-wrapping JTextPane in a scroll pane, with incremental
@@ -27,6 +35,12 @@ import java.awt.FontMetrics;
  * Window used to own all of this directly. Keeping it here means the frame only
  * has to know getText/setText, and the editor can grow (line numbers, bracket
  * matching, a gutter) without the frame growing with it.
+ *
+ * It also owns the undo history, and reports two things outwards: that the text
+ * changed (the workspace wants to know, for the dirty marker) and that the undo
+ * stack changed (UndoAction and RedoAction want to know, so they can grey
+ * themselves out). Both are plain Runnables — the editor has no idea who is
+ * listening.
  */
 public final class CodeEditorPanel extends JPanel
 {
@@ -35,8 +49,15 @@ public final class CodeEditorPanel extends JPanel
     /** Tab stops are positions, not a repeating rule, so enough must be defined up front. */
     private static final int TAB_STOP_COUNT = 60;
 
+    /** Enough to undo a session's worth of typing without holding the file's whole history. */
+    private static final int UNDO_LIMIT = 500;
+
     private final JTextPane textPane = new NoWrapTextPane();
     private final SyntaxHighlighter highlighter = new SyntaxHighlighter();
+    private final UndoManager undoManager = new UndoManager();
+
+    private final List<Runnable> textChangeListeners = new ArrayList<>();
+    private final List<Runnable> undoStateListeners = new ArrayList<>();
 
     // Dirty lines waiting to be highlighted, merged across every edit that has
     // arrived since the last pass. NO_PENDING means there is nothing to do.
@@ -52,6 +73,7 @@ public final class CodeEditorPanel extends JPanel
         textPane.setFont(font);
         applyTabSize(TAB_SIZE_IN_CHARACTERS);
         installHighlighting();
+        installUndoSupport();
 
         add(new JScrollPane(textPane), BorderLayout.CENTER);
     }
@@ -73,6 +95,12 @@ public final class CodeEditorPanel extends JPanel
         // Dropping it avoids highlighting the whole file a second time, which
         // is most of what made opening a large file feel like a hang.
         clearPending();
+
+        // Loading a file is not an edit, so there is nothing to undo back past.
+        // Discarded after setText rather than before, because setText is what
+        // put the edits there.
+        undoManager.discardAllEdits();
+        fireUndoStateChanged();
     }
 
     public void setTheme(TokenTheme theme)
@@ -86,6 +114,61 @@ public final class CodeEditorPanel extends JPanel
         return textPane;
     }
 
+    // --- Undo history --- //
+
+    public boolean canUndo()
+    {
+        return undoManager.canUndo();
+    }
+
+    public boolean canRedo()
+    {
+        return undoManager.canRedo();
+    }
+
+    public void undo()
+    {
+        try
+        {
+            if (undoManager.canUndo()) undoManager.undo();
+        }
+        catch (CannotUndoException e)
+        {
+            // canUndo said otherwise, so this should not happen — but an edit
+            // the document refuses to reverse is not worth an exception dialog.
+        }
+
+        fireUndoStateChanged();
+    }
+
+    public void redo()
+    {
+        try
+        {
+            if (undoManager.canRedo()) undoManager.redo();
+        }
+        catch (CannotRedoException e)
+        {
+            // As above.
+        }
+
+        fireUndoStateChanged();
+    }
+
+    // --- Listeners --- //
+
+    /** Fired for every insertion and removal, so keep the work small. */
+    public void addTextChangeListener(Runnable listener)
+    {
+        textChangeListeners.add(listener);
+    }
+
+    /** Fired when undo or redo becomes possible or impossible. */
+    public void addUndoStateListener(Runnable listener)
+    {
+        undoStateListeners.add(listener);
+    }
+
     /**
      * changedUpdate is deliberately left empty: it fires when <em>attributes</em>
      * change, which is exactly what the highlighter itself does — reacting to it
@@ -96,14 +179,54 @@ public final class CodeEditorPanel extends JPanel
         textPane.getDocument().addDocumentListener(new DocumentListener()
         {
             @Override
-            public void insertUpdate(DocumentEvent e) { queueRefresh(e); }
+            public void insertUpdate(DocumentEvent e) { queueRefresh(e); fireTextChanged(); }
 
             @Override
-            public void removeUpdate(DocumentEvent e) { queueRefresh(e); }
+            public void removeUpdate(DocumentEvent e) { queueRefresh(e); fireTextChanged(); }
 
             @Override
             public void changedUpdate(DocumentEvent e) { }
         });
+    }
+
+    private void installUndoSupport()
+    {
+        undoManager.setLimit(UNDO_LIMIT);
+        textPane.getDocument().addUndoableEditListener(this::recordEdit);
+    }
+
+    /**
+     * The catch that makes undo in a styled editor worth writing carefully: a
+     * StyledDocument reports a change of character attributes as an undoable
+     * edit, and the highlighter changes character attributes constantly. Record
+     * those and Ctrl+Z spends its first dozen presses undoing colours instead
+     * of the typing that caused them.
+     *
+     * Attribute changes arrive as a DefaultDocumentEvent of type CHANGE, which
+     * is the one thing that distinguishes them from real edits.
+     */
+    private void recordEdit(UndoableEditEvent event)
+    {
+        UndoableEdit edit = event.getEdit();
+
+        if (edit instanceof AbstractDocument.DefaultDocumentEvent documentEvent
+                && documentEvent.getType() == DocumentEvent.EventType.CHANGE)
+        {
+            return;
+        }
+
+        undoManager.addEdit(edit);
+        fireUndoStateChanged();
+    }
+
+    private void fireTextChanged()
+    {
+        for (Runnable listener : textChangeListeners) listener.run();
+    }
+
+    private void fireUndoStateChanged()
+    {
+        for (Runnable listener : undoStateListeners) listener.run();
     }
 
     /**

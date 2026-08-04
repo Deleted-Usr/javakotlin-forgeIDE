@@ -4,15 +4,14 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.willclay.forgeide.ui.Window;
 
 import javax.swing.*;
-import java.awt.*;
 
 
 // TODO
-//  - Separate Swing UI from the IDE backend
 //  - Use a JTabbedPane for the Code Editor Viewport
 //  - Use a JToggleButton for compiler options
-//  - Use JMenus for the Toolbar and Items
-//  - File paths in their own class or enum??
+//  - Give the actions icons (ForgeAction already has the hook)
+//  - Populate the project tree from the file system
+//  - Real projects: ProjectPaths becomes an instance with a user-chosen root
 
 // When running, this error may appear:
 // WARNING: A restricted method in java.lang.System has been called
@@ -61,6 +60,4 @@ public class Main
             // The default swing look and feel is fine if the user is not on Windows.
         }
     }
-
-    // https://share.google/aimode/qekCZWzrAal7bXaSR
 }
