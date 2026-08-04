@@ -8,6 +8,7 @@
 *.class
 target/
 build/
+!src/com/willclay/**/build/
 out/
 bin/
 classes/
