@@ -57,8 +57,7 @@ public class Window extends JFrame
         // The context has to exist before the actions, the actions before the
         // toolbar, and the toolbar lives in the workbench — hence setToolBar
         // rather than a constructor argument. See WorkbenchPanel.
-        UIContext context = new UIContext(
-                this, editor, console, workbench, compiler, workspace, new FileDialogs(this));
+        UIContext context = new UIContext(this, editor, console, workbench, compiler, workspace, new FileDialogs(this));
 
         ActionManager actions = new ActionManager(context);
 
