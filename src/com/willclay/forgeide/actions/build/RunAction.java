@@ -43,7 +43,7 @@ public final class RunAction extends ForgeAction
         RunTask.compileAndRun(
                 context.getCompiler(),
                 context.getConsole(),
-                context.getEditor().getText(),
+                context.getEditorManager().getText(),
                 () -> buildRunning.accept(false)
         ).execute();
     }

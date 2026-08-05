@@ -21,7 +21,7 @@ public final class UndoAction extends ForgeAction
     {
         super("Undo", Shortcuts.menu(KeyEvent.VK_Z), "Undo the last edit");
 
-        this.editor = context.getEditor();
+        this.editor = context.getEditorPanel();
 
         editor.addUndoStateListener(this::syncEnabled);
         syncEnabled();

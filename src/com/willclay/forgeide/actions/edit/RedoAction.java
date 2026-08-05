@@ -16,7 +16,7 @@ public final class RedoAction extends ForgeAction
     {
         super("Redo", Shortcuts.menuShift(KeyEvent.VK_Z), "Redo the last undone edit");
 
-        this.editor = context.getEditor();
+        this.editor = context.getEditorPanel();
 
         editor.addUndoStateListener(this::syncEnabled);
         syncEnabled();

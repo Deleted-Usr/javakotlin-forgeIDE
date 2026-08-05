@@ -35,6 +35,7 @@ public final class ViewMenu extends JMenu
 
     private void createLayoutItems()
     {
+        add(actions.getRefreshTreeAction());
         add(actions.getResetLayoutAction());
     }
 }

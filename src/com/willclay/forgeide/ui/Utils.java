@@ -43,6 +43,19 @@ public final class Utils
         return choice == JOptionPane.YES_OPTION;
     }
 
+    /**
+     * Asks for a single line of text — a new file's name, a rename.
+     *
+     * @return the answer with surrounding space removed, or null if cancelled
+     */
+    public static String prompt(Component parent, String title, String message, String initialValue)
+    {
+        Object answer = JOptionPane.showInputDialog(
+                parent, message, title, JOptionPane.QUESTION_MESSAGE, null, null, initialValue);
+
+        return answer == null ? null : answer.toString().trim();
+    }
+
     /** The one question every action that replaces the editor's contents has to ask. */
     public static boolean confirmDiscardChanges(Component parent, String title)
     {

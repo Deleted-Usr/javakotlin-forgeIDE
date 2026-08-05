@@ -23,12 +23,12 @@ public final class SaveAsAction extends ForgeAction
     @Override
     protected void perform()
     {
-        Path file = context.getDialogs().chooseFileToSave(context.getWorkspace().getCurrentFile());
+        Path file = context.getDialogs().chooseFileToSave(context.getEditorManager().getCurrentFile());
         if (file == null) return; // cancelled, or declined the overwrite
 
         try
         {
-            context.getWorkspace().saveTo(file, context.getEditor().getText());
+            context.getEditorManager().saveTo(file);
             Utils.showInfoMessage(context.getFrame(), "File saved successfully!");
         }
         catch (IOException e)

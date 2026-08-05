@@ -2,9 +2,9 @@ package com.willclay.forgeide.actions.file;
 
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
+import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.Utils;
-import com.willclay.forgeide.workspace.Workspace;
 
 import java.awt.event.KeyEvent;
 import java.io.IOException;
@@ -24,21 +24,16 @@ public final class OpenFileAction extends ForgeAction
     @Override
     protected void perform()
     {
-        Workspace workspace = context.getWorkspace();
+        EditorManager editor = context.getEditorManager();
 
-        if (workspace.isModified() && !Utils.confirmDiscardChanges(context.getFrame(), "Open File")) return;
+        if (editor.isModified() && !Utils.confirmDiscardChanges(context.getFrame(), "Open File")) return;
 
         Path file = context.getDialogs().chooseFileToOpen();
         if (file == null) return; // cancelled
 
         try
         {
-            // Read before touching the editor, so a failed read leaves what the
-            // user had open exactly as it was.
-            String text = workspace.read(file);
-
-            context.getEditor().setText(text);
-            workspace.setCurrentFile(file);
+            editor.openFile(file);
         }
         catch (IOException e)
         {

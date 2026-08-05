@@ -22,8 +22,13 @@ public final class ExitAction extends ForgeAction
     @Override
     protected void perform()
     {
-        if (context.getWorkspace().isModified()
+        if (context.getEditorManager().isModified()
                 && !Utils.confirmDiscardChanges(context.getFrame(), "Exit")) return;
+
+        // Releases the watcher's thread and its watch keys. A daemon thread
+        // would die with the JVM anyway; closing tidily means the same code
+        // works when the IDE learns to close a window without exiting.
+        context.getWorkspaceService().close();
 
         // Posting the close event rather than calling System.exit lets the
         // frame's own close operation decide what closing means, and lets any

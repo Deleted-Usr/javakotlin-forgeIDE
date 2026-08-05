@@ -10,12 +10,12 @@ import java.util.concurrent.ExecutionException;
 /**
  * Writes the editor's contents to the scratch file, compiles it, and — if asked
  * — runs it, all on a background thread.
- * <p>
+ *
  * This used to happen inside the Run button's action listener, i.e. on the
  * Event Dispatch Thread. That froze the entire UI for as long as javac took,
  * and nothing appeared in the console until the whole thing finished, because
  * every repaint was queued behind the still-running event handler.
- * <p>
+ *
  * Build Project needs everything here except the last step, so the two are one
  * class with two factory methods rather than two classes that differ by four
  * lines.
@@ -28,7 +28,8 @@ public final class RunTask extends SwingWorker<Integer, Void>
     private final Runnable onFinished;
     private final boolean launchAfterCompiling;
 
-    private RunTask(JavacRunner runner, ConsolePanel console, String source, Runnable onFinished, boolean launchAfterCompiling)
+    private RunTask(JavacRunner runner, ConsolePanel console, String source,
+                    Runnable onFinished, boolean launchAfterCompiling)
     {
         this.runner = runner;
         this.console = console;

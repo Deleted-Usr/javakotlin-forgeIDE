@@ -2,14 +2,18 @@ package com.willclay.forgeide.actions.file;
 
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
-import com.willclay.forgeide.project.SourceTemplates;
+import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.Utils;
-import com.willclay.forgeide.workspace.Workspace;
 
 import java.awt.event.KeyEvent;
 
-/** Replaces the editor's contents with a fresh scratch class. */
+/**
+ * A fresh scratch buffer in the editor, belonging to no file.
+ * <p>
+ * Not to be confused with the explorer's New File, which creates a file on disk
+ * inside the selected folder.
+ */
 public final class NewFileAction extends ForgeAction
 {
     private final UIContext context;
@@ -23,13 +27,10 @@ public final class NewFileAction extends ForgeAction
     @Override
     protected void perform()
     {
-        Workspace workspace = context.getWorkspace();
+        EditorManager editor = context.getEditorManager();
 
-        if (workspace.isModified() && !Utils.confirmDiscardChanges(context.getFrame(), "New File")) return;
+        if (editor.isModified() && !Utils.confirmDiscardChanges(context.getFrame(), "New File")) return;
 
-        // setText first, reset second: setText fires document events, and those
-        // are wired to Workspace::markModified.
-        context.getEditor().setText(SourceTemplates.scratchClass());
-        workspace.reset();
+        editor.newFile();
     }
 }

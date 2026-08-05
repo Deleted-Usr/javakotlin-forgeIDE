@@ -25,12 +25,31 @@ public final class FileDialogs
     private final Component parent;
     private final JFileChooser chooser = new JFileChooser();
 
+    /**
+     * A second chooser, because a directory picker and a file picker disagree
+     * about file selection mode and about the filter. Sharing one instance
+     * would mean reconfiguring it on every call and hoping nothing was missed.
+     */
+    private final JFileChooser directoryChooser = new JFileChooser();
+
     public FileDialogs(Component parent)
     {
         this.parent = parent;
 
         chooser.setFileFilter(new FileNameExtensionFilter("Java Source Files (*.java)", "java"));
         chooser.setAcceptAllFileFilterUsed(false);
+
+        directoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+    }
+
+    /** @return the chosen directory, or null if the user cancelled */
+    public Path chooseDirectory(String title)
+    {
+        directoryChooser.setDialogTitle(title);
+
+        if (directoryChooser.showOpenDialog(parent) != JFileChooser.APPROVE_OPTION) return null;
+
+        return directoryChooser.getSelectedFile().toPath();
     }
 
     /** @return the chosen file, or null if the user cancelled or picked something that is not Java */

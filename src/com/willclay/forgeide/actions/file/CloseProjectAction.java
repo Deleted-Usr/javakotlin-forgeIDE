@@ -4,23 +4,34 @@ import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.services.UIContext;
 
 /**
- * Placeholder — disabled until projects are a real concept.
+ * Empties the explorer and stops watching the project's directories.
  * <p>
- * TODO - once a project can be open, this is also the action whose enabled
- *        state should follow it: {@code closeProject.setEnabled(project != null)}
- *        in one place, and the menu item greys itself out.
+ * The enabled state is not managed by whoever calls this — the action watches
+ * the workspace itself, so the File menu item greys out the moment there is no
+ * project, wherever the close came from.
  */
 public final class CloseProjectAction extends ForgeAction
 {
+    private final UIContext context;
+
     public CloseProjectAction(UIContext context)
     {
-        super("Close Project");
-        setEnabled(false);
+        super("Close Project", null, "Close the current project");
+
+        this.context = context;
+
+        context.getWorkspace().addChangeListener(this::syncEnabled);
+        syncEnabled();
+    }
+
+    private void syncEnabled()
+    {
+        setEnabled(context.getWorkspace().hasProject());
     }
 
     @Override
     protected void perform()
     {
-        // Nothing yet.
+        context.getWorkspaceService().closeProject();
     }
 }

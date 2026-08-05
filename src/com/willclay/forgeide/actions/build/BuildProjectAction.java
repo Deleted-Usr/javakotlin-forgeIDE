@@ -36,7 +36,7 @@ public final class BuildProjectAction extends ForgeAction
         RunTask.compileOnly(
                 context.getCompiler(),
                 context.getConsole(),
-                context.getEditor().getText(),
+                context.getEditorManager().getText(),
                 () -> buildRunning.accept(false)
         ).execute();
     }

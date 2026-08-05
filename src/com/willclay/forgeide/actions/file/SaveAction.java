@@ -11,9 +11,8 @@ import java.io.IOException;
 /**
  * Writes straight back to the file the editor was loaded from, with no dialog.
  * <p>
- * Before there was a {@code Workspace} there was nowhere to remember that file,
- * so every save was really a Save As. Holding one small piece of state is the
- * whole difference.
+ * Before the editor remembered where its text came from, every save was really
+ * a Save As. Holding one small piece of state is the whole difference.
  */
 public final class SaveAction extends ForgeAction
 {
@@ -32,7 +31,7 @@ public final class SaveAction extends ForgeAction
     protected void perform()
     {
         // Nothing to write back to yet, so the only sensible Save is a Save As.
-        if (!context.getWorkspace().hasFile())
+        if (!context.getEditorManager().hasFile())
         {
             saveAs.trigger();
             return;
@@ -40,7 +39,7 @@ public final class SaveAction extends ForgeAction
 
         try
         {
-            context.getWorkspace().save(context.getEditor().getText());
+            context.getEditorManager().save();
         }
         catch (IOException e)
         {

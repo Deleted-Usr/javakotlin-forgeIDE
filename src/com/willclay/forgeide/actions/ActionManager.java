@@ -6,6 +6,14 @@ import com.willclay.forgeide.actions.build.RunAction;
 import com.willclay.forgeide.actions.edit.RedoAction;
 import com.willclay.forgeide.actions.edit.TextEditAction;
 import com.willclay.forgeide.actions.edit.UndoAction;
+import com.willclay.forgeide.actions.explorer.CopyPathAction;
+import com.willclay.forgeide.actions.explorer.CreateFileAction;
+import com.willclay.forgeide.actions.explorer.CreateFolderAction;
+import com.willclay.forgeide.actions.explorer.DeleteItemAction;
+import com.willclay.forgeide.actions.explorer.OpenSelectedFileAction;
+import com.willclay.forgeide.actions.explorer.RefreshTreeAction;
+import com.willclay.forgeide.actions.explorer.RenameItemAction;
+import com.willclay.forgeide.actions.explorer.RevealInFilesAction;
 import com.willclay.forgeide.actions.file.CloseProjectAction;
 import com.willclay.forgeide.actions.file.ExitAction;
 import com.willclay.forgeide.actions.file.NewFileAction;
@@ -72,6 +80,16 @@ public final class ActionManager
     private final ToggleViewAction toggleToolBar;
     private final ResetLayoutAction resetLayout;
 
+    // --- Explorer (the tree's context menu) --- //
+    private final OpenSelectedFileAction openSelectedFile;
+    private final CreateFileAction createFile;
+    private final CreateFolderAction createFolder;
+    private final RenameItemAction renameItem;
+    private final DeleteItemAction deleteItem;
+    private final CopyPathAction copyPath;
+    private final RevealInFilesAction revealInFiles;
+    private final RefreshTreeAction refreshTree;
+
     // --- Help --- //
     private final AboutAction about;
 
@@ -94,16 +112,16 @@ public final class ActionManager
         undo = new UndoAction(context);
         redo = new RedoAction(context);
 
-        cut = new TextEditAction("Cut", Shortcuts.menu(KeyEvent.VK_X), context.getEditor(), JTextPane::cut);
-        copy = new TextEditAction("Copy", Shortcuts.menu(KeyEvent.VK_C), context.getEditor(), JTextPane::copy);
-        paste = new TextEditAction("Paste", Shortcuts.menu(KeyEvent.VK_V), context.getEditor(), JTextPane::paste);
+        cut = new TextEditAction("Cut", Shortcuts.menu(KeyEvent.VK_X), context.getEditorPanel(), JTextPane::cut);
+        copy = new TextEditAction("Copy", Shortcuts.menu(KeyEvent.VK_C), context.getEditorPanel(), JTextPane::copy);
+        paste = new TextEditAction("Paste", Shortcuts.menu(KeyEvent.VK_V), context.getEditorPanel(), JTextPane::paste);
 
         // No accelerator on Delete on purpose. A menu accelerator is caught
         // before the focused component sees the key, so binding the Delete key
         // here would stop it deleting the character in front of the caret —
         // the menu would have quietly broken the editor.
-        delete = new TextEditAction("Delete", null, context.getEditor(), pane -> pane.replaceSelection(""));
-        selectAll = new TextEditAction("Select All", Shortcuts.menu(KeyEvent.VK_A), context.getEditor(), JTextPane::selectAll);
+        delete = new TextEditAction("Delete", null, context.getEditorPanel(), pane -> pane.replaceSelection(""));
+        selectAll = new TextEditAction("Select All", Shortcuts.menu(KeyEvent.VK_A), context.getEditorPanel(), JTextPane::selectAll);
 
         // this::setBuildRunning is resolved when it is called, not now, so it
         // is safe to hand out before the fields it touches are assigned.
@@ -115,6 +133,15 @@ public final class ActionManager
         toggleConsole = new ToggleViewAction("Console", null, true, workbench::setConsoleVisible);
         toggleToolBar = new ToggleViewAction("Toolbar", null, true, workbench::setToolBarVisible);
         resetLayout = new ResetLayoutAction(context, toggleProjectTree, toggleConsole, toggleToolBar);
+
+        openSelectedFile = new OpenSelectedFileAction(context);
+        createFile = new CreateFileAction(context);
+        createFolder = new CreateFolderAction(context);
+        renameItem = new RenameItemAction(context);
+        deleteItem = new DeleteItemAction(context);
+        copyPath = new CopyPathAction(context);
+        revealInFiles = new RevealInFilesAction(context);
+        refreshTree = new RefreshTreeAction(context);
 
         about = new AboutAction(context);
     }
@@ -175,6 +202,22 @@ public final class ActionManager
     public ToggleViewAction getToggleToolBarAction() { return toggleToolBar; }
 
     public ResetLayoutAction getResetLayoutAction() { return resetLayout; }
+
+    public OpenSelectedFileAction getOpenSelectedFileAction() { return openSelectedFile; }
+
+    public CreateFileAction getCreateFileAction() { return createFile; }
+
+    public CreateFolderAction getCreateFolderAction() { return createFolder; }
+
+    public RenameItemAction getRenameItemAction() { return renameItem; }
+
+    public DeleteItemAction getDeleteItemAction() { return deleteItem; }
+
+    public CopyPathAction getCopyPathAction() { return copyPath; }
+
+    public RevealInFilesAction getRevealInFilesAction() { return revealInFiles; }
+
+    public RefreshTreeAction getRefreshTreeAction() { return refreshTree; }
 
     public AboutAction getAboutAction() { return about; }
 }
