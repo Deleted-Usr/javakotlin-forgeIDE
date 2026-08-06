@@ -20,6 +20,7 @@ public final class JavacRunner
     }
 
     /**
+     * @param sourceFile the source containing the main method
      * @param output receives javac's diagnostics, one line at a time
      * @return true if javac exited cleanly
      */
@@ -30,7 +31,11 @@ public final class JavacRunner
 
         // -d redirects the .class output away from the source tree.
         ProcessBuilder builder = new ProcessBuilder(
-                "javac", "-d", outputDir.toString(), sourceFile.toString()
+                "javac",
+                "-encoding", "UTF-8",
+                "-sourcepath", sourceDir.toString(),
+                "-d", outputDir.toString()
+
         );
 
         return execute(builder, output) == 0;

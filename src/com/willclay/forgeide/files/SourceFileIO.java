@@ -12,7 +12,7 @@ import java.nio.file.Path;
  * dialogs, this only touches the disk. That split is what lets the same methods
  * be reused by the Run button, which has no dialogs at all.
  */
-public class SourceFileIO
+public final class SourceFileIO
 {
     // A system like this allows for an IDE with multiple supported languages
     public static final String JAVA_EXTENSION = ".java";

@@ -46,7 +46,7 @@ import javax.swing.*;
  *        plugin discovery off the EDT, then the UI, then anything that needs a
  *        window to report into. See, in future, ForgeApplication.
  */
-public class Main
+public final class Main
 {
     private static final int INITIAL_WIDTH = 1100;
     private static final int INITIAL_HEIGHT = 700;
