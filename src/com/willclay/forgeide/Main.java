@@ -1,6 +1,8 @@
 package com.willclay.forgeide;
 
+import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.intellijthemes.FlatArcDarkIJTheme;
 import com.willclay.forgeide.ui.Window;
 
 import javax.swing.*;
@@ -27,6 +29,23 @@ import javax.swing.*;
 // access hasn't been explicitly granted. The best way to clear the error is to add --enable-native-access=ALL-UNNAMED to
 // the VM Options when running the code.
 
+/**
+ * The entry point: sizes the frame, sets the look and feel, and hands over to
+ * {@link Window}.
+ * <p>
+ * Everything happens inside {@code invokeLater} because Swing components may
+ * only be touched on the Event Dispatch Thread — including while they are being
+ * constructed. Building the frame on the main thread appears to work and then
+ * fails intermittently under a different look and feel or a slower machine,
+ * which is the worst way for a bug to behave.
+ * <p>
+ * The look and feel is installed before the first component exists, since it is
+ * only consulted when a component is created.
+ * <p>
+ * TODO - becomes a two-phase launcher once there are plugins: services and
+ *        plugin discovery off the EDT, then the UI, then anything that needs a
+ *        window to report into. See, in future, ForgeApplication.
+ */
 public class Main
 {
     private static final int INITIAL_WIDTH = 1100;
@@ -36,8 +55,7 @@ public class Main
     {
         SwingUtilities.invokeLater(() ->
         {
-            FlatDarkLaf.setup();
-            //setLookAndFeel();
+            setLookAndFeel();
 
             Window w = new Window("Forge IDE");
 
@@ -53,7 +71,10 @@ public class Main
     {
         try
         {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+
+            //FlatDarculaLaf.setup();
+            FlatArcDarkIJTheme.setup();
         }
         catch (Exception _)
         {
