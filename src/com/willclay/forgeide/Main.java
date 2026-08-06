@@ -3,6 +3,7 @@ package com.willclay.forgeide;
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.intellijthemes.FlatArcDarkIJTheme;
+import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMTMaterialDarkerIJTheme;
 import com.willclay.forgeide.ui.Window;
 
 import javax.swing.*;
@@ -12,8 +13,9 @@ import javax.swing.*;
 //  - Use a JTabbedPane for the Code Editor Viewport
 //  - Use a JToggleButton for compiler options
 //  - Give the actions icons (ForgeAction already has the hook)
-//  - Populate the project tree from the file system
 //  - Real projects: ProjectPaths becomes an instance with a user-chosen root
+//  - Multi-Language Support with Plugin System
+//  - Theme selection menu and service
 
 // When running, this error may appear:
 // WARNING: A restricted method in java.lang.System has been called
@@ -74,7 +76,7 @@ public final class Main
             //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
             //FlatDarculaLaf.setup();
-            FlatArcDarkIJTheme.setup();
+            FlatMTMaterialDarkerIJTheme.setup();
         }
         catch (Exception _)
         {

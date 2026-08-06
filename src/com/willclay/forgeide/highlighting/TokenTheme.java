@@ -77,6 +77,23 @@ public final class TokenTheme
         return new TokenTheme(styles);
     }
 
+    public static TokenTheme materialDarker()
+    {
+        Map<TokenType, AttributeSet> styles = new EnumMap<>(TokenType.class);
+
+        styles.put(TokenType.PLAIN,      style(new Color(0xEEFFFF), false));
+        styles.put(TokenType.KEYWORD,    style(new Color(0xC792EA), false));
+        styles.put(TokenType.LITERAL,    style(new Color(0xFF5370), false));
+        styles.put(TokenType.TYPE,       style(new Color(0xFFCB6B), false));
+        styles.put(TokenType.STRING,     style(new Color(0xC3E88D), false));
+        styles.put(TokenType.CHARACTER,  style(new Color(0xC3E88D), false));
+        styles.put(TokenType.NUMBER,     style(new Color(0xF78C6C), false));
+        styles.put(TokenType.COMMENT,    style(new Color(0x616161), false));
+        styles.put(TokenType.ANNOTATION, style(new Color(0x82AAFF), false));
+
+        return new TokenTheme(styles);
+    }
+
     /**
      * No italics anywhere, deliberately. The bundled editor face is already the
      * italic cut, so asking for italic on top of it either does nothing or makes

@@ -38,7 +38,7 @@ public final class SyntaxHighlighter
      */
     private static final String SPANNING_CHARACTERS = "/*\"";
 
-    private TokenTheme theme = TokenTheme.dark();
+    private TokenTheme theme = TokenTheme.light();
 
     public void setTheme(TokenTheme theme)
     {

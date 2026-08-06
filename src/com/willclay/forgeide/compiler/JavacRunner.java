@@ -34,7 +34,11 @@ public final class JavacRunner
 
         // -d redirects the .class output away from the source tree.
         ProcessBuilder builder = new ProcessBuilder(
-                "javac", "-d", outputDir.toString(), sourceFile.toString()
+                "javac",
+                "-encoding", "UTF-8",
+                "-sourcepath", sourceDir.toString(),
+                "-d", outputDir.toString(),
+                sourceFile.toString()
         );
 
         return execute(builder, output, null) == 0;

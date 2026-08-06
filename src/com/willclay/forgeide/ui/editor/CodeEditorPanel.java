@@ -72,7 +72,10 @@ public final class CodeEditorPanel extends JPanel
 
         textPane.setFont(font);
         applyTabSize(TAB_SIZE_IN_CHARACTERS);
+
+        highlighter.setTheme(TokenTheme.materialDarker());
         installHighlighting();
+
         installUndoSupport();
 
         add(new JScrollPane(textPane), BorderLayout.CENTER);
