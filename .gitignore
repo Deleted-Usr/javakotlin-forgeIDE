@@ -21,6 +21,8 @@ classes/
 *.zip
 *.tar.gz
 
+!libs/*.jar
+
 # ...EXCEPT the build-tool wrappers, which must be committed so
 # a fresh clone can build without a preinstalled Maven/Gradle.
 !gradle/wrapper/gradle-wrapper.jar
