@@ -20,6 +20,6 @@ public final class ProjectPaths
     public static final Path OUTPUT_DIR    = WORKSPACE_DIR.resolve("out");
 
     /** The scratch class the Run button compiles and launches */
-    public static final String SCRATCH_CLASS_NAME = "TempProgram";
-    public static final Path SCRATCH_FILE = SOURCE_DIR.resolve(SCRATCH_CLASS_NAME + ".java");
+    public static final String MAIN_CLASS_NAME = "TempProgram";
+    public static final Path SCRATCH_FILE = SOURCE_DIR.resolve(MAIN_CLASS_NAME + ".java");
 }

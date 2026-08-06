@@ -1,8 +1,10 @@
 package com.willclay.forgeide.compiler;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,6 +12,8 @@ import java.util.function.Consumer;
 
 public final class JavacRunner
 {
+    private static final int READ_BUFFER_SIZE = 4096;
+
     private final Path sourceDir;
     private final Path outputDir;
 
@@ -20,8 +24,7 @@ public final class JavacRunner
     }
 
     /**
-     * @param sourceFile the source containing the main method
-     * @param output receives javac's diagnostics, one line at a time
+     * @param output receives javac's diagnostics as they arrive
      * @return true if javac exited cleanly
      */
     public boolean compile(Path sourceFile, Consumer<String> output) throws IOException, InterruptedException
@@ -31,21 +34,21 @@ public final class JavacRunner
 
         // -d redirects the .class output away from the source tree.
         ProcessBuilder builder = new ProcessBuilder(
-                "javac",
-                "-encoding", "UTF-8",
-                "-sourcepath", sourceDir.toString(),
-                "-d", outputDir.toString()
-
+                "javac", "-d", outputDir.toString(), sourceFile.toString()
         );
 
-        return execute(builder, output) == 0;
+        return execute(builder, output, null) == 0;
     }
 
     /**
      * @param mainClassName binary name of the class to launch, e.g. TempProgram
+     * @param onInputReady  handed the child's stdin as soon as it exists, so the
+     *                      console can write to it while this call is still
+     *                      blocked draining the output
      * @return the exit code of the launched program
      */
-    public int run(String mainClassName, Consumer<String> output) throws IOException, InterruptedException
+    public int run(String mainClassName, Consumer<String> output, Consumer<Writer> onInputReady)
+            throws IOException, InterruptedException
     {
         // -cp rather than setting the working directory: this keeps working if
         // the class later gains a package declaration.
@@ -53,29 +56,53 @@ public final class JavacRunner
                 "java", "-cp", outputDir.toString(), mainClassName
         );
 
-        return execute(builder, output);
+        return execute(builder, output, onInputReady);
     }
 
-    private int execute(ProcessBuilder builder, Consumer<String> output) throws IOException, InterruptedException
+    private int execute(ProcessBuilder builder, Consumer<String> output, Consumer<Writer> onInputReady)
+            throws IOException, InterruptedException
     {
         // One merged stream: simpler to drain, and errors keep their position
-        // relative to the normal output instead of arrivign in a clamp.
+        // relative to the normal output instead of arriving in a clump.
         builder.redirectErrorStream(true);
 
         Process process = builder.start();
 
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)))
+        Writer input = new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8);
+        if (onInputReady != null) onInputReady.accept(input);
+
+        // Chunks, not lines. A BufferedReader hands back a line only once it has
+        // seen the newline that ends it, so a prompt written with print() would
+        // sit in the reader until the program's next println — which is exactly
+        // when it is least useful, because by then the answer has been typed.
+        try (Reader reader = new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))
         {
-            String line;
-            while ((line = br.readLine()) != null)
+            char[] buffer = new char[READ_BUFFER_SIZE];
+            int count;
+
+            while ((count = reader.read(buffer)) != -1)
             {
-                output.accept(line);
+                output.accept(new String(buffer, 0, count));
             }
         }
         catch (IOException e)
         {
             process.destroy();
             throw e;
+        }
+        finally
+        {
+            // The stream ends when the child exits, so nothing can be sent to it
+            // after this point. Closing here also releases the pipe if the caller
+            // forgot to.
+            try
+            {
+                input.close();
+            }
+            catch (IOException ignored)
+            {
+                // Already gone.
+            }
         }
 
         return process.waitFor();

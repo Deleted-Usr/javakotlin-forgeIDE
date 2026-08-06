@@ -3,6 +3,11 @@ import javax.swing.*;
 
 public class Canvas extends JPanel
 {
+	public Canvas()
+	{
+		addKeyListener(new KeyboardLogic());
+	}
+
 	@Override
 	protected void paintComponent(Graphics g)
 	{

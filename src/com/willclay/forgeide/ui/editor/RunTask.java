@@ -75,7 +75,17 @@ public final class RunTask extends SwingWorker<Integer, Void>
         console.appendLine("Compilation successful. Running...");
         console.appendLine("");
 
-        int exitCode = runner.run(ProjectPaths.SCRATCH_CLASS_NAME, console::appendLine);
+        int exitCode;
+        try
+        {
+            exitCode = runner.run(ProjectPaths.MAIN_CLASS_NAME, console::append, console::beginInput);
+        }
+        finally
+        {
+            // Locks the console again whether the program exited or blew up, so a
+            // dead process cannot be left looking as though it is still listening.
+            console.endInput();
+        }
 
         console.appendLine("");
         console.appendLine("Compilation finished with exit code " + exitCode + "!");
