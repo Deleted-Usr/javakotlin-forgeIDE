@@ -24,6 +24,7 @@ import com.willclay.forgeide.actions.file.SaveAction;
 import com.willclay.forgeide.actions.file.SaveAllAction;
 import com.willclay.forgeide.actions.file.SaveAsAction;
 import com.willclay.forgeide.actions.help.AboutAction;
+import com.willclay.forgeide.actions.tools.SelectLanguageAction;
 import com.willclay.forgeide.actions.view.ResetLayoutAction;
 import com.willclay.forgeide.actions.view.ToggleViewAction;
 import com.willclay.forgeide.services.UIContext;
@@ -31,6 +32,8 @@ import com.willclay.forgeide.ui.WorkbenchPanel;
 
 import javax.swing.JTextPane;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Every command in the IDE, created once and handed out on request.
@@ -49,6 +52,9 @@ import java.awt.event.KeyEvent;
  */
 public final class ActionManager
 {
+    private final UIContext context;
+    private boolean buildRunning;
+
     // --- File --- //
     private final NewProjectAction newProject;
     private final OpenProjectAction openProject;
@@ -74,6 +80,9 @@ public final class ActionManager
     private final BuildProjectAction buildProject;
     private final CleanProjectAction cleanProject;
 
+    // --- Tools --- //
+    private final List<SelectLanguageAction> languages;
+
     // --- View --- //
     private final ToggleViewAction toggleProjectTree;
     private final ToggleViewAction toggleConsole;
@@ -95,6 +104,8 @@ public final class ActionManager
 
     public ActionManager(UIContext context)
     {
+        this.context = context;
+
         WorkbenchPanel workbench = context.getWorkbench();
 
         newProject = new NewProjectAction(context);
@@ -125,9 +136,18 @@ public final class ActionManager
 
         // this::setBuildRunning is resolved when it is called, not now, so it
         // is safe to hand out before the fields it touches are assigned.
-        run = new RunAction(context, this::setBuildRunning);
-        buildProject = new BuildProjectAction(context, this::setBuildRunning);
+        run = new RunAction(context, save, this::setBuildRunning);
+        buildProject = new BuildProjectAction(context, save, this::setBuildRunning);
         cleanProject = new CleanProjectAction(context);
+
+        languages = List.of(
+                new SelectLanguageAction(context, "java",       "Java",       true,  true),
+                new SelectLanguageAction(context, "cpp",        "C++",        false, false),
+                new SelectLanguageAction(context, "python",     "Python",     false, false),
+                new SelectLanguageAction(context, "json",       "JSON",       false, false),
+                new SelectLanguageAction(context, "markdown",   "Markdown",   false, false),
+                new SelectLanguageAction(context, "plain-text", "Plain Text", false, false)
+        );
 
         toggleProjectTree = new ToggleViewAction("Project Explorer", null, true, workbench::setProjectTreeVisible);
         toggleConsole = new ToggleViewAction("Console", null, true, workbench::setConsoleVisible);
@@ -144,6 +164,9 @@ public final class ActionManager
         refreshTree = new RefreshTreeAction(context);
 
         about = new AboutAction(context);
+
+        context.getWorkspace().addChangeListener(this::syncBuildActions);
+        syncBuildActions();
     }
 
     /**
@@ -153,8 +176,15 @@ public final class ActionManager
      */
     public void setBuildRunning(boolean running)
     {
-        run.setEnabled(!running);
-        buildProject.setEnabled(!running);
+        buildRunning = running;
+        syncBuildActions();
+    }
+
+    private void syncBuildActions()
+    {
+        boolean enabled = !buildRunning && context.getWorkspace().hasProject();
+        run.setEnabled(enabled);
+        buildProject.setEnabled(enabled);
     }
 
     public NewProjectAction getNewProjectAction() { return newProject; }
@@ -194,6 +224,8 @@ public final class ActionManager
     public BuildProjectAction getBuildProjectAction() { return buildProject; }
 
     public CleanProjectAction getCleanProjectAction() { return cleanProject; }
+
+    public List<SelectLanguageAction> getLanguageActions() { return languages; }
 
     public ToggleViewAction getToggleProjectTreeAction() { return toggleProjectTree; }
 

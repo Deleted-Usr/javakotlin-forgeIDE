@@ -6,12 +6,12 @@ import com.willclay.forgeide.services.UIContext;
 /**
  * Placeholder — disabled.
  * <p>
- * Deliberately not implemented yet: this action deletes things, and a delete
- * built on a path that is about to change (see the TODO on ProjectPaths) is
- * the wrong thing to have working early.
+ * This remains disabled until its recursive deletion and reporting are moved
+ * to a worker thread.
  * <p>
- * TODO - walk ProjectPaths.OUTPUT_DIR and delete the .class files, reporting to
- *        the console. Do it on a worker thread, as RunTask does.
+ * TODO - walk the active project's output directory and delete the .class
+ *        files, reporting to the console. Do it on a worker thread, as
+ *        RunTask does.
  */
 public final class CleanProjectAction extends ForgeAction
 {

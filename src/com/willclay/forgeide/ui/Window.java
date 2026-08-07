@@ -1,9 +1,7 @@
 package com.willclay.forgeide.ui;
 
 import com.willclay.forgeide.actions.ActionManager;
-import com.willclay.forgeide.compiler.JavacRunner;
 import com.willclay.forgeide.editor.EditorManager;
-import com.willclay.forgeide.project.ProjectPaths;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
@@ -53,8 +51,6 @@ public class Window extends JFrame
     private final Workspace workspace = new Workspace();
     private final WorkspaceService workspaceService;
 
-    private final JavacRunner compiler = new JavacRunner(ProjectPaths.SOURCE_DIR, ProjectPaths.OUTPUT_DIR);
-
     public Window(String title)
     {
         super(title);
@@ -76,7 +72,7 @@ public class Window extends JFrame
         // the context already holds. Hence the two setters below rather than
         // constructor arguments.
         UIContext context = new UIContext(this, editorPanel, editorManager, console, workbench, projectTree,
-                compiler, workspace, workspaceService, new FileDialogs(this));
+                workspace, workspaceService, new FileDialogs(this));
 
         ActionManager actions = new ActionManager(context);
 
@@ -91,7 +87,6 @@ public class Window extends JFrame
         add(workbench);
 
         wireState();
-        openDefaultProject();
     }
 
     /**
@@ -112,26 +107,6 @@ public class Window extends JFrame
         Project project = workspace.getProject();
 
         projectTree.showRoot(project == null ? null : project.rootItem());
-    }
-
-    /**
-     * Opens the built-in workspace directory so the explorer has something in
-     * it on a first run. Creating it here is a deliberate side effect — the Run
-     * button writes there anyway, and an IDE that starts with an empty tree
-     * looks broken rather than idle.
-     */
-    private void openDefaultProject()
-    {
-        try
-        {
-            workspaceService.openProject(ProjectPaths.WORKSPACE_DIR);
-        }
-        catch (IOException e)
-        {
-            // An unwritable working directory is worth saying out loud, but not
-            // worth refusing to start over: File > Open Project still works.
-            System.err.println("Could not open the default workspace: " + e.getMessage());
-        }
     }
 
     private void updateTitle()

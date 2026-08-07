@@ -13,9 +13,17 @@ import javax.swing.*;
 //  - Use a JTabbedPane for the Code Editor Viewport
 //  - Use a JToggleButton for compiler options
 //  - Give the actions icons (ForgeAction already has the hook)
-//  - Real projects: ProjectPaths becomes an instance with a user-chosen root
+//  - Separate Java language support from the actual IDE
 //  - Multi-Language Support with Plugin System
 //  - Theme selection menu and service
+//  - Run Configurations (Like IntelliJ)
+//  - Launch Forge through a bootstrap sequence
+//  - Custom Swing Components (extends JComponent):
+//       - Editor Panel (Syntax Highlighting, Custom Caret, Bracket Matching, Selection Painting, Configurable Fonts)
+//       - Custom Gutter (Line Numbers, Breakpoints, Folding Arrows, Modified Line Indicators)
+//       - Editor Tabs (Close Buttons, Dirty Indicator, Hover Effect, Drag Reorder)
+//       - Project Explorer (Icons, Better Spacing, Coloured Text, Inline Rename, Speed Search, Lazy Loading)
+//       - Status Bar (Compiler Status, Caret Position, Encoding, Line Endings, Project Name)
 
 // When running, this error may appear:
 // WARNING: A restricted method in java.lang.System has been called

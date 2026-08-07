@@ -1,15 +1,14 @@
 package com.willclay.forgeide.ui.editor;
 
 import com.willclay.forgeide.compiler.JavacRunner;
-import com.willclay.forgeide.files.SourceFileIO;
-import com.willclay.forgeide.project.ProjectPaths;
 
 import javax.swing.*;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Writes the editor's contents to the scratch file, compiles it, and — if asked
- * — runs it, all on a background thread.
+ * Compiles project source files and, if asked, launches the selected class on
+ * a background thread.
  *
  * This used to happen inside the Run button's action listener, i.e. on the
  * Event Dispatch Thread. That froze the entire UI for as long as javac took,
@@ -24,41 +23,48 @@ public final class RunTask extends SwingWorker<Integer, Void>
 {
     private final JavacRunner runner;
     private final ConsolePanel console;
-    private final String source;
+    private final Path sourceFile;
+    private final String mainClassName;
     private final Runnable onFinished;
     private final boolean launchAfterCompiling;
 
-    private RunTask(JavacRunner runner, ConsolePanel console, String source,
+    private RunTask(JavacRunner runner, ConsolePanel console, Path sourceFile, String mainClassName,
                     Runnable onFinished, boolean launchAfterCompiling)
     {
         this.runner = runner;
         this.console = console;
-        this.source = source;
+        this.sourceFile = sourceFile;
+        this.mainClassName = mainClassName;
         this.onFinished = onFinished;
         this.launchAfterCompiling = launchAfterCompiling;
     }
 
-    public static RunTask compileAndRun(JavacRunner runner, ConsolePanel console, String source, Runnable onFinished)
+    public static RunTask compileAndRun(JavacRunner runner, ConsolePanel console, Path sourceFile,
+                                        String mainClassName, Runnable onFinished)
     {
-        return new RunTask(runner, console, source, onFinished, true);
+        return new RunTask(runner, console, sourceFile, mainClassName, onFinished, true);
     }
 
-    public static RunTask compileOnly(JavacRunner runner, ConsolePanel console, String source, Runnable onFinished)
+    public static RunTask compileOnly(JavacRunner runner, ConsolePanel console, Runnable onFinished)
     {
-        return new RunTask(runner, console, source, onFinished, false);
+        return new RunTask(runner, console, null, null, onFinished, false);
     }
 
     @Override
     protected Integer doInBackground() throws Exception
     {
-        // The editor text was captured in the EDT before this task started, so
-        // nothing here touches a Swing component. ConsolePanel::appendLine is
-        // the one exception, and it hops back to the EDT itself.
-        SourceFileIO.write(ProjectPaths.SCRATCH_FILE, source);
+        // Paths were captured on the EDT before this task started, so nothing
+        // here touches an editor component. ConsolePanel's append methods are
+        // the one exception, and they hop back to the EDT themselves.
+        console.appendLine(launchAfterCompiling
+                ? "Compiling " + sourceFile + " ..."
+                : "Compiling project sources ...");
 
-        console.appendLine("Compiling " + ProjectPaths.SCRATCH_FILE + " ...");
+        boolean compiled = launchAfterCompiling
+                ? runner.compile(sourceFile, console::append)
+                : runner.compileAll(console::append);
 
-        if (!runner.compile(ProjectPaths.SCRATCH_FILE, console::appendLine))
+        if (!compiled)
         {
             console.appendLine("");
             console.appendLine("Compilation failed!");
@@ -78,7 +84,7 @@ public final class RunTask extends SwingWorker<Integer, Void>
         int exitCode;
         try
         {
-            exitCode = runner.run(ProjectPaths.MAIN_CLASS_NAME, console::append, console::beginInput);
+            exitCode = runner.run(mainClassName, console::append, console::beginInput);
         }
         finally
         {

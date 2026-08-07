@@ -1,6 +1,5 @@
 package com.willclay.forgeide.services;
 
-import com.willclay.forgeide.compiler.JavacRunner;
 import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.ui.WorkbenchPanel;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
@@ -36,7 +35,6 @@ public final class UIContext
     private final ConsolePanel console;
     private final WorkbenchPanel workbench;
     private final ProjectTree projectTree;
-    private final JavacRunner compiler;
     private final Workspace workspace;
     private final WorkspaceService workspaceService;
     private final FileDialogs dialogs;
@@ -47,7 +45,6 @@ public final class UIContext
                      ConsolePanel console,
                      WorkbenchPanel workbench,
                      ProjectTree projectTree,
-                     JavacRunner compiler,
                      Workspace workspace,
                      WorkspaceService workspaceService,
                      FileDialogs dialogs)
@@ -58,7 +55,6 @@ public final class UIContext
         this.console = console;
         this.workbench = workbench;
         this.projectTree = projectTree;
-        this.compiler = compiler;
         this.workspace = workspace;
         this.workspaceService = workspaceService;
         this.dialogs = dialogs;
@@ -86,8 +82,6 @@ public final class UIContext
     public WorkbenchPanel getWorkbench() { return workbench; }
 
     public ProjectTree getProjectTree() { return projectTree; }
-
-    public JavacRunner getCompiler() { return compiler; }
 
     public Workspace getWorkspace() { return workspace; }
 

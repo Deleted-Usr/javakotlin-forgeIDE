@@ -8,7 +8,11 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 public final class JavacRunner
 {
@@ -29,23 +33,64 @@ public final class JavacRunner
      */
     public boolean compile(Path sourceFile, Consumer<String> output) throws IOException, InterruptedException
     {
+        return compile(List.of(sourceFile), output);
+    }
+
+    /** Compiles every Java source under this runner's source directory. */
+    public boolean compileAll(Consumer<String> output) throws IOException, InterruptedException
+    {
+        List<Path> sourceFiles;
+
+        if (!Files.isDirectory(sourceDir))
+        {
+            output.accept("Source directory does not exist: " + sourceDir + System.lineSeparator());
+            return false;
+        }
+
+        try (Stream<Path> tree = Files.walk(sourceDir))
+        {
+            sourceFiles = tree
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().toLowerCase().endsWith(".java"))
+                    .sorted(Comparator.comparing(Path::toString))
+                    .toList();
+        }
+
+        if (sourceFiles.isEmpty())
+        {
+            output.accept("No Java source files found under " + sourceDir + System.lineSeparator());
+            return false;
+        }
+
+        return compile(sourceFiles, output);
+    }
+
+    /** Compiles the supplied source files together in one javac invocation. */
+    public boolean compile(List<Path> sourceFiles, Consumer<String> output)
+            throws IOException, InterruptedException
+    {
         Files.createDirectories(sourceDir);
         Files.createDirectories(outputDir);
 
         // -d redirects the .class output away from the source tree.
-        ProcessBuilder builder = new ProcessBuilder(
-                "javac",
-                "-encoding", "UTF-8",
-                "-sourcepath", sourceDir.toString(),
-                "-d", outputDir.toString(),
-                sourceFile.toString()
-        );
+        List<String> command = new ArrayList<>();
+        command.add("javac");
+        command.add("-encoding");
+        command.add("UTF-8");
+        command.add("-sourcepath");
+        command.add(sourceDir.toString());
+        command.add("-d");
+        command.add(outputDir.toString());
+
+        for (Path sourceFile : sourceFiles) command.add(sourceFile.toString());
+
+        ProcessBuilder builder = new ProcessBuilder(command);
 
         return execute(builder, output, null) == 0;
     }
 
     /**
-     * @param mainClassName binary name of the class to launch, e.g. TempProgram
+     * @param mainClassName binary name of the class to launch, e.g. example.Main
      * @param onInputReady  handed the child's stdin as soon as it exists, so the
      *                      console can write to it while this call is still
      *                      blocked draining the output

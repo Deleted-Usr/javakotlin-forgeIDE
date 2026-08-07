@@ -1,14 +1,6 @@
 package com.willclay.forgeide.ui;
 
-import javax.swing.Action;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JToolBar;
-import javax.swing.KeyStroke;
+import javax.swing.*;
 import java.awt.Component;
 import java.awt.event.ActionListener;
 
@@ -86,6 +78,17 @@ public final class Utils
     public static JCheckBoxMenuItem addCheckMenuItem(JMenu menu, Action action)
     {
         JCheckBoxMenuItem item = new JCheckBoxMenuItem(action);
+        menu.add(item);
+
+        return item;
+    }
+
+    /** A mutually exclusive ticked item. The group does the deselecting. */
+    public static JRadioButtonMenuItem addRadioMenuItem(JMenu menu, ButtonGroup group, Action action)
+    {
+        JRadioButtonMenuItem item = new JRadioButtonMenuItem(action);
+
+        group.add(item);
         menu.add(item);
 
         return item;

@@ -23,17 +23,29 @@ public final class SaveAsAction extends ForgeAction
     @Override
     protected void perform()
     {
-        Path file = context.getDialogs().chooseFileToSave(context.getEditorManager().getCurrentFile());
-        if (file == null) return; // cancelled, or declined the overwrite
+        saveAs(context.getEditorManager().getCurrentFile());
+    }
+
+    /**
+     * Saves under a user-selected name.
+     *
+     * @return true only when the document was written successfully
+     */
+    public boolean saveAs(Path suggested)
+    {
+        Path file = context.getDialogs().chooseFileToSave(suggested);
+        if (file == null) return false; // cancelled, or declined the overwrite
 
         try
         {
             context.getEditorManager().saveTo(file);
             Utils.showInfoMessage(context.getFrame(), "File saved successfully!");
+            return true;
         }
         catch (IOException e)
         {
             Utils.showErrorMessage(context.getFrame(), "Failed to save file: " + e.getMessage());
+            return false;
         }
     }
 }
