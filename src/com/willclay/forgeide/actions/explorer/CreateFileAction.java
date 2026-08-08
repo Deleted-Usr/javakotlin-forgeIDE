@@ -1,5 +1,6 @@
 package com.willclay.forgeide.actions.explorer;
 
+import com.willclay.forgeide.lang.Language;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.workspace.ProjectItem;
@@ -26,7 +27,14 @@ public final class CreateFileAction extends ExplorerAction
         ProjectItem folder = targetFolder();
         if (folder == null) return;
 
-        String name = Utils.prompt(context.getFrame(), "New File", "File name:", "Untitled.java");
+        Language lang = folder.language();
+
+        String name = Utils.prompt(
+                context.getFrame(),
+                "New File",
+                "File name:",
+                "Untitled" + lang.defaultExtension()
+        );
         if (name == null || name.isEmpty()) return;
 
         try

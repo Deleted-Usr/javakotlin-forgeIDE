@@ -18,7 +18,6 @@ public final class EditorMenuBar extends JMenuBar
         add(new EditMenu(actions));
         add(new ViewMenu(actions));
         add(new BuildMenu(actions));
-        add(new ToolsMenu(actions));
         add(new HelpMenu(actions));
     }
 }

@@ -1,73 +1,48 @@
 package com.willclay.forgeide.workspace;
 
+import com.willclay.forgeide.lang.Language;
+
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 /**
- * A directory the IDE has been pointed at.
- * <p>
- * Thin on purpose. It will grow a language level, a classpath and a build
- * configuration; until then the only thing a project is, is a root and the two
- * directories underneath it.
+ * One project directory and the language permanently assigned to it.
+ *
+ * <p>Language-specific layout stays behind {@link Language}; this record only
+ * owns project identity and delegates questions about its sources.</p>
  */
-public record Project(String name, Path root)
+public record Project(Path root, Language language)
 {
-    public static Project at(Path root)
+    public Project
+    {
+        root = Objects.requireNonNull(root, "root").toAbsolutePath().normalize();
+        Objects.requireNonNull(language, "language");
+    }
+
+    public static Project at(Path root, Language language)
     {
         Path normalisedRoot = Objects.requireNonNull(root, "root").toAbsolutePath().normalize();
-        Path fileName = normalisedRoot.getFileName();
-
-        return new Project(fileName == null ? normalisedRoot.toString() : fileName.toString(), normalisedRoot);
+        return new Project(normalisedRoot, language);
     }
 
-    public Path sourceDir()
+    public String name()
     {
-        return root.resolve("src");
+        Path fileName = root.getFileName();
+        return fileName == null ? root.toString() : fileName.toString();
     }
 
-    public Path outputDir()
+    public Path sourceRoot()
     {
-        return root.resolve("out");
+        return language.sourceRoot(this).toAbsolutePath().normalize();
     }
 
-    /** Whether a Java file belongs to this project's source tree. */
-    public boolean containsSourceFile(Path file)
+    public boolean isSourceFile(Path file)
     {
-        if (file == null) return false;
-
-        Path normalisedFile = file.toAbsolutePath().normalize();
-        return normalisedFile.startsWith(sourceDir())
-                && normalisedFile.getFileName() != null
-                && normalisedFile.getFileName().toString().toLowerCase().endsWith(".java");
-    }
-
-    /**
-     * Returns the binary class name implied by a source file's position under
-     * {@code src}, for example {@code src/com/example/Main.java} becomes
-     * {@code com.example.Main}.
-     *
-     * @throws IllegalArgumentException if {@code sourceFile} is outside this
-     *                                  project's source directory
-     */
-    public String classNameFor(Path sourceFile)
-    {
-        if (!containsSourceFile(sourceFile))
-        {
-            throw new IllegalArgumentException("Source file is outside the project's src directory.");
-        }
-
-        Path relative = sourceDir().relativize(sourceFile.toAbsolutePath().normalize());
-        String relativeName = StreamSupport.stream(relative.spliterator(), false)
-                .map(Path::toString)
-                .collect(Collectors.joining("."));
-
-        return relativeName.substring(0, relativeName.length() - ".java".length());
+        return language.isProjectSource(this, file);
     }
 
     public ProjectItem rootItem()
     {
-        return new ProjectItem(root, ProjectItemType.PROJECT);
+        return new ProjectItem(root, ProjectItemType.PROJECT, language);
     }
 }

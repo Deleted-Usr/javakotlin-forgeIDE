@@ -1,7 +1,6 @@
 package com.willclay.forgeide.services;
 
 import com.willclay.forgeide.editor.EditorManager;
-import com.willclay.forgeide.lang.LanguageManager;
 import com.willclay.forgeide.ui.WorkbenchPanel;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
@@ -25,8 +24,8 @@ import javax.swing.JFrame;
  * behaved one from reaching too far. That is a convention rather than a
  * compiler guarantee.
  * <p>
- * TODO - a ProjectManager, a SettingsManager, a StatusBar and a Terminal, as
- *        each of those arrives.
+ * TODO - add settings, status-bar and terminal services as those features
+ *        arrive.
  */
 public final class UIContext
 {
@@ -39,7 +38,6 @@ public final class UIContext
     private final Workspace workspace;
     private final WorkspaceService workspaceService;
     private final FileDialogs dialogs;
-    private final LanguageManager languageManager;
 
     public UIContext(JFrame frame,
                      CodeEditorPanel editorPanel,
@@ -49,8 +47,7 @@ public final class UIContext
                      ProjectTree projectTree,
                      Workspace workspace,
                      WorkspaceService workspaceService,
-                     FileDialogs dialogs,
-                     LanguageManager languageManager
+                     FileDialogs dialogs
     )
     {
         this.frame = frame;
@@ -62,7 +59,6 @@ public final class UIContext
         this.workspace = workspace;
         this.workspaceService = workspaceService;
         this.dialogs = dialogs;
-        this.languageManager = languageManager;
     }
 
     /**
@@ -94,5 +90,4 @@ public final class UIContext
 
     public FileDialogs getDialogs() { return dialogs; }
 
-    public LanguageManager getLanguageManager() { return languageManager; }
 }

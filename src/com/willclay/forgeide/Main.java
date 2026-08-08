@@ -16,7 +16,9 @@ import javax.swing.*;
 //  - Theme selection menu and service
 //  - Run Configurations (Like IntelliJ)
 //  - Launch Forge through a bootstrap sequence
+//  - Store registered languages in a cache upon app close, access that cache and load registry in bootstrap sequence
 //  - Fix performance concerned with Undo/Redo actions in the editor panel
+//  - Drag, shift select, reordering files and folders MUST be added to the explorer!!!
 //  - Custom Swing Components (extends JComponent):
 //       - Editor Panel (Syntax Highlighting, Custom Caret, Bracket Matching, Selection Painting, Configurable Fonts)
 //       - Custom Gutter (Line Numbers, Breakpoints, Folding Arrows, Modified Line Indicators)

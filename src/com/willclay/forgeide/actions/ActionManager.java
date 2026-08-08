@@ -24,7 +24,6 @@ import com.willclay.forgeide.actions.file.SaveAction;
 import com.willclay.forgeide.actions.file.SaveAllAction;
 import com.willclay.forgeide.actions.file.SaveAsAction;
 import com.willclay.forgeide.actions.help.AboutAction;
-import com.willclay.forgeide.actions.tools.SelectLanguageAction;
 import com.willclay.forgeide.actions.view.ResetLayoutAction;
 import com.willclay.forgeide.actions.view.ToggleViewAction;
 import com.willclay.forgeide.services.UIContext;
@@ -32,8 +31,6 @@ import com.willclay.forgeide.ui.WorkbenchPanel;
 
 import javax.swing.JTextPane;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Every command in the IDE, created once and handed out on request.
@@ -53,7 +50,7 @@ import java.util.List;
 public final class ActionManager
 {
     private final UIContext context;
-    private boolean buildRunning;
+    private boolean taskRunning;
 
     // --- File --- //
     private final NewProjectAction newProject;
@@ -79,9 +76,6 @@ public final class ActionManager
     private final RunAction run;
     private final BuildProjectAction buildProject;
     private final CleanProjectAction cleanProject;
-
-    // --- Tools --- //
-    private final List<SelectLanguageAction> languages;
 
     // --- View --- //
     private final ToggleViewAction toggleProjectTree;
@@ -134,20 +128,11 @@ public final class ActionManager
         delete = new TextEditAction("Delete", null, context.getEditorPanel(), pane -> pane.replaceSelection(""));
         selectAll = new TextEditAction("Select All", Shortcuts.menu(KeyEvent.VK_A), context.getEditorPanel(), JTextPane::selectAll);
 
-        // this::setBuildRunning is resolved when it is called, not now, so it
+        // this::setTaskRunning is resolved when it is called, not now, so it
         // is safe to hand out before the fields it touches are assigned.
-        run = new RunAction(context, save, this::setBuildRunning);
-        buildProject = new BuildProjectAction(context, save, this::setBuildRunning);
-        cleanProject = new CleanProjectAction(context);
-
-        languages = List.of(
-                new SelectLanguageAction(context, "java",       "Java",       true,  true),
-                new SelectLanguageAction(context, "cpp",        "C++",        false, false),
-                new SelectLanguageAction(context, "python",     "Python",     false, false),
-                new SelectLanguageAction(context, "json",       "JSON",       false, false),
-                new SelectLanguageAction(context, "markdown",   "Markdown",   false, false),
-                new SelectLanguageAction(context, "plain-text", "Plain Text", false, false)
-        );
+        run = new RunAction(context, save, this::setTaskRunning);
+        buildProject = new BuildProjectAction(context, save, this::setTaskRunning);
+        cleanProject = new CleanProjectAction(context, this::setTaskRunning);
 
         toggleProjectTree = new ToggleViewAction("Project Explorer", null, true, workbench::setProjectTreeVisible);
         toggleConsole = new ToggleViewAction("Console", null, true, workbench::setConsoleVisible);
@@ -165,8 +150,8 @@ public final class ActionManager
 
         about = new AboutAction(context);
 
-        context.getWorkspace().addChangeListener(this::syncBuildActions);
-        syncBuildActions();
+        context.getWorkspace().addChangeListener(this::syncProjectActions);
+        syncProjectActions();
     }
 
     /**
@@ -174,17 +159,26 @@ public final class ActionManager
      * toolbar, and as shortcuts — because in all three places they are these
      * same two objects.
      */
-    public void setBuildRunning(boolean running)
+    public void setTaskRunning(boolean running)
     {
-        buildRunning = running;
-        syncBuildActions();
+        taskRunning = running;
+        syncProjectActions();
     }
 
-    private void syncBuildActions()
+    private void syncProjectActions()
     {
-        boolean enabled = !buildRunning && context.getWorkspace().hasProject();
+        boolean hasToolchain = context.getWorkspace().hasProject()
+                && context.getWorkspace().getProject().language().toolchain().isPresent();
+        boolean enabled = !taskRunning && hasToolchain;
         run.setEnabled(enabled);
         buildProject.setEnabled(enabled);
+        cleanProject.setEnabled(enabled);
+
+        boolean hasProject = context.getWorkspace().hasProject();
+        newFile.setEnabled(hasProject);
+        openFile.setEnabled(hasProject);
+        save.setEnabled(hasProject);
+        saveAs.setEnabled(hasProject);
     }
 
     public NewProjectAction getNewProjectAction() { return newProject; }
@@ -224,8 +218,6 @@ public final class ActionManager
     public BuildProjectAction getBuildProjectAction() { return buildProject; }
 
     public CleanProjectAction getCleanProjectAction() { return cleanProject; }
-
-    public List<SelectLanguageAction> getLanguageActions() { return languages; }
 
     public ToggleViewAction getToggleProjectTreeAction() { return toggleProjectTree; }
 

@@ -2,7 +2,7 @@ package com.willclay.forgeide.actions.file;
 
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
-import com.willclay.forgeide.project.SourceTemplates;
+import com.willclay.forgeide.lang.Language;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.workspace.Project;
@@ -43,13 +43,15 @@ public final class SaveAction extends ForgeAction
      */
     public boolean saveCurrent()
     {
+        Project project = context.getWorkspace().getProject();
+        if (project == null) return false;
+
+        Language language = project.language();
+
         // Nothing to write back to yet, so the only sensible Save is a Save As.
         if (!context.getEditorManager().hasFile())
         {
-            Project project = context.getWorkspace().getProject();
-            Path suggested = project == null
-                    ? null
-                    : project.sourceDir().resolve(SourceTemplates.defaultFileName());
+            Path suggested = project.sourceRoot().resolve("Untitled" + language.defaultExtension());
 
             return saveAs.saveAs(suggested);
         }

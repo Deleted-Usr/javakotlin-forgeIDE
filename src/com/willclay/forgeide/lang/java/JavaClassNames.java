@@ -1,9 +1,9 @@
 package com.willclay.forgeide.lang.java;
 
-import com.willclay.forgeide.lang.java.*;
 import com.willclay.forgeide.workspace.Project;
 
 import java.nio.file.Path;
+import java.util.Locale;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -46,9 +46,9 @@ public final class JavaClassNames
         Path normalised = file.toAbsolutePath().normalize();
         Path name = normalised.getFileName();
 
-        return normalised.startsWith(project.sourceDir())
+        return normalised.startsWith(JavaProjectPaths.sourceRoot(project))
                 && name != null
-                && name.toString().toLowerCase().endsWith(EXTENSION);
+                && name.toString().toLowerCase(Locale.ROOT).endsWith(EXTENSION);
     }
 
     /**
@@ -61,10 +61,10 @@ public final class JavaClassNames
     {
         if (!belongsTo(project, sourceFile))
         {
-            throw new IllegalArgumentException(sourceFile + " is outside " + project.sourceDir() + ".");
+            throw new IllegalArgumentException(sourceFile + " is outside " + JavaProjectPaths.sourceRoot(project) + ".");
         }
 
-        Path relative = project.sourceDir().relativize(sourceFile.toAbsolutePath().normalize());
+        Path relative = JavaProjectPaths.sourceRoot(project).relativize(sourceFile.toAbsolutePath().normalize());
 
         // Iterated rather than split on a separator character: the separator is
         // \ on Windows and / everywhere else, and Path already knows which.

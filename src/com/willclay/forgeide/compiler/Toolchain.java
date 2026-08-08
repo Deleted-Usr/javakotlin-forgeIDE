@@ -35,5 +35,11 @@ public interface Toolchain
         return true;
     }
 
+    /** Removes generated project output. Languages without output may do nothing. */
+    default boolean clean(Project project, Consumer<String> output) throws IOException
+    {
+        return true;
+    }
+
     int run(Project project, Path sourceFile, Consumer<String> output, Consumer<Writer> onInputReady) throws IOException, InterruptedException;
 }

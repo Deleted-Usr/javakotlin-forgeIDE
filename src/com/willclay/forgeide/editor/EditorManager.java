@@ -1,7 +1,7 @@
 package com.willclay.forgeide.editor;
 
 import com.willclay.forgeide.files.SourceFileIO;
-import com.willclay.forgeide.project.SourceTemplates;
+import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 
 import java.io.IOException;
@@ -82,9 +82,15 @@ public final class EditorManager
     }
 
     /** A fresh scratch buffer, belonging to no file. */
-    public void newFile()
+    public void newFile(String template)
     {
-        setContents(SourceTemplates.scratchClass(), null);
+        setContents(template, null);
+    }
+
+    /** Clears the current document when its project is closed or replaced. */
+    public void closeFile()
+    {
+        setContents("", null);
     }
 
     /** Writes back to the file this was opened from. {@link #hasFile()} must be true. */
@@ -95,19 +101,23 @@ public final class EditorManager
             throw new IllegalStateException("No current file — ask the user for one with Save As first.");
         }
 
-        saveTo(currentFile);
+        writeAndAdopt(currentFile);
     }
 
-    /** Writes to {@code file}, appending .java if needed, and adopts it. */
+    /**
+     * Writes to {@code file} and adopts it as the current document.
+     */
     public void saveTo(Path file) throws IOException
     {
-        Path target = SourceFileIO.withJavaExtension(file);
+        writeAndAdopt(file);
+    }
 
+    public void writeAndAdopt(Path target) throws IOException
+    {
         SourceFileIO.write(target, editor.getText());
 
         currentFile = target;
         modified = false;
-
         fireChanged();
     }
 

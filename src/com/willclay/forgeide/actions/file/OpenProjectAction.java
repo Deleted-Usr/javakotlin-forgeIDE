@@ -2,6 +2,7 @@ package com.willclay.forgeide.actions.file;
 
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
+import com.willclay.forgeide.lang.Language;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.Utils;
 
@@ -9,7 +10,7 @@ import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.nio.file.Path;
 
-/** Points the project explorer at a directory. */
+/** Opens a Forge project, restoring its persisted language. */
 public final class OpenProjectAction extends ForgeAction
 {
     private final UIContext context;
@@ -23,16 +24,28 @@ public final class OpenProjectAction extends ForgeAction
     @Override
     protected void perform()
     {
+        if (context.getEditorManager().isModified()
+                && !Utils.confirmDiscardChanges(context.getFrame(), "Open Project")) return;
+
         Path root = context.getDialogs().chooseDirectory("Open Project");
         if (root == null) return;
 
         try
         {
-            // The tree is not touched here. The service updates the workspace,
-            // the workspace tells its listeners, and Window's listener shows
-            // the new root — so New Project, Open Project and Close Project all
-            // end at the same one line.
-            context.getWorkspaceService().openProject(root);
+            if (context.getWorkspaceService().isConfiguredProject(root))
+            {
+                context.getWorkspaceService().openProject(root);
+            }
+            else
+            {
+                Language language = context.getDialogs().chooseLanguage(
+                        "Configure Project", "Choose this project's language. This choice is saved with the project:");
+                if (language == null) return;
+
+                context.getWorkspaceService().configureProject(root, language);
+            }
+
+            context.getEditorManager().closeFile();
         }
         catch (IOException e)
         {

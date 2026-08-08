@@ -11,63 +11,44 @@ import com.willclay.forgeide.ui.editor.RunTask;
 import com.willclay.forgeide.workspace.Project;
 
 import java.awt.event.KeyEvent;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-/**
- * Compiles without launching, so errors can be checked without side effects.
- * <p>
- * Every Java source below the active project's {@code src} directory is passed
- * to one javac invocation.
- */
+/** Builds every source file in the current project. */
 public final class BuildProjectAction extends ForgeAction
 {
     private final UIContext context;
     private final SaveAction save;
-    private final Consumer<Boolean> buildRunning;
+    private final Consumer<Boolean> taskRunning;
 
-    public BuildProjectAction(UIContext context, SaveAction save, Consumer<Boolean> buildRunning)
+    public BuildProjectAction(UIContext context, SaveAction save, Consumer<Boolean> taskRunning)
     {
-        super("Build Project", Shortcuts.menu(KeyEvent.VK_B), "Compile without running");
-
+        super("Build Project", Shortcuts.menu(KeyEvent.VK_B), "Build the current project");
         this.context = context;
         this.save = save;
-        this.buildRunning = buildRunning;
+        this.taskRunning = taskRunning;
     }
 
     @Override
     protected void perform()
     {
         Project project = context.getWorkspace().getProject();
-        if (project == null)
-        {
-            Utils.showErrorMessage(context.getFrame(), "Open a project before building.");
-            return;
-        }
+        if (project == null) return;
 
         EditorManager editor = context.getEditorManager();
-        if (editor.isModified() && project.containsSourceFile(editor.getCurrentFile()) && !save.saveCurrent()) return;
+        Path sourceFile = editor.getCurrentFile();
+        if (editor.isModified() && project.isSourceFile(sourceFile) && !save.saveCurrent()) return;
 
-        Optional<Toolchain> selected = context.getLanguageManager().getCurrentToolchain();
+        Optional<Toolchain> selected = project.language().toolchain();
         if (selected.isEmpty())
         {
-            Utils.showErrorMessage(
-                    context.getFrame(),
-                    "The selected language cannot be run."
-            );
+            Utils.showErrorMessage(context.getFrame(), project.language().displayName() + " projects cannot be built.");
             return;
         }
 
-        Toolchain toolchain = selected.get();
-
         context.getConsole().clear();
-        buildRunning.accept(true);
-
-        RunTask.compileOnly(
-                project,
-                toolchain,
-                context.getConsole(),
-                () -> buildRunning.accept(false)
-        ).execute();
+        taskRunning.accept(true);
+        RunTask.build(project, selected.get(), context.getConsole(), () -> taskRunning.accept(false)).execute();
     }
 }

@@ -4,9 +4,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 
 /**
- * Reading and writing .java files.
+ * Reading and writing source files.
  * <p>
  * No Swing here on purpose: the ui package owns the file chooser and the error
  * dialogs, this only touches the disk. That split is what lets the same methods
@@ -14,9 +15,6 @@ import java.nio.file.Path;
  */
 public final class SourceFileIO
 {
-    // A system like this allows for an IDE with multiple supported languages
-    public static final String JAVA_EXTENSION = ".java";
-
     private SourceFileIO() { }
 
     /** Line separators are normalised to \n, which is what the editor works in. */
@@ -34,15 +32,13 @@ public final class SourceFileIO
         Files.writeString(file, contents, StandardCharsets.UTF_8);
     }
 
-    public static boolean isJavaFile(Path file)
+    /** Appends the extension if the user typed a bare name into the save dialog. */
+    public static Path withExtension(Path file, String extension)
     {
-        return fileName(file).toLowerCase().endsWith(JAVA_EXTENSION);
-    }
-
-    /** Appends .java if the user typed a bare name into the save dialog. */
-    public static Path withJavaExtension(Path file)
-    {
-        return isJavaFile(file) ? file : file.resolveSibling(fileName(file) + JAVA_EXTENSION);
+        String name = fileName(file);
+        return name.toLowerCase(Locale.ROOT).endsWith(extension.toLowerCase(Locale.ROOT))
+                ? file
+                : file.resolveSibling(name + extension);
     }
 
     private static String fileName(Path file)

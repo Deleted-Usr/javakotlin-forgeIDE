@@ -3,12 +3,20 @@ package com.willclay.forgeide.lang.java;
 import com.willclay.forgeide.compiler.Toolchain;
 import com.willclay.forgeide.highlighting.Lexer;
 import com.willclay.forgeide.lang.Language;
+import com.willclay.forgeide.workspace.Project;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 
+/** Java language support and its project conventions. */
 public final class JavaLanguage implements Language
 {
+    private final Lexer lexer = new JavaLexer();
+    private final Toolchain toolchain = new JavacToolchain();
+
     @Override
     public String id()
     {
@@ -36,18 +44,36 @@ public final class JavaLanguage implements Language
     @Override
     public Lexer lexer()
     {
-        return new JavaLexer();
+        return lexer;
     }
 
     @Override
     public String newFileTemplate(String typeName)
     {
-        return ""; // Empty for now, will add template soon,
+        return """
+               public class %s
+               {
+               }
+               """.formatted(typeName);
+    }
+
+    @Override
+    public Path sourceRoot(Project project)
+    {
+        return JavaProjectPaths.sourceRoot(project);
+    }
+
+    @Override
+    public void initializeProject(Project project) throws IOException
+    {
+        Files.createDirectories(JavaProjectPaths.librariesRoot(project));
+        Files.createDirectories(JavaProjectPaths.sourceRoot(project));
+        Files.createDirectories(JavaProjectPaths.outputRoot(project));
     }
 
     @Override
     public Optional<Toolchain> toolchain()
     {
-        return Optional.of(new JavacToolchain());
+        return Optional.of(toolchain);
     }
 }

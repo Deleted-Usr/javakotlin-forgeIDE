@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -19,8 +20,8 @@ public final class JavacToolchain implements Toolchain
     @Override
     public boolean compile(Project project, List<Path> sourceFiles, Consumer<String> output) throws IOException, InterruptedException
     {
-        Path src = project.sourceDir();
-        Path out = project.outputDir();
+        Path src = JavaProjectPaths.sourceRoot(project);
+        Path out = JavaProjectPaths.outputRoot(project);
 
         Files.createDirectories(src);
         Files.createDirectories(out);
@@ -47,8 +48,7 @@ public final class JavacToolchain implements Toolchain
     {
         List<Path> sourceFiles;
 
-        Path src = project.sourceDir();
-        Path out = project.outputDir();
+        Path src = JavaProjectPaths.sourceRoot(project);
 
         if (!Files.isDirectory(src))
         {
@@ -60,7 +60,7 @@ public final class JavacToolchain implements Toolchain
         {
             sourceFiles = tree
                     .filter(Files::isRegularFile)
-                    .filter(path -> path.getFileName().toString().toLowerCase().endsWith(".java"))
+                    .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(JavaClassNames.EXTENSION))
                     .sorted(Comparator.comparing(Path::toString))
                     .toList();
         }
@@ -75,10 +75,34 @@ public final class JavacToolchain implements Toolchain
     }
 
     @Override
+    public boolean clean(Project project, Consumer<String> output) throws IOException
+    {
+        Path root = project.root().toAbsolutePath().normalize();
+        Path out = JavaProjectPaths.outputRoot(project).toAbsolutePath().normalize();
+
+        if (!out.startsWith(root) || out.equals(root))
+        {
+            throw new IOException("Refusing to clean outside the project: " + out);
+        }
+        if (!Files.exists(out)) return true;
+
+        try (Stream<Path> tree = Files.walk(out))
+        {
+            for (Path path : tree.sorted(Comparator.reverseOrder()).toList())
+            {
+                Files.delete(path);
+            }
+        }
+
+        output.accept("Removed " + out + System.lineSeparator());
+        return true;
+    }
+
+    @Override
     public int run(Project project, Path sourceFile, Consumer<String> output, Consumer<Writer> onInputReady) throws IOException, InterruptedException
     {
         ProcessBuilder builder = new ProcessBuilder(
-                "java", "-cp", project.outputDir().toString(),
+                "java", "-cp", JavaProjectPaths.outputRoot(project).toString(),
                 JavaClassNames.of(project, sourceFile)
         );
 

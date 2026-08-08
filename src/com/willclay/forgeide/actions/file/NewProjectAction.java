@@ -2,17 +2,16 @@ package com.willclay.forgeide.actions.file;
 
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
-import com.willclay.forgeide.filesystem.FileOperations;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.Utils;
-import com.willclay.forgeide.workspace.Project;
+import com.willclay.forgeide.ui.dialogs.FileDialogs.NewProjectDetails;
 
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/** Creates a project directory with src/ and out/ inside it, then opens it. */
+/** Creates a project with one language selected for its lifetime. */
 public final class NewProjectAction extends ForgeAction
 {
     private final UIContext context;
@@ -26,28 +25,26 @@ public final class NewProjectAction extends ForgeAction
     @Override
     protected void perform()
     {
+        if (context.getEditorManager().isModified()
+                && !Utils.confirmDiscardChanges(context.getFrame(), "New Project")) return;
+
         Path parent = context.getDialogs().chooseDirectory("Where should the project go?");
         if (parent == null) return;
 
-        String name = Utils.prompt(context.getFrame(), "New Project", "Project name:", "MyProject");
-        if (name == null || name.isEmpty()) return;
+        NewProjectDetails details = context.getDialogs().chooseNewProjectDetails();
+        if (details == null) return;
 
-        Path root = parent.resolve(name);
-
+        Path root = parent.resolve(details.name());
         if (Files.exists(root))
         {
-            Utils.showErrorMessage(context.getFrame(), name + " already exists in " + parent + ".");
+            Utils.showErrorMessage(context.getFrame(), details.name() + " already exists in " + parent + ".");
             return;
         }
 
         try
         {
-            Project project = Project.at(root);
-
-            FileOperations.ensureDirectory(project.sourceDir());
-            FileOperations.ensureDirectory(project.outputDir());
-
-            context.getWorkspaceService().openProject(root);
+            context.getWorkspaceService().createProject(root, details.language());
+            context.getEditorManager().closeFile();
         }
         catch (IOException e)
         {

@@ -16,9 +16,8 @@ import java.util.List;
  * No Swing, and no file system either — opening a project is a decision, not an
  * operation. {@link WorkspaceService} does the reading.
  * <p>
- * TODO - a List&lt;Project&gt; once more than one can be open at a time. The
- *        tree's root then becomes a WORKSPACE item with a project per child,
- *        which is exactly why ProjectItemType already has that constant.
+ * Forge deliberately keeps one project open at a time so every editor and
+ * build operation has one unambiguous project language.
  */
 public final class Workspace
 {

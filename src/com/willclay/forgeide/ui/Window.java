@@ -2,7 +2,8 @@ package com.willclay.forgeide.ui;
 
 import com.willclay.forgeide.actions.ActionManager;
 import com.willclay.forgeide.editor.EditorManager;
-import com.willclay.forgeide.lang.LanguageManager;
+import com.willclay.forgeide.highlighting.Lexer;
+import com.willclay.forgeide.lang.LanguageRegistry;
 import com.willclay.forgeide.lang.java.JavaLanguage;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
@@ -23,6 +24,7 @@ import javax.swing.JFrame;
 import java.awt.Font;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.List;
 
 /**
  * The main frame, and only the composition root: it creates the parts, puts
@@ -34,7 +36,7 @@ import java.io.UncheckedIOException;
  * or that the file system exist — it knows that actions exist, and where to
  * hang them.
  * <p>
- * The wiring at the bottom is the whole of the frame's behaviour: three
+ * The wiring at the bottom is the whole of the frame's behaviour: two
  * subscriptions, each one line.
  */
 public class Window extends JFrame
@@ -53,7 +55,7 @@ public class Window extends JFrame
     private final Workspace workspace = new Workspace();
     private final WorkspaceService workspaceService;
 
-    private final LanguageManager languageManager;
+    private final LanguageRegistry languages;
 
     public Window(String title)
     {
@@ -63,6 +65,8 @@ public class Window extends JFrame
         Font editorFont = EditorFonts.load(EDITOR_FONT_SIZE);
 
         editorPanel = new CodeEditorPanel(editorFont);
+
+        languages = new LanguageRegistry(List.of(new JavaLanguage()));
         editorManager = new EditorManager(editorPanel);
         console = new ConsolePanel(editorFont.deriveFont(CONSOLE_FONT_SIZE));
 
@@ -71,15 +75,12 @@ public class Window extends JFrame
 
         workbench = new WorkbenchPanel(new ProjectTreePanel(projectTree), editorPanel, console);
 
-        languageManager = new LanguageManager(new JavaLanguage());
-        editorPanel.setLexer(languageManager.getCurrentLanguage().lexer());
-
         // The context has to exist before the actions, the actions before the
         // toolbar and the context menu — and both of those live on components
         // the context already holds. Hence the two setters below rather than
         // constructor arguments.
         UIContext context = new UIContext(this, editorPanel, editorManager, console, workbench, projectTree,
-                workspace, workspaceService, new FileDialogs(this), languageManager);
+                workspace, workspaceService, new FileDialogs(this, languages));
 
         ActionManager actions = new ActionManager(context);
 
@@ -105,8 +106,6 @@ public class Window extends JFrame
     {
         editorManager.addChangeListener(this::updateTitle);
         workspace.addChangeListener(this::showCurrentProject);
-
-        editorManager.newFile();
     }
 
     private void showCurrentProject()
@@ -114,6 +113,7 @@ public class Window extends JFrame
         Project project = workspace.getProject();
 
         projectTree.showRoot(project == null ? null : project.rootItem());
+        editorPanel.setLexer(project == null ? Lexer.PLAIN : project.language().lexer());
     }
 
     private void updateTitle()
@@ -130,7 +130,7 @@ public class Window extends JFrame
     {
         try
         {
-            return new WorkspaceService(workspace);
+            return new WorkspaceService(workspace, languages);
         }
         catch (IOException e)
         {

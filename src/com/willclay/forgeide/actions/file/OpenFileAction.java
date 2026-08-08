@@ -5,31 +5,34 @@ import com.willclay.forgeide.actions.Shortcuts;
 import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.Utils;
+import com.willclay.forgeide.workspace.Project;
 
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.nio.file.Path;
 
-/** Asks for a .java file and loads it into the editor. */
+/** Opens a source file using the current project's language. */
 public final class OpenFileAction extends ForgeAction
 {
     private final UIContext context;
 
     public OpenFileAction(UIContext context)
     {
-        super("Open File...", Shortcuts.menu(KeyEvent.VK_O), "Open an existing Java source file");
+        super("Open File...", Shortcuts.menu(KeyEvent.VK_O), "Open a source file");
         this.context = context;
     }
 
     @Override
     protected void perform()
     {
-        EditorManager editor = context.getEditorManager();
+        Project project = context.getWorkspace().getProject();
+        if (project == null) return;
 
+        EditorManager editor = context.getEditorManager();
         if (editor.isModified() && !Utils.confirmDiscardChanges(context.getFrame(), "Open File")) return;
 
-        Path file = context.getDialogs().chooseFileToOpen();
-        if (file == null) return; // cancelled
+        Path file = context.getDialogs().chooseFileToOpen(project.language());
+        if (file == null) return;
 
         try
         {

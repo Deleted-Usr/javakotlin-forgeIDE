@@ -2,8 +2,11 @@ package com.willclay.forgeide.services;
 
 import com.willclay.forgeide.filesystem.FileOperations;
 import com.willclay.forgeide.filesystem.FileWatcher;
+import com.willclay.forgeide.lang.Language;
+import com.willclay.forgeide.lang.LanguageRegistry;
 import com.willclay.forgeide.workspace.Project;
 import com.willclay.forgeide.workspace.ProjectItem;
+import com.willclay.forgeide.workspace.ProjectMetadata;
 import com.willclay.forgeide.workspace.Workspace;
 import com.willclay.forgeide.workspace.WorkspaceListener;
 
@@ -30,12 +33,14 @@ import java.util.List;
 public final class WorkspaceService implements AutoCloseable
 {
     private final Workspace workspace;
+    private final LanguageRegistry languages;
     private final FileWatcher watcher;
     private final List<WorkspaceListener> listeners = new ArrayList<>();
 
-    public WorkspaceService(Workspace workspace) throws IOException
+    public WorkspaceService(Workspace workspace, LanguageRegistry languages) throws IOException
     {
         this.workspace = workspace;
+        this.languages = languages;
         this.watcher = new FileWatcher(this::fireDirectoryChanged);
 
         watcher.start();
@@ -46,13 +51,39 @@ public final class WorkspaceService implements AutoCloseable
         return workspace;
     }
 
-    /** Points the workspace at a directory, watching nothing from the previous one. */
-    public void openProject(Path root) throws IOException
+    /** Creates, configures and opens a new project. */
+    public void createProject(Path root, Language language) throws IOException
     {
         FileOperations.ensureDirectory(root);
 
-        watcher.unwatchAll();
-        workspace.openProject(Project.at(root));
+        Project project = Project.at(root, language);
+        language.initializeProject(project);
+        ProjectMetadata.write(project);
+        open(project);
+    }
+
+    /** Returns whether a directory already contains Forge project metadata. */
+    public boolean isConfiguredProject(Path root)
+    {
+        return ProjectMetadata.exists(root);
+    }
+
+    /** Assigns a language to an existing directory and opens it as a project. */
+    public void configureProject(Path root, Language language) throws IOException
+    {
+        FileOperations.ensureDirectory(root);
+
+        Project project = Project.at(root, language);
+        language.initializeProject(project);
+        ProjectMetadata.write(project);
+        open(project);
+    }
+
+    /** Opens a configured project, restoring its persisted language. */
+    public void openProject(Path root) throws IOException
+    {
+        FileOperations.ensureDirectory(root);
+        open(ProjectMetadata.read(root, languages));
     }
 
     public void closeProject()
@@ -74,7 +105,10 @@ public final class WorkspaceService implements AutoCloseable
         {
             List<ProjectItem> children = new ArrayList<>();
 
-            for (Path child : FileOperations.listChildren(parent.path())) children.add(ProjectItem.of(child));
+            for (Path child : FileOperations.listChildren(parent.path()))
+            {
+                children.add(ProjectItem.of(child, parent.language()));
+            }
 
             children.sort(ProjectItem.EXPLORER_ORDER);
 
@@ -97,7 +131,7 @@ public final class WorkspaceService implements AutoCloseable
         Path created = FileOperations.createFile(parent.path(), name);
         fireDirectoryChanged(parent.path());
 
-        return ProjectItem.of(created);
+        return ProjectItem.of(created, parent.language());
     }
 
     public ProjectItem createFolder(ProjectItem parent, String name) throws IOException
@@ -105,7 +139,7 @@ public final class WorkspaceService implements AutoCloseable
         Path created = FileOperations.createDirectory(parent.path(), name);
         fireDirectoryChanged(parent.path());
 
-        return ProjectItem.of(created);
+        return ProjectItem.of(created, parent.language());
     }
 
     public ProjectItem rename(ProjectItem item, String newName) throws IOException
@@ -113,7 +147,7 @@ public final class WorkspaceService implements AutoCloseable
         Path renamed = FileOperations.rename(item.path(), newName);
         fireDirectoryChanged(parentOf(item));
 
-        return ProjectItem.of(renamed);
+        return ProjectItem.of(renamed, item.language());
     }
 
     public void delete(ProjectItem item) throws IOException
@@ -136,6 +170,12 @@ public final class WorkspaceService implements AutoCloseable
     private static Path parentOf(ProjectItem item)
     {
         return item.path().getParent();
+    }
+
+    private void open(Project project)
+    {
+        watcher.unwatchAll();
+        workspace.openProject(project);
     }
 
     private void fireDirectoryChanged(Path directory)

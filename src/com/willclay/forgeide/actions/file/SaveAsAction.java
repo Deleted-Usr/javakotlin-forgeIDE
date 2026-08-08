@@ -4,6 +4,7 @@ import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.Utils;
+import com.willclay.forgeide.workspace.Project;
 
 import java.awt.event.KeyEvent;
 import java.io.IOException;
@@ -33,7 +34,10 @@ public final class SaveAsAction extends ForgeAction
      */
     public boolean saveAs(Path suggested)
     {
-        Path file = context.getDialogs().chooseFileToSave(suggested);
+        Project project = context.getWorkspace().getProject();
+        if (project == null) return false;
+
+        Path file = context.getDialogs().chooseFileToSave(project.language(), suggested);
         if (file == null) return false; // cancelled, or declined the overwrite
 
         try

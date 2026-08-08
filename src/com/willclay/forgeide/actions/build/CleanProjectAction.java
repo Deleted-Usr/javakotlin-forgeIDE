@@ -1,29 +1,38 @@
 package com.willclay.forgeide.actions.build;
 
 import com.willclay.forgeide.actions.ForgeAction;
+import com.willclay.forgeide.compiler.Toolchain;
 import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.ui.editor.RunTask;
+import com.willclay.forgeide.workspace.Project;
 
-/**
- * Placeholder — disabled.
- * <p>
- * This remains disabled until its recursive deletion and reporting are moved
- * to a worker thread.
- * <p>
- * TODO - walk the active project's output directory and delete the .class
- *        files, reporting to the console. Do it on a worker thread, as
- *        RunTask does.
- */
+import java.util.Optional;
+import java.util.function.Consumer;
+
+/** Cleans generated output on the same worker used by build and run. */
 public final class CleanProjectAction extends ForgeAction
 {
-    public CleanProjectAction(UIContext context)
+    private final UIContext context;
+    private final Consumer<Boolean> taskRunning;
+
+    public CleanProjectAction(UIContext context, Consumer<Boolean> taskRunning)
     {
-        super("Clean Project", null, "Delete compiled output");
-        setEnabled(false);
+        super("Clean Project", null, "Delete generated project output");
+        this.context = context;
+        this.taskRunning = taskRunning;
     }
 
     @Override
     protected void perform()
     {
-        // Nothing yet.
+        Project project = context.getWorkspace().getProject();
+        if (project == null) return;
+
+        Optional<Toolchain> toolchain = project.language().toolchain();
+        if (toolchain.isEmpty()) return;
+
+        context.getConsole().clear();
+        taskRunning.accept(true);
+        RunTask.clean(project, toolchain.get(), context.getConsole(), () -> taskRunning.accept(false)).execute();
     }
 }

@@ -42,8 +42,7 @@ public final class Utils
      */
     public static String prompt(Component parent, String title, String message, String initialValue)
     {
-        Object answer = JOptionPane.showInputDialog(
-                parent, message, title, JOptionPane.QUESTION_MESSAGE, null, null, initialValue);
+        Object answer = JOptionPane.showInputDialog(parent, message, title, JOptionPane.QUESTION_MESSAGE, null, null, initialValue);
 
         return answer == null ? null : answer.toString().trim();
     }

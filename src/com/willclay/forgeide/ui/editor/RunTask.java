@@ -3,84 +3,71 @@ package com.willclay.forgeide.ui.editor;
 import com.willclay.forgeide.compiler.Toolchain;
 import com.willclay.forgeide.workspace.Project;
 
-import javax.swing.*;
+import javax.swing.SwingWorker;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 
-/**
- * Compiles project source files and, if asked, launches the selected class on
- * a background thread.
- *
- * This used to happen inside the Run button's action listener, i.e. on the
- * Event Dispatch Thread. That froze the entire UI for as long as javac took,
- * and nothing appeared in the console until the whole thing finished, because
- * every repaint was queued behind the still-running event handler.
- *
- * Build Project needs everything here except the last step, so the two are one
- * class with two factory methods rather than two classes that differ by four
- * lines.
- */
+/** Runs build-tool operations away from Swing's Event Dispatch Thread. */
 public final class RunTask extends SwingWorker<Integer, Void>
 {
-    private final Toolchain toolchain;
+    private enum Operation { RUN, BUILD, CLEAN }
+
     private final Project project;
-    private final Path sourceFile;
-
+    private final Toolchain toolchain;
     private final ConsolePanel console;
-    private final String mainClassName;
+    private final Path sourceFile;
     private final Runnable onFinished;
-    private final boolean launchAfterCompiling;
+    private final Operation operation;
 
-    private RunTask(Project project, Toolchain toolchain, ConsolePanel console, Path sourceFile, String mainClassName, Runnable onFinished, boolean launchAfterCompiling)
+    private RunTask(Project project, Toolchain toolchain, ConsolePanel console,
+                    Path sourceFile, Runnable onFinished, Operation operation)
     {
         this.project = project;
         this.toolchain = toolchain;
         this.console = console;
         this.sourceFile = sourceFile;
-        this.mainClassName = mainClassName;
         this.onFinished = onFinished;
-        this.launchAfterCompiling = launchAfterCompiling;
+        this.operation = operation;
     }
 
-    public static RunTask compileAndRun(Project project, Toolchain toolchain, ConsolePanel console, Path sourceFile, String mainClassName, Runnable onFinished)
+    public static RunTask run(Project project, Toolchain toolchain, ConsolePanel console,
+                              Path sourceFile, Runnable onFinished)
     {
-        return new RunTask(project, toolchain, console, sourceFile, mainClassName, onFinished, true);
+        return new RunTask(project, toolchain, console, sourceFile, onFinished, Operation.RUN);
     }
 
-    public static RunTask compileOnly(Project project, Toolchain toolchain, ConsolePanel console, Runnable onFinished)
+    public static RunTask build(Project project, Toolchain toolchain, ConsolePanel console, Runnable onFinished)
     {
-        return new RunTask(project, toolchain, console, null, null, onFinished, false);
+        return new RunTask(project, toolchain, console, null, onFinished, Operation.BUILD);
+    }
+
+    public static RunTask clean(Project project, Toolchain toolchain, ConsolePanel console, Runnable onFinished)
+    {
+        return new RunTask(project, toolchain, console, null, onFinished, Operation.CLEAN);
     }
 
     @Override
     protected Integer doInBackground() throws Exception
     {
-        // Paths were captured on the EDT before this task started, so nothing
-        // here touches an editor component. ConsolePanel's append methods are
-        // the one exception, and they hop back to the EDT themselves.
-        console.appendLine(launchAfterCompiling
-                ? "Compiling " + sourceFile + " ..."
-                : "Compiling project sources ...");
+        return switch (operation)
+        {
+            case RUN -> runSource();
+            case BUILD -> buildProject();
+            case CLEAN -> cleanProject();
+        };
+    }
 
-        boolean compiled = launchAfterCompiling
-                ? toolchain.compile(project, sourceFile, console::append)
-                : toolchain.build(project, console::append);
-
-        if (!compiled)
+    private int runSource() throws Exception
+    {
+        console.appendLine("Preparing " + sourceFile + " ...");
+        if (!toolchain.compile(project, sourceFile, console::append))
         {
             console.appendLine("");
-            console.appendLine("Compilation failed!");
+            console.appendLine("Preparation failed.");
             return 1;
         }
 
-        if (!launchAfterCompiling)
-        {
-            console.appendLine("");
-            console.appendLine("Build successful.");
-            return 0;
-        }
-
-        console.appendLine("Compilation successful. Running...");
+        console.appendLine("Ready. Running...");
         console.appendLine("");
 
         int exitCode;
@@ -90,15 +77,32 @@ public final class RunTask extends SwingWorker<Integer, Void>
         }
         finally
         {
-            // Locks the console again whether the program exited or blew up, so a
-            // dead process cannot be left looking as though it is still listening.
             console.endInput();
         }
 
         console.appendLine("");
-        console.appendLine("Compilation finished with exit code " + exitCode + "!");
-
+        console.appendLine("Process finished with exit code " + exitCode + ".");
         return exitCode;
+    }
+
+    private int buildProject() throws Exception
+    {
+        console.appendLine("Building " + project.name() + " ...");
+        boolean succeeded = toolchain.build(project, console::append);
+
+        console.appendLine("");
+        console.appendLine(succeeded ? "Build successful." : "Build failed.");
+        return succeeded ? 0 : 1;
+    }
+
+    private int cleanProject() throws Exception
+    {
+        console.appendLine("Cleaning " + project.name() + " ...");
+        boolean succeeded = toolchain.clean(project, console::append);
+
+        console.appendLine("");
+        console.appendLine(succeeded ? "Clean successful." : "Clean failed.");
+        return succeeded ? 0 : 1;
     }
 
     @Override
@@ -116,9 +120,7 @@ public final class RunTask extends SwingWorker<Integer, Void>
         }
         catch (ExecutionException e)
         {
-            // Missing javac, an unwritable workspace, and so on. Reported in the
-            // console rather than thrown, so a failed run cannot kill the IDE.
-            console.appendLine("Could not run: " + e.getCause());
+            console.appendLine("Task failed: " + e.getCause());
         }
     }
 }

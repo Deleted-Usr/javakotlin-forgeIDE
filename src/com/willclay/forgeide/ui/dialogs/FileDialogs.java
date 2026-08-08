@@ -1,69 +1,112 @@
 package com.willclay.forgeide.ui.dialogs;
 
 import com.willclay.forgeide.files.SourceFileIO;
+import com.willclay.forgeide.lang.Language;
+import com.willclay.forgeide.lang.LanguageRegistry;
 import com.willclay.forgeide.ui.Utils;
 
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.Component;
+import java.awt.GridLayout;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
 
-/**
- * The file chooser, and only the file chooser.
- * <p>
- * This used to be {@code EditorFileActions}, which asked the user for a file
- * <em>and</em> read it <em>and</em> pushed it into the editor. Splitting those
- * apart is what makes the action layer work: the actions decide what happens,
- * {@link SourceFileIO} touches the disk, and this class does nothing but ask a
- * question and return the answer.
- * <p>
- * One chooser instance is reused so it remembers the last directory.
- */
+/** Owns Forge's file and project-selection dialogs. */
 public final class FileDialogs
 {
     private final Component parent;
-    private final JFileChooser chooser = new JFileChooser();
-
-    /**
-     * A second chooser, because a directory picker and a file picker disagree
-     * about file selection mode and about the filter. Sharing one instance
-     * would mean reconfiguring it on every call and hoping nothing was missed.
-     */
+    private final LanguageRegistry languages;
+    private final JFileChooser fileChooser = new JFileChooser();
     private final JFileChooser directoryChooser = new JFileChooser();
 
-    public FileDialogs(Component parent)
+    public FileDialogs(Component parent, LanguageRegistry languages)
     {
         this.parent = parent;
+        this.languages = languages;
 
-        chooser.setFileFilter(new FileNameExtensionFilter("Java Source Files (*.java)", "java"));
-        chooser.setAcceptAllFileFilterUsed(false);
-
+        fileChooser.setAcceptAllFileFilterUsed(false);
         directoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
     }
 
-    /** @return the chosen directory, or null if the user cancelled */
+    /** Values collected by the New Project dialog. */
+    public record NewProjectDetails(String name, Language language) { }
+
+    /** @return the chosen directory, or {@code null} if cancelled */
     public Path chooseDirectory(String title)
     {
         directoryChooser.setDialogTitle(title);
-
         if (directoryChooser.showOpenDialog(parent) != JFileChooser.APPROVE_OPTION) return null;
 
         return directoryChooser.getSelectedFile().toPath();
     }
 
-    /** @return the chosen file, or null if the user cancelled or picked something that is not Java */
-    public Path chooseFileToOpen()
+    /** Prompts for both the new project's name and its permanent language. */
+    public NewProjectDetails chooseNewProjectDetails()
     {
-        chooser.setDialogTitle("Open Java File");
+        JTextField name = new JTextField("MyProject", 24);
+        JComboBox<String> language = new JComboBox<>(languageNames());
 
-        if (chooser.showOpenDialog(parent) != JFileChooser.APPROVE_OPTION) return null;
+        JPanel fields = new JPanel(new GridLayout(0, 1, 0, 4));
+        fields.add(new JLabel("Project name:"));
+        fields.add(name);
+        fields.add(new JLabel("Language:"));
+        fields.add(language);
 
-        Path file = chooser.getSelectedFile().toPath();
-
-        if (!SourceFileIO.isJavaFile(file))
+        while (true)
         {
-            Utils.showErrorMessage(parent, "Not a Java Source File: " + file.getFileName());
+            int choice = JOptionPane.showConfirmDialog(
+                    parent, fields, "New Project", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (choice != JOptionPane.OK_OPTION) return null;
+
+            String projectName = name.getText().trim();
+            if (isSimpleName(projectName))
+            {
+                return new NewProjectDetails(projectName, languages.languages().get(language.getSelectedIndex()));
+            }
+
+            Utils.showErrorMessage(parent, "Enter a single valid folder name for the project.");
+        }
+    }
+
+    /** Asks which language should be assigned to an unconfigured directory. */
+    public Language chooseLanguage(String title, String message)
+    {
+        List<Language> available = languages.languages();
+        String[] names = languageNames();
+
+        Object selected = JOptionPane.showInputDialog(
+                parent, message, title, JOptionPane.QUESTION_MESSAGE, null, names, names[0]);
+        if (selected == null) return null;
+
+        for (int i = 0; i < names.length; i++)
+        {
+            if (names[i].equals(selected)) return available.get(i);
+        }
+
+        return null;
+    }
+
+    /** @return a source file recognised by {@code language}, or {@code null} */
+    public Path chooseFileToOpen(Language language)
+    {
+        configureFileChooser(language);
+        fileChooser.setDialogTitle("Open " + language.displayName() + " File");
+
+        if (fileChooser.showOpenDialog(parent) != JFileChooser.APPROVE_OPTION) return null;
+
+        Path file = fileChooser.getSelectedFile().toPath();
+        if (!language.recognises(file))
+        {
+            Utils.showErrorMessage(parent, "Not a " + language.displayName() + " source file: " + file.getFileName());
             return null;
         }
 
@@ -71,22 +114,18 @@ public final class FileDialogs
     }
 
     /**
-     * Asks where to save, appending .java to a bare name and confirming an
-     * overwrite before it returns.
-     *
-     * @param suggested pre-selected in the dialog, or null for none
-     * @return the chosen file, or null if the user cancelled or declined the overwrite
+     * Asks where to save, appends the language's default extension to a bare
+     * name and confirms before overwriting an existing file.
      */
-    public Path chooseFileToSave(Path suggested)
+    public Path chooseFileToSave(Language language, Path suggested)
     {
-        chooser.setDialogTitle("Save Java File");
+        configureFileChooser(language);
+        fileChooser.setDialogTitle("Save " + language.displayName() + " File");
 
-        if (suggested != null) chooser.setSelectedFile(suggested.toFile());
+        if (suggested != null) fileChooser.setSelectedFile(suggested.toFile());
+        if (fileChooser.showSaveDialog(parent) != JFileChooser.APPROVE_OPTION) return null;
 
-        if (chooser.showSaveDialog(parent) != JFileChooser.APPROVE_OPTION) return null;
-
-        Path file = SourceFileIO.withJavaExtension(chooser.getSelectedFile().toPath());
-
+        Path file = SourceFileIO.withExtension(fileChooser.getSelectedFile().toPath(), language.defaultExtension());
         if (Files.exists(file)
                 && !Utils.confirm(parent, "Overwrite?", file.getFileName() + " already exists. Overwrite it?"))
         {
@@ -94,5 +133,50 @@ public final class FileDialogs
         }
 
         return file;
+    }
+
+    private void configureFileChooser(Language language)
+    {
+        fileChooser.resetChoosableFileFilters();
+        fileChooser.setFileFilter(createFilter(language));
+        fileChooser.setAcceptAllFileFilterUsed(false);
+    }
+
+    private String[] languageNames()
+    {
+        return languages.languages().stream().map(Language::displayName).toArray(String[]::new);
+    }
+
+    private static FileNameExtensionFilter createFilter(Language language)
+    {
+        String[] extensions = language.extensions().stream()
+                .map(FileDialogs::withoutLeadingDot)
+                .toArray(String[]::new);
+        String patterns = language.extensions().stream()
+                .map(extension -> "*" + extension)
+                .collect(Collectors.joining(", "));
+
+        return new FileNameExtensionFilter(
+                language.displayName() + " Source Files (" + patterns + ")", extensions);
+    }
+
+    private static String withoutLeadingDot(String extension)
+    {
+        return extension.startsWith(".") ? extension.substring(1) : extension;
+    }
+
+    private static boolean isSimpleName(String name)
+    {
+        if (name.isEmpty() || name.equals(".") || name.equals("..")) return false;
+
+        try
+        {
+            Path path = Path.of(name);
+            return !path.isAbsolute() && path.getNameCount() == 1;
+        }
+        catch (InvalidPathException e)
+        {
+            return false;
+        }
     }
 }

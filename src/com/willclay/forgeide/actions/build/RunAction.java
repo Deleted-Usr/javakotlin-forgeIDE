@@ -5,7 +5,6 @@ import com.willclay.forgeide.actions.Shortcuts;
 import com.willclay.forgeide.actions.file.SaveAction;
 import com.willclay.forgeide.compiler.Toolchain;
 import com.willclay.forgeide.editor.EditorManager;
-import com.willclay.forgeide.lang.java.JavaClassNames;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.editor.RunTask;
@@ -16,84 +15,60 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-/**
- * Compiles the editor's contents and launches them.
- * <p>
- * This is the body of what used to be {@code Window.runCode()}. Window no
- * longer knows that running exists — it builds a menu bar and a toolbar out of
- * actions, and this is one of them.
- * <p>
- * The busy flag is reported outwards rather than handled here, because Run is
- * not the only thing a build blocks: {@link BuildProjectAction} has to grey out
- * too, and later so will Debug and Stop.
- */
+/** Prepares and runs the current source file with its project's toolchain. */
 public final class RunAction extends ForgeAction
 {
     private final UIContext context;
     private final SaveAction save;
-    private final Consumer<Boolean> buildRunning;
+    private final Consumer<Boolean> taskRunning;
 
-    public RunAction(UIContext context, SaveAction save, Consumer<Boolean> buildRunning)
+    public RunAction(UIContext context, SaveAction save, Consumer<Boolean> taskRunning)
     {
-        super("Run", Shortcuts.menu(KeyEvent.VK_R), "Compile and run the current file");
-
+        super("Run", Shortcuts.menu(KeyEvent.VK_R), "Build and run the current file");
         this.context = context;
         this.save = save;
-        this.buildRunning = buildRunning;
+        this.taskRunning = taskRunning;
     }
 
     @Override
     protected void perform()
     {
         Project project = context.getWorkspace().getProject();
-        if (project == null)
-        {
-            Utils.showErrorMessage(context.getFrame(), "Open a project before running.");
-            return;
-        }
+        if (project == null) return;
 
         EditorManager editor = context.getEditorManager();
         Path sourceFile = editor.getCurrentFile();
 
-        if (sourceFile != null && !project.containsSourceFile(sourceFile))
+        if (sourceFile != null && !project.isSourceFile(sourceFile))
         {
-            Utils.showErrorMessage(context.getFrame(),
-                    "The file must be saved inside " + project.sourceDir() + " before it can be run.");
+            reportWrongSource(project);
             return;
         }
-
         if ((sourceFile == null || editor.isModified()) && !save.saveCurrent()) return;
 
         sourceFile = editor.getCurrentFile();
-        if (!project.containsSourceFile(sourceFile))
+        if (!project.isSourceFile(sourceFile))
         {
-            Utils.showErrorMessage(context.getFrame(),
-                    "The file must be saved inside " + project.sourceDir() + " before it can be run.");
+            reportWrongSource(project);
             return;
         }
 
-        Optional<Toolchain> selected = context.getLanguageManager().getCurrentToolchain();
+        Optional<Toolchain> selected = project.language().toolchain();
         if (selected.isEmpty())
         {
-            Utils.showErrorMessage(
-                    context.getFrame(),
-                    "The selected language cannot be run."
-            );
+            Utils.showErrorMessage(context.getFrame(), project.language().displayName() + " projects cannot be run.");
             return;
         }
 
-        Toolchain toolchain = selected.get();
-
         context.getConsole().clear();
-        buildRunning.accept(true);
+        taskRunning.accept(true);
+        RunTask.run(project, selected.get(), context.getConsole(), sourceFile, () -> taskRunning.accept(false)).execute();
+    }
 
-        RunTask.compileAndRun(
-                project,
-                toolchain,
-                context.getConsole(),
-                sourceFile,
-                JavaClassNames.of(project, sourceFile),
-                () -> buildRunning.accept(false)
-        ).execute();
+    private void reportWrongSource(Project project)
+    {
+        Utils.showErrorMessage(
+                context.getFrame(),
+                "Save a " + project.language().displayName() + " source file inside " + project.sourceRoot() + " before running.");
     }
 }

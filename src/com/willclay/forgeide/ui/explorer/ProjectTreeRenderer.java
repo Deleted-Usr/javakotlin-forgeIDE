@@ -23,18 +23,15 @@ import java.awt.geom.Path2D;
  * One renderer instance is reused for every row — that is how
  * DefaultTreeCellRenderer is meant to work. It is a rubber stamp, configured
  * and drawn once per row, so it must not hold per-row state.
- * <p>
- * TODO - swap in real icons by returning a loaded ImageIcon from iconFor.
- *        Nothing else has to change.
  */
 public final class ProjectTreeRenderer extends DefaultTreeCellRenderer
 {
     private static final Color FOLDER = new Color(0xD8A25A);
-    private static final Color JAVA_FILE = new Color(0x4EC9B0);
+    private static final Color SOURCE_FILE = new Color(0x4EC9B0);
     private static final Color OTHER_FILE = new Color(0x9AA7B2);
 
     private static final Icon FOLDER_ICON = new FolderIcon();
-    private static final Icon JAVA_ICON = new FileIcon(JAVA_FILE);
+    private static final Icon SOURCE_ICON = new FileIcon(SOURCE_FILE);
     private static final Icon FILE_ICON = new FileIcon(OTHER_FILE);
 
     @Override
@@ -59,7 +56,7 @@ public final class ProjectTreeRenderer extends DefaultTreeCellRenderer
     {
         if (item.isDirectory()) return FOLDER_ICON;
 
-        return item.isJavaFile() ? JAVA_ICON : FILE_ICON;
+        return item.isSourceFile() ? SOURCE_ICON : FILE_ICON;
     }
 
     /** A folder with a tab, filled and outlined in the same hue. */

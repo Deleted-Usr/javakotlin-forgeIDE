@@ -55,7 +55,7 @@ public abstract class ExplorerAction extends ForgeAction
         if (selected == null) return null;
         if (selected.isDirectory()) return selected;
 
-        return ProjectItem.of(selected.path().getParent());
+        return ProjectItem.of(selected.path().getParent(), selected.language());
     }
 
     protected final boolean isProjectRoot(ProjectItem item)
