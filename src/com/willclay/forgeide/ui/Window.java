@@ -2,6 +2,8 @@ package com.willclay.forgeide.ui;
 
 import com.willclay.forgeide.actions.ActionManager;
 import com.willclay.forgeide.editor.EditorManager;
+import com.willclay.forgeide.lang.LanguageManager;
+import com.willclay.forgeide.lang.java.JavaLanguage;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
@@ -51,6 +53,8 @@ public class Window extends JFrame
     private final Workspace workspace = new Workspace();
     private final WorkspaceService workspaceService;
 
+    private final LanguageManager languageManager;
+
     public Window(String title)
     {
         super(title);
@@ -67,12 +71,15 @@ public class Window extends JFrame
 
         workbench = new WorkbenchPanel(new ProjectTreePanel(projectTree), editorPanel, console);
 
+        languageManager = new LanguageManager(new JavaLanguage());
+        editorPanel.setLexer(languageManager.getCurrentLanguage().lexer());
+
         // The context has to exist before the actions, the actions before the
         // toolbar and the context menu — and both of those live on components
         // the context already holds. Hence the two setters below rather than
         // constructor arguments.
         UIContext context = new UIContext(this, editorPanel, editorManager, console, workbench, projectTree,
-                workspace, workspaceService, new FileDialogs(this));
+                workspace, workspaceService, new FileDialogs(this), languageManager);
 
         ActionManager actions = new ActionManager(context);
 

@@ -3,8 +3,9 @@ package com.willclay.forgeide.actions.build;
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
 import com.willclay.forgeide.actions.file.SaveAction;
-import com.willclay.forgeide.compiler.JavacRunner;
+import com.willclay.forgeide.compiler.Toolchain;
 import com.willclay.forgeide.editor.EditorManager;
+import com.willclay.forgeide.lang.java.JavaClassNames;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.editor.RunTask;
@@ -12,6 +13,7 @@ import com.willclay.forgeide.workspace.Project;
 
 import java.awt.event.KeyEvent;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -70,16 +72,27 @@ public final class RunAction extends ForgeAction
             return;
         }
 
-        JavacRunner compiler = new JavacRunner(project.sourceDir(), project.outputDir());
+        Optional<Toolchain> selected = context.getLanguageManager().getCurrentToolchain();
+        if (selected.isEmpty())
+        {
+            Utils.showErrorMessage(
+                    context.getFrame(),
+                    "The selected language cannot be run."
+            );
+            return;
+        }
+
+        Toolchain toolchain = selected.get();
 
         context.getConsole().clear();
         buildRunning.accept(true);
 
         RunTask.compileAndRun(
-                compiler,
+                project,
+                toolchain,
                 context.getConsole(),
                 sourceFile,
-                project.classNameFor(sourceFile),
+                JavaClassNames.of(project, sourceFile),
                 () -> buildRunning.accept(false)
         ).execute();
     }

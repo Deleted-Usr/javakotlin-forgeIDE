@@ -1,7 +1,10 @@
 package com.willclay.forgeide.ui.editor;
 
+import com.willclay.forgeide.editor.SyntaxUndoManager;
+import com.willclay.forgeide.highlighting.Lexer;
 import com.willclay.forgeide.highlighting.SyntaxHighlighter;
 import com.willclay.forgeide.highlighting.TokenTheme;
+import com.willclay.forgeide.lang.java.JavaLexer;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -54,7 +57,7 @@ public final class CodeEditorPanel extends JPanel
 
     private final JTextPane textPane = new NoWrapTextPane();
     private final SyntaxHighlighter highlighter = new SyntaxHighlighter();
-    private final UndoManager undoManager = new UndoManager();
+    private final SyntaxUndoManager undoManager = new SyntaxUndoManager();
 
     private final List<Runnable> textChangeListeners = new ArrayList<>();
     private final List<Runnable> undoStateListeners = new ArrayList<>();
@@ -66,6 +69,8 @@ public final class CodeEditorPanel extends JPanel
     private int pendingLastLine = NO_PENDING;
     private boolean refreshScheduled;
 
+    private boolean replayingHistory;
+
     public CodeEditorPanel(Font font)
     {
         super(new BorderLayout());
@@ -73,12 +78,26 @@ public final class CodeEditorPanel extends JPanel
         textPane.setFont(font);
         applyTabSize(TAB_SIZE_IN_CHARACTERS);
 
+        setLexer(Lexer.PLAIN);
+
         highlighter.setTheme(TokenTheme.materialDarker());
         installHighlighting();
 
         installUndoSupport();
 
         add(new JScrollPane(textPane), BorderLayout.CENTER);
+    }
+
+    public void setLexer(Lexer lexer)
+    {
+        highlighter.setLexer(lexer);
+        highlighter.refreshAll(textPane);
+    }
+
+    public void setTheme(TokenTheme theme)
+    {
+        highlighter.setTheme(theme);
+        highlighter.refreshAll(textPane);
     }
 
     public String getText()
@@ -106,12 +125,6 @@ public final class CodeEditorPanel extends JPanel
         fireUndoStateChanged();
     }
 
-    public void setTheme(TokenTheme theme)
-    {
-        highlighter.setTheme(theme);
-        highlighter.refreshAll(textPane);
-    }
-
     public JTextPane getTextPane()
     {
         return textPane;
@@ -131,14 +144,27 @@ public final class CodeEditorPanel extends JPanel
 
     public void undo()
     {
+        // Finish any queued highlighting so its edits occur before the text undo.
+        if (refreshScheduled)
+        {
+            refreshPending();
+        }
+
+        replayingHistory = true;
+
         try
         {
-            if (undoManager.canUndo()) undoManager.undo();
+            if (undoManager.canUndo())
+            {
+                undoManager.undo();
+            }
         }
-        catch (CannotUndoException e)
+        catch (CannotUndoException ignored)
         {
-            // canUndo said otherwise, so this should not happen — but an edit
-            // the document refuses to reverse is not worth an exception dialog.
+        }
+        finally
+        {
+            replayingHistory = false;
         }
 
         fireUndoStateChanged();
@@ -146,13 +172,27 @@ public final class CodeEditorPanel extends JPanel
 
     public void redo()
     {
+        // Finish any queued highlighting so its edits occur before the text undo.
+        if (refreshScheduled)
+        {
+            refreshPending();
+        }
+
+        replayingHistory = true;
+
         try
         {
-            if (undoManager.canRedo()) undoManager.redo();
+            if (undoManager.canRedo())
+            {
+                undoManager.redo();
+            }
         }
-        catch (CannotRedoException e)
+        catch (CannotUndoException ignored)
         {
-            // As above.
+        }
+        finally
+        {
+            replayingHistory = false;
         }
 
         fireUndoStateChanged();
@@ -182,10 +222,26 @@ public final class CodeEditorPanel extends JPanel
         textPane.getDocument().addDocumentListener(new DocumentListener()
         {
             @Override
-            public void insertUpdate(DocumentEvent e) { queueRefresh(e); fireTextChanged(); }
+            public void insertUpdate(DocumentEvent e)
+            {
+                if (!replayingHistory)
+                {
+                    queueRefresh(e);
+                }
+
+                fireTextChanged();
+            }
 
             @Override
-            public void removeUpdate(DocumentEvent e) { queueRefresh(e); fireTextChanged(); }
+            public void removeUpdate(DocumentEvent e)
+            {
+                if (!replayingHistory)
+                {
+                    queueRefresh(e);
+                }
+
+                fireTextChanged();
+            }
 
             @Override
             public void changedUpdate(DocumentEvent e) { }
@@ -211,12 +267,6 @@ public final class CodeEditorPanel extends JPanel
     private void recordEdit(UndoableEditEvent event)
     {
         UndoableEdit edit = event.getEdit();
-
-        if (edit instanceof AbstractDocument.DefaultDocumentEvent documentEvent
-                && documentEvent.getType() == DocumentEvent.EventType.CHANGE)
-        {
-            return;
-        }
 
         undoManager.addEdit(edit);
         fireUndoStateChanged();

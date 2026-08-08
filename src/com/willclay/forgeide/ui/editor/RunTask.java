@@ -1,6 +1,7 @@
 package com.willclay.forgeide.ui.editor;
 
-import com.willclay.forgeide.compiler.JavacRunner;
+import com.willclay.forgeide.compiler.Toolchain;
+import com.willclay.forgeide.workspace.Project;
 
 import javax.swing.*;
 import java.nio.file.Path;
@@ -21,17 +22,19 @@ import java.util.concurrent.ExecutionException;
  */
 public final class RunTask extends SwingWorker<Integer, Void>
 {
-    private final JavacRunner runner;
-    private final ConsolePanel console;
+    private final Toolchain toolchain;
+    private final Project project;
     private final Path sourceFile;
+
+    private final ConsolePanel console;
     private final String mainClassName;
     private final Runnable onFinished;
     private final boolean launchAfterCompiling;
 
-    private RunTask(JavacRunner runner, ConsolePanel console, Path sourceFile, String mainClassName,
-                    Runnable onFinished, boolean launchAfterCompiling)
+    private RunTask(Project project, Toolchain toolchain, ConsolePanel console, Path sourceFile, String mainClassName, Runnable onFinished, boolean launchAfterCompiling)
     {
-        this.runner = runner;
+        this.project = project;
+        this.toolchain = toolchain;
         this.console = console;
         this.sourceFile = sourceFile;
         this.mainClassName = mainClassName;
@@ -39,15 +42,14 @@ public final class RunTask extends SwingWorker<Integer, Void>
         this.launchAfterCompiling = launchAfterCompiling;
     }
 
-    public static RunTask compileAndRun(JavacRunner runner, ConsolePanel console, Path sourceFile,
-                                        String mainClassName, Runnable onFinished)
+    public static RunTask compileAndRun(Project project, Toolchain toolchain, ConsolePanel console, Path sourceFile, String mainClassName, Runnable onFinished)
     {
-        return new RunTask(runner, console, sourceFile, mainClassName, onFinished, true);
+        return new RunTask(project, toolchain, console, sourceFile, mainClassName, onFinished, true);
     }
 
-    public static RunTask compileOnly(JavacRunner runner, ConsolePanel console, Runnable onFinished)
+    public static RunTask compileOnly(Project project, Toolchain toolchain, ConsolePanel console, Runnable onFinished)
     {
-        return new RunTask(runner, console, null, null, onFinished, false);
+        return new RunTask(project, toolchain, console, null, null, onFinished, false);
     }
 
     @Override
@@ -61,8 +63,8 @@ public final class RunTask extends SwingWorker<Integer, Void>
                 : "Compiling project sources ...");
 
         boolean compiled = launchAfterCompiling
-                ? runner.compile(sourceFile, console::append)
-                : runner.compileAll(console::append);
+                ? toolchain.compile(project, sourceFile, console::append)
+                : toolchain.build(project, console::append);
 
         if (!compiled)
         {
@@ -84,7 +86,7 @@ public final class RunTask extends SwingWorker<Integer, Void>
         int exitCode;
         try
         {
-            exitCode = runner.run(mainClassName, console::append, console::beginInput);
+            exitCode = toolchain.run(project, sourceFile, console::append, console::beginInput);
         }
         finally
         {

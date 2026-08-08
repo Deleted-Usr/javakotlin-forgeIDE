@@ -7,7 +7,7 @@ import javax.swing.text.StyledDocument;
 import java.util.List;
 
 /**
- * Applies {@link JavaLexer}'s output to a text pane's document.
+ * Applies {@link Lexer}'s output to a text pane's document.
  * <p>
  * The split that keeps this both simple and quick: <b>tokenize globally, paint
  * locally.</b> Tokenizing is a regex over a string with no side effects, so
@@ -39,11 +39,10 @@ public final class SyntaxHighlighter
     private static final String SPANNING_CHARACTERS = "/*\"";
 
     private TokenTheme theme = TokenTheme.light();
+    private Lexer lexer = Lexer.PLAIN;
 
-    public void setTheme(TokenTheme theme)
-    {
-        this.theme = theme;
-    }
+    public void setTheme(TokenTheme theme) { this.theme = theme; }
+    public void setLexer(Lexer lexer) { this.lexer = lexer; }
 
     /** Repaints everything. Used on load, and after a theme change. */
     public void refreshAll(JTextPane pane)
@@ -86,8 +85,9 @@ public final class SyntaxHighlighter
         {
             end = text.length();
         }
+        if (start >= end) return;
 
-        List<Token> tokens = JavaLexer.tokenize(text);
+        List<Token> tokens = lexer.tokenize(text);
 
         // Clear the range first. Without this a token that has just been deleted
         // or shortened leaves its colour behind on the characters it used to

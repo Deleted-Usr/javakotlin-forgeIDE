@@ -27,7 +27,7 @@ import java.io.Writer;
  * the fields: {@link #append} hops there itself, so a worker thread writing
  * compiler output never races the user typing.
  */
-public class ConsolePanel extends JPanel
+public final class ConsolePanel extends JPanel
 {
     private static final int VISIBLE_ROWS = 12;
     private static final int VISIBLE_COLUMNS = 80;

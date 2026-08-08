@@ -1,4 +1,8 @@
-package com.willclay.forgeide.highlighting;
+package com.willclay.forgeide.lang.java;
+
+import com.willclay.forgeide.highlighting.Lexer;
+import com.willclay.forgeide.highlighting.Token;
+import com.willclay.forgeide.highlighting.TokenType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +32,7 @@ import java.util.regex.Pattern;
  * <p>
  * Nothing here touches Swing.
  */
-public final class JavaLexer
+public final class JavaLexer implements Lexer
 {
     /**
      * Looked up rather than spelled out as regex alternatives. Fifty
@@ -61,25 +65,28 @@ public final class JavaLexer
      * string would hand the rest of the line to the alternatives after it.
      */
     private static final Pattern TOKENS = Pattern.compile(
-            // Comments outrank everything, including quotes.
-              "(?<COMMENT>/\\*[\\s\\S]*?(?:\\*/|\\z)|//[^\\n]*)"
-            // Before STRING, or the opening """ is read as an empty string.
-            + "|(?<TEXTBLOCK>\"\"\"[\\s\\S]*?(?:\"\"\"|\\z))"
-            + "|(?<STRING>\"(?:\\\\.|[^\"\\\\\\n])*\"?)"
-            + "|(?<CHARACTER>'(?:\\\\.|[^'\\\\\\n])*'?)"
-            + "|(?<ANNOTATION>@\\w+)"
-            + "|(?<NUMBER>\\b(?:0[xX][0-9a-fA-F_]+|0[bB][01_]+|\\d[\\d_]*(?:\\.[\\d_]*)?(?:[eE][+-]?\\d+)?)[fFdDlL]?)"
-            // Identifiers are matched once and classified in typeOf. Matching
-            // them here rather than leaving them to fall through also stops a
-            // stray quote inside one (there is no such thing, but a paste can
-            // produce anything) from opening a string.
-            + "|(?<WORD>[A-Za-z_$][A-Za-z0-9_$]*)"
+                    // Comments outrank everything, including quotes.
+                    "(?<COMMENT>/\\*[\\s\\S]*?(?:\\*/|\\z)|//[^\\n]*)"
+                    // Before STRING, or the opening """ is read as an empty string.
+                    + "|(?<TEXTBLOCK>\"\"\"[\\s\\S]*?(?:\"\"\"|\\z))"
+                    + "|(?<STRING>\"(?:\\\\.|[^\"\\\\\\n])*\"?)"
+                    + "|(?<CHARACTER>'(?:\\\\.|[^'\\\\\\n])*'?)"
+                    + "|(?<ANNOTATION>@\\w+)"
+                    + "|(?<NUMBER>\\b(?:0[xX][0-9a-fA-F_]+|0[bB][01_]+|\\d[\\d_]*(?:\\.[\\d_]*)?(?:[eE][+-]?\\d+)?)[fFdDlL]?)"
+                    // Identifiers are matched once and classified in typeOf. Matching
+                    // them here rather than leaving them to fall through also stops a
+                    // stray quote inside one (there is no such thing, but a paste can
+                    // produce anything) from opening a string.
+                    + "|(?<WORD>[A-Za-z_$][A-Za-z0-9_$]*)"
     );
 
-    private JavaLexer() { }
+    public JavaLexer() { }
 
-    /** @return every coloured span, in ascending order and never overlapping */
-    public static List<Token> tokenize(String text)
+    /**
+     * @return every coloured span, in ascending order and never overlapping
+     */
+    @Override
+    public List<Token> tokenize(String text)
     {
         List<Token> tokens = new ArrayList<>();
         Matcher matcher = TOKENS.matcher(text);
@@ -91,7 +98,10 @@ public final class JavaLexer
             // Ordinary identifiers are the commonest match by far and already
             // carry the default colour, so they are dropped here rather than
             // costing a Token and an attribute write further down.
-            if (type != TokenType.PLAIN) tokens.add(new Token(type, matcher.start(), matcher.end()));
+            if (type != TokenType.PLAIN)
+            {
+                tokens.add(new Token(type, matcher.start(), matcher.end()));
+            }
         }
 
         return tokens;

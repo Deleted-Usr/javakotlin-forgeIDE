@@ -1,8 +1,5 @@
 package com.willclay.forgeide;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
-import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.intellijthemes.FlatArcDarkIJTheme;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMTMaterialDarkerIJTheme;
 import com.willclay.forgeide.ui.Window;
 
@@ -13,11 +10,13 @@ import javax.swing.*;
 //  - Use a JTabbedPane for the Code Editor Viewport
 //  - Use a JToggleButton for compiler options
 //  - Give the actions icons (ForgeAction already has the hook)
-//  - Separate Java language support from the actual IDE
+//  - Separate Java language in the backend from the actual IDE
 //  - Multi-Language Support with Plugin System
+//  - Automatic Lexing (Detecting file extension and lex accordingly)
 //  - Theme selection menu and service
 //  - Run Configurations (Like IntelliJ)
 //  - Launch Forge through a bootstrap sequence
+//  - Fix performance concerned with Undo/Redo actions in the editor panel
 //  - Custom Swing Components (extends JComponent):
 //       - Editor Panel (Syntax Highlighting, Custom Caret, Bracket Matching, Selection Painting, Configurable Fonts)
 //       - Custom Gutter (Line Numbers, Breakpoints, Folding Arrows, Modified Line Indicators)
