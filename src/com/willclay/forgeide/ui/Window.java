@@ -3,7 +3,7 @@ package com.willclay.forgeide.ui;
 import com.willclay.forgeide.actions.ActionManager;
 import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.highlighting.Lexer;
-import com.willclay.forgeide.lang.LanguageRegistry;
+import com.willclay.forgeide.lang.api.LanguageRegistry;
 import com.willclay.forgeide.lang.java.JavaLanguage;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;

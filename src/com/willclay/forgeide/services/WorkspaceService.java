@@ -2,8 +2,8 @@ package com.willclay.forgeide.services;
 
 import com.willclay.forgeide.filesystem.FileOperations;
 import com.willclay.forgeide.filesystem.FileWatcher;
-import com.willclay.forgeide.lang.Language;
-import com.willclay.forgeide.lang.LanguageRegistry;
+import com.willclay.forgeide.lang.api.Language;
+import com.willclay.forgeide.lang.api.LanguageRegistry;
 import com.willclay.forgeide.workspace.Project;
 import com.willclay.forgeide.workspace.ProjectItem;
 import com.willclay.forgeide.workspace.ProjectMetadata;

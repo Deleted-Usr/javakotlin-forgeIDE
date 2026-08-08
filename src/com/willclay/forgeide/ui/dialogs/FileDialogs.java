@@ -1,8 +1,8 @@
 package com.willclay.forgeide.ui.dialogs;
 
 import com.willclay.forgeide.files.SourceFileIO;
-import com.willclay.forgeide.lang.Language;
-import com.willclay.forgeide.lang.LanguageRegistry;
+import com.willclay.forgeide.lang.api.Language;
+import com.willclay.forgeide.lang.api.LanguageRegistry;
 import com.willclay.forgeide.ui.Utils;
 
 import javax.swing.JComboBox;

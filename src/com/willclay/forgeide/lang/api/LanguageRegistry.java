@@ -1,4 +1,4 @@
-package com.willclay.forgeide.lang;
+package com.willclay.forgeide.lang.api;
 
 import java.util.Collection;
 import java.util.Collections;

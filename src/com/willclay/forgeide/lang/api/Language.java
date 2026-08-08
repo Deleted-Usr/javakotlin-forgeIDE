@@ -1,4 +1,4 @@
-package com.willclay.forgeide.lang;
+package com.willclay.forgeide.lang.api;
 
 import com.willclay.forgeide.compiler.Toolchain;
 import com.willclay.forgeide.highlighting.Lexer;

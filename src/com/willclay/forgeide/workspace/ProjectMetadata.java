@@ -1,7 +1,7 @@
 package com.willclay.forgeide.workspace;
 
-import com.willclay.forgeide.lang.Language;
-import com.willclay.forgeide.lang.LanguageRegistry;
+import com.willclay.forgeide.lang.api.Language;
+import com.willclay.forgeide.lang.api.LanguageRegistry;
 
 import java.io.IOException;
 import java.io.Reader;
