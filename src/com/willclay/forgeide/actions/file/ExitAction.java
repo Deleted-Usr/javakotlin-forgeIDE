@@ -21,8 +21,7 @@ public final class ExitAction extends ForgeAction
     @Override
     protected void perform()
     {
-        if (context.getEditorManager().hasModifiedFiles()
-                && !Utils.confirmDiscardChanges(context.getFrame(), "Exit")) return;
+        if (context.getEditorManager().hasModifiedFiles() && !Utils.confirmDiscardChanges(context.getFrame(), "Exit")) return;
 
         // Releases the watcher's thread and its watch keys. A daemon thread
         // would die with the JVM anyway; closing tidily means the same code

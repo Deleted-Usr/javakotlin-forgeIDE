@@ -63,8 +63,7 @@ public final class FileDialogs
 
         while (true)
         {
-            int choice = JOptionPane.showConfirmDialog(
-                    parent, fields, "New Project", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+            int choice = JOptionPane.showConfirmDialog(parent, fields, "New Project", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (choice != JOptionPane.OK_OPTION) return null;
 
             String projectName = name.getText().trim();
@@ -83,8 +82,7 @@ public final class FileDialogs
         List<Language> available = languages.languages();
         String[] names = languageNames();
 
-        Object selected = JOptionPane.showInputDialog(
-                parent, message, title, JOptionPane.QUESTION_MESSAGE, null, names, names[0]);
+        Object selected = JOptionPane.showInputDialog(parent, message, title, JOptionPane.QUESTION_MESSAGE, null, names, names[0]);
         if (selected == null) return null;
 
         for (int i = 0; i < names.length; i++)
@@ -126,8 +124,7 @@ public final class FileDialogs
         if (fileChooser.showSaveDialog(parent) != JFileChooser.APPROVE_OPTION) return null;
 
         Path file = SourceFileIO.withExtension(fileChooser.getSelectedFile().toPath(), language.defaultExtension());
-        if (Files.exists(file)
-                && !Utils.confirm(parent, "Overwrite?", file.getFileName() + " already exists. Overwrite it?"))
+        if (Files.exists(file) && !Utils.confirm(parent, "Overwrite?", file.getFileName() + " already exists. Overwrite it?"))
         {
             return null;
         }

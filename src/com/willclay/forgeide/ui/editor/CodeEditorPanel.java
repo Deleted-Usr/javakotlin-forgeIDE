@@ -220,8 +220,10 @@ public final class CodeEditorPanel extends JPanel
     private EditorTab createTab(Path file)
     {
         EditorTab tab = new EditorTab(file);
+
         tab.getTextPane().setFont(editorFont);
         applyTabSize(tab.getTextPane(), TAB_SIZE_IN_CHARACTERS);
+
         tab.setTheme(theme);
         tab.setLexer(lexer);
 
@@ -237,10 +239,13 @@ public final class CodeEditorPanel extends JPanel
     private void addTab(EditorTab tab)
     {
         tabs.addTab(displayName(tab), tab);
+
         int index = tabs.indexOfComponent(tab);
+
         tabs.setTabComponentAt(index, new TabHeader(tab));
         tabs.setToolTipTextAt(index, tab.getFile() == null ? "Unsaved file" : tab.getFile().toString());
         tabs.setSelectedComponent(tab);
+
         fireStateChanged();
     }
 
@@ -319,6 +324,7 @@ public final class CodeEditorPanel extends JPanel
         StyleConstants.setTabSet(defaultStyle, new TabSet(tabStops));
     }
 
+    /** A small nested class that defines the header of each panel. */
     private final class TabHeader extends JPanel
     {
         private final JLabel title = new JLabel();
@@ -331,7 +337,7 @@ public final class CodeEditorPanel extends JPanel
             title.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 6));
             add(title);
 
-            JButton close = new JButton("\u00d7");
+            JButton close = new JButton("×");
             close.setHorizontalAlignment(SwingConstants.CENTER);
             close.setToolTipText("Close");
             close.setFocusable(false);

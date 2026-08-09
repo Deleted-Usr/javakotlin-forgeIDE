@@ -28,8 +28,7 @@ import javax.swing.*;
  *            evaluates a variable before "super(...)".
  *          - Run Configurations: Pressing run only runs the currently open file, not ForgeIDE's
  *            main method. See the run config point above.
- *          - Process Control and Clean Builds: There is no stop action yet, and Clean Project
- *            remains disabled in CleanProjectAction.java
+ *          - Process Control: There is no stop action yet
  */
 
 /* TODO (After school project, or if I have time)
@@ -87,6 +86,7 @@ public final class Main
 
             Window w = new Window("Forge IDE");
 
+            // No setDefaultCloseOperation here because it would override the save changes dialog
             w.setLocationRelativeTo(null);
 
             w.setSize(INITIAL_WIDTH, INITIAL_HEIGHT);

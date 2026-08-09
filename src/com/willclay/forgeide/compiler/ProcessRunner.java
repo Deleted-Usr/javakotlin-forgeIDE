@@ -18,8 +18,7 @@ public final class ProcessRunner
 
     private ProcessRunner() { }
 
-    public static int execute(ProcessBuilder builder, Consumer<String> output, Consumer<Writer> onInputReady)
-            throws IOException, InterruptedException
+    public static int execute(ProcessBuilder builder, Consumer<String> output, Consumer<Writer> onInputReady) throws IOException, InterruptedException
     {
         // One merged stream: simpler to drain, and errors keep their position
         // relative to the normal output instead of arriving in a clump.
