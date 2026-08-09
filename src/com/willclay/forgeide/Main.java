@@ -7,18 +7,18 @@ import javax.swing.*;
 
 
 // TODO
-//  - Use a JTabbedPane for the Code Editor Viewport
 //  - Use a JToggleButton for compiler options
 //  - Give the actions icons (ForgeAction already has the hook)
-//  - Separate Java language in the backend from the actual IDE
-//  - Multi-Language Support with Plugin System
 //  - Automatic Lexing (Detecting file extension and lex accordingly)
 //  - Theme selection menu and service
 //  - Run Configurations (Like IntelliJ)
+//  - Support for libs in JavacToolchain
 //  - Launch Forge through a bootstrap sequence
 //  - Store registered languages in a cache upon app close, access that cache and load registry in bootstrap sequence
 //  - Fix performance concerned with Undo/Redo actions in the editor panel
 //  - Drag, shift select, reordering files and folders MUST be added to the explorer!!!
+//  - Project templates, Language Dependent (Empty, Basic, Console App)
+//  - Project settings that read the metadata to determine language
 //  - Custom Swing Components (extends JComponent):
 //       - Editor Panel (Syntax Highlighting, Custom Caret, Bracket Matching, Selection Painting, Configurable Fonts)
 //       - Custom Gutter (Line Numbers, Breakpoints, Folding Arrows, Modified Line Indicators)
@@ -70,7 +70,6 @@ public final class Main
 
             Window w = new Window("Forge IDE");
 
-            w.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             w.setLocationRelativeTo(null);
 
             w.setSize(INITIAL_WIDTH, INITIAL_HEIGHT);

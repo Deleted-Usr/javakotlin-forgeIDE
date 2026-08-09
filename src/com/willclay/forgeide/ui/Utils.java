@@ -29,8 +29,7 @@ public final class Utils
     /** @return true if the user chose Yes */
     public static boolean confirm(Component parent, String title, String message)
     {
-        int choice = JOptionPane.showConfirmDialog(
-                parent, message, title, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        int choice = JOptionPane.showConfirmDialog(parent, message, title, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         return choice == JOptionPane.YES_OPTION;
     }
@@ -50,7 +49,7 @@ public final class Utils
     /** The one question every action that replaces the editor's contents has to ask. */
     public static boolean confirmDiscardChanges(Component parent, String title)
     {
-        return confirm(parent, title, "The current file has unsaved changes.\nContinue and lose them?");
+        return confirm(parent, title, "There are unsaved changes.\nContinue and lose them?");
     }
 
     // --- Menu Factories --- //

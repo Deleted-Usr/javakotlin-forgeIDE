@@ -1,7 +1,6 @@
 package com.willclay.forgeide.actions.explorer;
 
 import com.willclay.forgeide.services.UIContext;
-import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.workspace.ProjectItem;
 
 import java.io.IOException;
@@ -31,9 +30,6 @@ public final class OpenSelectedFileAction extends ExplorerAction
     {
         ProjectItem item = getSelection();
         if (!appliesTo(item)) return;
-
-        if (context.getEditorManager().isModified()
-                && !Utils.confirmDiscardChanges(context.getFrame(), "Open " + item.name())) return;
 
         try
         {

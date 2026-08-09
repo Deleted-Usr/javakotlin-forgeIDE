@@ -44,7 +44,7 @@ public final class SaveAction extends ForgeAction
     public boolean saveCurrent()
     {
         Project project = context.getWorkspace().getProject();
-        if (project == null) return false;
+        if (project == null || context.getEditorManager().getCurrentTab() == null) return false;
 
         Language language = project.language();
 

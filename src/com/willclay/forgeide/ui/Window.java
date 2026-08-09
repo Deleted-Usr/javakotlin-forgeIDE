@@ -9,6 +9,7 @@ import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 import com.willclay.forgeide.ui.editor.ConsolePanel;
+import com.willclay.forgeide.ui.editor.EditorTab;
 import com.willclay.forgeide.ui.explorer.ProjectContextMenu;
 import com.willclay.forgeide.ui.explorer.ProjectTree;
 import com.willclay.forgeide.ui.explorer.ProjectTreeModel;
@@ -22,6 +23,8 @@ import com.willclay.forgeide.services.WorkspaceService;
 
 import javax.swing.JFrame;
 import java.awt.Font;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
@@ -39,7 +42,7 @@ import java.util.List;
  * The wiring at the bottom is the whole of the frame's behaviour: two
  * subscriptions, each one line.
  */
-public class Window extends JFrame
+public final class Window extends JFrame
 {
     private static final float EDITOR_FONT_SIZE = 14f;
     private static final float CONSOLE_FONT_SIZE = 12f;
@@ -84,6 +87,17 @@ public class Window extends JFrame
 
         ActionManager actions = new ActionManager(context);
 
+        editorPanel.setCloseRequestHandler(this::confirmCloseTab);
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter()
+        {
+            @Override
+            public void windowClosing(WindowEvent event)
+            {
+                actions.getExitAction().trigger();
+            }
+        });
+
         setJMenuBar(new EditorMenuBar(actions));
         workbench.setToolBar(new EditorToolBar(actions));
         projectTree.setContextMenu(new ProjectContextMenu(actions));
@@ -95,6 +109,15 @@ public class Window extends JFrame
         add(workbench);
 
         wireState();
+        updateTitle();
+    }
+
+    private boolean confirmCloseTab(EditorTab tab)
+    {
+        if (!tab.isModified()) return true;
+
+        String name = tab.getFile() == null ? EditorManager.UNTITLED : tab.getFile().getFileName().toString();
+        return Utils.confirmDiscardChanges(this, "Close " + name);
     }
 
     /**

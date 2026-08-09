@@ -2,7 +2,6 @@ package com.willclay.forgeide.actions.file;
 
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
-import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.workspace.Project;
@@ -28,15 +27,12 @@ public final class OpenFileAction extends ForgeAction
         Project project = context.getWorkspace().getProject();
         if (project == null) return;
 
-        EditorManager editor = context.getEditorManager();
-        if (editor.isModified() && !Utils.confirmDiscardChanges(context.getFrame(), "Open File")) return;
-
         Path file = context.getDialogs().chooseFileToOpen(project.language());
         if (file == null) return;
 
         try
         {
-            editor.openFile(file);
+            context.getEditorManager().openFile(file);
         }
         catch (IOException e)
         {

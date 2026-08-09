@@ -25,7 +25,7 @@ public final class NewProjectAction extends ForgeAction
     @Override
     protected void perform()
     {
-        if (context.getEditorManager().isModified()
+        if (context.getEditorManager().hasModifiedFiles()
                 && !Utils.confirmDiscardChanges(context.getFrame(), "New Project")) return;
 
         Path parent = context.getDialogs().chooseDirectory("Where should the project go?");

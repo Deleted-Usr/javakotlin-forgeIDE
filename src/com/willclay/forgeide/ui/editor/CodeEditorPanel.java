@@ -1,335 +1,309 @@
 package com.willclay.forgeide.ui.editor;
 
-import com.willclay.forgeide.editor.SyntaxUndoManager;
 import com.willclay.forgeide.highlighting.Lexer;
-import com.willclay.forgeide.highlighting.SyntaxHighlighter;
 import com.willclay.forgeide.highlighting.TokenTheme;
 
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextPane;
-import javax.swing.SwingUtilities;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.event.UndoableEditEvent;
-import javax.swing.text.Element;
+import javax.swing.SwingConstants;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 import javax.swing.text.TabSet;
 import javax.swing.text.TabStop;
-import javax.swing.undo.CannotUndoException;
-import javax.swing.undo.UndoableEdit;
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Predicate;
 
 /**
- * The code editor: a non-wrapping JTextPane in a scroll pane, with incremental
- * syntax highlighting wired to its document.
- *
- * Window used to own all of this directly. Keeping it here means the frame only
- * has to know getText/setText, and the editor can grow (line numbers, bracket
- * matching, a gutter) without the frame growing with it.
- *
- * It also owns the undo history, and reports two things outwards: that the text
- * changed (the workspace wants to know, for the dirty marker) and that the undo
- * stack changed (UndoAction and RedoAction want to know, so they can grey
- * themselves out). Both are plain Runnables — the editor has no idea who is
- * listening.
+ * Owns the editor tab strip and routes editor commands to the selected tab.
+ * Each {@link EditorTab} owns its document, dirty state, highlighter and undo
+ * history; this class owns only operations that span or select documents.
  */
 public final class CodeEditorPanel extends JPanel
 {
     private static final int TAB_SIZE_IN_CHARACTERS = 4;
-
-    /** Tab stops are positions, not a repeating rule, so enough must be defined up front. */
     private static final int TAB_STOP_COUNT = 60;
 
-    /** Enough to undo a session's worth of typing without holding the file's whole history. */
-    private static final int UNDO_LIMIT = 500;
-
-    private final JTextPane textPane = new NoWrapTextPane();
-    private final SyntaxHighlighter highlighter = new SyntaxHighlighter();
-    private final SyntaxUndoManager undoManager = new SyntaxUndoManager();
-
-    private final List<Runnable> textChangeListeners = new ArrayList<>();
+    private final JTabbedPane tabs = new JTabbedPane();
+    private final Font editorFont;
+    private final List<Runnable> stateChangeListeners = new ArrayList<>();
     private final List<Runnable> undoStateListeners = new ArrayList<>();
 
-    // Dirty lines waiting to be highlighted, merged across every edit that has
-    // arrived since the last pass. NO_PENDING means there is nothing to do.
-    private static final int NO_PENDING = -1;
-    private int pendingFirstLine = NO_PENDING;
-    private int pendingLastLine = NO_PENDING;
-    private boolean refreshScheduled;
+    private Lexer lexer = Lexer.PLAIN;
+    private TokenTheme theme = TokenTheme.materialDarker();
+    private Predicate<EditorTab> closeRequestHandler = tab -> true;
 
-    private boolean replayingHistory;
-
-    public CodeEditorPanel(Font font)
+    public CodeEditorPanel(Font editorFont)
     {
         super(new BorderLayout());
 
-        textPane.setFont(font);
-        applyTabSize(TAB_SIZE_IN_CHARACTERS);
+        this.editorFont = Objects.requireNonNull(editorFont);
+        tabs.addChangeListener(event -> activeTabChanged());
 
-        setLexer(Lexer.PLAIN);
-
-        highlighter.setTheme(TokenTheme.materialDarker());
-        installHighlighting();
-
-        installUndoSupport();
-
-        add(new JScrollPane(textPane), BorderLayout.CENTER);
+        add(tabs, BorderLayout.CENTER);
+        addUntitledTab("", false);
     }
 
-    public void setLexer(Lexer lexer)
+    public EditorTab getSelectedTab()
     {
-        highlighter.setLexer(lexer);
-        highlighter.refreshAll(textPane);
+        Component selected = tabs.getSelectedComponent();
+        return selected instanceof EditorTab tab ? tab : null;
     }
 
-    public void setTheme(TokenTheme theme)
+    public List<EditorTab> getOpenTabs()
     {
-        highlighter.setTheme(theme);
-        highlighter.refreshAll(textPane);
+        List<EditorTab> result = new ArrayList<>();
+
+        for (int i = 0; i < tabs.getTabCount(); i++)
+        {
+            Component component = tabs.getComponentAt(i);
+            if (component instanceof EditorTab tab) result.add(tab);
+        }
+
+        return List.copyOf(result);
     }
 
-    public String getText()
+    public EditorTab newFile(String contents)
     {
-        return textPane.getText();
+        return addUntitledTab(contents, true);
     }
 
-    /** Replaces the contents and re-highlights the whole document. */
-    public void setText(String text)
+    public EditorTab openFile(Path file, String contents)
     {
-        textPane.setText(text);
-        textPane.setCaretPosition(0);
+        Objects.requireNonNull(file);
 
-        highlighter.refreshAll(textPane);
+        EditorTab existing = findTab(file);
+        if (existing != null)
+        {
+            selectTab(existing);
+            return existing;
+        }
 
-        // setText fired document events that queued a refresh of their own.
-        // Dropping it avoids highlighting the whole file a second time, which
-        // is most of what made opening a large file feel like a hang.
-        clearPending();
+        EditorTab tab = createTab(file);
+        tab.setText(contents);
+        addTab(tab);
 
-        // Loading a file is not an edit, so there is nothing to undo back past.
-        // Discarded after setText rather than before, because setText is what
-        // put the edits there.
-        undoManager.discardAllEdits();
+        return tab;
+    }
+
+    /** Prevents the same file from being opened in two tabs. */
+    public EditorTab findTab(Path file)
+    {
+        if (file == null) return null;
+
+        Path normalizedFile = normalize(file);
+        for (EditorTab tab : getOpenTabs())
+        {
+            if (tab.getFile() != null && normalize(tab.getFile()).equals(normalizedFile)) return tab;
+        }
+
+        return null;
+    }
+
+    public void selectTab(EditorTab tab)
+    {
+        if (tabs.indexOfComponent(tab) >= 0) tabs.setSelectedComponent(tab);
+    }
+
+    /** Removes every document, used when a project is closed or replaced. */
+    public void closeAllTabs()
+    {
+        tabs.removeAll();
+        fireStateChanged();
         fireUndoStateChanged();
+    }
+
+    public boolean hasModifiedTabs()
+    {
+        return getOpenTabs().stream().anyMatch(EditorTab::isModified);
+    }
+
+    public void markSaved(EditorTab tab, Path file)
+    {
+        if (tabs.indexOfComponent(tab) < 0) return;
+
+        tab.setFile(file);
+        tab.markSaved();
+        updateTabTitle(tab);
+        fireStateChanged();
     }
 
     public JTextPane getTextPane()
     {
-        return textPane;
+        EditorTab tab = getSelectedTab();
+        return tab == null ? null : tab.getTextPane();
     }
 
-    // --- Undo history --- //
+    public String getText()
+    {
+        EditorTab tab = getSelectedTab();
+        return tab == null ? "" : tab.getText();
+    }
 
     public boolean canUndo()
     {
-        return undoManager.canUndo();
-    }
-
-    public boolean canRedo()
-    {
-        return undoManager.canRedo();
+        EditorTab tab = getSelectedTab();
+        return tab != null && tab.canUndo();
     }
 
     public void undo()
     {
-        // Finish any queued highlighting so its edits occur before the text undo.
-        if (refreshScheduled)
-        {
-            refreshPending();
-        }
+        EditorTab tab = getSelectedTab();
+        if (tab != null) tab.undo();
+    }
 
-        replayingHistory = true;
-
-        try
-        {
-            if (undoManager.canUndo())
-            {
-                undoManager.undo();
-            }
-        }
-        catch (CannotUndoException ignored)
-        {
-        }
-        finally
-        {
-            replayingHistory = false;
-        }
-
-        fireUndoStateChanged();
+    public boolean canRedo()
+    {
+        EditorTab tab = getSelectedTab();
+        return tab != null && tab.canRedo();
     }
 
     public void redo()
     {
-        // Finish any queued highlighting so its edits occur before the text undo.
-        if (refreshScheduled)
-        {
-            refreshPending();
-        }
-
-        replayingHistory = true;
-
-        try
-        {
-            if (undoManager.canRedo())
-            {
-                undoManager.redo();
-            }
-        }
-        catch (CannotUndoException ignored)
-        {
-        }
-        finally
-        {
-            replayingHistory = false;
-        }
-
-        fireUndoStateChanged();
+        EditorTab tab = getSelectedTab();
+        if (tab != null) tab.redo();
     }
 
-    // --- Listeners --- //
-
-    /** Fired for every insertion and removal, so keep the work small. */
-    public void addTextChangeListener(Runnable listener)
+    /** Applies the project's language to existing tabs and all tabs opened later. */
+    public void setLexer(Lexer lexer)
     {
-        textChangeListeners.add(listener);
+        this.lexer = Objects.requireNonNull(lexer);
+        for (EditorTab tab : getOpenTabs()) tab.setLexer(lexer);
     }
 
-    /** Fired when undo or redo becomes possible or impossible. */
+    public void setTheme(TokenTheme theme)
+    {
+        this.theme = Objects.requireNonNull(theme);
+        for (EditorTab tab : getOpenTabs()) tab.setTheme(theme);
+    }
+
+    public void addStateChangeListener(Runnable listener)
+    {
+        stateChangeListeners.add(Objects.requireNonNull(listener));
+    }
+
+    /** Fired for changes to the selected tab's undo/redo availability. */
     public void addUndoStateListener(Runnable listener)
     {
-        undoStateListeners.add(listener);
+        undoStateListeners.add(Objects.requireNonNull(listener));
     }
 
-    /**
-     * changedUpdate is deliberately left empty: it fires when <em>attributes</em>
-     * change, which is exactly what the highlighter itself does — reacting to it
-     * would recurse forever.
-     */
-    private void installHighlighting()
+    /** Called before a tab-close button removes its document. */
+    public void setCloseRequestHandler(Predicate<EditorTab> handler)
     {
-        textPane.getDocument().addDocumentListener(new DocumentListener()
+        closeRequestHandler = Objects.requireNonNull(handler);
+    }
+
+    private EditorTab addUntitledTab(String contents, boolean modified)
+    {
+        EditorTab tab = createTab(null);
+        tab.setText(contents);
+        if (modified) tab.markModified();
+        addTab(tab);
+
+        return tab;
+    }
+
+    private EditorTab createTab(Path file)
+    {
+        EditorTab tab = new EditorTab(file);
+        tab.getTextPane().setFont(editorFont);
+        applyTabSize(tab.getTextPane(), TAB_SIZE_IN_CHARACTERS);
+        tab.setTheme(theme);
+        tab.setLexer(lexer);
+
+        tab.addTextChangeListener(() -> tabTextChanged(tab));
+        tab.addUndoStateListener(() ->
         {
-            @Override
-            public void insertUpdate(DocumentEvent e)
-            {
-                if (!replayingHistory)
-                {
-                    queueRefresh(e);
-                }
-
-                fireTextChanged();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e)
-            {
-                if (!replayingHistory)
-                {
-                    queueRefresh(e);
-                }
-
-                fireTextChanged();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) { }
+            if (tab == getSelectedTab()) fireUndoStateChanged();
         });
+
+        return tab;
     }
 
-    private void installUndoSupport()
+    private void addTab(EditorTab tab)
     {
-        undoManager.setLimit(UNDO_LIMIT);
-        textPane.getDocument().addUndoableEditListener(this::recordEdit);
+        tabs.addTab(displayName(tab), tab);
+        int index = tabs.indexOfComponent(tab);
+        tabs.setTabComponentAt(index, new TabHeader(tab));
+        tabs.setToolTipTextAt(index, tab.getFile() == null ? "Unsaved file" : tab.getFile().toString());
+        tabs.setSelectedComponent(tab);
+        fireStateChanged();
     }
 
-    /**
-     * The catch that makes undo in a styled editor worth writing carefully: a
-     * StyledDocument reports a change of character attributes as an undoable
-     * edit, and the highlighter changes character attributes constantly. Record
-     * those and Ctrl+Z spends its first dozen presses undoing colours instead
-     * of the typing that caused them.
-     *
-     * Attribute changes arrive as a DefaultDocumentEvent of type CHANGE, which
-     * is the one thing that distinguishes them from real edits.
-     */
-    private void recordEdit(UndoableEditEvent event)
+    private void requestClose(EditorTab tab)
     {
-        UndoableEdit edit = event.getEdit();
+        int index = tabs.indexOfComponent(tab);
+        if (index < 0 || !closeRequestHandler.test(tab)) return;
 
-        undoManager.addEdit(edit);
+        tabs.removeTabAt(index);
+        fireStateChanged();
         fireUndoStateChanged();
     }
 
-    private void fireTextChanged()
+    private void activeTabChanged()
     {
-        for (Runnable listener : textChangeListeners) listener.run();
+        EditorTab tab = getSelectedTab();
+        if (tab != null) tab.getTextPane().requestFocusInWindow();
+
+        fireStateChanged();
+        fireUndoStateChanged();
+    }
+
+    private void tabTextChanged(EditorTab tab)
+    {
+        updateTabTitle(tab);
+        fireStateChanged();
+    }
+
+    private void updateTabTitle(EditorTab tab)
+    {
+        int index = tabs.indexOfComponent(tab);
+        if (index < 0) return;
+
+        String title = displayName(tab);
+        tabs.setTitleAt(index, title);
+        tabs.setToolTipTextAt(index, tab.getFile() == null ? "Unsaved file" : tab.getFile().toString());
+
+        Component header = tabs.getTabComponentAt(index);
+        if (header instanceof TabHeader tabHeader) tabHeader.setTitle(title);
+    }
+
+    private static String displayName(EditorTab tab)
+    {
+        String filename = tab.getFile() == null ? "Untitled" : tab.getFile().getFileName().toString();
+        return filename + (tab.isModified() ? " *" : "");
+    }
+
+    private void fireStateChanged()
+    {
+        for (Runnable listener : List.copyOf(stateChangeListeners)) listener.run();
     }
 
     private void fireUndoStateChanged()
     {
-        for (Runnable listener : undoStateListeners) listener.run();
+        for (Runnable listener : List.copyOf(undoStateListeners)) listener.run();
     }
 
-    /**
-     * Records the dirty lines and makes sure exactly one refresh is queued.
-     *
-     * Posting an invokeLater per document event meant a paste, a block comment
-     * or an auto-indent produced several passes over overlapping lines, each one
-     * mutating the document and invalidating the view layout. Merging them into
-     * a single range collapses that into one pass per burst of edits.
-     */
-    private void queueRefresh(DocumentEvent e)
+    private static Path normalize(Path file)
     {
-        Element root = e.getDocument().getDefaultRootElement();
-        int docLength = e.getDocument().getLength();
-
-        // On a removal the text is already gone, so offset + length can point
-        // past the end of the document — clamp before asking for a line index.
-        int first = root.getElementIndex(e.getOffset());
-        int last = root.getElementIndex(Math.min(e.getOffset() + e.getLength(), docLength));
-
-        pendingFirstLine = pendingFirstLine == NO_PENDING ? first : Math.min(pendingFirstLine, first);
-        pendingLastLine = Math.max(pendingLastLine, last);
-
-        if (refreshScheduled) return;
-        refreshScheduled = true;
-
-        // Never recolour from inside the listener: a document may not be
-        // modified while it is notifying its listeners.
-        SwingUtilities.invokeLater(this::refreshPending);
+        return file.toAbsolutePath().normalize();
     }
 
-    private void refreshPending()
-    {
-        refreshScheduled = false;
-
-        int first = pendingFirstLine;
-        int last = pendingLastLine;
-        clearPending();
-
-        if (first != NO_PENDING) highlighter.refresh(textPane, first, last);
-    }
-
-    private void clearPending()
-    {
-        pendingFirstLine = NO_PENDING;
-        pendingLastLine = NO_PENDING;
-    }
-
-    /**
-     * JTextPane has no setTabSize(int) — tab stops live in the paragraph
-     * attributes. Applied to DEFAULT_STYLE so new paragraphs inherit it.
-     * Must run after setFont, since the width comes from the font metrics.
-     */
-    private void applyTabSize(int charactersPerTab)
+    private static void applyTabSize(JTextPane textPane, int charactersPerTab)
     {
         FontMetrics metrics = textPane.getFontMetrics(textPane.getFont());
         int tabWidth = metrics.charWidth('m') * charactersPerTab;
@@ -340,8 +314,38 @@ public final class CodeEditorPanel extends JPanel
             tabStops[i] = new TabStop((i + 1) * tabWidth);
         }
 
-        StyledDocument doc = textPane.getStyledDocument();
-        Style defaultStyle = doc.getStyle(StyleContext.DEFAULT_STYLE);
+        StyledDocument document = textPane.getStyledDocument();
+        Style defaultStyle = document.getStyle(StyleContext.DEFAULT_STYLE);
         StyleConstants.setTabSet(defaultStyle, new TabSet(tabStops));
+    }
+
+    private final class TabHeader extends JPanel
+    {
+        private final JLabel title = new JLabel();
+
+        private TabHeader(EditorTab tab)
+        {
+            super(new FlowLayout(FlowLayout.LEADING, 0, 0));
+            setOpaque(false);
+
+            title.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 6));
+            add(title);
+
+            JButton close = new JButton("\u00d7");
+            close.setHorizontalAlignment(SwingConstants.CENTER);
+            close.setToolTipText("Close");
+            close.setFocusable(false);
+            close.setContentAreaFilled(false);
+            close.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
+            close.addActionListener(event -> requestClose(tab));
+            add(close);
+
+            setTitle(displayName(tab));
+        }
+
+        private void setTitle(String value)
+        {
+            title.setText(value);
+        }
     }
 }

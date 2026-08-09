@@ -111,7 +111,7 @@ public final class ActionManager
         // Save needs Save As to fall back to, so Save As is built first.
         saveAs = new SaveAsAction(context);
         save = new SaveAction(context, saveAs);
-        saveAll = new SaveAllAction(context);
+        saveAll = new SaveAllAction(context, save);
         exit = new ExitAction(context);
 
         undo = new UndoAction(context);
@@ -131,7 +131,7 @@ public final class ActionManager
         // this::setTaskRunning is resolved when it is called, not now, so it
         // is safe to hand out before the fields it touches are assigned.
         run = new RunAction(context, save, this::setTaskRunning);
-        buildProject = new BuildProjectAction(context, save, this::setTaskRunning);
+        buildProject = new BuildProjectAction(context, saveAll, this::setTaskRunning);
         cleanProject = new CleanProjectAction(context, this::setTaskRunning);
 
         toggleProjectTree = new ToggleViewAction("Project Explorer", null, true, workbench::setProjectTreeVisible);
@@ -151,6 +151,7 @@ public final class ActionManager
         about = new AboutAction(context);
 
         context.getWorkspace().addChangeListener(this::syncProjectActions);
+        context.getEditorManager().addChangeListener(this::syncProjectActions);
         syncProjectActions();
     }
 
@@ -177,8 +178,9 @@ public final class ActionManager
         boolean hasProject = context.getWorkspace().hasProject();
         newFile.setEnabled(hasProject);
         openFile.setEnabled(hasProject);
-        save.setEnabled(hasProject);
-        saveAs.setEnabled(hasProject);
+        boolean hasEditor = context.getEditorManager().getCurrentTab() != null;
+        save.setEnabled(hasProject && hasEditor);
+        saveAs.setEnabled(hasProject && hasEditor);
     }
 
     public NewProjectAction getNewProjectAction() { return newProject; }

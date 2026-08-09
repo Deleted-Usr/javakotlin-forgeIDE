@@ -7,11 +7,11 @@ import java.awt.Dimension;
 
 /**
  * A JTextPane that does not line-wrap.
- *
+ * <p>
  * JTextPane normally reports that it tracks its viewport's width, which is what
  * makes long lines wrap. Reporting false lets the enclosing JScrollPane give it
  * its full preferred width and show a horizontal scrollbar instead.
- *
+ * <p>
  * PERFORMANCE: this used to answer by comparing getUI().getPreferredSize(this)
  * against the viewport width. That call measures every glyph run in the whole
  * document, and Swing calls getScrollableTracksViewportWidth on every validate,
@@ -21,7 +21,7 @@ import java.awt.Dimension;
  * full-document remeasure. Answering with a constant removes the measurement
  * from the hot path entirely.
  */
-final class NoWrapTextPane extends JTextPane
+public class NoWrapTextPane extends JTextPane
 {
     @Override
     public boolean getScrollableTracksViewportWidth()

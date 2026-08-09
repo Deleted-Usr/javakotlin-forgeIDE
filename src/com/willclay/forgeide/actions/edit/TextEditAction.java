@@ -33,6 +33,7 @@ public final class TextEditAction extends ForgeAction
     protected void perform()
     {
         JTextPane pane = editor.getTextPane();
+        if (pane == null) return;
 
         // A menu click moves focus to the menu, and cut/paste operate on the
         // caret's selection — so put focus back before touching the document.

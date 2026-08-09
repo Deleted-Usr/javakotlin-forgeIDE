@@ -35,7 +35,7 @@ public final class SaveAsAction extends ForgeAction
     public boolean saveAs(Path suggested)
     {
         Project project = context.getWorkspace().getProject();
-        if (project == null) return false;
+        if (project == null || context.getEditorManager().getCurrentTab() == null) return false;
 
         Path file = context.getDialogs().chooseFileToSave(project.language(), suggested);
         if (file == null) return false; // cancelled, or declined the overwrite

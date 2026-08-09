@@ -2,29 +2,57 @@ package com.willclay.forgeide.actions.file;
 
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
+import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.ui.editor.EditorTab;
 
 import java.awt.event.KeyEvent;
 
-/**
- * Placeholder — disabled until there is more than one file open.
- * <p>
- * It exists now so the menu it belongs in never has to be edited again: when
- * the editor becomes a JTabbedPane, this class is the only one that changes.
- * <p>
- * TODO - loop the workspace's open documents and save the modified ones.
- */
+/** Saves each modified editor tab, asking for a path for untitled documents. */
 public final class SaveAllAction extends ForgeAction
 {
-    public SaveAllAction(UIContext context)
+    private final UIContext context;
+    private final SaveAction save;
+
+    public SaveAllAction(UIContext context, SaveAction save)
     {
         super("Save All", Shortcuts.menuAlt(KeyEvent.VK_S), "Save every modified file");
-        setEnabled(false);
+
+        this.context = context;
+        this.save = save;
+
+        context.getEditorManager().addChangeListener(this::syncEnabled);
+        context.getWorkspace().addChangeListener(this::syncEnabled);
+        syncEnabled();
+    }
+
+    private void syncEnabled()
+    {
+        setEnabled(context.getWorkspace().hasProject()
+                && context.getEditorManager().hasModifiedFiles());
     }
 
     @Override
     protected void perform()
     {
-        // Nothing yet — a single open file means Save already covers this.
+        saveAll();
+    }
+
+    /** @return true only when every modified tab was saved successfully */
+    public boolean saveAll()
+    {
+        EditorManager manager = context.getEditorManager();
+        EditorTab original = manager.getCurrentTab();
+
+        for (EditorTab tab : manager.getOpenTabs())
+        {
+            if (!tab.isModified()) continue;
+
+            manager.selectTab(tab);
+            if (!save.saveCurrent()) return false;
+        }
+
+        if (original != null) manager.selectTab(original);
+        return true;
     }
 }
