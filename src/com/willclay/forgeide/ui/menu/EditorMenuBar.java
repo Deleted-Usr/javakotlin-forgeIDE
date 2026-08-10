@@ -1,6 +1,7 @@
 package com.willclay.forgeide.ui.menu;
 
 import com.willclay.forgeide.actions.ActionManager;
+import com.willclay.forgeide.ui.settings.SettingsButton;
 
 import javax.swing.*;
 
@@ -19,6 +20,8 @@ public final class EditorMenuBar extends JMenuBar
         add(new ViewMenu(actions));
         add(new BuildMenu(actions));
         add(new HelpMenu(actions));
+
+        add(Box.createHorizontalGlue());
 
         add(new SettingsButton());
     }

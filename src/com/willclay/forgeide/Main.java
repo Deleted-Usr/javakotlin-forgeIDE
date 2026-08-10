@@ -21,6 +21,12 @@ import javax.swing.*;
  *  - Project templates, Language Dependent (Empty, Basic, Console App)
  */
 
+/* TODO - Settings Menus
+ *          - Project Menu: Similar to project structure in IntelliJ. Provides general
+ *            and language specific settings for the current project.
+ *
+ */
+
 /* TODO - Get the project to a point where self-hosting is possible, that requires:
  *          - Dependency Classpaths: Add the ability to compile with JAR files, as ForgeIDE
  *            requires FlatLaF libraries.
