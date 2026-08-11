@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Swing Component Catalog — Metal (Ocean) look and feel</title>
+<style>
+/* ============================================================
+   Ocean theme palette (javax.swing.plaf.metal.OceanTheme)
+   ============================================================ */
+:root{
+  --p1:#6382BF;            /* primary1   */
+  --p2:#A3B8CC;            /* primary2   */
+  --p3:#B8CFE5;            /* primary3   */
+  --s1:#7A8A99;            /* secondary1 */
+  --s2:#B8CFE5;            /* secondary2 */
+  --s3:#EEEEEE;            /* secondary3 - control */
+  --ink:#333333;           /* black      */
+  --disabled:#999999;
+  --btn:linear-gradient(to bottom,#DDE8F3 0%,#FFFFFF 30%,#B8CFE5 100%);
+  --btn-press:linear-gradient(to bottom,#A3B8CC 0%,#B8CFE5 40%,#DDE8F3 100%);
+  --bar:linear-gradient(to bottom,#FFFFFF 0%,#F2F2F2 60%,#E4E4E4 100%);
+  --dialog:"Lucida Sans","Lucida Grande","DejaVu Sans",Verdana,Tahoma,sans-serif;
+  --mono:"DejaVu Sans Mono",Menlo,Consolas,"Courier New",monospace;
+}
+*{box-sizing:border-box}
+html{background:#5B6670;background-image:radial-gradient(circle at 50% 0,#75818C,#4A545D 70%)}
+body{
+  margin:0;padding:22px 16px 60px;
+  font:12px/1.4 var(--dialog);color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ============================================================
+   Metal primitives — reused by every specimen
+   ============================================================ */
+.control{background:var(--s3)}
+.lowered{border:1px solid var(--s1);border-right-color:#B0BCC7;border-bottom-color:#B0BCC7;background:#fff}
+.etched{border:1px solid var(--s1)}
+.bold{font-weight:700}
+
+/* JButton family */
+.btn{
+  font:700 12px var(--dialog);color:var(--ink);
+  padding:3px 12px;border:1px solid var(--s1);border-radius:3px;
+  background:var(--btn);cursor:default;display:inline-flex;align-items:center;gap:5px;
+  min-height:23px;
+}
+.btn.rollover{border-color:var(--p1)}
+.btn.focused{box-shadow:inset 0 0 0 1px #fff,inset 0 0 0 2px var(--p2)}
+.btn.pressed,.btn.selected{background:var(--btn-press);border-color:var(--p1)}
+.btn.disabled{color:var(--disabled);border-color:#C0C0C0;background:var(--s3)}
+.btn.icon-only{padding:3px 6px}
+
+/* JCheckBox / JRadioButton */
+.box,.circle{
+  width:13px;height:13px;flex:0 0 13px;border:1px solid var(--s1);
+  background:linear-gradient(to bottom,#fff 0%,#DDE8F3 50%,#B8CFE5 100%);
+  display:inline-grid;place-items:center;border-radius:2px;
+}
+.circle{border-radius:50%}
+.box.on::after{content:"";width:9px;height:9px;background:var(--ink);
+  clip-path:polygon(14% 47%,0 61%,36% 100%,100% 25%,86% 12%,34% 71%)}
+.circle.on::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--ink)}
+.box.off,.circle.off{background:linear-gradient(to bottom,#fff,#EDF2F8)}
+.box.dis,.circle.dis{border-color:#C0C0C0;background:var(--s3)}
+label.tog{display:inline-flex;align-items:center;gap:5px;font-weight:700;cursor:default}
+label.tog.dis{color:var(--disabled)}
+
+/* Text components */
+.field{font:12px var(--dialog);color:var(--ink);background:#fff;
+  border:1px solid var(--s1);border-right-color:#B0BCC7;border-bottom-color:#B0BCC7;
+  padding:3px 4px;min-height:22px;display:block}
+.field.dis{background:var(--s3);color:var(--disabled)}
+.caret{display:inline-block;width:1px;height:13px;background:var(--ink);
+  vertical-align:-2px;animation:blink 1.06s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.selectedtext{background:var(--p3)}
+
+/* Panels, borders, titled borders */
+.panel{background:var(--s3);border:1px solid transparent}
+fieldset.titled{
+  border:1px solid var(--s1);margin:0 0 22px;padding:14px 14px 4px;background:var(--s3);
+}
+fieldset.titled>legend{font-weight:700;padding:0 5px;color:var(--ink)}
+.divider{height:1px;background:var(--s1);border-bottom:1px solid #fff}
+
+/* Scrollbars (Metal, with bumps) */
+.sb{background:#EEF2F6;border:1px solid var(--s1);display:flex}
+.sb.v{width:17px;flex-direction:column;height:100%}
+.sb.h{height:17px;width:100%}
+.sb-btn{background:var(--btn);border:1px solid var(--s1);display:grid;place-items:center;
+  font-size:7px;color:var(--ink);flex:0 0 15px}
+.sb.v .sb-btn{height:15px}
+.sb.h .sb-btn{width:15px}
+.sb-thumb{background:var(--btn);border:1px solid var(--s1);position:relative;overflow:hidden}
+.sb-thumb::after{content:"";position:absolute;inset:3px;
+  background-image:radial-gradient(#fff .6px,transparent .7px),radial-gradient(var(--s1) .6px,transparent .7px);
+  background-size:4px 4px,4px 4px;background-position:0 0,1px 1px;opacity:.9}
+.sb-track{flex:1}
+
+/* Progress bar */
+.prog{height:16px;border:1px solid var(--s1);background:#EEF2F6;position:relative;overflow:hidden}
+.prog>i{display:block;height:100%;background:linear-gradient(to bottom,#B8CFE5,#6382BF 60%,#8FA9CE);}
+.prog>span{position:absolute;inset:0;display:grid;place-items:center;font:700 11px var(--dialog)}
+
+/* Slider (Metal pointed thumb) */
+.slider{position:relative;height:24px;padding-top:9px}
+.slider .trk{height:5px;background:#EEF2F6;border:1px solid var(--s1)}
+.slider .thumb{position:absolute;top:4px;width:15px;height:16px;background:var(--btn);
+  border:1px solid var(--s1);clip-path:polygon(0 0,100% 0,100% 62%,50% 100%,0 62%)}
+.slider .ticks{display:flex;justify-content:space-between;margin-top:3px}
+.slider .ticks i{width:1px;height:5px;background:var(--s1)}
+
+/* Menus */
+.menubar{background:var(--bar);border-bottom:1px solid var(--s1);display:flex;align-items:stretch}
+.menubar>span{font-weight:700;padding:4px 9px;cursor:default}
+.menubar>span:hover,.menubar>span.open{background:var(--p2)}
+.popup{background:var(--s3);border:1px solid var(--s1);box-shadow:2px 2px 0 rgba(0,0,0,.25);
+  padding:2px 0;min-width:186px}
+.mi{display:flex;align-items:center;gap:8px;padding:3px 8px 3px 6px;font-weight:700;cursor:default}
+.mi:hover{background:var(--p2)}
+.mi .acc{margin-left:auto;font-weight:400;color:#555}
+.mi.dis,.mi.dis:hover{color:var(--disabled);background:none}
+.mi .gutter{width:13px;flex:0 0 13px;display:grid;place-items:center}
+.mi .arrow{margin-left:auto;font-size:8px}
+.msep{height:1px;background:var(--s1);margin:2px 1px;border-bottom:1px solid #fff}
+
+/* Tabs (Metal beveled corner) */
+.tabs{display:flex;align-items:flex-end;gap:1px;padding-left:4px}
+.tab{font-weight:700;padding:4px 12px 5px;border:1px solid var(--s1);border-bottom:none;
+  background:linear-gradient(to bottom,#F7F7F7,#DCDCDC);
+  clip-path:polygon(0 100%,0 7px,7px 0,100% 0,100% 100%);position:relative;top:1px;cursor:default}
+.tab::before{content:"";position:absolute;left:0;top:0;width:8px;height:8px;
+  background:linear-gradient(to top left,transparent 49.5%,var(--s1) 49.5%,var(--s1) 53%,transparent 53%)}
+.tab.sel{background:linear-gradient(to bottom,#fff,#DDE8F3);top:0;padding-bottom:6px;z-index:2}
+.tabbody{border:1px solid var(--s1);background:var(--s3);padding:12px;min-height:64px}
+
+/* Lists / tables / trees */
+.list{background:#fff;border:1px solid var(--s1);border-right-color:#B0BCC7;font:12px var(--dialog)}
+.list .row{padding:2px 5px;cursor:default}
+.list .row.sel{background:var(--p3)}
+table.jtable{border-collapse:collapse;background:#fff;font:12px var(--dialog);width:100%}
+table.jtable th{
+  font:700 12px var(--dialog);text-align:left;padding:3px 6px;
+  background:var(--btn);border:1px solid var(--s1);border-left:none}
+table.jtable td{padding:2px 6px;border-right:1px solid var(--p3);border-bottom:1px solid var(--p3)}
+table.jtable tr.sel td{background:var(--p3)}
+.tree{background:#fff;border:1px solid var(--s1);padding:4px;font:12px var(--dialog)}
+.tree ul{list-style:none;margin:0;padding-left:17px}
+.tree>ul{padding-left:2px}
+.tree li{position:relative;padding:1px 0}
+.tree li>span{display:inline-flex;align-items:center;gap:4px;padding:1px 3px;cursor:default}
+.tree li>span.sel{background:var(--p3)}
+.handle{width:9px;height:9px;border:1px solid var(--s1);background:#fff;border-radius:2px;
+  display:inline-grid;place-items:center;font:9px/1 var(--mono);color:var(--ink);flex:0 0 9px}
+.leafdot{width:9px;flex:0 0 9px}
+.ficon,.dicon{width:12px;height:11px;flex:0 0 12px;border:1px solid var(--s1)}
+.dicon{background:linear-gradient(#FFF3C4,#E8CE6B);border-radius:1px 3px 1px 1px}
+.ficon{background:#fff;clip-path:polygon(0 0,72% 0,100% 26%,100% 100%,0 100%)}
+
+/* Combo / spinner */
+.combo{display:inline-flex;border:1px solid var(--s1);background:#fff;min-width:150px}
+.combo .val{flex:1;padding:3px 5px;font:12px var(--dialog)}
+.combo .arw{width:17px;background:var(--btn);border-left:1px solid var(--s1);
+  display:grid;place-items:center;font-size:7px}
+.spin{display:inline-flex;border:1px solid var(--s1);background:#fff}
+.spin .val{padding:3px 5px;min-width:64px;font:12px var(--dialog);text-align:left}
+.spin .btns{display:flex;flex-direction:column;border-left:1px solid var(--s1);width:16px}
+.spin .btns b{flex:1;background:var(--btn);display:grid;place-items:center;font-size:6px;font-weight:400}
+.spin .btns b:first-child{border-bottom:1px solid var(--s1)}
+
+/* Windows: internal frame + Metal-decorated frame */
+.win{border:1px solid var(--s1);background:var(--s3);box-shadow:2px 2px 0 rgba(0,0,0,.2)}
+.titlebar{display:flex;align-items:center;gap:6px;padding:3px 4px 3px 6px;
+  background:linear-gradient(to bottom,#F0F5FB,#B8CFE5);border-bottom:1px solid var(--s1)}
+.titlebar.inactive{background:linear-gradient(to bottom,#F6F6F6,#DCDCDC);color:#6E6E6E}
+.titlebar .ttl{font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wbtn{width:15px;height:14px;border:1px solid var(--s1);background:var(--btn);
+  display:grid;place-items:center;font:9px/1 var(--mono);flex:0 0 15px}
+
+/* Tooltip */
+.tip{background:#FFFFE1;border:1px solid var(--ink);padding:2px 5px;font:12px var(--dialog);
+  display:inline-block;box-shadow:1px 1px 0 rgba(0,0,0,.2)}
+
+/* ============================================================
+   Catalog chrome — the page is itself a Swing window
+   ============================================================ */
+.frame{max-width:1120px;margin:0 auto;border:1px solid #3F4B55;background:var(--s3);
+  box-shadow:0 14px 40px rgba(0,0,0,.45)}
+.frame>.titlebar{background:linear-gradient(to bottom,#8AA4CE,#6382BF 55%,#4E6DA8);
+  border-bottom:1px solid #3F4B55;color:#fff;padding:5px 6px}
+.frame>.titlebar .ttl{color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.35)}
+.toolbar{display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--bar);
+  border-bottom:1px solid var(--s1);flex-wrap:wrap}
+.toolbar .grip{width:6px;height:20px;
+  background-image:radial-gradient(var(--s1) .6px,transparent .7px);background-size:3px 3px}
+.split{display:flex;align-items:stretch;min-height:70vh}
+.leftpane{width:266px;flex:0 0 266px;padding:8px;background:var(--s3);overflow:auto;
+  max-height:calc(100vh - 120px);position:sticky;top:0}
+.splitgutter{flex:0 0 6px;background:var(--s3);border-left:1px solid #fff;border-right:1px solid var(--s1);
+  position:relative}
+.splitgutter::after{content:"";position:absolute;top:50%;left:1px;width:3px;height:26px;
+  background-image:radial-gradient(var(--s1) .6px,transparent .7px);background-size:3px 3px}
+.rightpane{flex:1;min-width:0;padding:14px;background:#F7F7F7;overflow:hidden}
+.statusbar{display:flex;gap:10px;align-items:center;padding:4px 8px;background:var(--s3);
+  border-top:1px solid var(--s1);font:11px var(--mono)}
+.statusbar .cell{border:1px solid var(--s1);border-right-color:#fff;border-bottom-color:#fff;
+  padding:2px 6px;background:#F4F4F4}
+.statusbar .grow{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+
+/* Specimen rows */
+.spec{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:16px;
+  padding:11px 2px;border-top:1px dotted #C4CDD6;align-items:start}
+fieldset.titled .spec:first-of-type{border-top:none}
+.spec>.demo{min-width:0}
+.spec>.meta{min-width:0}
+.spec .cls{font:12px var(--mono);color:#1F3D6B;font-weight:700}
+.spec .cls .pkg{color:#7A8A99;font-weight:400}
+.spec .desc{margin:3px 0 0;color:#43505C}
+.spec .desc b{color:var(--ink)}
+.tag{display:inline-block;font:400 10px var(--mono);color:#6A4A00;background:#FFF3C4;
+  border:1px solid #E8CE6B;padding:0 4px;margin-left:6px;vertical-align:1px}
+.tag.abs{color:#3A3A6A;background:#E6E9F5;border-color:#B8BEDD}
+h1{font:700 15px var(--dialog);margin:0 0 4px}
+.lede{margin:0 0 16px;max-width:66ch;color:#43505C}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.col{display:flex;gap:8px;flex-direction:column;align-items:flex-start}
+.hint{font:400 11px var(--mono);color:#7A8A99;margin-top:5px}
+a.node{color:inherit;text-decoration:none}
+a.node:focus-visible,button:focus-visible,.tab:focus-visible{outline:2px solid #1F3D6B;outline-offset:1px}
+:target>legend{background:var(--p3)}
+@media (max-width:860px){
+  .split{flex-direction:column}
+  .leftpane{width:auto;flex:none;position:static;max-height:none}
+  .splitgutter{flex:0 0 6px;height:6px;border:none;border-top:1px solid var(--s1)}
+  .spec{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="titlebar">
+    <span class="ttl">Swing Component Catalog — Metal (Ocean) look and feel</span>
+    <span class="wbtn" aria-hidden="true">_</span>
+    <span class="wbtn" aria-hidden="true">□</span>
+    <span class="wbtn" aria-hidden="true">×</span>
+  </div>
+
+  <div class="menubar" role="presentation">
+    <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+  </div>
+
+  <div class="toolbar">
+    <span class="grip" aria-hidden="true"></span>
+    <span class="btn icon-only">◀</span>
+    <span class="btn icon-only">▶</span>
+    <span style="width:1px;height:20px;background:var(--s1);border-right:1px solid #fff"></span>
+    <label class="tog"><span class="box on"></span>Show class names</label>
+    <span style="margin-left:auto" class="hint">javax.swing · 49 specimens</span>
+  </div>
+
+  <div class="split">
+    <nav class="leftpane" aria-label="Component hierarchy">
+      <div class="tree" id="nav"></div>
+    </nav>
+    <div class="splitgutter" aria-hidden="true"></div>
+    <main class="rightpane">
+      <h1>Every component in <span style="font-family:var(--mono)">javax.swing</span>, drawn at its default</h1>
+      <p class="lede">Each specimen below is a CSS recreation of how the component paints itself with no
+      customisation at all — Metal with the Ocean theme, which is the cross-platform default
+      look and feel. Hover any specimen to read its fully qualified class name in the status bar.</p>
+<fieldset class="titled" id="top">
+<legend>Top-level containers — the four things that can exist on the desktop</legend>
+
+  <div class="spec" data-fqn="javax.swing.JFrame">
+    <div class="demo">
+      <div class="win" style="max-width:260px">
+        <div class="titlebar"><span class="ttl">Untitled</span>
+          <span class="wbtn">_</span><span class="wbtn">□</span><span class="wbtn">×</span></div>
+        <div class="menubar"><span>File</span><span>Help</span></div>
+        <div style="height:52px;background:var(--s3)"></div>
+      </div>
+      <p class="hint">Metal-decorated; native decorations are the default.</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JFrame</div>
+      <p class="desc">The main application window. Empty by default — no menu bar, no content, and
+      <b>a bare grey content pane</b>. Ships with native OS decorations unless you call
+      <span style="font-family:var(--mono)">setDefaultLookAndFeelDecorated(true)</span>, which gives you
+      the blue Ocean title bar drawn above.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JWindow">
+    <div class="demo">
+      <div class="win" style="max-width:200px;border-color:var(--s1)">
+        <div style="height:64px;background:var(--s3)"></div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JWindow</div>
+      <p class="desc">A window with <b>no decoration whatsoever</b> — no title bar, no border, no close
+      button. Used for splash screens and custom popups.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JDialog">
+    <div class="demo">
+      <div class="win" style="max-width:250px">
+        <div class="titlebar"><span class="ttl">Dialog</span><span class="wbtn">×</span></div>
+        <div style="padding:14px;text-align:center;background:var(--s3)">
+          <div style="height:20px"></div>
+          <span class="btn">OK</span>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JDialog</div>
+      <p class="desc">A secondary window, optionally modal. Its title bar carries only a close button,
+      and it is non-modal and non-resizable-agnostic by default.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JApplet">
+    <div class="demo">
+      <div style="border:1px dashed var(--s1);background:var(--s3);height:64px;max-width:200px;
+        display:grid;place-items:center;color:var(--disabled);font-weight:700">applet area</div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JApplet<span class="tag">deprecated</span></div>
+      <p class="desc">Browser-embedded top-level container. <b>Deprecated since Java 9</b> and unusable in
+      modern browsers; listed here only for completeness.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="root">
+<legend>Root machinery — invisible by design</legend>
+
+  <div class="spec" data-fqn="javax.swing.JRootPane">
+    <div class="demo">
+      <div style="border:1px solid var(--s1);background:#fff;padding:6px;font:11px var(--mono);max-width:280px">
+        <div style="border:1px dashed var(--p1);padding:5px">layeredPane
+          <div style="border:1px dashed var(--s1);padding:4px;margin-top:4px;background:var(--s3)">menuBar</div>
+          <div style="border:1px dashed var(--s1);padding:10px 4px;margin-top:3px;background:var(--s3)">contentPane</div>
+        </div>
+        <div style="border:1px dashed #C0C0C0;padding:3px;margin-top:4px;color:#7A8A99">glassPane (transparent)</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JRootPane</div>
+      <p class="desc">Every top-level container holds exactly one. It stacks the layered pane, the optional
+      menu bar, the content pane and the transparent glass pane. <b>You never see it</b> — the diagram
+      shows its structure, not its appearance.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JLayeredPane">
+    <div class="demo">
+      <div style="position:relative;height:74px;background:#fff;border:1px solid var(--s1);max-width:280px">
+        <div style="position:absolute;left:10px;top:10px;width:110px;height:40px;background:var(--p3);
+          border:1px solid var(--s1);font:11px var(--mono);padding:3px">DEFAULT_LAYER</div>
+        <div style="position:absolute;left:60px;top:26px;width:110px;height:40px;background:#FFF3C4;
+          border:1px solid var(--s1);font:11px var(--mono);padding:3px">PALETTE_LAYER</div>
+        <div style="position:absolute;left:120px;top:42px;width:100px;height:26px;background:#fff;
+          border:1px solid var(--ink);font:11px var(--mono);padding:3px">POPUP_LAYER</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JLayeredPane</div>
+      <p class="desc">Adds a Z axis to a container so children can overlap in a defined order. Transparent
+      and empty by default; the coloured blocks are stand-ins for the depth constants.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JPanel">
+    <div class="demo">
+      <div style="width:190px;height:56px;background:var(--s3);border:1px solid #DCDCDC"></div>
+      <p class="hint">#EEEEEE, FlowLayout, no border</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JPanel</div>
+      <p class="desc">The generic container and the workhorse of every Swing layout. Default look is
+      <b>a flat rectangle of control grey with no border at all</b> — the hairline above is only there so
+      you can see where it ends.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.Box">
+    <div class="demo">
+      <div style="display:flex;align-items:center;background:var(--s3);border:1px solid #DCDCDC;padding:6px;max-width:280px">
+        <span class="btn">One</span>
+        <span style="flex:1;border-top:1px dashed var(--p1);margin:0 2px" title="glue"></span>
+        <span class="btn">Two</span>
+      </div>
+      <p class="hint">createHorizontalGlue() between the buttons</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>Box</div>
+      <p class="desc">A lightweight container hardwired to BoxLayout, plus its invisible spacers —
+      struts, rigid areas and glue (<span style="font-family:var(--mono)">Box.Filler</span>).
+      <b>Nothing about it paints.</b></p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JViewport">
+    <div class="demo">
+      <div style="width:170px;height:58px;overflow:hidden;border:1px solid var(--s1);background:#fff;position:relative">
+        <div style="position:absolute;left:-24px;top:-14px;width:260px;font:12px var(--dialog);padding:4px;color:#43505C">
+          a view larger than the window onto it, clipped on every side by the viewport's bounds
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JViewport</div>
+      <p class="desc">The clipping window inside a scroll pane. It draws no border and no background of its
+      own; <b>what you see is the view showing through it.</b></p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JComponent">
+    <div class="demo">
+      <div style="width:150px;height:44px;border:1px dashed #C0C0C0;display:grid;place-items:center;
+        color:var(--disabled);font:11px var(--mono)">no rendering</div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JComponent<span class="tag abs">abstract</span></div>
+      <p class="desc">Base class for everything above and below. It supplies borders, tooltips, double
+      buffering and the pluggable-look-and-feel hook, but <b>paints nothing itself</b>.</p>
+    </div>
+  </div>
+</fieldset>
+<fieldset class="titled" id="containers">
+<legend>Intermediate containers</legend>
+
+  <div class="spec" data-fqn="javax.swing.JScrollPane">
+    <div class="demo">
+      <div style="display:flex;max-width:250px">
+        <div style="flex:1;min-width:0">
+          <div class="list" style="height:70px;border-right:none;padding:2px 4px;overflow:hidden">
+            <div>The scroll pane adds bars</div><div>only when the view is</div>
+            <div>bigger than the viewport.</div><div>That is the default</div>
+          </div>
+          <div class="sb h" style="border-top:none">
+            <span class="sb-btn">◀</span>
+            <span class="sb-thumb" style="width:70px"></span>
+            <span class="sb-track"></span>
+            <span class="sb-btn" style="margin-left:auto">▶</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;width:17px">
+          <div class="sb v" style="height:70px">
+            <span class="sb-btn">▲</span><span class="sb-thumb" style="height:26px"></span>
+            <span class="sb-track"></span><span class="sb-btn">▼</span>
+          </div>
+          <div style="height:17px;background:var(--s3);border:1px solid var(--s1);border-top:none"></div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JScrollPane</div>
+      <p class="desc">Wraps a view in a viewport and manages two scroll bars, with
+      <b>AS_NEEDED policy by default</b> — bars appear only when the content overflows. Note the small dead
+      square where the two bars meet.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JScrollBar">
+    <div class="demo">
+      <div class="sb h" style="max-width:220px">
+        <span class="sb-btn">◀</span>
+        <span class="sb-track" style="flex:0 0 30px"></span>
+        <span class="sb-thumb" style="width:64px"></span>
+        <span class="sb-track"></span>
+        <span class="sb-btn">▶</span>
+      </div>
+      <p class="hint">Metal thumbs carry the "bumps" texture</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JScrollBar</div>
+      <p class="desc">Usable standalone as a range control. Metal draws a square arrow button at each end and
+      a gradient thumb stippled with its signature dotted bump pattern.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JSplitPane">
+    <div class="demo">
+      <div style="display:flex;border:1px solid var(--s1);max-width:260px;height:72px;background:var(--s3)">
+        <div style="flex:1;display:grid;place-items:center;font:11px var(--mono);color:#43505C">left</div>
+        <div style="flex:0 0 7px;background:var(--s3);border-left:1px solid #fff;border-right:1px solid var(--s1);
+          position:relative;display:grid;place-items:center">
+          <span style="position:absolute;top:3px;width:5px;height:5px;border:1px solid var(--s1);
+            border-radius:50%;background:var(--btn)"></span>
+          <span style="position:absolute;top:12px;width:5px;height:5px;border:1px solid var(--s1);
+            border-radius:50%;background:var(--btn)"></span>
+        </div>
+        <div style="flex:1.3;display:grid;place-items:center;font:11px var(--mono);color:#43505C">right</div>
+      </div>
+      <p class="hint">Divider with one-touch expand buttons</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JSplitPane</div>
+      <p class="desc">Two components separated by a draggable divider. The divider is
+      <b>a plain grey bar with a bump grip</b>; the little round collapse arrows appear only when
+      one-touch expansion is switched on.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JTabbedPane">
+    <div class="demo">
+      <div style="max-width:280px">
+        <div class="tabs">
+          <span class="tab sel">General</span><span class="tab">Fonts</span><span class="tab">Advanced</span>
+        </div>
+        <div class="tabbody">
+          <label class="tog"><span class="box on"></span>Wrap long lines</label>
+        </div>
+      </div>
+      <p class="hint">TOP placement, WRAP_TAB_LAYOUT</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JTabbedPane</div>
+      <p class="desc">One card visible at a time. Metal's tabs have <b>a chamfered top-left corner</b>; the
+      selected tab is lighter and sits a pixel proud of the others, merging into the content border.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JToolBar">
+    <div class="demo">
+      <div style="display:flex;align-items:center;gap:5px;background:var(--bar);
+        border:1px solid var(--s1);padding:4px;max-width:260px">
+        <span class="grip" style="width:6px;height:20px;
+          background-image:radial-gradient(var(--s1) .6px,transparent .7px);background-size:3px 3px"></span>
+        <span class="btn icon-only">🖫</span><span class="btn icon-only">✂</span>
+        <span style="width:1px;height:20px;background:var(--s1);border-right:1px solid #fff"></span>
+        <span class="btn icon-only">↺</span><span class="btn icon-only">↻</span>
+      </div>
+      <p class="hint">Floatable, with a JToolBar.Separator</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JToolBar</div>
+      <p class="desc">A row of actions that is <b>floatable by default</b> — hence the bump handle on the
+      left edge, which you can drag to tear the bar off into its own window.
+      <span style="font-family:var(--mono)">JToolBar.Separator</span> supplies the vertical rule.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JDesktopPane">
+    <div class="demo">
+      <div style="position:relative;height:96px;background:#8A9BAA;border:1px solid var(--s1);max-width:280px;overflow:hidden">
+        <div class="win" style="position:absolute;left:8px;top:8px;width:150px">
+          <div class="titlebar inactive"><span class="ttl">Doc 1</span><span class="wbtn">×</span></div>
+          <div style="height:28px"></div>
+        </div>
+        <div class="win" style="position:absolute;left:58px;top:38px;width:160px">
+          <div class="titlebar"><span class="ttl">Doc 2</span>
+            <span class="wbtn">_</span><span class="wbtn">□</span><span class="wbtn">×</span></div>
+          <div style="height:32px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JDesktopPane</div>
+      <p class="desc">The MDI surface that hosts internal frames. Its default background is
+      <b>a flat slate blue-grey</b>, and it uses outline dragging only if you ask for it.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JInternalFrame">
+    <div class="demo">
+      <div class="win" style="max-width:230px">
+        <div class="titlebar"><span class="ttl">Internal frame</span>
+          <span class="wbtn">_</span><span class="wbtn">□</span><span class="wbtn">×</span></div>
+        <div style="height:44px;background:var(--s3)"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+        <div style="border:1px solid var(--s1);background:var(--s3);padding:2px 6px;font-weight:700;
+          box-shadow:1px 1px 0 rgba(0,0,0,.2)">▣ Doc 1</div>
+        <span class="hint" style="margin:0">JDesktopIcon (iconified)</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JInternalFrame</div>
+      <p class="desc">A window drawn entirely by Swing inside a desktop pane. Ocean gives the active frame
+      <b>a pale blue gradient title bar</b> and an inactive one plain grey. Minimising it swaps in the
+      nested class <span style="font-family:var(--mono)">JInternalFrame.JDesktopIcon</span>.</p>
+    </div>
+  </div>
+</fieldset>
+<fieldset class="titled" id="static">
+<legend>Labels &amp; static widgets</legend>
+
+  <div class="spec" data-fqn="javax.swing.JLabel">
+    <div class="demo">
+      <div class="col">
+        <span class="bold">User name:</span>
+        <span style="color:var(--disabled);font-weight:700">Disabled label</span>
+        <span class="bold" style="display:inline-flex;gap:5px;align-items:center">
+          <i class="dicon"></i>With icon, CENTER-aligned text</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JLabel</div>
+      <p class="desc">Non-interactive text and/or an icon. Metal sets labels in
+      <b>bold 12pt Dialog</b> — the single most recognisable trait of the look and feel. Transparent
+      background, no border, LEADING alignment.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JSeparator">
+    <div class="demo">
+      <div style="max-width:220px">
+        <div class="divider"></div>
+        <p class="hint">1px shadow line over a 1px highlight</p>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JSeparator</div>
+      <p class="desc">An etched rule, horizontal by default. Two pixels tall in Metal: a dark line with a
+      white line beneath it, which is what gives it the engraved feel.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JToolTip">
+    <div class="demo">
+      <div style="padding-bottom:4px"><span class="btn">Save</span></div>
+      <span class="tip">Save the current document</span>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JToolTip</div>
+      <p class="desc">Created for you whenever you call
+      <span style="font-family:var(--mono)">setToolTipText</span>. Metal paints
+      <b>pale yellow with a hard black 1px border</b> and no rounding.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JProgressBar">
+    <div class="demo">
+      <div class="col" style="width:100%;max-width:220px">
+        <div class="prog" style="width:100%"><i style="width:62%"></i></div>
+        <div class="prog" style="width:100%"><i style="width:62%"></i><span>62%</span></div>
+        <div class="prog" style="width:100%"><i style="width:34%;margin-left:22%"></i></div>
+        <p class="hint">determinate · with string · indeterminate</p>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JProgressBar</div>
+      <p class="desc">Range 0–100, horizontal, <b>determinate with the percentage string hidden</b> unless you
+      switch it on. The Ocean fill is a blue vertical gradient; in indeterminate mode a bouncing block
+      slides back and forth instead.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="buttons">
+<legend>Buttons — all four extend AbstractButton</legend>
+
+  <div class="spec" data-fqn="javax.swing.JButton">
+    <div class="demo">
+      <div class="row">
+        <span class="btn">Normal</span>
+        <span class="btn rollover">Rollover</span>
+        <span class="btn pressed">Pressed</span>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <span class="btn focused">Focused</span>
+        <span class="btn disabled">Disabled</span>
+        <span class="btn"><i class="dicon"></i>With icon</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JButton</div>
+      <p class="desc">Ocean fills buttons with <b>a white-to-pale-blue gradient</b> inside a 1px
+      #7A8A99 border with 3px corners. Rollover recolours the border; focus draws an inner ring; the
+      pressed state flips the gradient upside down.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JToggleButton">
+    <div class="demo">
+      <div class="row">
+        <span class="btn">Off</span>
+        <span class="btn selected">On (selected)</span>
+      </div>
+      <p class="hint">stays down until clicked again</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JToggleButton</div>
+      <p class="desc">Identical to JButton at rest, but it latches. Selected state keeps the inverted
+      gradient permanently, which is <b>the only visual cue that it is a toggle</b>.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JCheckBox">
+    <div class="demo">
+      <div class="col">
+        <label class="tog"><span class="box on"></span>Checked</label>
+        <label class="tog"><span class="box off"></span>Unchecked</label>
+        <label class="tog dis"><span class="box dis"></span>Disabled</label>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JCheckBox</div>
+      <p class="desc">A 13×13 gradient square with a dark tick. <b>Unselected and transparent by default</b>,
+      so it takes the background of whatever panel holds it.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JRadioButton">
+    <div class="demo">
+      <div class="col">
+        <label class="tog"><span class="circle on"></span>Selected</label>
+        <label class="tog"><span class="circle off"></span>Not selected</label>
+        <label class="tog dis"><span class="circle dis"></span>Disabled</label>
+      </div>
+      <p class="hint">mutual exclusion needs a ButtonGroup</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JRadioButton</div>
+      <p class="desc">Same widget, round. Nothing enforces one-of-many on its own —
+      <b>without a ButtonGroup every radio button is independent</b>, which is the classic Swing beginner
+      surprise.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.AbstractButton">
+    <div class="demo">
+      <div style="width:150px;height:44px;border:1px dashed #C0C0C0;display:grid;place-items:center;
+        color:var(--disabled);font:11px var(--mono)">no rendering</div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>AbstractButton<span class="tag abs">abstract</span></div>
+      <p class="desc">Holds the text, icon, mnemonic, Action and ButtonModel shared by the four buttons above
+      and by every menu item below.</p>
+    </div>
+  </div>
+</fieldset>
+<fieldset class="titled" id="menus">
+<legend>Menus</legend>
+
+  <div class="spec" data-fqn="javax.swing.JMenuBar">
+    <div class="demo">
+      <div style="max-width:260px;border:1px solid var(--s1)">
+        <div class="menubar" style="border-bottom:none">
+          <span class="open">File</span><span>Edit</span><span>View</span><span>Help</span>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JMenuBar</div>
+      <p class="desc">Sits at the top of a root pane. Ocean gives it <b>a faint white-to-grey gradient</b>
+      with a hairline along the bottom; the highlighted menu title takes the #A3B8CC selection colour.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JMenu">
+    <div class="demo">
+      <div style="max-width:260px">
+        <div class="menubar" style="border:1px solid var(--s1)">
+          <span class="open">File</span><span>Edit</span>
+        </div>
+        <div class="popup" style="margin-left:1px">
+          <div class="mi"><span class="gutter"></span>New<span class="acc">Ctrl-N</span></div>
+          <div class="mi"><span class="gutter"></span>Open…<span class="acc">Ctrl-O</span></div>
+          <div class="mi"><span class="gutter"></span>Recent files<span class="arrow">▶</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JMenu</div>
+      <p class="desc">A menu item that opens a popup — so it works both as a menu-bar title and as a submenu,
+      where it gains <b>a right-pointing triangle</b>. Submenus open on hover after a short delay.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JMenuItem">
+    <div class="demo">
+      <div class="popup" style="max-width:210px">
+        <div class="mi"><span class="gutter"></span>Cut<span class="acc">Ctrl-X</span></div>
+        <div class="mi"><span class="gutter"><i class="dicon"></i></span>Copy<span class="acc">Ctrl-C</span></div>
+        <div class="mi dis"><span class="gutter"></span>Paste<span class="acc">Ctrl-V</span></div>
+      </div>
+      <p class="hint">accelerator text is right-aligned and plain</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JMenuItem</div>
+      <p class="desc">A single command. Bold label on the left, accelerator on the right in
+      <b>plain, not bold, type</b>, and a gutter reserved for an icon whether or not one is set.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JCheckBoxMenuItem">
+    <div class="demo">
+      <div class="popup" style="max-width:210px">
+        <div class="mi"><span class="gutter"><span class="box on"></span></span>Show toolbar</div>
+        <div class="mi"><span class="gutter"><span class="box off"></span></span>Show status bar</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JCheckBoxMenuItem</div>
+      <p class="desc">A menu item that carries its own on/off state, drawn with the same 13px check box in
+      the icon gutter.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JRadioButtonMenuItem">
+    <div class="demo">
+      <div class="popup" style="max-width:210px">
+        <div class="mi"><span class="gutter"><span class="circle on"></span></span>Small</div>
+        <div class="mi"><span class="gutter"><span class="circle off"></span></span>Medium</div>
+        <div class="mi"><span class="gutter"><span class="circle off"></span></span>Large</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JRadioButtonMenuItem</div>
+      <p class="desc">One-of-many inside a menu. As with plain radio buttons, <b>you must add them to a
+      ButtonGroup yourself.</b></p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JPopupMenu">
+    <div class="demo">
+      <div class="popup" style="max-width:210px">
+        <div class="mi"><span class="gutter"></span>Undo<span class="acc">Ctrl-Z</span></div>
+        <div class="msep"></div>
+        <div class="mi"><span class="gutter"></span>Select all<span class="acc">Ctrl-A</span></div>
+        <div class="mi"><span class="gutter"></span>Properties…</div>
+      </div>
+      <p class="hint">JPopupMenu.Separator between groups</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JPopupMenu</div>
+      <p class="desc">The floating panel itself, used for context menus. Control grey with a 1px border and
+      <b>a hard drop shadow</b> — lightweight while it fits inside the window, promoted to a real heavyweight
+      window when it doesn't.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="text">
+<legend>Text components — all extend JTextComponent</legend>
+
+  <div class="spec" data-fqn="javax.swing.JTextField">
+    <div class="demo">
+      <div class="col" style="width:100%;max-width:220px">
+        <span class="field" style="width:100%">Editable text<span class="caret"></span></span>
+        <span class="field" style="width:100%"><span class="selectedtext">selected run</span> of text</span>
+        <span class="field dis" style="width:100%">Not editable</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JTextField</div>
+      <p class="desc">One line of plain text, white on a 1px sunken border, <b>no placeholder support of any
+      kind</b>. Selection is the #B8CFE5 wash. Note it has no visible columns limit until you set one.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JPasswordField">
+    <div class="demo">
+      <span class="field" style="max-width:220px;letter-spacing:2px">•••••••••<span class="caret"></span></span>
+      <p class="hint">echo char '•' — and no reveal button</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JPasswordField</div>
+      <p class="desc">A text field that echoes a bullet per character and refuses to copy its contents to the
+      clipboard. Read it with <span style="font-family:var(--mono)">getPassword()</span>, which returns a
+      char array you can wipe.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JFormattedTextField">
+    <div class="demo">
+      <div class="col" style="width:100%;max-width:220px">
+        <span class="field" style="width:100%">30/07/2026</span>
+        <span class="field" style="width:100%">£1,240.50</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JFormattedTextField</div>
+      <p class="desc">Looks exactly like a JTextField — the difference is behavioural. It validates and
+      reformats on focus loss, and <b>reverts to the last valid value</b> if what you typed doesn't parse.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JTextArea">
+    <div class="demo">
+      <div class="field" style="max-width:230px;height:64px;overflow:hidden;font-family:var(--mono);font-size:11px">
+        Plain multi-line text.
+        Line wrapping is OFF by
+        default, so long lines just keep going →
+      </div>
+      <p class="hint">monospaced, and not scrollable on its own</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JTextArea</div>
+      <p class="desc">Multi-line plain text in <b>a monospaced font, with line wrap switched off</b> and no
+      scroll bars of its own — you almost always drop it into a JScrollPane.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JEditorPane">
+    <div class="demo">
+      <div class="field" style="max-width:230px;height:70px;overflow:hidden;font-family:'Times New Roman',serif">
+        <b style="font-size:14px">Heading</b><br>
+        Renders <i>HTML 3.2</i> and RTF via a pluggable EditorKit.
+      </div>
+      <p class="hint">serif, because the HTML kit's CSS says so</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JEditorPane</div>
+      <p class="desc">Text with a content type. Set it to
+      <span style="font-family:var(--mono)">text/html</span> and it renders a <b>famously dated subset of
+      HTML 3.2</b>; the default type, though, is plain text.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JTextPane">
+    <div class="demo">
+      <div class="field" style="max-width:230px;height:70px;overflow:hidden">
+        Styled runs: <b>bold</b>, <i>italic</i>,
+        <span style="color:#B03030">colour</span>, and
+        <span style="display:inline-flex;vertical-align:-3px"><i class="dicon"></i></span> embedded components.
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JTextPane</div>
+      <p class="desc">An editor pane specialised for styled documents. It can apply named attribute sets to
+      runs of text and <b>embed live components and images in the flow</b>.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.text.JTextComponent">
+    <div class="demo">
+      <div style="width:150px;height:44px;border:1px dashed #C0C0C0;display:grid;place-items:center;
+        color:var(--disabled);font:11px var(--mono)">no rendering</div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.text.</span>JTextComponent<span class="tag abs">abstract</span></div>
+      <p class="desc">The shared base: Document model, Caret, Highlighter, keymap and the undo plumbing that
+      all six components above inherit.</p>
+    </div>
+  </div>
+</fieldset>
+<fieldset class="titled" id="pickers">
+<legend>Choosers &amp; value pickers</legend>
+
+  <div class="spec" data-fqn="javax.swing.JComboBox">
+    <div class="demo">
+      <div class="combo"><span class="val">Helvetica</span><span class="arw">▼</span></div>
+      <div class="popup" style="min-width:150px;width:150px;margin-top:2px">
+        <div class="mi" style="font-weight:400;background:var(--p3)">Helvetica</div>
+        <div class="mi" style="font-weight:400">Lucida Sans</div>
+        <div class="mi" style="font-weight:400">Monospaced</div>
+      </div>
+      <p class="hint">non-editable, so no caret in the field</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JComboBox&lt;E&gt;</div>
+      <p class="desc">A drop-down list. <b>Non-editable by default</b> — the value area is not a text field
+      until you call <span style="font-family:var(--mono)">setEditable(true)</span>. Metal draws a square
+      arrow button glued to the right edge, and the list items in plain, not bold, type.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JSpinner">
+    <div class="demo">
+      <div class="row">
+        <span class="spin"><span class="val">42</span><span class="btns"><b>▲</b><b>▼</b></span></span>
+        <span class="spin"><span class="val">30 July 2026</span><span class="btns"><b>▲</b><b>▼</b></span></span>
+      </div>
+      <p class="hint">Number, Date and List models</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JSpinner</div>
+      <p class="desc">A single value from a sequence, with two stacked half-height arrow buttons. Its editor is
+      a JFormattedTextField, so <b>typing is allowed and validated</b> alongside the arrows.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JSlider">
+    <div class="demo">
+      <div class="slider" style="max-width:210px">
+        <div class="trk"></div>
+        <div class="thumb" style="left:46%"></div>
+      </div>
+      <div class="slider" style="max-width:210px">
+        <div class="trk"></div>
+        <div class="thumb" style="left:20%"></div>
+        <div class="ticks"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <p class="hint">ticks and labels are off until requested</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JSlider</div>
+      <p class="desc">Range 0–100 starting at 50, horizontal. Metal's thumb is
+      <b>a distinctive downward-pointing pentagon</b> rather than a rectangle, and neither tick marks nor
+      value labels are painted by default.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="data">
+<legend>Data views — model-driven components</legend>
+
+  <div class="spec" data-fqn="javax.swing.JList">
+    <div class="demo">
+      <div class="list" style="max-width:200px">
+        <div class="row" style="display:block">Apple</div>
+        <div class="row sel" style="display:block">Blackcurrant</div>
+        <div class="row sel" style="display:block">Cherry</div>
+        <div class="row" style="display:block">Damson</div>
+      </div>
+      <p class="hint">MULTIPLE_INTERVAL_SELECTION</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JList&lt;E&gt;</div>
+      <p class="desc">A vertical list of rendered cells, white background, plain type,
+      <b>multiple-interval selection allowed by default</b>. It provides no scroll bars and no header —
+      wrap it in a scroll pane.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JTable">
+    <div class="demo">
+      <div style="border:1px solid var(--s1);max-width:280px;background:#fff">
+        <table class="jtable">
+          <thead><tr><th style="border-left:1px solid var(--s1)">Name</th><th>Size</th><th>Ready</th></tr></thead>
+          <tbody>
+            <tr><td>report.pdf</td><td>1.2 MB</td><td><span class="box on" style="margin:0 auto"></span></td></tr>
+            <tr class="sel"><td>notes.txt</td><td>4 kB</td><td><span class="box off" style="margin:0 auto"></span></td></tr>
+            <tr><td>build.log</td><td>88 kB</td><td><span class="box on" style="margin:0 auto"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="hint">Boolean columns render as check boxes automatically</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JTable</div>
+      <p class="desc">Rows and columns from a TableModel. Grid lines in pale blue, <b>columns resizable and
+      editable but not sortable</b> until you install a row sorter. Cells are selected by row by default.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.table.JTableHeader">
+    <div class="demo">
+      <table class="jtable" style="max-width:280px">
+        <thead><tr><th style="border-left:1px solid var(--s1)">Name</th><th>Size ▲</th><th>Ready</th></tr></thead>
+      </table>
+      <p class="hint">the ▲ appears only with a RowSorter</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.table.</span>JTableHeader</div>
+      <p class="desc">The table's own column header, a separate component that the scroll pane parks in its
+      column-header area. Metal styles each cell <b>like a small button</b>, which is the hint that you can
+      drag and resize them.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JTree">
+    <div class="demo">
+      <div class="tree" style="max-width:220px">
+        <ul>
+          <li><span><b class="handle">−</b><i class="dicon"></i>src</span>
+            <ul>
+              <li><span><b class="handle">−</b><i class="dicon"></i>ui</span>
+                <ul>
+                  <li><span class="sel"><i class="leafdot"></i><i class="ficon"></i>MainFrame.java</span></li>
+                  <li><span><i class="leafdot"></i><i class="ficon"></i>Toolbar.java</span></li>
+                </ul>
+              </li>
+              <li><span><b class="handle">+</b><i class="dicon"></i>model</span></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <p class="hint">root handle visible; root itself shown</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JTree</div>
+      <p class="desc">Hierarchical nodes from a TreeModel. Metal marks expandable nodes with
+      <b>a small square + / − box</b> and gives folders a manila icon, leaves a page icon. Single selection,
+      and the root node is shown by default.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="dialogs">
+<legend>Standard dialogs — ready-made, and instantly recognisable</legend>
+
+  <div class="spec" data-fqn="javax.swing.JOptionPane">
+    <div class="demo">
+      <div class="win" style="max-width:262px">
+        <div class="titlebar"><span class="ttl">Message</span><span class="wbtn">×</span></div>
+        <div style="padding:14px;background:var(--s3)">
+          <div style="display:flex;gap:11px;align-items:flex-start">
+            <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+              <circle cx="16" cy="16" r="14" fill="#6382BF" stroke="#3F5C96"/>
+              <rect x="14.4" y="12" width="3.2" height="12" fill="#fff"/>
+              <rect x="14.4" y="7" width="3.2" height="3.4" fill="#fff"/>
+            </svg>
+            <span class="bold" style="padding-top:7px">Your changes have been saved.</span>
+          </div>
+          <div class="row" style="justify-content:center;margin-top:14px">
+            <span class="btn focused">OK</span>
+          </div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:9px">
+        <svg width="22" height="22" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 31 29H1z" fill="#E8B23A" stroke="#9A7413"/><rect x="14.5" y="11" width="3" height="10" fill="#3A2A00"/><rect x="14.5" y="23" width="3" height="3" fill="#3A2A00"/></svg>
+        <svg width="22" height="22" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#C0392B" stroke="#8A2318"/><rect x="7" y="14" width="18" height="4" fill="#fff"/></svg>
+        <svg width="22" height="22" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#6382BF" stroke="#3F5C96"/><text x="16" y="24" font-size="20" font-family="serif" font-weight="bold" fill="#fff" text-anchor="middle">?</text></svg>
+        <span class="hint" style="margin:0">warning · error · question</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JOptionPane</div>
+      <p class="desc">One static call builds the whole dialog: an icon chosen by message type, a message, and
+      a button row <b>centred at the bottom with OK focused</b>. Also does input and confirm variants.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JFileChooser">
+    <div class="demo">
+      <div class="win" style="max-width:300px">
+        <div class="titlebar"><span class="ttl">Open</span><span class="wbtn">×</span></div>
+        <div style="padding:9px;background:var(--s3)">
+          <div class="row" style="gap:5px;flex-wrap:nowrap">
+            <span class="bold" style="white-space:nowrap">Look in:</span>
+            <span class="combo" style="flex:1;min-width:0"><span class="val">Documents</span><span class="arw">▼</span></span>
+            <span class="btn icon-only">↰</span><span class="btn icon-only">⌂</span>
+            <span class="btn icon-only">⊞</span><span class="btn icon-only">☰</span>
+          </div>
+          <div class="list" style="height:66px;margin-top:7px;padding:4px;font-size:11px">
+            <div style="display:flex;gap:5px;align-items:center"><i class="dicon"></i>projects</div>
+            <div style="display:flex;gap:5px;align-items:center"><i class="ficon"></i>notes.txt</div>
+            <div style="display:flex;gap:5px;align-items:center;background:var(--p3);padding:1px 2px;margin:0 -2px">
+              <i class="ficon"></i>report.pdf</div>
+          </div>
+          <div class="row" style="gap:5px;flex-wrap:nowrap;margin-top:7px">
+            <span class="bold">File name:</span>
+            <span class="field" style="flex:1;min-width:0">report.pdf</span>
+          </div>
+          <div class="row" style="gap:5px;flex-wrap:nowrap;margin-top:5px">
+            <span class="bold">Files of type:</span>
+            <span class="combo" style="flex:1;min-width:0"><span class="val">All Files</span><span class="arw">▼</span></span>
+          </div>
+          <div class="row" style="justify-content:flex-end;margin-top:9px">
+            <span class="btn">Open</span><span class="btn">Cancel</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JFileChooser</div>
+      <p class="desc">The Swing-drawn file browser, not the native one. Opens on the user's home directory in
+      <b>FILES_ONLY mode with single selection</b>, and the four small buttons top-right are up-one-level,
+      home, new folder and the list/details toggle.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JColorChooser">
+    <div class="demo">
+      <div class="win" style="max-width:290px">
+        <div class="titlebar"><span class="ttl">Choose a colour</span><span class="wbtn">×</span></div>
+        <div style="padding:9px;background:var(--s3)">
+          <div class="tabs" style="padding-left:0">
+            <span class="tab sel">Swatches</span><span class="tab">HSV</span><span class="tab">RGB</span>
+          </div>
+          <div class="tabbody" style="padding:8px;min-height:0">
+            <div style="display:grid;grid-template-columns:repeat(15,1fr);gap:1px;max-width:100%">
+              <span style="aspect-ratio:1;background:#fff;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FFCCCC;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FFCC99;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FFFFCC;border:1px solid #999"></span><span style="aspect-ratio:1;background:#CCFFCC;border:1px solid #999"></span><span style="aspect-ratio:1;background:#CCFFFF;border:1px solid #999"></span><span style="aspect-ratio:1;background:#CCCCFF;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FFCCFF;border:1px solid #999"></span><span style="aspect-ratio:1;background:#EEEEEE;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FF9999;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FFCC66;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FFFF99;border:1px solid #999"></span><span style="aspect-ratio:1;background:#99FF99;border:1px solid #999"></span><span style="aspect-ratio:1;background:#99FFFF;border:1px solid #999"></span><span style="aspect-ratio:1;background:#9999FF;border:1px solid #999"></span>
+              <span style="aspect-ratio:1;background:#CCCCCC;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FF6666;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FF9933;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FFFF66;border:1px solid #999"></span><span style="aspect-ratio:1;background:#66FF66;border:1px solid #999"></span><span style="aspect-ratio:1;background:#66FFFF;border:1px solid #999"></span><span style="aspect-ratio:1;background:#6666FF;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FF66FF;border:1px solid #999"></span><span style="aspect-ratio:1;background:#999999;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FF0000;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FF6600;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FFFF00;border:1px solid #999"></span><span style="aspect-ratio:1;background:#00CC00;border:1px solid #999"></span><span style="aspect-ratio:1;background:#00CCCC;border:1px solid #999"></span><span style="aspect-ratio:1;background:#0000FF;border:1px solid #999"></span>
+              <span style="aspect-ratio:1;background:#666666;border:1px solid #999"></span><span style="aspect-ratio:1;background:#CC0000;border:1px solid #999"></span><span style="aspect-ratio:1;background:#CC5200;border:1px solid #999"></span><span style="aspect-ratio:1;background:#CCCC00;border:1px solid #999"></span><span style="aspect-ratio:1;background:#009900;border:1px solid #999"></span><span style="aspect-ratio:1;background:#009999;border:1px solid #999"></span><span style="aspect-ratio:1;background:#0000CC;border:1px solid #999"></span><span style="aspect-ratio:1;background:#CC00CC;border:1px solid #999"></span><span style="aspect-ratio:1;background:#333333;border:1px solid #999"></span><span style="aspect-ratio:1;background:#990000;border:1px solid #999"></span><span style="aspect-ratio:1;background:#993D00;border:1px solid #999"></span><span style="aspect-ratio:1;background:#999900;border:1px solid #999"></span><span style="aspect-ratio:1;background:#006600;border:1px solid #999"></span><span style="aspect-ratio:1;background:#006666;border:1px solid #999"></span><span style="aspect-ratio:1;background:#000099;border:1px solid #999"></span>
+            </div>
+            <div style="display:flex;gap:7px;align-items:center;margin-top:8px">
+              <span class="bold" style="font-size:11px">Preview</span>
+              <span style="border:1px solid var(--s1);background:#fff;padding:2px 7px;font:700 11px var(--dialog);color:#0000CC">Sample Text</span>
+            </div>
+          </div>
+          <div class="row" style="justify-content:flex-end;margin-top:9px">
+            <span class="btn">OK</span><span class="btn">Cancel</span><span class="btn">Reset</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JColorChooser</div>
+      <p class="desc">A colour picker with three panels by default — a fixed swatch grid, HSV and RGB — over a
+      live preview. Usable as a panel or, via
+      <span style="font-family:var(--mono)">showDialog()</span>, as a modal dialog with
+      <b>OK, Cancel and Reset</b>.</p>
+    </div>
+  </div>
+</fieldset>
+
+<p class="lede" style="margin-top:6px">Also in the package but never painted:
+<span style="font-family:var(--mono)">ButtonGroup</span>,
+<span style="font-family:var(--mono)">Timer</span>,
+<span style="font-family:var(--mono)">SwingWorker</span>,
+<span style="font-family:var(--mono)">SwingUtilities</span> and the layout managers
+(<span style="font-family:var(--mono)">BoxLayout</span>,
+<span style="font-family:var(--mono)">OverlayLayout</span>,
+<span style="font-family:var(--mono)">GroupLayout</span>,
+<span style="font-family:var(--mono)">SpringLayout</span>,
+<span style="font-family:var(--mono)">ScrollPaneLayout</span>,
+<span style="font-family:var(--mono)">ViewportLayout</span>). They are Swing classes, but not components.</p>
+
+    </main>
+  </div>
+
+  <div class="statusbar">
+    <span class="cell grow" id="status">javax.swing</span>
+    <span class="cell">Metal / OceanTheme</span>
+  </div>
+</div>
+<script>
+/* Left tree: the real containment + inheritance grouping, doubling as navigation. */
+const TREE = [
+  ["Top-level containers", "top", ["JFrame","JWindow","JDialog","JApplet"]],
+  ["Root machinery", "root", ["JRootPane","JLayeredPane","JPanel","Box","JViewport","JComponent"]],
+  ["Intermediate containers", "containers", ["JScrollPane","JScrollBar","JSplitPane","JTabbedPane","JToolBar","JDesktopPane","JInternalFrame"]],
+  ["Labels & static widgets", "static", ["JLabel","JSeparator","JToolTip","JProgressBar"]],
+  ["Buttons", "buttons", ["JButton","JToggleButton","JCheckBox","JRadioButton"]],
+  ["Menus", "menus", ["JMenuBar","JMenu","JMenuItem","JCheckBoxMenuItem","JRadioButtonMenuItem","JPopupMenu"]],
+  ["Text components", "text", ["JTextField","JPasswordField","JFormattedTextField","JTextArea","JEditorPane","JTextPane"]],
+  ["Choosers & value pickers", "pickers", ["JComboBox","JSpinner","JSlider"]],
+  ["Data views", "data", ["JList","JTable","JTableHeader","JTree"]],
+  ["Standard dialogs", "dialogs", ["JOptionPane","JFileChooser","JColorChooser"]]
+];
+document.getElementById("nav").innerHTML =
+  '<ul><li><span class="sel"><b class="handle">−</b><i class="dicon"></i>javax.swing</span><ul>' +
+  TREE.map(([label,id,kids]) =>
+    `<li><span><b class="handle">−</b><i class="dicon"></i><a class="node" href="#${id}">${label}</a></span>
+     <ul>${kids.map(k=>`<li><span><i class="leafdot"></i><i class="ficon"></i><a class="node" href="#${id}">${k}</a></span></li>`).join("")}</ul></li>`
+  ).join("") + '</ul></li></ul>';
+
+/* Status bar mirrors the JavaDoc habit of showing the FQN. */
+const status = document.getElementById("status");
+document.querySelectorAll("[data-fqn]").forEach(el => {
+  el.addEventListener("pointerenter", () => status.textContent = el.dataset.fqn);
+  el.addEventListener("focusin", () => status.textContent = el.dataset.fqn);
+});
+document.querySelector(".rightpane").addEventListener("pointerleave",
+  () => status.textContent = "javax.swing");
+</script>
+</body>
+</html>

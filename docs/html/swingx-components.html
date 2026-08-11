@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SwingX component catalogue — org.jdesktop.swingx</title>
+<style>
+
+/* ============================================================
+   Ocean theme palette (javax.swing.plaf.metal.OceanTheme)
+   ============================================================ */
+:root{
+  --p1:#6382BF;            /* primary1   */
+  --p2:#A3B8CC;            /* primary2   */
+  --p3:#B8CFE5;            /* primary3   */
+  --s1:#7A8A99;            /* secondary1 */
+  --s2:#B8CFE5;            /* secondary2 */
+  --s3:#EEEEEE;            /* secondary3 - control */
+  --ink:#333333;           /* black      */
+  --disabled:#999999;
+  --btn:linear-gradient(to bottom,#DDE8F3 0%,#FFFFFF 30%,#B8CFE5 100%);
+  --btn-press:linear-gradient(to bottom,#A3B8CC 0%,#B8CFE5 40%,#DDE8F3 100%);
+  --bar:linear-gradient(to bottom,#FFFFFF 0%,#F2F2F2 60%,#E4E4E4 100%);
+  --dialog:"Lucida Sans","Lucida Grande","DejaVu Sans",Verdana,Tahoma,sans-serif;
+  --mono:"DejaVu Sans Mono",Menlo,Consolas,"Courier New",monospace;
+}
+*{box-sizing:border-box}
+html{background:#5B6670;background-image:radial-gradient(circle at 50% 0,#75818C,#4A545D 70%)}
+body{
+  margin:0;padding:22px 16px 60px;
+  font:12px/1.4 var(--dialog);color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ============================================================
+   Metal primitives — reused by every specimen
+   ============================================================ */
+.control{background:var(--s3)}
+.lowered{border:1px solid var(--s1);border-right-color:#B0BCC7;border-bottom-color:#B0BCC7;background:#fff}
+.etched{border:1px solid var(--s1)}
+.bold{font-weight:700}
+
+/* JButton family */
+.btn{
+  font:700 12px var(--dialog);color:var(--ink);
+  padding:3px 12px;border:1px solid var(--s1);border-radius:3px;
+  background:var(--btn);cursor:default;display:inline-flex;align-items:center;gap:5px;
+  min-height:23px;
+}
+.btn.rollover{border-color:var(--p1)}
+.btn.focused{box-shadow:inset 0 0 0 1px #fff,inset 0 0 0 2px var(--p2)}
+.btn.pressed,.btn.selected{background:var(--btn-press);border-color:var(--p1)}
+.btn.disabled{color:var(--disabled);border-color:#C0C0C0;background:var(--s3)}
+.btn.icon-only{padding:3px 6px}
+
+/* JCheckBox / JRadioButton */
+.box,.circle{
+  width:13px;height:13px;flex:0 0 13px;border:1px solid var(--s1);
+  background:linear-gradient(to bottom,#fff 0%,#DDE8F3 50%,#B8CFE5 100%);
+  display:inline-grid;place-items:center;border-radius:2px;
+}
+.circle{border-radius:50%}
+.box.on::after{content:"";width:9px;height:9px;background:var(--ink);
+  clip-path:polygon(14% 47%,0 61%,36% 100%,100% 25%,86% 12%,34% 71%)}
+.circle.on::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--ink)}
+.box.off,.circle.off{background:linear-gradient(to bottom,#fff,#EDF2F8)}
+.box.dis,.circle.dis{border-color:#C0C0C0;background:var(--s3)}
+label.tog{display:inline-flex;align-items:center;gap:5px;font-weight:700;cursor:default}
+label.tog.dis{color:var(--disabled)}
+
+/* Text components */
+.field{font:12px var(--dialog);color:var(--ink);background:#fff;
+  border:1px solid var(--s1);border-right-color:#B0BCC7;border-bottom-color:#B0BCC7;
+  padding:3px 4px;min-height:22px;display:block}
+.field.dis{background:var(--s3);color:var(--disabled)}
+.caret{display:inline-block;width:1px;height:13px;background:var(--ink);
+  vertical-align:-2px;animation:blink 1.06s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.selectedtext{background:var(--p3)}
+
+/* Panels, borders, titled borders */
+.panel{background:var(--s3);border:1px solid transparent}
+fieldset.titled{
+  border:1px solid var(--s1);margin:0 0 22px;padding:14px 14px 4px;background:var(--s3);
+}
+fieldset.titled>legend{font-weight:700;padding:0 5px;color:var(--ink)}
+.divider{height:1px;background:var(--s1);border-bottom:1px solid #fff}
+
+/* Scrollbars (Metal, with bumps) */
+.sb{background:#EEF2F6;border:1px solid var(--s1);display:flex}
+.sb.v{width:17px;flex-direction:column;height:100%}
+.sb.h{height:17px;width:100%}
+.sb-btn{background:var(--btn);border:1px solid var(--s1);display:grid;place-items:center;
+  font-size:7px;color:var(--ink);flex:0 0 15px}
+.sb.v .sb-btn{height:15px}
+.sb.h .sb-btn{width:15px}
+.sb-thumb{background:var(--btn);border:1px solid var(--s1);position:relative;overflow:hidden}
+.sb-thumb::after{content:"";position:absolute;inset:3px;
+  background-image:radial-gradient(#fff .6px,transparent .7px),radial-gradient(var(--s1) .6px,transparent .7px);
+  background-size:4px 4px,4px 4px;background-position:0 0,1px 1px;opacity:.9}
+.sb-track{flex:1}
+
+/* Progress bar */
+.prog{height:16px;border:1px solid var(--s1);background:#EEF2F6;position:relative;overflow:hidden}
+.prog>i{display:block;height:100%;background:linear-gradient(to bottom,#B8CFE5,#6382BF 60%,#8FA9CE);}
+.prog>span{position:absolute;inset:0;display:grid;place-items:center;font:700 11px var(--dialog)}
+
+/* Slider (Metal pointed thumb) */
+.slider{position:relative;height:24px;padding-top:9px}
+.slider .trk{height:5px;background:#EEF2F6;border:1px solid var(--s1)}
+.slider .thumb{position:absolute;top:4px;width:15px;height:16px;background:var(--btn);
+  border:1px solid var(--s1);clip-path:polygon(0 0,100% 0,100% 62%,50% 100%,0 62%)}
+.slider .ticks{display:flex;justify-content:space-between;margin-top:3px}
+.slider .ticks i{width:1px;height:5px;background:var(--s1)}
+
+/* Menus */
+.menubar{background:var(--bar);border-bottom:1px solid var(--s1);display:flex;align-items:stretch}
+.menubar>span{font-weight:700;padding:4px 9px;cursor:default}
+.menubar>span:hover,.menubar>span.open{background:var(--p2)}
+.popup{background:var(--s3);border:1px solid var(--s1);box-shadow:2px 2px 0 rgba(0,0,0,.25);
+  padding:2px 0;min-width:186px}
+.mi{display:flex;align-items:center;gap:8px;padding:3px 8px 3px 6px;font-weight:700;cursor:default}
+.mi:hover{background:var(--p2)}
+.mi .acc{margin-left:auto;font-weight:400;color:#555}
+.mi.dis,.mi.dis:hover{color:var(--disabled);background:none}
+.mi .gutter{width:13px;flex:0 0 13px;display:grid;place-items:center}
+.mi .arrow{margin-left:auto;font-size:8px}
+.msep{height:1px;background:var(--s1);margin:2px 1px;border-bottom:1px solid #fff}
+
+/* Tabs (Metal beveled corner) */
+.tabs{display:flex;align-items:flex-end;gap:1px;padding-left:4px}
+.tab{font-weight:700;padding:4px 12px 5px;border:1px solid var(--s1);border-bottom:none;
+  background:linear-gradient(to bottom,#F7F7F7,#DCDCDC);
+  clip-path:polygon(0 100%,0 7px,7px 0,100% 0,100% 100%);position:relative;top:1px;cursor:default}
+.tab::before{content:"";position:absolute;left:0;top:0;width:8px;height:8px;
+  background:linear-gradient(to top left,transparent 49.5%,var(--s1) 49.5%,var(--s1) 53%,transparent 53%)}
+.tab.sel{background:linear-gradient(to bottom,#fff,#DDE8F3);top:0;padding-bottom:6px;z-index:2}
+.tabbody{border:1px solid var(--s1);background:var(--s3);padding:12px;min-height:64px}
+
+/* Lists / tables / trees */
+.list{background:#fff;border:1px solid var(--s1);border-right-color:#B0BCC7;font:12px var(--dialog)}
+.list .row{padding:2px 5px;cursor:default}
+.list .row.sel{background:var(--p3)}
+table.jtable{border-collapse:collapse;background:#fff;font:12px var(--dialog);width:100%}
+table.jtable th{
+  font:700 12px var(--dialog);text-align:left;padding:3px 6px;
+  background:var(--btn);border:1px solid var(--s1);border-left:none}
+table.jtable td{padding:2px 6px;border-right:1px solid var(--p3);border-bottom:1px solid var(--p3)}
+table.jtable tr.sel td{background:var(--p3)}
+.tree{background:#fff;border:1px solid var(--s1);padding:4px;font:12px var(--dialog)}
+.tree ul{list-style:none;margin:0;padding-left:17px}
+.tree>ul{padding-left:2px}
+.tree li{position:relative;padding:1px 0}
+.tree li>span{display:inline-flex;align-items:center;gap:4px;padding:1px 3px;cursor:default}
+.tree li>span.sel{background:var(--p3)}
+.handle{width:9px;height:9px;border:1px solid var(--s1);background:#fff;border-radius:2px;
+  display:inline-grid;place-items:center;font:9px/1 var(--mono);color:var(--ink);flex:0 0 9px}
+.leafdot{width:9px;flex:0 0 9px}
+.ficon,.dicon{width:12px;height:11px;flex:0 0 12px;border:1px solid var(--s1)}
+.dicon{background:linear-gradient(#FFF3C4,#E8CE6B);border-radius:1px 3px 1px 1px}
+.ficon{background:#fff;clip-path:polygon(0 0,72% 0,100% 26%,100% 100%,0 100%)}
+
+/* Combo / spinner */
+.combo{display:inline-flex;border:1px solid var(--s1);background:#fff;min-width:150px}
+.combo .val{flex:1;padding:3px 5px;font:12px var(--dialog)}
+.combo .arw{width:17px;background:var(--btn);border-left:1px solid var(--s1);
+  display:grid;place-items:center;font-size:7px}
+.spin{display:inline-flex;border:1px solid var(--s1);background:#fff}
+.spin .val{padding:3px 5px;min-width:64px;font:12px var(--dialog);text-align:left}
+.spin .btns{display:flex;flex-direction:column;border-left:1px solid var(--s1);width:16px}
+.spin .btns b{flex:1;background:var(--btn);display:grid;place-items:center;font-size:6px;font-weight:400}
+.spin .btns b:first-child{border-bottom:1px solid var(--s1)}
+
+/* Windows: internal frame + Metal-decorated frame */
+.win{border:1px solid var(--s1);background:var(--s3);box-shadow:2px 2px 0 rgba(0,0,0,.2)}
+.titlebar{display:flex;align-items:center;gap:6px;padding:3px 4px 3px 6px;
+  background:linear-gradient(to bottom,#F0F5FB,#B8CFE5);border-bottom:1px solid var(--s1)}
+.titlebar.inactive{background:linear-gradient(to bottom,#F6F6F6,#DCDCDC);color:#6E6E6E}
+.titlebar .ttl{font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wbtn{width:15px;height:14px;border:1px solid var(--s1);background:var(--btn);
+  display:grid;place-items:center;font:9px/1 var(--mono);flex:0 0 15px}
+
+/* Tooltip */
+.tip{background:#FFFFE1;border:1px solid var(--ink);padding:2px 5px;font:12px var(--dialog);
+  display:inline-block;box-shadow:1px 1px 0 rgba(0,0,0,.2)}
+
+/* ============================================================
+   Catalog chrome — the page is itself a Swing window
+   ============================================================ */
+.frame{max-width:1120px;margin:0 auto;border:1px solid #3F4B55;background:var(--s3);
+  box-shadow:0 14px 40px rgba(0,0,0,.45)}
+.frame>.titlebar{background:linear-gradient(to bottom,#8AA4CE,#6382BF 55%,#4E6DA8);
+  border-bottom:1px solid #3F4B55;color:#fff;padding:5px 6px}
+.frame>.titlebar .ttl{color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.35)}
+.toolbar{display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--bar);
+  border-bottom:1px solid var(--s1);flex-wrap:wrap}
+.toolbar .grip{width:6px;height:20px;
+  background-image:radial-gradient(var(--s1) .6px,transparent .7px);background-size:3px 3px}
+.split{display:flex;align-items:stretch;min-height:70vh}
+.leftpane{width:266px;flex:0 0 266px;padding:8px;background:var(--s3);overflow:auto;
+  max-height:calc(100vh - 120px);position:sticky;top:0}
+.splitgutter{flex:0 0 6px;background:var(--s3);border-left:1px solid #fff;border-right:1px solid var(--s1);
+  position:relative}
+.splitgutter::after{content:"";position:absolute;top:50%;left:1px;width:3px;height:26px;
+  background-image:radial-gradient(var(--s1) .6px,transparent .7px);background-size:3px 3px}
+.rightpane{flex:1;min-width:0;padding:14px;background:#F7F7F7;overflow:hidden}
+.statusbar{display:flex;gap:10px;align-items:center;padding:4px 8px;background:var(--s3);
+  border-top:1px solid var(--s1);font:11px var(--mono)}
+.statusbar .cell{border:1px solid var(--s1);border-right-color:#fff;border-bottom-color:#fff;
+  padding:2px 6px;background:#F4F4F4}
+.statusbar .grow{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+
+/* Specimen rows */
+.spec{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:16px;
+  padding:11px 2px;border-top:1px dotted #C4CDD6;align-items:start}
+fieldset.titled .spec:first-of-type{border-top:none}
+.spec>.demo{min-width:0}
+.spec>.meta{min-width:0}
+.spec .cls{font:12px var(--mono);color:#1F3D6B;font-weight:700}
+.spec .cls .pkg{color:#7A8A99;font-weight:400}
+.spec .desc{margin:3px 0 0;color:#43505C}
+.spec .desc b{color:var(--ink)}
+.tag{display:inline-block;font:400 10px var(--mono);color:#6A4A00;background:#FFF3C4;
+  border:1px solid #E8CE6B;padding:0 4px;margin-left:6px;vertical-align:1px}
+.tag.abs{color:#3A3A6A;background:#E6E9F5;border-color:#B8BEDD}
+h1{font:700 15px var(--dialog);margin:0 0 4px}
+.lede{margin:0 0 16px;max-width:66ch;color:#43505C}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.col{display:flex;gap:8px;flex-direction:column;align-items:flex-start}
+.hint{font:400 11px var(--mono);color:#7A8A99;margin-top:5px}
+a.node{color:inherit;text-decoration:none}
+a.node:focus-visible,button:focus-visible,.tab:focus-visible{outline:2px solid #1F3D6B;outline-offset:1px}
+:target>legend{background:var(--p3)}
+@media (max-width:860px){
+  .split{flex-direction:column}
+  .leftpane{width:auto;flex:none;position:static;max-height:none}
+  .splitgutter{flex:0 0 6px;height:6px;border:none;border-top:1px solid var(--s1)}
+  .spec{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+
+
+/* ============================================================
+   SwingX additions. SwingX has no look and feel of its own: it
+   installs addons that read colours from the active LAF, so
+   everything here is drawn as it appears under Metal / Ocean.
+   ============================================================ */
+
+.mono{font-family:var(--mono)}
+.desc{margin:3px 0 0;color:#43505C}
+.desc b{color:var(--ink)}
+fieldset.titled>.desc{max-width:70ch}
+
+/* the honesty badge — does this component actually look different? */
+.badge{display:inline-block;font:400 10px var(--mono);padding:1px 5px;margin-left:7px;
+  vertical-align:2px;border:1px solid;white-space:nowrap}
+.badge.newchrome{background:#DCEBD8;border-color:#7FA872;color:#2F5324}
+.badge.same{background:#EDEDED;border-color:#BFBFBF;color:#5A5A5A}
+.badge.config{background:#FFF3C4;border-color:#E8CE6B;color:#6A4A00}
+.legendbar{display:flex;gap:14px;flex-wrap:wrap;padding:9px 11px;margin:0 0 18px;
+  background:var(--s3);border:1px solid var(--s1)}
+.legendbar span{display:flex;align-items:center;gap:0}
+
+/* JXTitledPanel */
+.xtitled{border:1px solid var(--s1);background:var(--s3)}
+.xtitled>.cap{font-weight:700;color:#fff;padding:5px 9px;
+  background:linear-gradient(to bottom,#7E9BCC,#6382BF 55%,#4E6DA8)}
+.xtitled>.cap.right{display:flex;align-items:center;gap:8px}
+.xtitled>.body{padding:10px}
+
+/* JXHeader */
+.xheader{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;
+  background:linear-gradient(to right,#FFFFFF 0%,#DDE8F3 60%,#B8CFE5 100%);
+  border-bottom:1px solid var(--s1)}
+.xheader .t{font-weight:700;font-size:13px}
+.xheader .d{margin-top:3px;color:#43505C;max-width:38ch}
+.xheader .ic{flex:0 0 40px;width:40px;height:40px;border:1px solid var(--s1);background:#fff;
+  display:grid;place-items:center;color:var(--p1);font-size:20px}
+
+/* JXTitledSeparator */
+.xtsep{display:flex;align-items:center;gap:9px}
+.xtsep>b{font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.xtsep>i{flex:1;height:1px;background:var(--s1);box-shadow:0 1px 0 #fff}
+
+/* JXTaskPane / JXTaskPaneContainer */
+.xtpc{background:#A0B4CC;padding:8px;display:flex;flex-direction:column;gap:8px;
+  border:1px solid var(--s1)}
+.xtp{border:1px solid #4E6DA8;border-radius:5px;overflow:hidden;background:#fff}
+.xtp>.cap{display:flex;align-items:center;gap:7px;padding:5px 8px;font-weight:700;color:#1F3D6B;
+  background:linear-gradient(to bottom,#FFFFFF,#C8DDF2);cursor:default}
+.xtp>.cap .chev{margin-left:auto;font-size:9px;color:#1F3D6B}
+.xtp>.body{padding:8px 10px;display:flex;flex-direction:column;gap:5px;background:#fff}
+.xtp.collapsed>.body{display:none}
+
+/* JXCollapsiblePane */
+.xcp{border:1px solid var(--s1);background:var(--s3);overflow:hidden}
+.xcp>.body{padding:10px}
+.xcp.shut>.body{height:0;padding:0 10px}
+
+/* JXStatusBar */
+.xsb{display:flex;align-items:stretch;background:var(--s3);border:1px solid var(--s1);
+  padding:2px;gap:0}
+.xsb>span{padding:2px 9px}
+.xsb>i{width:1px;background:var(--s1);box-shadow:1px 0 0 #fff;margin:1px 0}
+.xsb>.grip{width:14px;margin-left:auto;
+  background-image:radial-gradient(var(--s1) .7px,transparent .8px);background-size:4px 4px;
+  background-position:bottom right;background-repeat:no-repeat;background-size:11px 11px}
+
+/* JXHyperlink */
+.xlink{color:#0000EE;cursor:pointer;font-weight:700}
+.xlink.hover{text-decoration:underline;color:#CC0000}
+.xlink.visited{color:#551A8B}
+
+/* JXBusyLabel */
+.xbusy{position:relative;width:26px;height:26px;flex:0 0 26px}
+.xbusy i{position:absolute;left:11.5px;top:1px;width:3px;height:7px;border-radius:1.5px;
+  background:var(--s1);transform-origin:1.5px 12px;animation:spokes 1s linear infinite}
+@keyframes spokes{0%{opacity:1}100%{opacity:.18}}
+
+/* JXColorSelectionButton */
+.xcolorbtn{width:26px;height:22px;border:1px solid var(--s1);border-radius:3px;
+  background:var(--btn);padding:3px;display:inline-block}
+.xcolorbtn i{display:block;width:100%;height:100%;border:1px solid #555}
+
+/* JXSearchField, and the "buddy" slots either side of the text */
+.xsearch{display:inline-flex;align-items:center;gap:5px;background:#fff;
+  border:1px solid var(--s1);border-right-color:#B0BCC7;padding:2px 5px;min-height:22px}
+.xsearch .mag{color:var(--s1)}
+.xsearch .txt{flex:1;min-width:0}
+.xsearch .clear{width:13px;height:13px;border-radius:50%;background:var(--s1);color:#fff;
+  display:grid;place-items:center;font:9px/1 var(--dialog);flex:0 0 13px}
+.prompt{color:#9A9A9A}
+
+/* JXDatePicker + JXMonthView */
+.xdp{display:inline-flex;border:1px solid var(--s1);background:#fff}
+.xdp .val{padding:3px 6px;min-width:96px}
+.xdp .b{width:21px;border-left:1px solid var(--s1);background:var(--btn);display:grid;
+  place-items:center;font-size:11px}
+.xmv{background:#fff;border:1px solid var(--s1);padding:6px;width:196px;font:12px var(--dialog)}
+.xmv .mvcap{display:flex;align-items:center;justify-content:space-between;font-weight:700;
+  padding:1px 3px 5px}
+.xmv table{border-collapse:collapse;width:100%}
+.xmv th{font-weight:700;font-size:11px;padding:2px 0;text-align:center;color:#43505C}
+.xmv td{text-align:center;padding:2px 0;width:14.28%}
+.xmv td.today{box-shadow:inset 0 0 0 1px var(--p1)}
+.xmv td.sel{background:var(--p3)}
+.xmv td.other{color:#BBBBBB}
+.xmv .wk{color:#8A8A8A;font-size:10px}
+
+/* JXLoginPane */
+.xlogin{border:1px solid var(--s1);background:var(--s3);max-width:300px}
+.xlogin .banner{height:58px;position:relative;overflow:hidden;
+  background:linear-gradient(105deg,#4E6DA8 0%,#6382BF 45%,#9DB6D9 100%)}
+.xlogin .banner b{position:absolute;left:12px;bottom:9px;color:#fff;font-size:19px;
+  font-weight:700;font-style:italic}
+.xlogin .banner::after{content:"";position:absolute;inset:-20% -10%;
+  background:linear-gradient(105deg,transparent 46%,rgba(255,255,255,.28) 50%,transparent 54%)}
+.xlogin .form{padding:11px;display:grid;grid-template-columns:auto 1fr;gap:7px 8px;align-items:center}
+
+/* JXErrorPane */
+.xerr{border:1px solid var(--s1);background:var(--s3);max-width:320px}
+.xerr .details{border:1px solid var(--s1);background:#fff;height:56px;overflow:hidden;
+  font:11px var(--mono);padding:4px;color:#43505C;margin-top:8px}
+
+/* JXTipOfTheDay */
+.xtotd{border:1px solid var(--s1);background:var(--s3);max-width:330px;display:flex;
+  flex-direction:column}
+.xtotd .strip{width:62px;flex:0 0 62px;background:linear-gradient(to bottom,#6382BF,#B8CFE5);
+  color:#fff;font-weight:700;writing-mode:vertical-rl;text-align:center;padding:8px 0;font-size:13px}
+.xtotd .tip{background:#fff;border:1px solid var(--s1);padding:9px;flex:1;min-width:0}
+
+/* JXFindBar */
+.xfind{display:flex;align-items:center;gap:6px;background:var(--s3);border:1px solid var(--s1);
+  padding:5px 7px;flex-wrap:wrap}
+.xfind .miss{background:#FFC3C3}
+
+/* JXTable extras */
+.colctl{width:17px;height:100%;min-height:22px;background:var(--btn);border:1px solid var(--s1);
+  border-left:none;display:grid;place-items:center;font-size:9px}
+tr.stripe td{background:#F2F2F2}
+tr.hilite td{background:#FFF3C4}
+
+/* JXGradientChooser */
+.xgc .strip{height:26px;border:1px solid var(--s1);
+  background:linear-gradient(to right,#1B3A6B,#4E9ACF 45%,#F2E9A0)}
+.xgc .thumbs{display:flex;justify-content:space-between;margin-top:2px}
+.xgc .thumbs i{width:9px;height:9px;background:var(--btn);border:1px solid var(--s1);
+  clip-path:polygon(50% 0,100% 100%,0 100%)}
+
+/* JXImageView */
+.ximg{border:1px solid var(--s1);height:78px;display:grid;place-items:center;
+  background-image:linear-gradient(45deg,#DDD 25%,transparent 25%,transparent 75%,#DDD 75%),
+                   linear-gradient(45deg,#DDD 25%,transparent 25%,transparent 75%,#DDD 75%);
+  background-size:12px 12px;background-position:0 0,6px 6px;background-color:#fff}
+
+/* painter / highlighter swatches */
+.pnt{height:46px;border:1px solid var(--s1)}
+.pnt.matte{background:linear-gradient(to bottom,#B8CFE5,#4E6DA8)}
+.pnt.gloss{background:linear-gradient(to bottom,rgba(255,255,255,.75) 0 49%,rgba(255,255,255,.12) 50% 100%),#5C7FBF}
+.pnt.pin{background:repeating-linear-gradient(45deg,#D8E4F2 0 3px,#FFFFFF 3px 9px)}
+.pnt.checker{background-image:linear-gradient(45deg,#D8E4F2 25%,transparent 25%,transparent 75%,#D8E4F2 75%),
+  linear-gradient(45deg,#D8E4F2 25%,transparent 25%,transparent 75%,#D8E4F2 75%);
+  background-size:14px 14px;background-position:0 0,7px 7px;background-color:#fff}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+.pgrid figcaption{font:400 10px var(--mono);color:#43505C;margin-top:3px}
+figure{margin:0}
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="titlebar">
+    <span class="ttl">SwingX component catalogue — org.jdesktop.swingx, drawn under Metal / Ocean</span>
+    <span class="wbtn" aria-hidden="true">_</span>
+    <span class="wbtn" aria-hidden="true">□</span>
+    <span class="wbtn" aria-hidden="true">×</span>
+  </div>
+
+  <div class="menubar" role="presentation">
+    <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+  </div>
+
+  <div class="toolbar">
+    <span class="grip" aria-hidden="true"></span>
+    <span class="btn icon-only">◀</span>
+    <span class="btn icon-only">▶</span>
+    <span style="width:1px;height:20px;background:var(--s1);border-right:1px solid #fff"></span>
+    <span class="xtsep" style="min-width:150px"><b>swingx-all 1.6.5-1</b><i></i></span>
+    <span style="margin-left:auto" class="hint">38 components · 4 decorator families</span>
+  </div>
+
+  <div class="split">
+    <nav class="leftpane" aria-label="SwingX component list">
+      <div class="tree" id="nav"></div>
+    </nav>
+    <div class="splitgutter" aria-hidden="true"></div>
+    <main class="rightpane">
+      <h1>SwingX adds 38 components — but only some of them look new</h1>
+      <p class="lede">SwingX has no look and feel of its own. It registers addons that read their colours
+      from whichever LAF is running, so these are drawn under Metal / Ocean to sit alongside the first
+      catalogue. The badge on each entry says whether you actually see a difference out of the box.</p>
+      <div class="legendbar">
+        <span><span class="badge newchrome" style="margin:0">new chrome</span></span>
+        <span style="color:#43505C">paints something Swing has no equivalent for</span>
+        <span><span class="badge config" style="margin:0">on configuration</span></span>
+        <span style="color:#43505C">identical until you switch a feature on</span>
+        <span><span class="badge same" style="margin:0">same as parent</span></span>
+        <span style="color:#43505C">pure API extension, pixel-identical</span>
+      </div>
+<fieldset class="titled" id="dropin">
+<legend>Drop-in replacements — swap the class, see nothing change</legend>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXFrame">
+    <div class="demo">
+      <div class="win" style="max-width:262px">
+        <div class="titlebar"><span class="ttl">Application</span>
+          <span class="wbtn">_</span><span class="wbtn">□</span><span class="wbtn">×</span></div>
+        <div class="menubar"><span>File</span><span>Help</span></div>
+        <div style="height:34px"></div>
+        <div class="xsb" style="border:none;border-top:1px solid var(--s1)">
+          <span>Ready</span><i></i><span>ln 1, col 1</span><span class="grip"></span>
+        </div>
+      </div>
+      <p class="hint">status bar and wait pane are opt-in extras</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXFrame<span class="badge config">on configuration</span></div>
+      <p class="desc">A JFrame that knows about a status bar and a <b>wait pane</b> — a glass-pane overlay that
+      blocks input and shows a busy animation while a task runs. Empty, it is indistinguishable from JFrame.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXDialog">
+    <div class="demo">
+      <div class="win" style="max-width:238px">
+        <div class="titlebar"><span class="ttl">Dialog</span><span class="wbtn">×</span></div>
+        <div style="padding:12px">
+          <div style="height:16px"></div>
+          <div class="row" style="justify-content:flex-end"><span class="btn">OK</span><span class="btn">Cancel</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXDialog<span class="badge config">on configuration</span></div>
+      <p class="desc">Wires a content component's <span class="mono">execute</span> and
+      <span class="mono">cancel</span> Actions into <b>an automatically built OK / Cancel button bar</b>. The
+      bar is the only visible addition.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXRootPane">
+    <div class="demo">
+      <div style="border:1px solid var(--s1);background:#fff;padding:6px;max-width:266px;font:11px var(--mono)">
+        <div style="border:1px dashed var(--s1);padding:4px;background:var(--s3)">menuBar</div>
+        <div style="border:1px dashed var(--p1);padding:4px;margin-top:3px;background:var(--s3)">toolBar &nbsp;← added</div>
+        <div style="border:1px dashed var(--s1);padding:9px 4px;margin-top:3px;background:var(--s3)">contentPane</div>
+        <div style="border:1px dashed var(--p1);padding:4px;margin-top:3px;background:var(--s3)">statusBar &nbsp;← added</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXRootPane<span class="badge same">same as parent</span></div>
+      <p class="desc">Adds <b>managed slots for a toolbar and a status bar</b> above and below the content pane,
+      so you stop hand-rolling a BorderLayout for them. Invisible in itself.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXPanel">
+    <div class="demo">
+      <div class="pgrid" style="max-width:290px">
+        <figure><div class="pnt matte"></div><figcaption>backgroundPainter</figcaption></figure>
+        <figure><div style="height:46px;border:1px solid var(--s1);background:var(--s3);opacity:.45"></div>
+          <figcaption>setAlpha(0.45f)</figcaption></figure>
+      </div>
+      <p class="hint">plain #EEEEEE until you set either</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXPanel<span class="badge config">on configuration</span></div>
+      <p class="desc">The most-used class in the library. Adds <b>real translucency</b> via
+      <span class="mono">setAlpha</span>, a background Painter, and scroll-tracking hints so a panel can
+      follow its viewport's width. Defaults to an ordinary grey JPanel.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXButton">
+    <div class="demo">
+      <div class="row">
+        <span class="btn">Ordinary</span>
+        <span class="btn" style="background:linear-gradient(to bottom,#8FB0DE,#4E6DA8);color:#fff;
+          border-color:#3F5C96">Painted</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXButton<span class="badge config">on configuration</span></div>
+      <p class="desc">A JButton with a background and a foreground Painter. Unpainted it is
+      <b>the Ocean gradient button, unchanged</b>; the second example shows the point of the class.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXLabel">
+    <div class="demo">
+      <div class="col" style="width:100%;max-width:250px">
+        <span class="bold">Ordinary label</span>
+        <div style="border:1px dotted #C4CDD6;padding:4px;width:100%">
+          <span class="bold" style="display:block">Multi-line text that wraps inside the label's own width
+          once you call setLineWrap(true) — no HTML required.</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px">
+          <span class="bold" style="writing-mode:vertical-rl;transform:rotate(180deg)">rotated 90°</span>
+          <span class="hint" style="margin:0">setTextRotation(Math.PI * 3/2)</span>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXLabel<span class="badge config">on configuration</span></div>
+      <p class="desc">Two things JLabel cannot do: <b>wrap plain text without resorting to HTML</b>, and
+      rotate to any angle. Line wrap is off by default, so it starts out identical.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXEditorPane">
+    <div class="demo">
+      <div style="max-width:250px">
+        <div style="display:flex;gap:5px;background:var(--bar);border:1px solid var(--s1);
+          border-bottom:none;padding:4px">
+          <span class="btn icon-only">↺</span><span class="btn icon-only">↻</span>
+          <span class="btn icon-only">B</span><span class="btn icon-only">I</span>
+        </div>
+        <div class="field" style="height:52px;font-family:'Times New Roman',serif">
+          <b>Editable</b> HTML with undo, redo and find already wired up.</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXEditorPane<span class="badge same">same as parent</span></div>
+      <p class="desc">Ships with <b>undo, redo, cut/copy/paste and find Actions already registered</b>, plus
+      paragraph and HTML editing helpers. You supply the toolbar; it supplies the Actions.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXTextField">
+    <div class="demo">
+      <div class="col" style="width:100%;max-width:240px">
+        <span class="field" style="width:100%"><span class="prompt">Search the catalogue…</span></span>
+        <span class="xsearch" style="width:100%"><span class="mag">⌕</span>
+          <span class="txt">canberra</span><span class="clear">×</span></span>
+        <p class="hint">PromptSupport · BuddySupport</p>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXTextField<span class="badge config">on configuration</span></div>
+      <p class="desc">Finally, <b>placeholder text</b> — grey prompt text that clears on focus or on keypress,
+      your choice. It also supports "buddies": components docked inside the field's border, left or right.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXTextArea">
+    <div class="demo">
+      <div class="field" style="max-width:240px;height:56px">
+        <span class="prompt">Describe the problem…</span></div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXTextArea<span class="badge config">on configuration</span></div>
+      <p class="desc">The same prompt support on a multi-line field. Note it keeps
+      <b>JTextArea's monospaced default font</b> — SwingX does not fix that for you.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXFormattedTextField">
+    <div class="demo">
+      <span class="field" style="max-width:240px"><span class="prompt">dd/mm/yyyy</span></span>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXFormattedTextField<span class="badge config">on configuration</span></div>
+      <p class="desc">Prompt support again, which pairs particularly well here — <b>the prompt can show the
+      expected format</b> instead of a separate label.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXComboBox">
+    <div class="demo">
+      <div class="combo"><span class="val">Blackcurrant</span><span class="arw">▼</span></div>
+      <div class="popup" style="min-width:150px;width:150px;margin-top:2px">
+        <div class="mi" style="font-weight:400">Apple</div>
+        <div class="mi" style="font-weight:400;background:#F2F2F2">Blackcurrant</div>
+        <div class="mi" style="font-weight:400">Cherry</div>
+        <div class="mi" style="font-weight:400;background:#F2F2F2">Damson</div>
+      </div>
+      <p class="hint">striping shown — a Highlighter, not a default</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXComboBox<span class="badge config">on configuration</span></div>
+      <p class="desc">A combo box whose popup list accepts <b>the same Highlighters as JXTable and JXList</b>,
+      so striping and conditional colouring work here too.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="containers">
+<legend>New containers — the ones you can see</legend>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXTitledPanel">
+    <div class="demo">
+      <div class="xtitled" style="max-width:262px">
+        <div class="cap right"><span style="flex:1">Connection details</span>
+          <span style="font-size:10px;font-weight:400">▲ hide</span></div>
+        <div class="body">
+          <label class="tog"><span class="box on"></span>Use secure transport</label>
+        </div>
+      </div>
+      <p class="hint">title painter derived from the LAF's caption colours</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXTitledPanel<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">A panel with <b>a painted title bar and an optional decoration slot on the right</b> —
+      usually a close or collapse control. The bar's gradient comes from a Painter, so it is the first thing
+      most projects restyle.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXHeader">
+    <div class="demo">
+      <div class="xheader" style="max-width:290px">
+        <div style="flex:1;min-width:0">
+          <div class="t">Import your library</div>
+          <div class="d">Choose a folder to scan. Existing entries are matched by checksum, not by
+          file name.</div>
+        </div>
+        <div class="ic">↧</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXHeader<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">The banner across the top of a wizard page or dialog: <b>bold title, wrapped
+      description, icon on the right, gradient behind</b>. Three properties and you are done — the component
+      exists because everyone was rebuilding it by hand.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXTitledSeparator">
+    <div class="demo">
+      <div class="col" style="width:100%;max-width:250px">
+        <span class="xtsep" style="width:100%"><b>Network</b><i></i></span>
+        <span class="xtsep" style="width:100%"><b><i class="dicon" style="flex:0 0 12px"></i>Advanced</b><i></i></span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXTitledSeparator<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">A caption with a rule running off to the right — <b>the flat alternative to a titled
+      border</b>, and much easier to keep aligned down a column of settings. Takes an icon and any horizontal
+      alignment.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXCollapsiblePane">
+    <div class="demo">
+      <div style="max-width:250px">
+        <span class="xlink">▾ Advanced options</span>
+        <div class="xcp" style="margin-top:5px">
+          <div class="body">
+            <label class="tog"><span class="box off"></span>Verify checksums</label>
+          </div>
+        </div>
+        <div class="xcp shut" style="margin-top:6px"><div class="body">hidden</div></div>
+        <p class="hint">animated slide, ~30 frames, in either direction</p>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXCollapsiblePane<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">A container that <b>animates its own height to zero</b> and back. It supplies no header
+      of its own — you drive it with its <span class="mono">toggleAction</span>, typically from a JXHyperlink
+      or a JXTaskPane title.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXTaskPane">
+    <div class="demo">
+      <div class="xtp" style="max-width:230px">
+        <div class="cap"><span>▾</span>Common tasks<span class="chev">▲</span></div>
+        <div class="body">
+          <span class="xlink">Add a folder…</span>
+          <span class="xlink">Rescan library</span>
+          <span class="xlink visited">Export as CSV</span>
+        </div>
+      </div>
+      <p class="hint">rounded, titled, collapsible</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXTaskPane<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">The Windows XP "common tasks" group: <b>a rounded, titled box that collapses when you
+      click its caption</b>. Add Actions to it and each becomes a hyperlink-styled row automatically.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXTaskPaneContainer">
+    <div class="demo">
+      <div class="xtpc" style="max-width:230px">
+        <div class="xtp">
+          <div class="cap"><span>▾</span>Library<span class="chev">▲</span></div>
+          <div class="body"><span class="xlink">Add a folder…</span><span class="xlink">Rescan</span></div>
+        </div>
+        <div class="xtp collapsed">
+          <div class="cap"><span>▸</span>Sharing<span class="chev">▼</span></div>
+          <div class="body"></div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXTaskPaneContainer<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">Stacks task panes down a <b>tinted background</b> with consistent gutters, sizing each to
+      its content. Drop it in a scroll pane and you have the whole XP sidebar.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXMultiSplitPane">
+    <div class="demo">
+      <div style="display:flex;border:1px solid var(--s1);height:80px;max-width:270px;background:var(--s3)">
+        <div style="flex:1;display:grid;place-items:center;font:11px var(--mono)">left</div>
+        <div style="flex:0 0 6px;border-left:1px solid #fff;border-right:1px solid var(--s1)"></div>
+        <div style="flex:1.4;display:flex;flex-direction:column">
+          <div style="flex:1;display:grid;place-items:center;font:11px var(--mono)">middle.top</div>
+          <div style="flex:0 0 6px;border-top:1px solid #fff;border-bottom:1px solid var(--s1)"></div>
+          <div style="flex:1;display:grid;place-items:center;font:11px var(--mono)">middle.bottom</div>
+        </div>
+        <div style="flex:0 0 6px;border-left:1px solid #fff;border-right:1px solid var(--s1)"></div>
+        <div style="flex:.8;display:grid;place-items:center;font:11px var(--mono)">right</div>
+      </div>
+      <p class="hint">one component, three dividers, no nesting</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXMultiSplitPane<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">Replaces nested JSplitPanes with <b>a single component driven by a layout string</b> —
+      <span class="mono">(ROW left (COLUMN top bottom) right)</span>. Dividers look like Swing's but the
+      arrangement is declarative, and it can be saved and restored.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXStatusBar">
+    <div class="demo">
+      <div class="xsb" style="max-width:270px">
+        <span>Scanning…</span><i></i><span>1,204 files</span><i></i>
+        <span class="xbusy" style="transform:scale(.6);transform-origin:left center"></span>
+        <span class="grip"></span>
+      </div>
+      <p class="hint">separators between constraints; resize grip at the end</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXStatusBar<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">Lays out cells with <b>proper separators and a trailing resize grip</b>, and each cell can
+      be fixed or filled. This is what the hand-built status bar in the first catalogue was imitating.</p>
+    </div>
+  </div>
+</fieldset>
+<fieldset class="titled" id="controls">
+<legend>New controls</legend>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXHyperlink">
+    <div class="demo">
+      <div class="col">
+        <span class="xlink">Open the release notes</span>
+        <span class="xlink hover">Rollover — underlined and red</span>
+        <span class="xlink visited">Already clicked</span>
+      </div>
+      <p class="hint">no underline at rest; that arrives on rollover</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXHyperlink<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">A button that <b>looks like a web link and remembers being clicked</b>: blue at rest,
+      underlined on rollover, and a permanent visited colour afterwards. All three colours are properties, and
+      the cursor becomes a hand.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXRadioGroup">
+    <div class="demo">
+      <div class="row" style="border:1px dotted #C4CDD6;padding:6px;gap:14px">
+        <label class="tog"><span class="circle on"></span>Daily</label>
+        <label class="tog"><span class="circle off"></span>Weekly</label>
+        <label class="tog"><span class="circle off"></span>Never</label>
+      </div>
+      <p class="hint">the ButtonGroup is created for you</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXRadioGroup&lt;T&gt;<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">Give it an array of values and it <b>builds the radio buttons, the ButtonGroup and the
+      layout</b>, then hands back the selected value as its own type. It fixes the classic
+      forgotten-ButtonGroup bug by construction.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXBusyLabel">
+    <div class="demo">
+      <div class="row" style="gap:12px">
+        <span class="xbusy"></span>
+        <span class="bold">Contacting server…</span>
+      </div>
+      <p class="hint">BusyPainter: eight spokes, staggered fade</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXBusyLabel<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">An indeterminate spinner for when a progress bar would be a lie. The default is
+      <b>eight rounded spokes in a ring, fading in sequence</b>; point count, colours and trail length are all
+      adjustable through its BusyPainter.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXColorSelectionButton">
+    <div class="demo">
+      <div class="row">
+        <span class="xcolorbtn"><i style="background:#C0392B"></i></span>
+        <span class="xcolorbtn"><i style="background:#6382BF"></i></span>
+        <span class="bold">Grid colour</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXColorSelectionButton<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">A button whose face <b>is the currently chosen colour</b>; clicking it opens a
+      JColorChooser and writes the result back. Small, but it removes a dozen lines from every preferences
+      dialog.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXSearchField">
+    <div class="demo">
+      <div class="col" style="width:100%;max-width:240px">
+        <span class="xsearch" style="width:100%"><span class="mag">⌕</span>
+          <span class="txt prompt">Filter…</span></span>
+        <span class="xsearch" style="width:100%"><span class="mag">⌕</span>
+          <span class="txt">tasmania<span class="caret"></span></span><span class="clear">×</span></span>
+        <p class="hint">clear button appears only when there is text</p>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXSearchField<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">A search box with <b>a magnifier buddy on the left and a clear button on the right</b>,
+      prompt text, and a choice of instant or on-demand search. On macOS it takes the native rounded shape;
+      under Metal it stays a rectangle.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="data">
+<legend>Data views — where SwingX earned its reputation</legend>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXTable">
+    <div class="demo">
+      <div style="border:1px solid var(--s1);max-width:290px;background:#fff">
+        <div style="display:flex">
+          <table class="jtable">
+            <thead><tr><th style="border-left:1px solid var(--s1)">Name ▲</th><th>Size</th><th>Rating</th></tr></thead>
+            <tbody>
+              <tr><td>build.log</td><td>88 kB</td><td>2</td></tr>
+              <tr class="stripe"><td>notes.txt</td><td>4 kB</td><td>4</td></tr>
+              <tr><td>report.pdf</td><td>1.2 MB</td><td>3</td></tr>
+              <tr class="stripe hilite"><td>todo.md</td><td>900 B</td><td>5</td></tr>
+            </tbody>
+          </table>
+          <div class="colctl" title="column control">▦</div>
+        </div>
+      </div>
+      <p class="hint">sorted by default · striping and the ▦ control are opt-in</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXTable<span class="badge config">on configuration</span></div>
+      <p class="desc">The flagship. <b>Sorting is on by default</b> — the one behaviour JTable makes you install
+      yourself — and column visibility, Highlighters, search and per-column prototypes come free. Worth being
+      precise, though: <b>striping is not a default</b>. You get it by adding
+      <span class="mono">HighlighterFactory.createSimpleStriping()</span>, and the column-control button in the
+      header corner only appears after <span class="mono">setColumnControlVisible(true)</span>. The yellow row
+      here is a ColorHighlighter with a predicate on the rating column.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXTreeTable">
+    <div class="demo">
+      <div style="border:1px solid var(--s1);max-width:290px;background:#fff">
+        <table class="jtable">
+          <thead><tr><th style="border-left:1px solid var(--s1)">File</th><th>Size</th><th>Modified</th></tr></thead>
+          <tbody>
+            <tr><td><span style="display:inline-flex;gap:4px;align-items:center">
+              <b class="handle">−</b><i class="dicon"></i>src</span></td><td>—</td><td>30 Jul</td></tr>
+            <tr class="stripe"><td><span style="display:inline-flex;gap:4px;align-items:center;padding-left:16px">
+              <b class="handle">−</b><i class="dicon"></i>ui</span></td><td>—</td><td>30 Jul</td></tr>
+            <tr><td><span style="display:inline-flex;gap:4px;align-items:center;padding-left:32px">
+              <i class="leafdot"></i><i class="ficon"></i>MainFrame.java</span></td><td>12 kB</td><td>29 Jul</td></tr>
+            <tr class="stripe"><td><span style="display:inline-flex;gap:4px;align-items:center;padding-left:16px">
+              <b class="handle">+</b><i class="dicon"></i>model</span></td><td>—</td><td>28 Jul</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXTreeTable<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">A tree in the first column, ordinary columns after it —
+      <b>the component Swing never shipped</b>, and the reason a great many projects took the SwingX
+      dependency. Backed by a TreeTableModel; the hierarchy column keeps its expand handles and indentation.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXList">
+    <div class="demo">
+      <div class="list" style="max-width:200px">
+        <div class="row" style="display:block">Apple</div>
+        <div class="row" style="display:block;background:#F2F2F2">Blackcurrant</div>
+        <div class="row sel" style="display:block">Cherry</div>
+        <div class="row" style="display:block;background:#F2F2F2">Damson</div>
+      </div>
+      <p class="hint">sorting off by default, unlike JXTable</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXList&lt;E&gt;<span class="badge config">on configuration</span></div>
+      <p class="desc">Highlighters, rollover detection and sorting for lists. An inconsistency worth knowing:
+      <b>JXList does not auto-create its row sorter, where JXTable does</b>, so you must ask for it.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXTree">
+    <div class="demo">
+      <div class="tree" style="max-width:212px">
+        <ul>
+          <li><span><b class="handle">−</b><i class="dicon"></i>src</span>
+            <ul>
+              <li><span style="background:#F2F2F2;display:flex;width:100%">
+                <b class="handle">−</b><i class="dicon"></i>ui</span>
+                <ul>
+                  <li><span class="sel"><i class="leafdot"></i><i class="ficon"></i>MainFrame.java</span></li>
+                  <li><span style="background:#FFF3C4;display:flex;width:100%">
+                    <i class="leafdot"></i><i class="ficon"></i>Toolbar.java</span></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <p class="hint">striping and a conditional highlight, both added</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXTree<span class="badge config">on configuration</span></div>
+      <p class="desc">Brings the same Highlighter pipeline to trees, plus rollover support. Note that striping a
+      tree <b>colours the full row width</b>, which JTree's renderer cannot do on its own.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="dates">
+<legend>Dates</legend>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXDatePicker">
+    <div class="demo">
+      <div class="xdp"><span class="val">30/07/2026</span><span class="b">▤</span></div>
+      <div class="xmv" style="margin-top:4px">
+        <div class="mvcap"><span>◀</span><span>July 2026</span><span>▶</span></div>
+        <table>
+          <thead><tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr></thead>
+          <tbody>
+            <tr><td class="other">28</td><td class="other">29</td><td class="other">30</td><td>1</td><td>2</td><td>3</td><td>4</td></tr>
+            <tr><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td></tr>
+            <tr><td>12</td><td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td></tr>
+            <tr><td>19</td><td>20</td><td>21</td><td>22</td><td>23</td><td>24</td><td>25</td></tr>
+            <tr><td>26</td><td>27</td><td>28</td><td>29</td><td class="sel today">30</td><td>31</td><td class="other">1</td></tr>
+          </tbody>
+        </table>
+        <div class="divider" style="margin:6px 0 5px"></div>
+        <div style="text-align:center;font-weight:700">Today is 30/07/2026</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXDatePicker<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">An editable formatted field plus a drop-down calendar —
+      <b>Swing has no date component at all</b>, so this was one of the most-copied classes in the library. The
+      popup carries a "Today" link along the bottom by default.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXMonthView">
+    <div class="demo">
+      <div class="xmv" style="width:216px">
+        <div class="mvcap"><span>◀</span><span>July 2026</span><span>▶</span></div>
+        <table>
+          <thead><tr><th class="wk">wk</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th><th>S</th></tr></thead>
+          <tbody>
+            <tr><td class="wk">27</td><td class="other">29</td><td class="other">30</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td></tr>
+            <tr><td class="wk">28</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td></tr>
+            <tr><td class="wk">29</td><td>13</td><td>14</td><td class="sel">15</td><td class="sel">16</td><td class="sel">17</td><td>18</td><td>19</td></tr>
+            <tr><td class="wk">30</td><td>20</td><td>21</td><td>22</td><td>23</td><td>24</td><td>25</td><td>26</td></tr>
+            <tr><td class="wk">31</td><td>27</td><td>28</td><td>29</td><td class="today">30</td><td>31</td><td class="other">1</td><td class="other">2</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="hint">week numbers and leading days shown — both opt-in</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXMonthView<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">The calendar grid itself, usable standalone. It handles <b>single, multiple or interval
+      selection, flagged and unselectable dates, and several months side by side</b>. Today gets a box; the
+      selection uses the LAF's highlight colour. By default there are no week numbers and no leading or
+      trailing days.</p>
+    </div>
+  </div>
+</fieldset>
+<fieldset class="titled" id="dialogs">
+<legend>Dialogs &amp; panes</legend>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXLoginPane">
+    <div class="demo">
+      <div class="xlogin">
+        <div class="banner"><b>Login</b></div>
+        <div class="form">
+          <span class="bold">Name</span><span class="field">jsmith</span>
+          <span class="bold">Password</span><span class="field" style="letter-spacing:2px">••••••••</span>
+          <span></span><label class="tog"><span class="box on"></span>Save password</label>
+          <span class="bold">Server</span><span class="combo" style="min-width:0"><span class="val">production</span><span class="arw">▼</span></span>
+        </div>
+        <div class="row" style="justify-content:flex-end;padding:0 11px 11px">
+          <span class="btn">Login</span><span class="btn">Cancel</span>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXLoginPane<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">A complete sign-in panel: <b>angled gradient banner, name and password fields, optional
+      save-password and server pickers</b>, and a progress state while authenticating. Use it inline or via
+      <span class="mono">showLoginDialog</span>, and plug in your own LoginService.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXErrorPane">
+    <div class="demo">
+      <div class="xerr">
+        <div class="titlebar"><span class="ttl">Error</span><span class="wbtn">×</span></div>
+        <div style="padding:12px">
+          <div style="display:flex;gap:11px;align-items:flex-start">
+            <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
+              <circle cx="16" cy="16" r="14" fill="#C0392B" stroke="#8A2318"/>
+              <rect x="9" y="14" width="14" height="4" fill="#fff"/></svg>
+            <span class="bold" style="padding-top:5px">Could not write to the library index.</span>
+          </div>
+          <div class="details">java.io.IOException: Read-only file system
+  at java.base/sun.nio.fs.UnixException.translateToIOException
+  at org.example.index.IndexWriter.flush(IndexWriter.java:212)
+  at org.example.LibraryScanner.run(LibraryScanner.java:88)</div>
+          <div class="row" style="justify-content:flex-end;margin-top:10px">
+            <span class="btn">▲ Details</span><span class="btn">Report…</span><span class="btn focused">OK</span>
+          </div>
+        </div>
+      </div>
+      <p class="hint">details pane is collapsed until asked for</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXErrorPane<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">What JOptionPane's error dialog should have been: <b>a short message, an expandable stack
+      trace, and a pluggable ErrorReporter</b> behind a Report button. Fed by an ErrorInfo carrying the
+      message, the throwable and a severity level.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXTipOfTheDay">
+    <div class="demo">
+      <div class="xtotd">
+        <div class="titlebar"><span class="ttl">Did you know…</span><span class="wbtn">×</span></div>
+        <div style="display:flex;gap:0;padding:10px;align-items:stretch">
+          <div class="strip">Did you know…</div>
+          <div class="tip" style="margin-left:10px">
+            <span class="bold">Alt-drag a column</span> to reorder it, or right-click the header corner to hide
+            columns you do not need.</div>
+        </div>
+        <div class="row" style="padding:0 10px 10px">
+          <label class="tog"><span class="box on"></span>Show tips on startup</label>
+          <span class="btn" style="margin-left:auto">Previous</span>
+          <span class="btn">Next</span><span class="btn">Close</span>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXTipOfTheDay<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">The startup tip dialog, complete with <b>the vertical banner strip and the
+      show-on-startup checkbox</b> whose state it persists for you. Tips come from a TipOfTheDayModel and may
+      be text, HTML or arbitrary components.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXFindBar">
+    <div class="demo">
+      <div class="xfind" style="max-width:290px">
+        <span class="bold">Find:</span>
+        <span class="field" style="flex:1;min-width:60px">indexwri<span class="caret"></span></span>
+        <span class="btn icon-only">▲</span><span class="btn icon-only">▼</span>
+        <label class="tog"><span class="box off"></span>Match case</label>
+      </div>
+      <div class="xfind" style="max-width:290px;margin-top:7px">
+        <span class="bold">Find:</span>
+        <span class="field miss" style="flex:1;min-width:60px">zzz</span>
+        <span class="btn icon-only">▲</span><span class="btn icon-only">▼</span>
+        <span class="hint" style="margin:0">not found</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXFindBar<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">The browser-style incremental search strip you dock under a component. It searches as you
+      type and <b>turns the field red when there is no match</b> — feedback Swing offers nowhere else.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXFindPanel">
+    <div class="demo">
+      <div class="win" style="max-width:250px">
+        <div class="titlebar"><span class="ttl">Find</span><span class="wbtn">×</span></div>
+        <div style="padding:11px">
+          <div class="row" style="flex-wrap:nowrap"><span class="bold">Find:</span>
+            <span class="field" style="flex:1;min-width:0">index</span></div>
+          <div class="col" style="margin-top:8px">
+            <label class="tog"><span class="box off"></span>Match case</label>
+            <label class="tog"><span class="box off"></span>Whole words</label>
+            <label class="tog"><span class="box off"></span>Backwards</label>
+            <label class="tog"><span class="box off"></span>Wrap around</label>
+          </div>
+          <div class="row" style="justify-content:flex-end;margin-top:10px">
+            <span class="btn focused">Find</span><span class="btn">Close</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXFindPanel<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">The same search plumbing as a dialog, with <b>the full set of options as checkboxes</b>.
+      Both talk to a shared Searchable interface, which JXTable, JXTree, JXList and JXEditorPane all implement.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="graphics">
+<legend>Graphics</legend>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXGraph">
+    <div class="demo">
+      <svg viewBox="0 0 260 130" style="width:100%;max-width:280px;border:1px solid var(--s1);background:#fff"
+           role="img" aria-label="Plot of a damped sine curve on a grid with axes">
+        <defs><pattern id="g" width="26" height="26" patternUnits="userSpaceOnUse">
+          <path d="M26 0 H0 V26" fill="none" stroke="#DDE8F3" stroke-width="1"/></pattern></defs>
+        <rect width="260" height="130" fill="url(#g)"/>
+        <line x1="0" y1="65" x2="260" y2="65" stroke="#7A8A99"/>
+        <line x1="26" y1="0" x2="26" y2="130" stroke="#7A8A99"/>
+        <path d="M26 65 Q45 15 65 45 T104 62 T143 64 T182 65 T260 65" fill="none" stroke="#6382BF" stroke-width="2"/>
+        <text x="30" y="126" font-size="8" fill="#43505C" font-family="monospace">0</text>
+        <text x="112" y="126" font-size="8" fill="#43505C" font-family="monospace">1.5</text>
+        <text x="6" y="30" font-size="8" fill="#43505C" font-family="monospace">1</text>
+      </svg>
+      <p class="hint">grid, axes and tick labels are drawn by default</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXGraph<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">Plots mathematical functions on a <b>pannable, zoomable grid with labelled axes</b>. You
+      add Plot objects that compute y from x; it is a function grapher rather than a charting library, so do
+      not reach for it when you want a bar chart.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXGradientChooser">
+    <div class="demo">
+      <div class="xgc" style="max-width:250px">
+        <div class="strip"></div>
+        <div class="thumbs"><i></i><i style="margin-left:40%"></i><i></i></div>
+        <div class="row" style="margin-top:9px">
+          <span class="combo" style="min-width:96px"><span class="val">Linear</span><span class="arw">▼</span></span>
+          <span class="combo" style="min-width:88px"><span class="val">Reflect</span><span class="arw">▼</span></span>
+        </div>
+        <div class="row" style="margin-top:7px">
+          <span class="xcolorbtn"><i style="background:#4E9ACF"></i></span>
+          <span class="bold">Stop 2</span>
+          <span class="field" style="width:56px">45%</span>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXGradientChooser<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">A visual editor for multi-stop gradients: <b>drag the triangular stop handles along the
+      preview strip</b>, set each stop's colour and opacity, and pick linear or radial with a cycle method. It
+      returns a ready-made Paint.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.JXImageView">
+    <div class="demo">
+      <div class="ximg" style="max-width:250px">
+        <div style="width:96px;height:58px;border:1px solid var(--s1);background:
+          linear-gradient(160deg,#B8CFE5,#4E6DA8);display:grid;place-items:center;color:#fff;font-weight:700">
+          image</div>
+      </div>
+      <p class="hint">checkerboard shows through transparency</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.</span>JXImageView<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">Displays an image with <b>drag-to-pan, zoom, and drag-and-drop in and out</b> — including
+      dragging the image to another application. Empty by default, showing only its background.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="decorators">
+<legend>Decorators — not components, but the reason to use SwingX</legend>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.painter.Painter">
+    <div class="demo">
+      <div class="pgrid" style="max-width:290px">
+        <figure><div class="pnt matte"></div><figcaption>MattePainter</figcaption></figure>
+        <figure><div class="pnt gloss"></div><figcaption>GlossPainter</figcaption></figure>
+        <figure><div class="pnt pin"></div><figcaption>PinstripePainter</figcaption></figure>
+        <figure><div class="pnt checker"></div><figcaption>CheckerboardPainter</figcaption></figure>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.painter.</span>Painter&lt;T&gt;<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">A one-method interface for painting a background, <b>stackable through
+      CompoundPainter</b> so a matte, a gloss and a set of pinstripes compose into one effect. Accepted by
+      JXPanel, JXButton, JXLabel, JXTitledPanel and others — and by Nimbus, which is where the idea ended up
+      in the JDK.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.decorator.Highlighter">
+    <div class="demo">
+      <table class="jtable" style="max-width:280px;border:1px solid var(--s1)">
+        <thead><tr><th style="border-left:1px solid var(--s1)">Task</th><th>Due</th><th>State</th></tr></thead>
+        <tbody>
+          <tr><td>Draft the brief</td><td>28 Jul</td><td>done</td></tr>
+          <tr class="stripe"><td>Review copy</td><td>29 Jul</td><td>done</td></tr>
+          <tr style="background:#FFD9D9"><td>Ship release</td><td>26 Jul</td><td>overdue</td></tr>
+          <tr class="stripe"><td>Write tests</td><td>31 Jul</td><td>open</td></tr>
+        </tbody>
+      </table>
+      <p class="hint">striping + a predicate on the due date</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.decorator.</span>Highlighter<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">Decorates a cell renderer <b>after</b> it has rendered, so you never subclass a renderer
+      again. A ColorHighlighter plus a HighlightPredicate expresses "colour the row red when the due date has
+      passed" in one line, and <b>the same object works on tables, lists and trees</b>.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.autocomplete.AutoCompleteDecorator">
+    <div class="demo">
+      <div style="max-width:230px">
+        <span class="field" style="width:100%">Tas<span class="selectedtext">mania</span><span class="caret"></span></span>
+        <div class="popup" style="margin-top:2px;min-width:0;width:100%">
+          <div class="mi" style="font-weight:400;background:var(--p3)">Tasmania</div>
+          <div class="mi" style="font-weight:400">Tasman Peninsula</div>
+        </div>
+      </div>
+      <p class="hint">the completed part arrives pre-selected</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.autocomplete.</span>AutoCompleteDecorator<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">One static call — <span class="mono">decorate(comboBox)</span> or
+      <span class="mono">decorate(textField, items, strict)</span> — and you have type-ahead completion with
+      <b>the inferred remainder selected so the next keystroke replaces it</b>. Strict mode refuses input that
+      matches nothing.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="org.jdesktop.swingx.prompt.PromptSupport">
+    <div class="demo">
+      <div class="col" style="width:100%;max-width:230px">
+        <span class="field" style="width:100%"><span class="prompt">Placeholder text</span></span>
+        <span class="xsearch" style="width:100%"><span class="mag">⌕</span>
+          <span class="txt prompt">with a buddy</span></span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">org.jdesktop.swingx.prompt.</span>PromptSupport<span class="badge newchrome">new chrome</span></div>
+      <p class="desc">Static methods that add prompt text, and a focus behaviour for it, to
+      <b>any JTextComponent — not only the JX ones</b>. Its sibling BuddySupport docks small components inside
+      a field's border, which is how JXSearchField is built.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="status">
+<legend>Before you add the dependency</legend>
+  <p class="desc" style="max-width:70ch"><b>SwingX is in maintenance, not development.</b> It came out of the
+  SwingLabs project at Sun, and the widely used release is
+  <span class="mono">org.swinglabs.swingx:swingx-all:1.6.5-1</span>. Active work stopped in the early 2010s, so
+  expect no fixes and no new components — check the current state of the project before committing to it,
+  since my information here has a cutoff.</p>
+  <p class="desc" style="max-width:70ch;margin-top:9px">It still works, and JXTreeTable, JXDatePicker and the
+  Highlighter pipeline remain hard to replace. But a few of its ideas were absorbed into the JDK — Painters
+  became part of Nimbus, and <span class="mono">RowSorter</span> arrived in Java 6 — so check what you actually
+  need before taking the whole library.</p>
+  <p class="desc" style="max-width:70ch;margin-top:9px"><b>Separate modules.</b> The map components,
+  <span class="mono">JXMapViewer</span> and <span class="mono">JXMapKit</span>, are not in swingx-core; they
+  live in the swingx-ws / mapviewer artifacts and are usually taken via the maintained
+  <span class="mono">jxmapviewer2</span> fork instead. Not shown above, since they render tiles rather than
+  chrome.</p>
+</fieldset>
+<!--SECTIONS-->
+    </main>
+  </div>
+
+  <div class="statusbar">
+    <span class="cell grow" id="status">org.jdesktop.swingx</span>
+    <span class="cell">Metal / OceanTheme</span>
+  </div>
+</div>
+<script>
+const TREE=[
+ ["Drop-in replacements","dropin",["JXFrame","JXDialog","JXRootPane","JXPanel","JXButton","JXLabel","JXEditorPane","JXTextField","JXTextArea","JXFormattedTextField","JXComboBox"]],
+ ["New containers","containers",["JXTitledPanel","JXHeader","JXTitledSeparator","JXCollapsiblePane","JXTaskPane","JXTaskPaneContainer","JXMultiSplitPane","JXStatusBar"]],
+ ["New controls","controls",["JXHyperlink","JXRadioGroup","JXBusyLabel","JXColorSelectionButton","JXSearchField"]],
+ ["Data views","data",["JXTable","JXTreeTable","JXList","JXTree"]],
+ ["Dates","dates",["JXDatePicker","JXMonthView"]],
+ ["Dialogs & panes","dialogs",["JXLoginPane","JXErrorPane","JXTipOfTheDay","JXFindBar","JXFindPanel"]],
+ ["Graphics","graphics",["JXGraph","JXGradientChooser","JXImageView"]],
+ ["Decorators (not components)","decorators",["Painter","Highlighter","AutoComplete","PromptSupport"]],
+ ["Project status","status",["Maintenance","Separate modules"]]
+];
+document.getElementById("nav").innerHTML=
+ '<ul><li><span class="sel"><b class="handle">−</b><i class="dicon"></i>org.jdesktop.swingx</span><ul>'+
+ TREE.map(([label,id,kids])=>
+  `<li><span><b class="handle">−</b><i class="dicon"></i><a class="node" href="#${id}">${label}</a></span>
+   <ul>${kids.map(k=>`<li><span><i class="leafdot"></i><i class="ficon"></i><a class="node" href="#${id}">${k}</a></span></li>`).join("")}</ul></li>`
+ ).join("")+'</ul></li></ul>';
+const status=document.getElementById("status");
+document.querySelectorAll("[data-fqn]").forEach(el=>{
+  el.addEventListener("pointerenter",()=>status.textContent=el.dataset.fqn);
+  el.addEventListener("focusin",()=>status.textContent=el.dataset.fqn);
+});
+document.querySelector(".rightpane").addEventListener("pointerleave",
+  ()=>status.textContent="org.jdesktop.swingx");
+/* JXBusyLabel: eight spokes, staggered — the default BusyPainter look */
+document.querySelectorAll(".xbusy").forEach(b=>{
+  b.innerHTML=Array.from({length:8},(_,i)=>
+    `<i style="transform:rotate(${i*45}deg);animation-delay:${(i*0.125).toFixed(3)}s"></i>`).join("");
+});
+</script>
+</body>
+</html>

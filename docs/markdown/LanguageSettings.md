@@ -12,7 +12,7 @@ IDE Settings
 └── Theme               ← application-wide
 ```
 
-[`../ProjectSettings.java`](C:/Users/willc/OneDrive/Documents/GitHub/Java_ForgeIDE/src/com/willclay/forgeide/ui/settings/ProjectSettings.java:5) can contain that nested tabbed pane.
+[`../../src/com/willclay/forgeide/ui/settings/ProjectSettings.java`](C:/Users/willc/OneDrive/Documents/GitHub/Java_ForgeIDE/src/com/willclay/forgeide/ui/settings/ProjectSettings.java:5) can contain that nested tabbed pane.
 
 ```java
 Project project = workspace.getProject();

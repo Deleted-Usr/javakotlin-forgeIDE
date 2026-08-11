@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="win10">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Swing components — Windows look and feel</title>
+<style>
+/* ============================================================
+   Two themes, one set of specimens.
+   win10   = WindowsLookAndFeel with visual styles active (Win 10/11 Aero)
+   classic = WindowsClassicLookAndFeel (Win 95 / 98 / 2000 chrome)
+   ============================================================ */
+:root,[data-theme="win10"]{
+  --font:"Segoe UI","Segoe UI Variable",Tahoma,Arial,sans-serif;
+  --fs:12px; --lh:1.35;
+  --face:#F0F0F0; --face2:#FFFFFF; --ink:#000000; --dim:#838383; --line:#ACACAC;
+
+  --btn-bg:#E1E1E1; --btn-bd:#ADADAD; --btn-r:2px; --btn-sh:none;
+  --btn-hb:#E5F1FB; --btn-hbd:#0078D7;
+  --btn-pb:#CCE4F7; --btn-pbd:#005499;
+  --btn-dbd:#0078D7;                       /* default button ring */
+  --btn-disb:#EFEFEF; --btn-disbd:#B5B2B5;
+
+  --field-bg:#FFFFFF; --field-bd:#7A7A7A; --field-sh:none; --field-focus:#0078D7;
+  --sel:#0078D7; --sel-fg:#FFFFFF;
+
+  --menubar:#F0F0F0; --menubar-sel:#CCE8FF;
+  --menu-bg:#F2F2F2; --menu-bd:#CFCFCF; --menu-sh:0 2px 6px rgba(0,0,0,.18);
+  --menu-sel:#CCE8FF; --menu-sel-fg:#000000;
+
+  --tip-bg:#FFFFFF; --tip-bd:#767676; --tip-r:0;
+  --prog-fill:#06B025; --prog-track:#E6E6E6; --prog-bd:#BCBCBC;
+
+  --cap-a:linear-gradient(to bottom,#C9DBEC,#99B4D1);   /* SystemColor.activeCaption */
+  --cap-i:linear-gradient(to bottom,#E1E8EF,#BFCDDB);
+  --cap-fg:#000000; --cap-r:3px;
+
+  --sb-track:#F0F0F0; --sb-thumb:#CDCDCD; --sb-arrow:#606060; --sb-bd:transparent;
+  --tab-r:3px; --tab-bg:linear-gradient(to bottom,#F6F6F6,#EAEAEA); --tab-sel:#FCFCFC;
+
+  --thumb:#6C6C6C;                          /* trackbar */
+  --winbd:#CCCCCC;
+  --frame-cap:#FFFFFF; --frame-fg:#000000;
+}
+[data-theme="classic"]{
+  --font:Tahoma,"MS Sans Serif",Verdana,Geneva,sans-serif;
+  --fs:11px; --lh:1.3;
+  --face:#D4D0C8; --face2:#D4D0C8; --ink:#000000; --dim:#808080; --line:#808080;
+
+  --btn-bg:#D4D0C8; --btn-bd:transparent; --btn-r:0;
+  --btn-sh:inset 1px 1px 0 #FFFFFF,inset -1px -1px 0 #404040,
+           inset 2px 2px 0 #D4D0C8,inset -2px -2px 0 #808080;
+  --btn-hb:#D4D0C8; --btn-hbd:transparent;
+  --btn-pb:#D4D0C8; --btn-pbd:transparent;
+  --btn-dbd:#000000;
+  --btn-disb:#D4D0C8; --btn-disbd:transparent;
+
+  --field-bg:#FFFFFF; --field-bd:transparent; --field-focus:transparent;
+  --field-sh:inset 1px 1px 0 #808080,inset -1px -1px 0 #FFFFFF,
+             inset 2px 2px 0 #404040,inset -2px -2px 0 #D4D0C8;
+  --sel:#000080; --sel-fg:#FFFFFF;
+
+  --menubar:#D4D0C8; --menubar-sel:#000080;
+  --menu-bg:#D4D0C8; --menu-bd:transparent; --menu-sh:1px 1px 0 rgba(0,0,0,.35);
+  --menu-sel:#000080; --menu-sel-fg:#FFFFFF;
+
+  --tip-bg:#FFFFE1; --tip-bd:#000000; --tip-r:0;
+  --prog-fill:#000080; --prog-track:#D4D0C8; --prog-bd:transparent;
+
+  --cap-a:#000080; --cap-i:#808080; --cap-fg:#FFFFFF; --cap-r:0;
+
+  --sb-track:#D4D0C8; --sb-thumb:#D4D0C8; --sb-arrow:#000000; --sb-bd:transparent;
+  --tab-r:0; --tab-bg:#D4D0C8; --tab-sel:#D4D0C8;
+
+  --thumb:#D4D0C8;
+  --winbd:#D4D0C8;
+  --frame-cap:#000080; --frame-fg:#FFFFFF;
+}
+*{box-sizing:border-box}
+html{background:#3C6E9E;background-image:linear-gradient(160deg,#5C8CB8,#2E5478)}
+[data-theme="classic"] html,html[data-theme="classic"]{background-image:linear-gradient(160deg,#3A6EA5,#204A7A)}
+body{margin:0;padding:22px 16px 60px;font:var(--fs)/var(--lh) var(--font);color:var(--ink);
+  -webkit-font-smoothing:antialiased}
+
+/* ---------- shared 3D helpers (classic only, no-ops under win10) ---------- */
+.raised{box-shadow:var(--btn-sh)}
+.sunken{box-shadow:var(--field-sh)}
+
+/* ---------- buttons ---------- */
+.btn{font:var(--fs) var(--font);color:var(--ink);padding:4px 13px;min-height:24px;
+  background:var(--btn-bg);border:1px solid var(--btn-bd);border-radius:var(--btn-r);
+  box-shadow:var(--btn-sh);cursor:default;display:inline-flex;align-items:center;gap:5px;
+  position:relative}
+.btn.rollover{background:var(--btn-hb);border-color:var(--btn-hbd)}
+.btn.pressed{background:var(--btn-pb);border-color:var(--btn-pbd)}
+[data-theme="classic"] .btn.pressed{padding:5px 12px 3px 14px;
+  box-shadow:inset 1px 1px 0 #808080,inset -1px -1px 0 #FFFFFF,
+             inset 2px 2px 0 #404040,inset -2px -2px 0 #D4D0C8}
+.btn.deflt{border-color:var(--btn-dbd)}
+[data-theme="classic"] .btn.deflt{box-shadow:var(--btn-sh),0 0 0 1px #000000}
+.btn.disabled{color:var(--dim);background:var(--btn-disb);border-color:var(--btn-disbd)}
+[data-theme="classic"] .btn.disabled{text-shadow:1px 1px 0 #FFFFFF}
+/* Windows draws focus as a dotted rectangle inset inside the border */
+.btn.focused::after{content:"";position:absolute;inset:2px;border:1px dotted var(--ink)}
+.btn.icon-only{padding:4px 7px}
+[data-theme="classic"] .btn{min-height:22px}
+
+/* ---------- check boxes & radio buttons ---------- */
+.box,.circle{width:13px;height:13px;flex:0 0 13px;background:#FFFFFF;
+  border:1px solid #5A5A5A;display:inline-grid;place-items:center}
+.circle{border-radius:50%}
+[data-theme="classic"] .box,[data-theme="classic"] .circle{border:0;
+  box-shadow:inset 1px 1px 0 #808080,inset -1px -1px 0 #FFFFFF,
+             inset 2px 2px 0 #404040,inset -2px -2px 0 #D4D0C8}
+.box.on::after{content:"";width:9px;height:9px;background:var(--ink);
+  clip-path:polygon(14% 47%,0 61%,36% 100%,100% 25%,86% 12%,34% 71%)}
+.circle.on::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--ink)}
+.box.dis,.circle.dis{background:var(--face)}
+.box.dis.on::after,.circle.dis.on::after{background:var(--dim)}
+label.tog{display:inline-flex;align-items:center;gap:6px;cursor:default;position:relative}
+label.tog.dis{color:var(--dim)}
+[data-theme="classic"] label.tog.dis{text-shadow:1px 1px 0 #FFFFFF}
+
+/* ---------- text ---------- */
+.field{font:var(--fs) var(--font);color:var(--ink);background:var(--field-bg);
+  border:1px solid var(--field-bd);box-shadow:var(--field-sh);padding:4px 5px;min-height:23px;display:block}
+.field.focus{border-color:var(--field-focus)}
+.field.dis{background:var(--face);color:var(--dim)}
+.caret{display:inline-block;width:1px;height:13px;background:var(--ink);vertical-align:-2px;
+  animation:blink 1.06s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.selectedtext{background:var(--sel);color:var(--sel-fg)}
+
+/* ---------- panels / separators / titled borders ---------- */
+fieldset.titled{border:1px solid var(--line);margin:0 0 22px;padding:14px 14px 4px;background:var(--face)}
+[data-theme="classic"] fieldset.titled{border:0;box-shadow:inset 1px 1px 0 #808080,inset -1px -1px 0 #FFFFFF}
+fieldset.titled>legend{padding:0 5px;font-weight:600}
+[data-theme="classic"] fieldset.titled>legend{font-weight:700}
+.divider{height:2px;border-top:1px solid var(--dim);border-bottom:1px solid #FFFFFF}
+[data-theme="win10"] .divider{height:1px;border-top:1px solid #DFDFDF;border-bottom:0}
+
+/* ---------- scroll bars ---------- */
+.sb{background:var(--sb-track);display:flex;border:0}
+[data-theme="classic"] .sb{
+  background-image:repeating-conic-gradient(#FFFFFF 0 25%,#D4D0C8 0 50%);
+  background-size:2px 2px}
+.sb.v{width:17px;flex-direction:column;height:100%}
+.sb.h{height:17px;width:100%}
+.sb-btn{flex:0 0 17px;display:grid;place-items:center;font-size:8px;color:var(--sb-arrow);
+  background:var(--sb-track)}
+[data-theme="classic"] .sb-btn{background:#D4D0C8;box-shadow:var(--btn-sh)}
+.sb.v .sb-btn{height:17px}
+.sb.h .sb-btn{width:17px}
+.sb-thumb{background:var(--sb-thumb)}
+[data-theme="classic"] .sb-thumb{box-shadow:var(--btn-sh)}
+.sb-track{flex:1}
+
+/* ---------- progress bar ---------- */
+.prog{height:17px;background:var(--prog-track);border:1px solid var(--prog-bd);position:relative;overflow:hidden}
+[data-theme="classic"] .prog{border:0;box-shadow:inset 1px 1px 0 #808080,inset -1px -1px 0 #FFFFFF}
+.prog>i{display:block;height:100%;background:var(--prog-fill)}
+/* classic paints the bar as discrete chunks */
+[data-theme="classic"] .prog>i{margin:2px;height:calc(100% - 4px);
+  background-image:repeating-linear-gradient(to right,var(--prog-fill) 0 8px,transparent 8px 10px);
+  background-color:transparent}
+.prog>span{position:absolute;inset:0;display:grid;place-items:center;font:var(--fs) var(--font)}
+[data-theme="classic"] .prog>span{display:none}
+
+/* ---------- slider / trackbar ---------- */
+.slider{position:relative;height:26px;padding-top:9px}
+.slider .trk{height:4px;background:#E7EAEA;border:1px solid #D6D6D6}
+[data-theme="classic"] .slider .trk{height:4px;background:#D4D0C8;border:0;
+  box-shadow:inset 1px 1px 0 #808080,inset -1px -1px 0 #FFFFFF}
+.slider .thumb{position:absolute;top:2px;width:11px;height:20px;background:var(--thumb);border-radius:1px}
+[data-theme="classic"] .slider .thumb{width:11px;height:19px;background:#D4D0C8;border-radius:0;
+  clip-path:polygon(0 0,100% 0,100% 60%,50% 100%,0 60%);
+  box-shadow:inset 1px 1px 0 #FFFFFF,inset -1px -1px 0 #404040}
+.slider .ticks{display:flex;justify-content:space-between;margin-top:2px}
+.slider .ticks i{width:1px;height:4px;background:var(--dim)}
+
+/* ---------- menus ---------- */
+.menubar{background:var(--menubar);display:flex;align-items:stretch}
+[data-theme="classic"] .menubar{box-shadow:inset 0 -1px 0 #FFFFFF}
+.menubar>span{padding:5px 10px;cursor:default}
+.menubar>span.open,.menubar>span:hover{background:var(--menubar-sel);color:var(--menu-sel-fg)}
+[data-theme="win10"] .menubar>span.open,[data-theme="win10"] .menubar>span:hover{color:var(--ink)}
+.popup{background:var(--menu-bg);border:1px solid var(--menu-bd);box-shadow:var(--menu-sh);
+  padding:2px;min-width:190px}
+[data-theme="classic"] .popup{box-shadow:inset 1px 1px 0 #FFFFFF,inset -1px -1px 0 #404040,
+  inset 2px 2px 0 #D4D0C8,inset -2px -2px 0 #808080,2px 2px 0 rgba(0,0,0,.35);padding:3px}
+.mi{display:flex;align-items:center;gap:9px;padding:4px 8px 4px 6px;cursor:default}
+.mi:hover{background:var(--menu-sel);color:var(--menu-sel-fg)}
+.mi .acc{margin-left:auto;color:inherit;opacity:.75;padding-left:18px}
+.mi.dis,.mi.dis:hover{color:var(--dim);background:none}
+[data-theme="classic"] .mi.dis{text-shadow:1px 1px 0 #FFFFFF}
+.mi .gutter{width:14px;flex:0 0 14px;display:grid;place-items:center;font-size:11px}
+.mi .arrow{margin-left:auto;font-size:8px}
+.msep{height:2px;margin:3px 2px;border-top:1px solid var(--dim);border-bottom:1px solid #FFFFFF}
+[data-theme="win10"] .msep{height:1px;border-top:1px solid #D7D7D7;border-bottom:0}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex;align-items:flex-end;gap:2px;padding-left:3px}
+.tab{padding:4px 12px;border:1px solid var(--line);border-bottom:none;background:var(--tab-bg);
+  border-radius:var(--tab-r) var(--tab-r) 0 0;position:relative;top:2px;cursor:default}
+[data-theme="classic"] .tab{border:0;box-shadow:inset 1px 1px 0 #FFFFFF,inset -1px 0 0 #404040;
+  background:#D4D0C8}
+.tab.sel{background:var(--tab-sel);top:0;padding-bottom:6px;z-index:2}
+[data-theme="classic"] .tab.sel{background:#D4D0C8;padding:5px 14px 6px}
+.tabbody{border:1px solid var(--line);background:var(--face);padding:12px;min-height:64px}
+[data-theme="classic"] .tabbody{border:0;box-shadow:inset 1px 1px 0 #FFFFFF,inset -1px -1px 0 #404040,
+  inset -2px -2px 0 #808080}
+
+/* ---------- lists / tables / trees ---------- */
+.list{background:#FFFFFF;border:1px solid var(--field-bd);box-shadow:var(--field-sh);font:var(--fs) var(--font)}
+.list .r{padding:2px 5px;cursor:default}
+.list .r.sel{background:var(--sel);color:var(--sel-fg)}
+table.jtable{border-collapse:collapse;background:#FFFFFF;font:var(--fs) var(--font);width:100%}
+table.jtable th{text-align:left;padding:4px 7px;background:var(--btn-bg);
+  border:1px solid var(--line);border-left:none;font-weight:400}
+[data-theme="classic"] table.jtable th{background:#D4D0C8;border:0;
+  box-shadow:inset 1px 1px 0 #FFFFFF,inset -1px -1px 0 #808080}
+table.jtable td{padding:3px 7px;border-right:1px solid #E5E5E5;border-bottom:1px solid #E5E5E5}
+[data-theme="classic"] table.jtable td{border-color:#D4D0C8}
+table.jtable tr.sel td{background:var(--sel);color:var(--sel-fg)}
+.tree{background:#FFFFFF;border:1px solid var(--field-bd);box-shadow:var(--field-sh);
+  padding:5px;font:var(--fs) var(--font)}
+.tree ul{list-style:none;margin:0;padding-left:18px}
+.tree>ul{padding-left:2px}
+.tree li{padding:1px 0}
+.tree li>span{display:inline-flex;align-items:center;gap:5px;padding:1px 3px;cursor:default}
+.tree li>span.sel{background:var(--sel);color:var(--sel-fg)}
+/* Vista+ themes swap the classic +/- boxes for chevrons */
+.chev{width:10px;flex:0 0 10px;font-size:9px;color:#595959;text-align:center}
+.plus{width:9px;height:9px;flex:0 0 9px;border:1px solid #808080;background:#FFFFFF;
+  display:inline-grid;place-items:center;font:9px/1 monospace;color:#000}
+.leafdot{width:10px;flex:0 0 10px}
+[data-theme="win10"] .plus,[data-theme="classic"] .chev{display:none}
+.ficon,.dicon{width:13px;height:11px;flex:0 0 13px}
+.dicon{background:linear-gradient(#FFE9A8,#EFC75E);border:1px solid #B08A2A;border-radius:1px 3px 1px 1px}
+.ficon{background:#FFFFFF;border:1px solid #9A9A9A;clip-path:polygon(0 0,72% 0,100% 26%,100% 100%,0 100%)}
+
+/* ---------- combo / spinner ---------- */
+.combo{display:inline-flex;background:#FFFFFF;border:1px solid var(--line);min-width:155px}
+[data-theme="classic"] .combo{border:0;box-shadow:var(--field-sh)}
+.combo .val{flex:1;padding:4px 6px}
+.combo .arw{width:19px;display:grid;place-items:center;font-size:9px;color:#383838}
+[data-theme="classic"] .combo .arw{background:#D4D0C8;box-shadow:var(--btn-sh);margin:2px}
+.spin{display:inline-flex;background:#FFFFFF;border:1px solid var(--line)}
+[data-theme="classic"] .spin{border:0;box-shadow:var(--field-sh)}
+.spin .val{padding:4px 6px;min-width:66px}
+.spin .btns{display:flex;flex-direction:column;width:18px}
+.spin .btns b{flex:1;display:grid;place-items:center;font-size:7px;font-weight:400;
+  background:var(--btn-bg);border-left:1px solid var(--line)}
+[data-theme="classic"] .spin .btns b{border:0;box-shadow:var(--btn-sh);background:#D4D0C8}
+
+/* ---------- windows ---------- */
+.win{background:var(--face);border:1px solid var(--winbd)}
+[data-theme="win10"] .win{box-shadow:0 3px 10px rgba(0,0,0,.22)}
+[data-theme="classic"] .win{border:0;box-shadow:inset 1px 1px 0 #FFFFFF,inset -1px -1px 0 #404040,
+  inset 2px 2px 0 #D4D0C8,inset -2px -2px 0 #808080;padding:3px}
+.titlebar{display:flex;align-items:center;gap:5px;padding:4px 4px 4px 7px;background:var(--cap-a);
+  color:var(--cap-fg);border-radius:var(--cap-r) var(--cap-r) 0 0}
+.titlebar.inactive{background:var(--cap-i)}
+[data-theme="classic"] .titlebar{padding:2px 2px 2px 4px;font-weight:700}
+[data-theme="classic"] .titlebar.inactive{color:#D4D0C8}
+[data-theme="win10"] .titlebar.native{background:#FFFFFF;color:#000000;
+  border-bottom:1px solid #E5E5E5;padding:6px 4px 6px 10px;border-radius:0}
+[data-theme="win10"] .titlebar.native .wbtn{background:transparent;border:0;width:27px;height:19px;
+  flex:0 0 27px;font-size:10px}
+[data-theme="win10"] .titlebar.native .wbtn:hover{background:#E5E5E5}
+[data-theme="win10"] .titlebar.native .wbtn.x:hover{background:#E81123;color:#FFFFFF}
+.titlebar .ttl{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wbtn{width:17px;height:15px;flex:0 0 17px;display:grid;place-items:center;
+  font:9px/1 var(--font);color:var(--ink);background:var(--btn-bg);border:1px solid var(--btn-bd)}
+[data-theme="classic"] .wbtn{width:16px;height:14px;flex:0 0 16px;background:#D4D0C8;border:0;
+  box-shadow:var(--btn-sh);font-weight:700}
+
+/* ---------- tooltip ---------- */
+.tip{background:var(--tip-bg);border:1px solid var(--tip-bd);padding:3px 6px;display:inline-block;
+  border-radius:var(--tip-r)}
+
+/* ============================================================
+   Catalogue chrome
+   ============================================================ */
+.frame{max-width:1120px;margin:0 auto;background:var(--face);border:1px solid #8A8A8A}
+[data-theme="win10"] .frame{box-shadow:0 16px 44px rgba(0,0,0,.4)}
+[data-theme="classic"] .frame{border:0;padding:3px;
+  box-shadow:inset 1px 1px 0 #FFFFFF,inset -1px -1px 0 #404040,
+             inset 2px 2px 0 #D4D0C8,inset -2px -2px 0 #808080,0 16px 44px rgba(0,0,0,.4)}
+.frame>.capbar{display:flex;align-items:center;gap:6px;padding:8px 8px 8px 12px;
+  background:var(--frame-cap);color:var(--frame-fg);border-bottom:1px solid #E5E5E5}
+[data-theme="classic"] .frame>.capbar{padding:2px 2px 2px 4px;font-weight:700;border-bottom:0}
+.frame>.capbar .ttl{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.capbtn{width:32px;height:22px;display:grid;place-items:center;font-size:11px;color:var(--frame-fg)}
+.capbtn.x:hover{background:#E81123;color:#FFFFFF}
+[data-theme="classic"] .capbtn{width:16px;height:14px;background:#D4D0C8;color:#000;
+  box-shadow:var(--btn-sh);font-weight:700}
+[data-theme="classic"] .capbtn.x:hover{background:#D4D0C8;color:#000}
+.toolbar{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--face);
+  border-bottom:1px solid var(--line);flex-wrap:wrap}
+[data-theme="classic"] .toolbar{border-bottom:0;box-shadow:inset 0 -1px 0 #808080}
+.grip{width:5px;height:20px;border-left:1px solid #FFFFFF;border-right:1px solid var(--dim)}
+[data-theme="win10"] .grip{border-left:1px solid #DFDFDF;border-right:0}
+.split{display:flex;align-items:stretch;min-height:70vh}
+.leftpane{width:270px;flex:0 0 270px;padding:8px;overflow:auto;max-height:calc(100vh - 130px);
+  position:sticky;top:0;background:var(--face)}
+.divbar{flex:0 0 5px;background:var(--face);border-left:1px solid #FFFFFF;border-right:1px solid var(--dim)}
+[data-theme="win10"] .divbar{border-left:1px solid #E1E1E1;border-right:0}
+.rightpane{flex:1;min-width:0;padding:14px;background:var(--face);overflow:hidden}
+[data-theme="win10"] .rightpane{background:#FAFAFA}
+.statusbar{display:flex;gap:6px;align-items:center;padding:4px 8px;background:var(--face);
+  border-top:1px solid var(--line);font-size:11px}
+[data-theme="classic"] .statusbar{border-top:0;box-shadow:inset 0 1px 0 #FFFFFF}
+.statusbar .cell{padding:2px 7px;background:var(--face);border:1px solid #DFDFDF}
+[data-theme="classic"] .statusbar .cell{border:0;
+  box-shadow:inset 1px 1px 0 #808080,inset -1px -1px 0 #FFFFFF}
+.statusbar .grow{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+
+.spec{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:16px;padding:12px 2px;
+  border-top:1px solid #E3E3E3;align-items:start}
+[data-theme="classic"] .spec{border-top:1px solid #C4C0B8}
+fieldset.titled .spec:first-of-type{border-top:none}
+.cls{font-family:Consolas,"DejaVu Sans Mono",monospace;font-size:12px;font-weight:700;color:#123E6B}
+[data-theme="classic"] .cls{color:#000080}
+.cls .pkg{opacity:.6;font-weight:400}
+.desc{margin:4px 0 0;opacity:.92}
+.desc b{font-weight:600}
+.mono{font-family:Consolas,"DejaVu Sans Mono",monospace}
+.hint{font-size:11px;color:var(--dim);margin-top:5px;font-family:Consolas,monospace}
+[data-theme="classic"] .hint{text-shadow:1px 1px 0 #FFFFFF}
+.tag{display:inline-block;font:400 10px Consolas,monospace;padding:0 4px;margin-left:6px;
+  border:1px solid #C9A227;background:#FFF6D6;color:#6A4A00;vertical-align:1px}
+.tag.abs{border-color:#B8BEDD;background:#E9ECF7;color:#33356A}
+h1{font-size:15px;font-weight:600;margin:0 0 4px}
+.lede{margin:0 0 16px;max-width:68ch;opacity:.9}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.col{display:flex;gap:8px;flex-direction:column;align-items:flex-start}
+.themeswitch{display:flex;gap:0}
+.themeswitch button{font:var(--fs) var(--font);color:var(--ink);padding:4px 11px;min-height:24px;
+  background:var(--btn-bg);border:1px solid var(--btn-bd);box-shadow:var(--btn-sh);cursor:pointer}
+.themeswitch button[aria-pressed="true"]{background:var(--btn-pb);border-color:var(--btn-pbd)}
+[data-theme="classic"] .themeswitch button[aria-pressed="true"]{
+  box-shadow:inset 1px 1px 0 #808080,inset -1px -1px 0 #FFFFFF,inset 2px 2px 0 #404040,inset -2px -2px 0 #D4D0C8;
+  background-image:repeating-conic-gradient(#FFFFFF 0 25%,#D4D0C8 0 50%);background-size:2px 2px}
+a.node{color:inherit;text-decoration:none}
+a.node:focus-visible,button:focus-visible{outline:1px dotted var(--ink);outline-offset:2px}
+:target>legend{background:var(--sel);color:var(--sel-fg)}
+@media (max-width:860px){
+  .split{flex-direction:column}
+  .leftpane{width:auto;flex:none;position:static;max-height:none}
+  .divbar{flex:0 0 5px;height:5px;border:0;border-top:1px solid var(--dim)}
+  .spec{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="capbar">
+    <span class="ttl">Swing components — Windows look and feel</span>
+    <span class="capbtn">—</span><span class="capbtn">□</span><span class="capbtn x">✕</span>
+  </div>
+
+  <div class="menubar"><span>File</span><span>Edit</span><span>View</span><span>Help</span></div>
+
+  <div class="toolbar">
+    <span class="grip" aria-hidden="true"></span>
+    <span style="margin-right:2px">Theme:</span>
+    <span class="themeswitch">
+      <button type="button" id="b-win10" aria-pressed="true">Windows 10 / 11 visual styles</button>
+      <button type="button" id="b-classic" aria-pressed="false">Windows Classic</button>
+    </span>
+    <span class="hint" id="lafname" style="margin:0 0 0 auto">WindowsLookAndFeel</span>
+  </div>
+
+  <div class="split">
+    <nav class="leftpane" aria-label="Component hierarchy"><div class="tree" id="nav"></div></nav>
+    <div class="divbar" aria-hidden="true"></div>
+    <main class="rightpane">
+      <h1>The same 49 specimens, re-skinned by the Windows delegate</h1>
+      <p class="lede" id="intro"></p>
+<fieldset class="titled" id="top">
+<legend>Top-level containers</legend>
+
+  <div class="spec" data-fqn="javax.swing.JFrame">
+    <div class="demo">
+      <div class="win" style="max-width:268px">
+        <div class="titlebar native"><span class="ttl">Untitled</span>
+          <span class="wbtn">—</span><span class="wbtn">□</span><span class="wbtn x">✕</span></div>
+        <div class="menubar"><span>File</span><span>Help</span></div>
+        <div style="height:52px"></div>
+      </div>
+      <p class="hint">native decorations — the OS draws this bar</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JFrame</div>
+      <p class="desc">Unchanged in structure, but the caption now comes from Windows itself: <b>white with black
+      text on Win 10, navy with bold white text in Classic</b>. Swing only paints its own caption if you ask
+      for look-and-feel decorations.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JWindow">
+    <div class="demo">
+      <div class="win" style="max-width:200px"><div style="height:62px"></div></div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JWindow</div>
+      <p class="desc">Undecorated in every look and feel. The only visible change is the face colour —
+      <b>#F0F0F0 instead of Metal's #EEEEEE</b>, or #D4D0C8 in Classic.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JDialog">
+    <div class="demo">
+      <div class="win" style="max-width:252px">
+        <div class="titlebar native"><span class="ttl">Dialog</span><span class="wbtn x">✕</span></div>
+        <div style="padding:14px;text-align:center">
+          <div style="height:18px"></div><span class="btn deflt">OK</span>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JDialog</div>
+      <p class="desc">Same window, native caption. Note the default button: Windows marks it with
+      <b>a blue ring</b>, where Classic uses a hard black outer outline.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JApplet">
+    <div class="demo">
+      <div style="border:1px dashed var(--line);height:62px;max-width:200px;display:grid;
+        place-items:center;color:var(--dim)">applet area</div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JApplet<span class="tag">deprecated</span></div>
+      <p class="desc">Look-and-feel independent, and deprecated since Java 9.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="root">
+<legend>Root machinery — still invisible</legend>
+
+  <div class="spec" data-fqn="javax.swing.JRootPane">
+    <div class="demo">
+      <div style="background:#FFFFFF;border:1px solid var(--line);padding:6px;max-width:280px" class="mono">
+        <div style="border:1px dashed #0078D7;padding:5px">layeredPane
+          <div style="border:1px dashed var(--line);padding:4px;margin-top:4px;background:var(--face)">menuBar</div>
+          <div style="border:1px dashed var(--line);padding:10px 4px;margin-top:3px;background:var(--face)">contentPane</div>
+        </div>
+        <div style="border:1px dashed #CCC;padding:3px;margin-top:4px;color:var(--dim)">glassPane</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JRootPane</div>
+      <p class="desc">Pure plumbing, identical under every delegate. <b>The one thing the look and feel changes
+      here is which class draws the window caption</b> when decorations are enabled.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JLayeredPane">
+    <div class="demo">
+      <div style="position:relative;height:74px;background:#FFFFFF;border:1px solid var(--line);max-width:280px">
+        <div class="mono" style="position:absolute;left:10px;top:10px;width:112px;height:40px;
+          background:#CCE8FF;border:1px solid var(--line);padding:3px">DEFAULT_LAYER</div>
+        <div class="mono" style="position:absolute;left:60px;top:26px;width:112px;height:40px;
+          background:#FFF6D6;border:1px solid var(--line);padding:3px">PALETTE_LAYER</div>
+        <div class="mono" style="position:absolute;left:122px;top:42px;width:100px;height:26px;
+          background:#FFFFFF;border:1px solid var(--ink);padding:3px">POPUP_LAYER</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JLayeredPane</div>
+      <p class="desc">No painting of its own, so nothing to re-skin.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JPanel">
+    <div class="demo">
+      <div style="width:190px;height:56px;background:var(--face);border:1px solid #DEDEDE"></div>
+      <p class="hint">#F0F0F0 · Classic #D4D0C8</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JPanel</div>
+      <p class="desc">A flat rectangle of the platform face colour. <b>This one colour change is what makes a
+      whole application look native or not</b>, more than any individual widget.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.Box">
+    <div class="demo">
+      <div style="display:flex;align-items:center;background:var(--face);border:1px solid #DEDEDE;
+        padding:6px;max-width:280px">
+        <span class="btn">One</span>
+        <span style="flex:1;border-top:1px dashed #0078D7;margin:0 3px"></span>
+        <span class="btn">Two</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>Box</div>
+      <p class="desc">Layout only. Worth noting that Windows expects tighter default gaps than Metal, so
+      hard-coded strut sizes tuned on Metal <b>often look loose here</b>.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JViewport">
+    <div class="demo">
+      <div style="width:172px;height:58px;overflow:hidden;border:1px solid var(--line);background:#FFFFFF;
+        position:relative">
+        <div style="position:absolute;left:-24px;top:-14px;width:262px;padding:4px">
+          a view larger than the window onto it, clipped on every side by the viewport's bounds</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JViewport</div>
+      <p class="desc">Draws nothing. Unchanged.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JComponent">
+    <div class="demo">
+      <div style="width:150px;height:44px;border:1px dashed #CCC;display:grid;place-items:center;
+        color:var(--dim)" class="mono">no rendering</div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JComponent<span class="tag abs">abstract</span></div>
+      <p class="desc">The class that makes all of this possible: it holds the
+      <span class="mono">ComponentUI</span> reference that every look and feel swaps out.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="containers">
+<legend>Intermediate containers</legend>
+
+  <div class="spec" data-fqn="javax.swing.JScrollPane">
+    <div class="demo">
+      <div style="display:flex;max-width:252px">
+        <div style="flex:1;min-width:0">
+          <div class="list" style="height:70px;padding:3px 5px;overflow:hidden">
+            <div>Bars appear only when the</div><div>view overflows — the policy</div>
+            <div>is the same as Metal's.</div><div>The bars themselves are not.</div>
+          </div>
+          <div class="sb h">
+            <span class="sb-btn">◀</span><span class="sb-thumb" style="width:72px"></span>
+            <span class="sb-track"></span><span class="sb-btn">▶</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;width:17px">
+          <div class="sb v" style="height:70px">
+            <span class="sb-btn">▲</span><span class="sb-thumb" style="height:26px"></span>
+            <span class="sb-track"></span><span class="sb-btn">▼</span>
+          </div>
+          <div style="height:17px;background:var(--face)"></div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JScrollPane</div>
+      <p class="desc">Structure identical; the scroll bars are the giveaway. Windows 10 makes them
+      <b>flat and borderless with grey thumbs</b>, so the pane looks considerably quieter than Metal's
+      bordered, bump-textured version.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JScrollBar">
+    <div class="demo">
+      <div class="sb h" style="max-width:220px">
+        <span class="sb-btn">◀</span><span class="sb-track" style="flex:0 0 30px"></span>
+        <span class="sb-thumb" style="width:66px"></span><span class="sb-track"></span>
+        <span class="sb-btn">▶</span>
+      </div>
+      <p class="hint">Classic: a 50% dither on the track, bevelled thumb</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JScrollBar</div>
+      <p class="desc">17px wide in both themes. Classic fills the track with
+      <b>the checkerboard dither of white and face grey</b> that Windows 95 used in place of a solid colour —
+      switch themes and watch it appear.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JSplitPane">
+    <div class="demo">
+      <div style="display:flex;border:1px solid var(--line);max-width:262px;height:72px;background:var(--face)">
+        <div style="flex:1;display:grid;place-items:center;color:var(--dim)">left</div>
+        <div style="flex:0 0 5px;border-left:1px solid #FFFFFF;border-right:1px solid var(--dim)"></div>
+        <div style="flex:1.3;display:grid;place-items:center;color:var(--dim)">right</div>
+      </div>
+      <p class="hint">no bump grip, and one-touch arrows are square</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JSplitPane</div>
+      <p class="desc">The divider drops Metal's round grip dots entirely — it is
+      <b>a plain 5px raised ridge</b>, and its one-touch expanders are small square arrow buttons rather than
+      circles.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JTabbedPane">
+    <div class="demo">
+      <div style="max-width:280px">
+        <div class="tabs"><span class="tab sel">General</span><span class="tab">Fonts</span><span class="tab">Advanced</span></div>
+        <div class="tabbody"><label class="tog"><span class="box on"></span>Wrap long lines</label></div>
+      </div>
+      <p class="hint">rounded top corners; Classic squares them off</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JTabbedPane</div>
+      <p class="desc">Metal's chamfered corner is gone. Windows uses <b>a small top-corner radius and a
+      taller, lighter selected tab</b>; Classic reverts to square bevelled tabs where the selected one simply
+      grows a pixel in each direction.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JToolBar">
+    <div class="demo">
+      <div style="display:flex;align-items:center;gap:5px;background:var(--face);
+        border:1px solid var(--line);padding:5px;max-width:262px">
+        <span class="grip" aria-hidden="true"></span>
+        <span class="btn icon-only">🖫</span><span class="btn icon-only">✂</span>
+        <span class="grip" aria-hidden="true"></span>
+        <span class="btn icon-only">↺</span><span class="btn icon-only">↻</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JToolBar</div>
+      <p class="desc">Still floatable, but the handle is <b>a thin etched ridge rather than Metal's dotted
+      bumps</b> — and separators are drawn the same etched way, which is why the two read as a pair here.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JDesktopPane">
+    <div class="demo">
+      <div style="position:relative;height:96px;background:#3A6EA5;border:1px solid var(--line);
+        max-width:280px;overflow:hidden">
+        <div class="win" style="position:absolute;left:8px;top:8px;width:152px">
+          <div class="titlebar inactive"><span class="ttl">Doc 1</span><span class="wbtn">✕</span></div>
+          <div style="height:26px"></div>
+        </div>
+        <div class="win" style="position:absolute;left:58px;top:38px;width:162px">
+          <div class="titlebar"><span class="ttl">Doc 2</span>
+            <span class="wbtn">—</span><span class="wbtn">□</span><span class="wbtn">✕</span></div>
+          <div style="height:30px"></div>
+        </div>
+      </div>
+      <p class="hint">desktop background follows SystemColor.desktop</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JDesktopPane</div>
+      <p class="desc">The MDI surface picks up the Windows desktop colour —
+      <b>the old #3A6EA5 "Windows blue"</b> rather than Metal's slate grey.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JInternalFrame">
+    <div class="demo">
+      <div class="win" style="max-width:232px">
+        <div class="titlebar"><span class="ttl">Internal frame</span>
+          <span class="wbtn">—</span><span class="wbtn">□</span><span class="wbtn">✕</span></div>
+        <div style="height:42px"></div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <div style="background:var(--face);border:1px solid var(--line);padding:3px 7px">▣ Doc 1</div>
+        <span class="hint" style="margin:0">JDesktopIcon</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JInternalFrame</div>
+      <p class="desc">Swing paints this caption itself, from
+      <span class="mono">SystemColor.activeCaption</span> — which on Windows 10 still returns the legacy
+      <b>#99B4D1 pale blue</b>, and in Classic the famous #000080 navy with bold white text.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="static">
+<legend>Labels &amp; static widgets</legend>
+
+  <div class="spec" data-fqn="javax.swing.JLabel">
+    <div class="demo">
+      <div class="col">
+        <span>User name:</span>
+        <span style="color:var(--dim)">Disabled label</span>
+        <span style="display:inline-flex;gap:5px;align-items:center"><i class="dicon"></i>With icon</span>
+        <span><u>F</u>ile — mnemonic, shown only after Alt</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JLabel</div>
+      <p class="desc"><b>The single biggest difference in the whole catalogue: labels are no longer bold.</b>
+      Windows sets them in the system UI font at regular weight, and it hides mnemonic underlines until the
+      user presses Alt.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JSeparator">
+    <div class="demo">
+      <div style="max-width:220px"><div class="divider"></div></div>
+      <p class="hint">Win 10: one flat #DFDFDF line · Classic: etched pair</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JSeparator</div>
+      <p class="desc">Classic keeps the two-tone engraved rule. Visual styles flatten it to
+      <b>a single light grey hairline</b>.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JToolTip">
+    <div class="demo">
+      <div style="padding-bottom:5px"><span class="btn">Save</span></div>
+      <span class="tip">Save the current document</span>
+      <p class="hint">Win 10: white on #767676 · Classic: the yellow one</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JToolTip</div>
+      <p class="desc">Metal's pale yellow tip survives in Classic, but modern Windows draws
+      <b>a white balloon with a mid-grey border</b> instead.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JProgressBar">
+    <div class="demo">
+      <div class="col" style="width:100%;max-width:220px">
+        <div class="prog" style="width:100%"><i style="width:62%"></i></div>
+        <div class="prog" style="width:100%"><i style="width:62%"></i><span>62%</span></div>
+        <div class="prog" style="width:100%"><i style="width:34%;margin-left:22%"></i></div>
+        <p class="hint">determinate · with string · indeterminate</p>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JProgressBar</div>
+      <p class="desc">Not blue any more. Windows 10 fills it with <b>the native green (#06B025)</b>, and
+      Classic draws the unmistakable <b>row of separate navy chunks</b> with a two-pixel inset margin. The
+      percentage string is suppressed entirely in Classic.</p>
+    </div>
+  </div>
+</fieldset>
+<fieldset class="titled" id="buttons">
+<legend>Buttons</legend>
+
+  <div class="spec" data-fqn="javax.swing.JButton">
+    <div class="demo">
+      <div class="row">
+        <span class="btn">Normal</span><span class="btn rollover">Rollover</span><span class="btn pressed">Pressed</span>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <span class="btn focused">Focused</span><span class="btn deflt">Default</span>
+        <span class="btn disabled">Disabled</span>
+      </div>
+      <p class="hint">focus = dotted rectangle, not a coloured ring</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JButton</div>
+      <p class="desc">Windows 10 gives a <b>flat #E1E1E1 face with a #ADADAD border</b>, a pale blue #E5F1FB
+      hover with a #0078D7 edge, and a deeper #CCE4F7 press — no gradient at any point. Classic replaces all
+      of it with a two-pixel raised bevel that inverts when pressed, <b>and shifts the label one pixel down
+      and right</b> so the button physically depresses. Both draw focus as a dotted inset rectangle, and
+      disabled text in Classic gets its embossed white shadow.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JToggleButton">
+    <div class="demo">
+      <div class="row"><span class="btn">Off</span><span class="btn pressed">On (selected)</span></div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JToggleButton</div>
+      <p class="desc">Latches into the pressed appearance. In Classic that means
+      <b>a permanently sunken bevel</b>, historically filled with the same dither pattern as a scroll track —
+      as on the theme switch in the toolbar above.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JCheckBox">
+    <div class="demo">
+      <div class="col">
+        <label class="tog"><span class="box on"></span>Checked</label>
+        <label class="tog"><span class="box"></span>Unchecked</label>
+        <label class="tog dis"><span class="box dis on"></span>Disabled, checked</label>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JCheckBox</div>
+      <p class="desc">Still 13×13, but <b>flat white with a dark grey border</b> instead of Metal's blue
+      gradient. Classic sinks it into the panel with a bevel.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JRadioButton">
+    <div class="demo">
+      <div class="col">
+        <label class="tog"><span class="circle on"></span>Selected</label>
+        <label class="tog"><span class="circle"></span>Not selected</label>
+        <label class="tog dis"><span class="circle dis"></span>Disabled</label>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JRadioButton</div>
+      <p class="desc">Same treatment, round. A ButtonGroup is still required for mutual exclusion — that part
+      is behaviour, not appearance, so no delegate can fix it for you.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.AbstractButton">
+    <div class="demo">
+      <div style="width:150px;height:44px;border:1px dashed #CCC;display:grid;place-items:center;
+        color:var(--dim)" class="mono">no rendering</div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>AbstractButton<span class="tag abs">abstract</span></div>
+      <p class="desc">Model and action plumbing shared by the four above.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="menus">
+<legend>Menus</legend>
+
+  <div class="spec" data-fqn="javax.swing.JMenuBar">
+    <div class="demo">
+      <div style="max-width:262px;border:1px solid var(--line)">
+        <div class="menubar"><span class="open">File</span><span>Edit</span><span>View</span><span>Help</span></div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JMenuBar</div>
+      <p class="desc">Flat, gradient-free, and flush with the face colour. Classic highlights the open menu
+      with <b>a solid navy block and white text</b> — the sharpest contrast with Metal's soft blue wash.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JMenu">
+    <div class="demo">
+      <div style="max-width:262px">
+        <div class="menubar" style="border:1px solid var(--line)">
+          <span class="open">File</span><span>Edit</span>
+        </div>
+        <div class="popup" style="margin-left:1px">
+          <div class="mi"><span class="gutter"></span>New<span class="acc">Ctrl+N</span></div>
+          <div class="mi"><span class="gutter"></span>Open…<span class="acc">Ctrl+O</span></div>
+          <div class="mi"><span class="gutter"></span>Recent files<span class="arrow">▶</span></div>
+        </div>
+      </div>
+      <p class="hint">Windows writes accelerators as Ctrl+N, not Ctrl-N</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JMenu</div>
+      <p class="desc">Same popup-on-a-menu-item design. One detail worth catching: the delegate changes the
+      accelerator delimiter, so <b>Metal's <span class="mono">Ctrl-N</span> becomes
+      <span class="mono">Ctrl+N</span></b>.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JMenuItem">
+    <div class="demo">
+      <div class="popup" style="max-width:212px">
+        <div class="mi"><span class="gutter"></span>Cut<span class="acc">Ctrl+X</span></div>
+        <div class="mi"><span class="gutter"><i class="dicon"></i></span>Copy<span class="acc">Ctrl+C</span></div>
+        <div class="mi dis"><span class="gutter"></span>Paste<span class="acc">Ctrl+V</span></div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JMenuItem</div>
+      <p class="desc">Regular weight, wider accelerator gutter, and a taller row than Metal's.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JCheckBoxMenuItem">
+    <div class="demo">
+      <div class="popup" style="max-width:212px">
+        <div class="mi"><span class="gutter">✓</span>Show toolbar</div>
+        <div class="mi"><span class="gutter"></span>Show status bar</div>
+      </div>
+      <p class="hint">a check glyph, not a check box</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JCheckBoxMenuItem</div>
+      <p class="desc">Where Metal drops an actual 13px check box into the gutter, Windows follows its own
+      convention and draws <b>a bare tick mark</b> — and nothing at all when unchecked.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JRadioButtonMenuItem">
+    <div class="demo">
+      <div class="popup" style="max-width:212px">
+        <div class="mi"><span class="gutter">●</span>Small</div>
+        <div class="mi"><span class="gutter"></span>Medium</div>
+        <div class="mi"><span class="gutter"></span>Large</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JRadioButtonMenuItem</div>
+      <p class="desc">Likewise <b>a plain bullet</b> rather than a miniature radio button.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JPopupMenu">
+    <div class="demo">
+      <div class="popup" style="max-width:212px">
+        <div class="mi"><span class="gutter"></span>Undo<span class="acc">Ctrl+Z</span></div>
+        <div class="msep"></div>
+        <div class="mi"><span class="gutter"></span>Select all<span class="acc">Ctrl+A</span></div>
+        <div class="mi"><span class="gutter"></span>Properties…</div>
+      </div>
+      <p class="hint">soft shadow · Classic: hard 2px offset shadow</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JPopupMenu</div>
+      <p class="desc">Nearly white (#F2F2F2) with a thin grey border and a soft drop shadow on Windows 10;
+      Classic gives it <b>a raised bevel and a hard offset shadow</b>. Menu highlight colours are read from
+      the running theme, so this is the one area most likely to differ on your machine.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="text">
+<legend>Text components</legend>
+
+  <div class="spec" data-fqn="javax.swing.JTextField">
+    <div class="demo">
+      <div class="col" style="width:100%;max-width:222px">
+        <span class="field focus" style="width:100%">Focused<span class="caret"></span></span>
+        <span class="field" style="width:100%"><span class="selectedtext">selected run</span> of text</span>
+        <span class="field dis" style="width:100%">Not editable</span>
+      </div>
+      <p class="hint">selection: #0078D7 · Classic #000080</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JTextField</div>
+      <p class="desc">A single flat #7A7A7A border that <b>turns blue on focus</b> — versus Classic's
+      two-pixel sunken well. Selected text also becomes solid highlight blue with white text, where Metal
+      used a pale tint over black.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JPasswordField">
+    <div class="demo">
+      <span class="field" style="max-width:222px;letter-spacing:2px">●●●●●●●●●<span class="caret"></span></span>
+      <p class="hint">Windows echoes ● where Metal echoes •</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JPasswordField</div>
+      <p class="desc">Same field, and even the echo character is a look-and-feel property —
+      <b>Windows uses a larger, heavier bullet</b>.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JFormattedTextField">
+    <div class="demo">
+      <div class="col" style="width:100%;max-width:222px">
+        <span class="field" style="width:100%">30/07/2026</span>
+        <span class="field" style="width:100%">£1,240.50</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JFormattedTextField</div>
+      <p class="desc">Visually a text field; the formatter behaviour is delegate-independent.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JTextArea">
+    <div class="demo">
+      <div class="field mono" style="max-width:232px;height:64px;overflow:hidden;font-size:11px">
+        Plain multi-line text.
+        Wrapping is still off by
+        default, and the font is still monospaced →
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JTextArea</div>
+      <p class="desc">Only the border changes. Windows uses
+      <b>Courier New rather than Metal's Monospaced</b> for the default font, which reads noticeably narrower.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JEditorPane">
+    <div class="demo">
+      <div class="field" style="max-width:232px;height:70px;overflow:hidden;font-family:'Times New Roman',serif">
+        <b style="font-size:14px">Heading</b><br>Renders <i>HTML 3.2</i> via an EditorKit.
+      </div>
+      <p class="hint">the HTML kit's own CSS wins, so this stays serif</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JEditorPane</div>
+      <p class="desc">Effectively unstyled by the delegate: <b>HTMLEditorKit supplies its own stylesheet</b>,
+      which is why HTML content looks the same on every platform and stubbornly unlike the surrounding
+      application.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JTextPane">
+    <div class="demo">
+      <div class="field" style="max-width:232px;height:70px;overflow:hidden">
+        Styled runs: <b>bold</b>, <i>italic</i>,
+        <span style="color:#B03030">colour</span>, and
+        <span style="display:inline-flex;vertical-align:-3px"><i class="dicon"></i></span> embedded components.
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JTextPane</div>
+      <p class="desc">Attributes you set win over the look and feel, so only the border and caret follow the
+      platform.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.text.JTextComponent">
+    <div class="demo">
+      <div style="width:150px;height:44px;border:1px dashed #CCC;display:grid;place-items:center;
+        color:var(--dim)" class="mono">no rendering</div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.text.</span>JTextComponent<span class="tag abs">abstract</span></div>
+      <p class="desc">Note that the <b>keymap</b> is a look-and-feel property too, so Windows-style editing
+      bindings arrive with the delegate rather than the component.</p>
+    </div>
+  </div>
+</fieldset>
+<fieldset class="titled" id="pickers">
+<legend>Choosers &amp; value pickers</legend>
+
+  <div class="spec" data-fqn="javax.swing.JComboBox">
+    <div class="demo">
+      <div class="combo"><span class="val">Segoe UI</span><span class="arw">⌄</span></div>
+      <div class="popup" style="min-width:155px;width:155px;margin-top:1px;padding:1px">
+        <div class="mi" style="padding:3px 7px;background:var(--sel);color:var(--sel-fg)">Segoe UI</div>
+        <div class="mi" style="padding:3px 7px">Tahoma</div>
+        <div class="mi" style="padding:3px 7px">Courier New</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JComboBox&lt;E&gt;</div>
+      <p class="desc">Visual styles drop the separate arrow button altogether —
+      <b>just a chevron sitting inside the field</b>, with no dividing line. Classic brings back the bevelled
+      square button, inset two pixels from the sunken field.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JSpinner">
+    <div class="demo">
+      <div class="row">
+        <span class="spin"><span class="val">42</span><span class="btns"><b>▲</b><b>▼</b></span></span>
+        <span class="spin"><span class="val">30 July 2026</span><span class="btns"><b>▲</b><b>▼</b></span></span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JSpinner</div>
+      <p class="desc">The stacked arrows lose Metal's blue gradient and become
+      <b>flat grey half-buttons</b>, or bevelled ones in Classic.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JSlider">
+    <div class="demo">
+      <div class="slider" style="max-width:210px">
+        <div class="trk"></div><div class="thumb" style="left:46%"></div>
+      </div>
+      <div class="slider" style="max-width:210px">
+        <div class="trk"></div><div class="thumb" style="left:20%"></div>
+        <div class="ticks"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <p class="hint">Win 10: dark bar · Classic: bevelled pointer</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JSlider</div>
+      <p class="desc">The Windows trackbar thumb is <b>a tall dark grey bar</b> on a thin light track. Classic
+      keeps the pointed shape Metal also used, but bevelled in face grey rather than filled with a blue
+      gradient.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="data">
+<legend>Data views</legend>
+
+  <div class="spec" data-fqn="javax.swing.JList">
+    <div class="demo">
+      <div class="list" style="max-width:200px">
+        <div class="r">Apple</div><div class="r sel">Blackcurrant</div>
+        <div class="r sel">Cherry</div><div class="r">Damson</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JList&lt;E&gt;</div>
+      <p class="desc">Selection is now <b>solid highlight blue with white text</b> rather than a pale tint, so
+      multi-selection reads far more emphatically than it does in Metal.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JTable">
+    <div class="demo">
+      <div style="border:1px solid var(--field-bd);max-width:280px;background:#FFFFFF">
+        <table class="jtable">
+          <thead><tr><th style="border-left:1px solid var(--line)">Name</th><th>Size</th><th>Ready</th></tr></thead>
+          <tbody>
+            <tr><td>report.pdf</td><td>1.2 MB</td><td><span class="box on" style="margin:0 auto"></span></td></tr>
+            <tr class="sel"><td>notes.txt</td><td>4 kB</td><td><span class="box" style="margin:0 auto"></span></td></tr>
+            <tr><td>build.log</td><td>88 kB</td><td><span class="box on" style="margin:0 auto"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="hint">grid lines drop to near-invisible grey</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JTable</div>
+      <p class="desc">Metal's pale blue grid becomes <b>a very light grey</b>, and row height grows slightly to
+      suit the taller system font.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.table.JTableHeader">
+    <div class="demo">
+      <table class="jtable" style="max-width:280px">
+        <thead><tr><th style="border-left:1px solid var(--line)">Name</th><th>Size ▲</th><th>Ready</th></tr></thead>
+      </table>
+      <p class="hint">Classic: each cell is a raised bevelled button</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.table.</span>JTableHeader</div>
+      <p class="desc">Flat and quiet under visual styles — regular weight, no gradient. Classic makes every
+      column heading <b>an obviously clickable raised button</b>, which is arguably the clearer affordance.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JTree">
+    <div class="demo">
+      <div class="tree" style="max-width:222px">
+        <ul>
+          <li><span><b class="chev">▾</b><b class="plus">−</b><i class="dicon"></i>src</span>
+            <ul>
+              <li><span><b class="chev">▾</b><b class="plus">−</b><i class="dicon"></i>ui</span>
+                <ul>
+                  <li><span class="sel"><i class="leafdot"></i><i class="ficon"></i>MainFrame.java</span></li>
+                  <li><span><i class="leafdot"></i><i class="ficon"></i>Toolbar.java</span></li>
+                </ul>
+              </li>
+              <li><span><b class="chev">▸</b><b class="plus">+</b><i class="dicon"></i>model</span></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <p class="hint">Vista+ glyphs · Classic +/− boxes</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JTree</div>
+      <p class="desc">The handles change shape entirely: modern themes give
+      <b>small chevrons with no connecting lines</b>, while Classic uses the +/− boxes joined by dotted
+      guides. Exactly which you get depends on the Windows version, so this is worth checking on your target
+      platform rather than assuming.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="dialogs">
+<legend>Standard dialogs</legend>
+
+  <div class="spec" data-fqn="javax.swing.JOptionPane">
+    <div class="demo">
+      <div class="win" style="max-width:266px">
+        <div class="titlebar native"><span class="ttl">Message</span><span class="wbtn x">✕</span></div>
+        <div style="padding:15px">
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+              <circle cx="16" cy="16" r="14" fill="#0078D7"/>
+              <rect x="14.4" y="12" width="3.2" height="12" fill="#fff"/>
+              <rect x="14.4" y="7" width="3.2" height="3.4" fill="#fff"/></svg>
+            <span style="padding-top:7px">Your changes have been saved.</span>
+          </div>
+          <div class="row" style="justify-content:flex-end;margin-top:15px">
+            <span class="btn deflt focused">OK</span>
+          </div>
+        </div>
+      </div>
+      <p class="hint">Windows puts dialog buttons bottom-right, not centred</p>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JOptionPane</div>
+      <p class="desc">Icons switch to the flat Windows set, and — the part people miss —
+      <b>the button row moves from centred to right-aligned</b>, because button ordering and alignment are
+      look-and-feel properties.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JFileChooser">
+    <div class="demo">
+      <div class="win" style="max-width:320px">
+        <div class="titlebar native"><span class="ttl">Open</span><span class="wbtn x">✕</span></div>
+        <div style="padding:10px">
+          <div class="row" style="gap:5px;flex-wrap:nowrap">
+            <span style="white-space:nowrap">Look in:</span>
+            <span class="combo" style="flex:1;min-width:0"><span class="val">Documents</span><span class="arw">⌄</span></span>
+            <span class="btn icon-only">↰</span><span class="btn icon-only">⌂</span><span class="btn icon-only">☰</span>
+          </div>
+          <div class="list" style="height:66px;margin-top:8px;padding:4px;font-size:11px">
+            <div class="r" style="display:flex;gap:5px;align-items:center"><i class="dicon"></i>projects</div>
+            <div class="r" style="display:flex;gap:5px;align-items:center"><i class="ficon"></i>notes.txt</div>
+            <div class="r sel" style="display:flex;gap:5px;align-items:center"><i class="ficon"></i>report.pdf</div>
+          </div>
+          <div class="row" style="gap:6px;flex-wrap:nowrap;margin-top:8px;align-items:flex-start">
+            <div style="flex:1;min-width:0">
+              <div class="row" style="gap:5px;flex-wrap:nowrap">
+                <span style="white-space:nowrap">File name:</span>
+                <span class="field" style="flex:1;min-width:0">report.pdf</span>
+              </div>
+              <div class="row" style="gap:5px;flex-wrap:nowrap;margin-top:6px">
+                <span style="white-space:nowrap">Files of type:</span>
+                <span class="combo" style="flex:1;min-width:0"><span class="val">All Files</span><span class="arw">⌄</span></span>
+              </div>
+            </div>
+            <div class="col" style="gap:6px">
+              <span class="btn deflt" style="width:74px;justify-content:center">Open</span>
+              <span class="btn" style="width:74px;justify-content:center">Cancel</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JFileChooser</div>
+      <p class="desc">The clearest layout change in the catalogue. Where Metal stacks the buttons in a row
+      beneath everything, the Windows delegate <b>puts Open and Cancel in a vertical column to the right of
+      the file-name fields</b>, mirroring the real Windows file dialog. It is still Swing's own chooser, not
+      the native one.</p>
+    </div>
+  </div>
+
+  <div class="spec" data-fqn="javax.swing.JColorChooser">
+    <div class="demo">
+      <div class="win" style="max-width:296px">
+        <div class="titlebar native"><span class="ttl">Choose a colour</span><span class="wbtn x">✕</span></div>
+        <div style="padding:10px">
+          <div class="tabs" style="padding-left:0">
+            <span class="tab sel">Swatches</span><span class="tab">HSV</span><span class="tab">RGB</span>
+          </div>
+          <div class="tabbody" style="padding:8px;min-height:0">
+            <div style="display:grid;grid-template-columns:repeat(15,1fr);gap:1px">
+              <span style="aspect-ratio:1;background:#fff;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FFCCCC;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FFCC99;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FFFFCC;border:1px solid #999"></span><span style="aspect-ratio:1;background:#CCFFCC;border:1px solid #999"></span><span style="aspect-ratio:1;background:#CCFFFF;border:1px solid #999"></span><span style="aspect-ratio:1;background:#CCCCFF;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FFCCFF;border:1px solid #999"></span><span style="aspect-ratio:1;background:#EEEEEE;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FF9999;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FFCC66;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FFFF99;border:1px solid #999"></span><span style="aspect-ratio:1;background:#99FF99;border:1px solid #999"></span><span style="aspect-ratio:1;background:#99FFFF;border:1px solid #999"></span><span style="aspect-ratio:1;background:#9999FF;border:1px solid #999"></span>
+              <span style="aspect-ratio:1;background:#CCCCCC;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FF6666;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FF9933;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FFFF66;border:1px solid #999"></span><span style="aspect-ratio:1;background:#66FF66;border:1px solid #999"></span><span style="aspect-ratio:1;background:#66FFFF;border:1px solid #999"></span><span style="aspect-ratio:1;background:#6666FF;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FF66FF;border:1px solid #999"></span><span style="aspect-ratio:1;background:#999999;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FF0000;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FF6600;border:1px solid #999"></span><span style="aspect-ratio:1;background:#FFFF00;border:1px solid #999"></span><span style="aspect-ratio:1;background:#00CC00;border:1px solid #999"></span><span style="aspect-ratio:1;background:#00CCCC;border:1px solid #999"></span><span style="aspect-ratio:1;background:#0000FF;border:1px solid #999"></span>
+              <span style="aspect-ratio:1;background:#666666;border:1px solid #999"></span><span style="aspect-ratio:1;background:#CC0000;border:1px solid #999"></span><span style="aspect-ratio:1;background:#CC5200;border:1px solid #999"></span><span style="aspect-ratio:1;background:#CCCC00;border:1px solid #999"></span><span style="aspect-ratio:1;background:#009900;border:1px solid #999"></span><span style="aspect-ratio:1;background:#009999;border:1px solid #999"></span><span style="aspect-ratio:1;background:#0000CC;border:1px solid #999"></span><span style="aspect-ratio:1;background:#CC00CC;border:1px solid #999"></span><span style="aspect-ratio:1;background:#333333;border:1px solid #999"></span><span style="aspect-ratio:1;background:#990000;border:1px solid #999"></span><span style="aspect-ratio:1;background:#993D00;border:1px solid #999"></span><span style="aspect-ratio:1;background:#999900;border:1px solid #999"></span><span style="aspect-ratio:1;background:#006600;border:1px solid #999"></span><span style="aspect-ratio:1;background:#006666;border:1px solid #999"></span><span style="aspect-ratio:1;background:#000099;border:1px solid #999"></span>
+            </div>
+            <div class="row" style="gap:8px;margin-top:9px">
+              <span>Preview</span>
+              <span style="border:1px solid var(--line);background:#fff;padding:2px 8px;color:#0000CC">Sample Text</span>
+            </div>
+          </div>
+          <div class="row" style="justify-content:flex-end;margin-top:10px">
+            <span class="btn deflt">OK</span><span class="btn">Cancel</span><span class="btn">Reset</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="cls"><span class="pkg">javax.swing.</span>JColorChooser</div>
+      <p class="desc">The chooser panels are built from ordinary Swing components rather than drawn by the
+      delegate, so <b>only their chrome changes</b> — the swatch grid itself is byte-for-byte the same as in
+      Metal.</p>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="titled" id="caveat">
+<legend>Two things to know before you rely on this</legend>
+  <p class="desc" style="max-width:70ch">
+  <b>The Windows delegate only exists on Windows.</b> Asking for it on macOS or Linux throws
+  <span class="mono">UnsupportedLookAndFeelException</span>, which is why Metal remains the cross-platform
+  default and why <span class="mono">getSystemLookAndFeelClassName()</span> is the safer call.</p>
+  <p class="desc" style="max-width:70ch;margin-top:9px">
+  <b>Visual styles mean the OS gets a vote.</b> With themes active, Swing hands much of the painting to
+  <span class="mono">uxtheme</span>, so the same code looks different across Windows 7, 10 and 11, under a
+  custom accent colour, in high-contrast mode, and at non-100% display scaling. Treat the left-hand theme as
+  representative rather than exact — the Classic panel, which Swing paints entirely itself, is the one that is
+  genuinely fixed.</p>
+</fieldset>
+
+    </main>
+  </div>
+
+  <div class="statusbar">
+    <span class="cell grow" id="status">javax.swing</span>
+    <span class="cell" id="lafcell">com.sun.java.swing.plaf.windows.WindowsLookAndFeel</span>
+  </div>
+</div>
+<script>
+const TREE=[
+ ["Top-level containers","top",["JFrame","JWindow","JDialog","JApplet"]],
+ ["Root machinery","root",["JRootPane","JLayeredPane","JPanel","Box","JViewport","JComponent"]],
+ ["Intermediate containers","containers",["JScrollPane","JScrollBar","JSplitPane","JTabbedPane","JToolBar","JDesktopPane","JInternalFrame"]],
+ ["Labels & static widgets","static",["JLabel","JSeparator","JToolTip","JProgressBar"]],
+ ["Buttons","buttons",["JButton","JToggleButton","JCheckBox","JRadioButton"]],
+ ["Menus","menus",["JMenuBar","JMenu","JMenuItem","JCheckBoxMenuItem","JRadioButtonMenuItem","JPopupMenu"]],
+ ["Text components","text",["JTextField","JPasswordField","JFormattedTextField","JTextArea","JEditorPane","JTextPane"]],
+ ["Choosers & value pickers","pickers",["JComboBox","JSpinner","JSlider"]],
+ ["Data views","data",["JList","JTable","JTableHeader","JTree"]],
+ ["Standard dialogs","dialogs",["JOptionPane","JFileChooser","JColorChooser"]]
+];
+document.getElementById("nav").innerHTML=
+ '<ul><li><span class="sel"><b class="chev">▾</b><b class="plus">−</b><i class="dicon"></i>javax.swing</span><ul>'+
+ TREE.map(([label,id,kids])=>
+  `<li><span><b class="chev">▾</b><b class="plus">−</b><i class="dicon"></i><a class="node" href="#${id}">${label}</a></span>
+   <ul>${kids.map(k=>`<li><span><i class="leafdot"></i><i class="ficon"></i><a class="node" href="#${id}">${k}</a></span></li>`).join("")}</ul></li>`
+ ).join("")+'</ul></li></ul>';
+
+const COPY={
+ win10:"Windows 10 and 11 draw these through uxtheme, so buttons are flat, accents are #0078D7, and everything is set in Segoe UI at a regular weight — the loss of Metal's bold labels is the change you notice first.",
+ classic:"WindowsClassicLookAndFeel ignores the OS theme and paints the Windows 95 chrome itself: two-pixel bevels everywhere, #D4D0C8 face, navy selection, Tahoma, and not one rounded corner or gradient."
+};
+const status=document.getElementById("status"),intro=document.getElementById("intro"),
+      lafname=document.getElementById("lafname"),lafcell=document.getElementById("lafcell"),
+      root=document.documentElement;
+function setTheme(t){
+  root.dataset.theme=t;
+  document.getElementById("b-win10").setAttribute("aria-pressed",t==="win10");
+  document.getElementById("b-classic").setAttribute("aria-pressed",t==="classic");
+  intro.textContent=COPY[t];
+  lafname.textContent=t==="win10"?"WindowsLookAndFeel":"WindowsClassicLookAndFeel";
+  lafcell.textContent="com.sun.java.swing.plaf.windows."+lafname.textContent;
+}
+document.getElementById("b-win10").onclick=()=>setTheme("win10");
+document.getElementById("b-classic").onclick=()=>setTheme("classic");
+setTheme("win10");
+document.querySelectorAll("[data-fqn]").forEach(el=>{
+  el.addEventListener("pointerenter",()=>status.textContent=el.dataset.fqn);
+  el.addEventListener("focusin",()=>status.textContent=el.dataset.fqn);
+});
+document.querySelector(".rightpane").addEventListener("pointerleave",()=>status.textContent="javax.swing");
+</script>
+</body>
+</html>

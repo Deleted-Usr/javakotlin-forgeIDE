@@ -20,7 +20,8 @@ import javax.swing.*;
  *  - Fix performance concerned with Undo/Redo actions in the editor panel
  *  - Drag, shift/ctrl select, reordering files and folders MUST be added to the explorer!!!
  *  - Project templates, Language Dependent (Empty, Basic, Console App)
- *  - Add an interactive introduction tutorial, like IntelliJ,
+ *  - Add an interactive introduction tutorial, like IntelliJ or Unity
+ *  - Add developer options (like access to the ForgeIDE Self-Hosting run configuration)
  */
 
 /*
@@ -55,6 +56,7 @@ import javax.swing.*;
  *          - Editor Tabs (Close Buttons, Dirty Indicator, Hover Effect, Drag Reorder)
  *          - Project Explorer (Icons, Better Spacing, Coloured Text, Inline Rename, Speed Search, Lazy Loading)
  *          - Status Bar (Compiler Status, Caret Position, Encoding, Line Endings, Project Name)
+ *          - Full AI Agent Implementation (Writing Code, Reading and Writing to Files, Full Project Context, Agent Pet like GPT)
  */
 
 /*

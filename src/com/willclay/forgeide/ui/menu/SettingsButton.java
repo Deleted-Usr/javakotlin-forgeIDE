@@ -15,7 +15,7 @@ public final class SettingsButton extends JButton
     public SettingsButton(Action openSettings)
     {
         super(openSettings);
-        setText("\u2699");
+        setText("⚙");
         setMnemonic(KeyEvent.VK_S);
 
         putClientProperty("JButton.buttonType", "toolBarButton");
