@@ -6,6 +6,7 @@ import com.willclay.forgeide.ui.dialogs.FileDialogs;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 import com.willclay.forgeide.ui.editor.ConsolePanel;
 import com.willclay.forgeide.ui.explorer.ProjectTree;
+import com.willclay.forgeide.ui.settings.SettingsDialogController;
 import com.willclay.forgeide.workspace.Workspace;
 
 import javax.swing.JFrame;
@@ -24,8 +25,7 @@ import javax.swing.JFrame;
  * behaved one from reaching too far. That is a convention rather than a
  * compiler guarantee.
  * <p>
- * TODO - add settings, status-bar and terminal services as those features
- *        arrive.
+ * TODO - add status-bar and terminal services as those features arrive.
  */
 public final class UIContext
 {
@@ -38,6 +38,9 @@ public final class UIContext
     private final Workspace workspace;
     private final WorkspaceService workspaceService;
     private final FileDialogs dialogs;
+    private final SettingsService settingsService;
+    private final ThemeService themeService;
+    private final SettingsDialogController settingsDialogController;
 
     public UIContext(JFrame frame,
                      CodeEditorPanel editorPanel,
@@ -45,9 +48,12 @@ public final class UIContext
                      ConsolePanel console,
                      WorkbenchPanel workbench,
                      ProjectTree projectTree,
-                     Workspace workspace,
-                     WorkspaceService workspaceService,
-                     FileDialogs dialogs)
+                      Workspace workspace,
+                      WorkspaceService workspaceService,
+                      FileDialogs dialogs,
+                      SettingsService settingsService,
+                      ThemeService themeService,
+                      SettingsDialogController settingsDialogController)
     {
         this.frame = frame;
         this.editorPanel = editorPanel;
@@ -58,6 +64,9 @@ public final class UIContext
         this.workspace = workspace;
         this.workspaceService = workspaceService;
         this.dialogs = dialogs;
+        this.settingsService = settingsService;
+        this.themeService = themeService;
+        this.settingsDialogController = settingsDialogController;
     }
 
     /**
@@ -88,5 +97,11 @@ public final class UIContext
     public WorkspaceService getWorkspaceService() { return workspaceService; }
 
     public FileDialogs getDialogs() { return dialogs; }
+
+    public SettingsService getSettingsService() { return settingsService; }
+
+    public ThemeService getThemeService() { return themeService; }
+
+    public SettingsDialogController getSettingsDialogController() { return settingsDialogController; }
 
 }

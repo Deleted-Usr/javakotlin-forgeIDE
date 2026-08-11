@@ -24,6 +24,7 @@ import com.willclay.forgeide.actions.file.SaveAction;
 import com.willclay.forgeide.actions.file.SaveAllAction;
 import com.willclay.forgeide.actions.file.SaveAsAction;
 import com.willclay.forgeide.actions.help.AboutAction;
+import com.willclay.forgeide.actions.settings.OpenSettingsAction;
 import com.willclay.forgeide.actions.view.ResetLayoutAction;
 import com.willclay.forgeide.actions.view.ToggleViewAction;
 import com.willclay.forgeide.services.UIContext;
@@ -96,6 +97,9 @@ public final class ActionManager
     // --- Help --- //
     private final AboutAction about;
 
+    // --- Settings --- //
+    private final OpenSettingsAction openSettings;
+
     public ActionManager(UIContext context)
     {
         this.context = context;
@@ -149,6 +153,7 @@ public final class ActionManager
         refreshTree = new RefreshTreeAction(context);
 
         about = new AboutAction(context);
+        openSettings = new OpenSettingsAction(context);
 
         context.getWorkspace().addChangeListener(this::syncProjectActions);
         context.getEditorManager().addChangeListener(this::syncProjectActions);
@@ -246,4 +251,6 @@ public final class ActionManager
     public RefreshTreeAction getRefreshTreeAction() { return refreshTree; }
 
     public AboutAction getAboutAction() { return about; }
+
+    public OpenSettingsAction getOpenSettingsAction() { return openSettings; }
 }

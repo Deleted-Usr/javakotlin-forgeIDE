@@ -6,6 +6,8 @@ import com.willclay.forgeide.highlighting.Lexer;
 import com.willclay.forgeide.lang.api.LanguageRegistry;
 import com.willclay.forgeide.lang.java.JavaLanguage;
 import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.SettingsService;
+import com.willclay.forgeide.services.ThemeService;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 import com.willclay.forgeide.ui.editor.ConsolePanel;
@@ -16,6 +18,7 @@ import com.willclay.forgeide.ui.explorer.ProjectTreeModel;
 import com.willclay.forgeide.ui.explorer.ProjectTreePanel;
 import com.willclay.forgeide.ui.fonts.EditorFonts;
 import com.willclay.forgeide.ui.menu.EditorMenuBar;
+import com.willclay.forgeide.ui.settings.SettingsDialogController;
 import com.willclay.forgeide.ui.toolbar.EditorToolBar;
 import com.willclay.forgeide.workspace.Project;
 import com.willclay.forgeide.workspace.Workspace;
@@ -69,6 +72,10 @@ public final class Window extends JFrame
 
         editorPanel = new CodeEditorPanel(editorFont);
 
+        SettingsService settingsService = new SettingsService();
+        ThemeService themeService = new ThemeService(this, editorPanel, settingsService);
+        SettingsDialogController settingsDialogController = new SettingsDialogController(this, themeService);
+
         languages = new LanguageRegistry(List.of(new JavaLanguage()));
         editorManager = new EditorManager(editorPanel);
         console = new ConsolePanel(editorFont.deriveFont(CONSOLE_FONT_SIZE));
@@ -83,7 +90,8 @@ public final class Window extends JFrame
         // the context already holds. Hence the two setters below rather than
         // constructor arguments.
         UIContext context = new UIContext(this, editorPanel, editorManager, console, workbench, projectTree,
-                workspace, workspaceService, new FileDialogs(this, languages));
+                workspace, workspaceService, new FileDialogs(this, languages), settingsService, themeService,
+                settingsDialogController);
 
         ActionManager actions = new ActionManager(context);
 
@@ -107,6 +115,10 @@ public final class Window extends JFrame
         projectTree.setOnFileActivated(item -> actions.getOpenSelectedFileAction().trigger());
 
         add(workbench);
+
+        // The startup look and feel is installed before construction; this pass
+        // restores the user's choice and applies its matching syntax colours.
+        themeService.applySavedTheme();
 
         wireState();
         updateTitle();

@@ -1,5 +1,7 @@
 package com.willclay.forgeide.ui.settings;
 
+import com.willclay.forgeide.services.ThemeService;
+import com.willclay.forgeide.ui.menu.SettingsButton;
 import com.willclay.forgeide.ui.settings.theme.ThemeSettings;
 
 import javax.swing.*;
@@ -14,7 +16,7 @@ import java.awt.*;
  */
 public final class SettingsWindow extends JDialog
 {
-    public SettingsWindow(Window owner)
+    public SettingsWindow(Window owner, ThemeService themeService)
     {
         super(owner, "IDE Settings", ModalityType.MODELESS);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -24,14 +26,14 @@ public final class SettingsWindow extends JDialog
 
         // If this grows past a window full of tabs, switch to side buttons with a card layout.
         JTabbedPane tabs = new JTabbedPane();
-        addTabs(tabs);
+        addTabs(tabs, themeService);
 
         add(tabs, BorderLayout.CENTER);
     }
 
-    private void addTabs(JTabbedPane tabs)
+    private void addTabs(JTabbedPane tabs, ThemeService themeService)
     {
         tabs.addTab("Project", new ProjectSettings());
-        tabs.addTab("Theme",   new ThemeSettings());
+        tabs.addTab("Theme",   new ThemeSettings(themeService));
     }
 }
