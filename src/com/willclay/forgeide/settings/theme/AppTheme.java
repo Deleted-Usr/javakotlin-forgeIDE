@@ -1,4 +1,4 @@
-package com.willclay.forgeide.ui.settings.theme;
+package com.willclay.forgeide.settings.theme;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
@@ -38,4 +38,8 @@ public enum AppTheme
         this.swingTheme = swingTheme;
         this.tokenTheme = tokenTheme;
     }
+
+    public String getDisplayName()    { return displayName; }
+    public FlatLaf getSwingTheme()    { return swingTheme; }
+    public TokenTheme getTokenTheme() { return tokenTheme; }
 }

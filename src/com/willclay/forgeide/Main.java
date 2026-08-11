@@ -6,7 +6,8 @@ import com.willclay.forgeide.ui.Window;
 import javax.swing.*;
 
 
-/* TODO (For school project)
+/*
+ * TODO (For school project)
  *  - Project settings that read the metadata to determine language
  *  - Use a JToggleButton for compiler options, in language settings menu
  *  - Give the actions icons (ForgeAction already has the hook)
@@ -17,33 +18,43 @@ import javax.swing.*;
  *  - Launch Forge through a bootstrap sequence
  *  - Store registered languages in a cache upon app close, access that cache and load registry in bootstrap sequence
  *  - Fix performance concerned with Undo/Redo actions in the editor panel
- *  - Drag, shift select, reordering files and folders MUST be added to the explorer!!!
+ *  - Drag, shift/ctrl select, reordering files and folders MUST be added to the explorer!!!
  *  - Project templates, Language Dependent (Empty, Basic, Console App)
+ *  - Add an interactive introduction tutorial, like IntelliJ,
  */
 
-/* TODO - Settings Menus
+/*
+ * TODO - Settings Menus
  *          - Project Menu: Similar to project structure in IntelliJ. Provides general
  *            and language specific settings for the current project.
  *
  */
 
-/* TODO - Get the project to a point where self-hosting is possible, that requires:
+/*
+ * TODO - Get the project to a point where self-hosting is possible, that requires:
  *          - Dependency Classpaths: Add the ability to compile with JAR files, as ForgeIDE
  *            requires FlatLaF libraries.
- *          - The Working Tree Currently Requires Java 23 Preview Mode: OpenFileAction.java
- *            evaluates a variable before "super(...)".
  *          - Run Configurations: Pressing run only runs the currently open file, not ForgeIDE's
  *            main method. See the run config point above.
- *          - Process Control: There is no stop action yet
+ *          - Process Control: There is no stop action yet, so a running application could leave
+ *            a hanging process on the system.
  */
 
-/* TODO (After school project, or if I have time)
+/*
+ * TODO - Language Plugins
+ *  - Python
+ *  - C++
+ *  - Kotlin
+ */
+
+/*
+ * TODO (After school project, or if I have time)
  *       - Custom Swing Components (extends JComponent):
- *       - Editor Panel (Syntax Highlighting, Custom Caret, Bracket Matching, Selection Painting, Configurable Fonts)
- *       - Custom Gutter (Line Numbers, Breakpoints, Folding Arrows, Modified Line Indicators)
- *       - Editor Tabs (Close Buttons, Dirty Indicator, Hover Effect, Drag Reorder)
- *       - Project Explorer (Icons, Better Spacing, Coloured Text, Inline Rename, Speed Search, Lazy Loading)
- *       - Status Bar (Compiler Status, Caret Position, Encoding, Line Endings, Project Name)
+ *          - Editor Panel (Syntax Highlighting, Custom Caret, Bracket Matching, Selection Painting, Configurable Fonts)
+ *          - Custom Gutter (Line Numbers, Breakpoints, Folding Arrows, Modified Line Indicators)
+ *          - Editor Tabs (Close Buttons, Dirty Indicator, Hover Effect, Drag Reorder)
+ *          - Project Explorer (Icons, Better Spacing, Coloured Text, Inline Rename, Speed Search, Lazy Loading)
+ *          - Status Bar (Compiler Status, Caret Position, Encoding, Line Endings, Project Name)
  */
 
 /*

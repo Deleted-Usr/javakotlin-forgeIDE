@@ -47,8 +47,7 @@ public final class UIContext
                      ProjectTree projectTree,
                      Workspace workspace,
                      WorkspaceService workspaceService,
-                     FileDialogs dialogs
-    )
+                     FileDialogs dialogs)
     {
         this.frame = frame;
         this.editorPanel = editorPanel;

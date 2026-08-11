@@ -1,9 +1,9 @@
 package com.willclay.forgeide.ui.settings;
 
+import com.willclay.forgeide.ui.settings.theme.ThemeSettings;
+
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The settings window {@link SettingsButton} opens
@@ -22,6 +22,7 @@ public final class SettingsWindow extends JDialog
         setSize(500, 600);
         setLocationRelativeTo(owner);
 
+        // If this grows past a window full of tabs, switch to side buttons with a card layout.
         JTabbedPane tabs = new JTabbedPane();
         addTabs(tabs);
 

@@ -10,6 +10,7 @@ The most important design decision is setting scope. An IDE normally has at leas
 | Session state | Open tabs, divider positions, last selected file | Local state file |
 
 Machine-specific paths and secrets should never be written into shared project metadata.
+IDE wide configurations could be stored in a config file, and the path to that can be configured.
 
 ## Suggested settings hierarchy
 
