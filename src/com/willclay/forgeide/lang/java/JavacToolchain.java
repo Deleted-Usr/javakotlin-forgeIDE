@@ -20,9 +20,11 @@ public final class JavacToolchain implements Toolchain
     @Override
     public boolean compile(Project project, List<Path> sourceFiles, Consumer<String> output) throws IOException, InterruptedException
     {
-        Path src = JavaProjectPaths.sourceRoot(project);
-        Path out = JavaProjectPaths.outputRoot(project);
+        Path libs = JavaProjectPaths.librariesRoot(project);
+        Path src  = JavaProjectPaths.sourceRoot(project);
+        Path out  = JavaProjectPaths.outputRoot(project);
 
+        Files.createDirectories(libs);
         Files.createDirectories(src);
         Files.createDirectories(out);
 
@@ -31,6 +33,8 @@ public final class JavacToolchain implements Toolchain
         command.add("javac");
         command.add("-encoding");
         command.add("UTF-8");
+        command.add("-classpath");
+        command.add(JavaClassNames.classPath(out, libs));
         command.add("-sourcepath");
         command.add(src.toString());
         command.add("-d");
@@ -101,8 +105,11 @@ public final class JavacToolchain implements Toolchain
     @Override
     public int run(Project project, Path sourceFile, Consumer<String> output, Consumer<Writer> onInputReady) throws IOException, InterruptedException
     {
+        Path libs = JavaProjectPaths.librariesRoot(project);
+        Path out  = JavaProjectPaths.outputRoot(project);
+
         ProcessBuilder builder = new ProcessBuilder(
-                "java", "-cp", JavaProjectPaths.outputRoot(project).toString(),
+                "java", "-cp", JavaClassNames.classPath(out, libs).toString(),
                 JavaClassNames.of(project, sourceFile)
         );
 

@@ -2,6 +2,7 @@ package com.willclay.forgeide.lang.java;
 
 import com.willclay.forgeide.workspace.Project;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -104,5 +105,11 @@ public final class JavaClassNames
         }
 
         return true;
+    }
+
+    public static String classPath(Path out, Path libs)
+    {
+        String libraryWildcard = libs + File.separator + "*";
+        return String.join(File.pathSeparator, out.toString(), libraryWildcard);
     }
 }

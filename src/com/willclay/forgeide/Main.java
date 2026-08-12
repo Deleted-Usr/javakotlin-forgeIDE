@@ -8,11 +8,12 @@ import javax.swing.*;
 
 /*
  * TODO (For school project)
+ *  - IDE Status Bar (Not fully custom swing)
  *  - Project settings that read the metadata to determine language
  *  - Use a JToggleButton for compiler options, in language settings menu
  *  - Give the actions icons (ForgeAction already has the hook)
  *  - Automatic Lexing (Detecting file extension and lex accordingly)
- *  - Theme selection menu and service
+ *  - Theme selection menu and service, complete allowing the user to save custom token/swing combos or make their own
  *  - Run Configurations (Like IntelliJ)
  *  - Support for libs in JavacToolchain
  *  - Launch Forge through a bootstrap sequence
@@ -20,21 +21,19 @@ import javax.swing.*;
  *  - Fix performance concerned with Undo/Redo actions in the editor panel
  *  - Drag, shift/ctrl select, reordering files and folders MUST be added to the explorer!!!
  *  - Project templates, Language Dependent (Empty, Basic, Console App)
- *  - Add an interactive introduction tutorial, like IntelliJ or Unity
+ *  - Add an interactive introduction tutorial, like IntelliJ's or Unity's
  *  - Add developer options (like access to the ForgeIDE Self-Hosting run configuration)
+ *  - Better implement dependency classpaths. Very rough right now.
  */
 
 /*
  * TODO - Settings Menus
  *          - Project Menu: Similar to project structure in IntelliJ. Provides general
  *            and language specific settings for the current project.
- *
  */
 
 /*
  * TODO - Get the project to a point where self-hosting is possible, that requires:
- *          - Dependency Classpaths: Add the ability to compile with JAR files, as ForgeIDE
- *            requires FlatLaF libraries.
  *          - Run Configurations: Pressing run only runs the currently open file, not ForgeIDE's
  *            main method. See the run config point above.
  *          - Process Control: There is no stop action yet, so a running application could leave
