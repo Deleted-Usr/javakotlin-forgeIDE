@@ -7,7 +7,7 @@ are no assets or libraries to install.
 ## Open and run it
 
 1. Launch ForgeIDE and choose **File > Open Project...**.
-2. Select the `examples/ForgeRunner` directory.
+2. Select the `` directory.
 3. Open `src/forgerunner/ForgeRunner.java` in the project tree.
 4. Choose **Build > Run** (or use the Run toolbar button).
 

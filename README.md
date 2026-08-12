@@ -13,6 +13,10 @@ TODO:
 
 ### Example project
 
-[`examples/ForgeRunner`](examples/ForgeRunner) is a small side-scrolling Java2D
+[`examples/Forge Runner - Java`](examples/Forge%20Runner%20-%20Java) is a small side-scrolling Java2D
 platformer packaged as a Forge project. Open that directory in ForgeIDE, select
 `src/forgerunner/ForgeRunner.java`, and press Run.
+
+[`examples/Forge Strike - C++`](examples/Forge%20Strike%20-%20C%2B%2B) is a
+top-down SFML arena shooter prepared for ForgeIDE's planned C++ language
+support. It includes a CMake build and procedural graphics with no game assets.
