@@ -1,5 +1,6 @@
 package com.willclay.forgeide;
 
+import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMTMaterialDarkerIJTheme;
 import com.willclay.forgeide.ui.Window;
 
@@ -101,6 +102,7 @@ public final class Main
         SwingUtilities.invokeLater(() ->
         {
             setLookAndFeel();
+            FlatAnimatedLafChange.duration = 300;
 
             Window w = new Window("Forge IDE");
 

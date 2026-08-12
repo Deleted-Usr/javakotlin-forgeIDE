@@ -1,6 +1,7 @@
 package com.willclay.forgeide.services;
 
 import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.willclay.forgeide.settings.theme.AppTheme;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
@@ -49,15 +50,32 @@ public final class ThemeService
 
     private boolean apply(AppTheme theme, boolean persist)
     {
+        boolean animate = persist && frame.isShowing();
+        boolean snapshotVisible = false;
+
         try
         {
+            if (animate)
+            {
+                FlatAnimatedLafChange.showSnapshot();
+                snapshotVisible = true;
+            }
+
             UIManager.setLookAndFeel(theme.getSwingTheme());
             FlatLaf.updateUI();
 
+            // Update custom-content before revealing the new UI.
             editorPanel.setTheme(theme.getTokenTheme());
-            currentTheme = theme;
 
+            currentTheme = theme;
             if (persist) settings.setTheme(theme);
+
+            if (snapshotVisible)
+            {
+                FlatAnimatedLafChange.hideSnapshotWithAnimation();
+                snapshotVisible = false;
+            }
+
             return true;
         }
         catch (UnsupportedLookAndFeelException _)
@@ -67,6 +85,11 @@ public final class ThemeService
                 Utils.showErrorMessage(frame, "The selected look and feel is unsupported. The previous theme will be kept.");
             }
             return false;
+        }
+        finally
+        {
+            // Prevent a failed theme change from leaving the snapshot overlay visible.
+            if (snapshotVisible) FlatAnimatedLafChange.stop();
         }
     }
 }
