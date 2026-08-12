@@ -10,3 +10,9 @@ TODO:
     - project structure
     - class structure
     - documentation
+
+### Example project
+
+[`examples/ForgeRunner`](examples/ForgeRunner) is a small side-scrolling Java2D
+platformer packaged as a Forge project. Open that directory in ForgeIDE, select
+`src/forgerunner/ForgeRunner.java`, and press Run.

@@ -73,6 +73,8 @@ jdtls/
 # ---------- Your own IDE's per-project state ----------
 # Forge writes layout, open tabs, caret positions here.
 .forge/
+!examples/ForgeRunner/.forge/
+!examples/ForgeRunner/.forge/project.properties
 # If you later decide run configurations SHOULD be shared
 # across machines, uncomment the negation below:
 # !.forge/runConfigurations/
