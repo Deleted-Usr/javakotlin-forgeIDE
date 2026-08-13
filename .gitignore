@@ -9,6 +9,7 @@
 target/
 build/
 !src/com/willclay/**/build/
+!examples/**/build
 out/
 bin/
 classes/
