@@ -30,8 +30,10 @@ import com.willclay.forgeide.actions.view.ResetLayoutAction;
 import com.willclay.forgeide.actions.view.ToggleViewAction;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.WorkbenchPanel;
+import com.willclay.forgeide.ui.editor.RunTask;
 
 import javax.swing.JTextPane;
+import javax.swing.SwingWorker;
 import java.awt.event.KeyEvent;
 
 /**
@@ -52,7 +54,7 @@ import java.awt.event.KeyEvent;
 public final class ActionManager
 {
     private final UIContext context;
-    private boolean taskRunning;
+    private RunTask activeTask;
 
     // --- File --- //
     private final NewProjectAction newProject;
@@ -134,12 +136,12 @@ public final class ActionManager
         delete = new TextEditAction("Delete", null, context.getEditorPanel(), pane -> pane.replaceSelection(""));
         selectAll = new TextEditAction("Select All", Shortcuts.menu(KeyEvent.VK_A), context.getEditorPanel(), JTextPane::selectAll);
 
-        // this::setTaskRunning is resolved when it is called, not now, so it
-        // is safe to hand out before the fields it touches are assigned.
-        run = new RunAction(context, save, this::setTaskRunning);
-        stop = new StopAction(context);
-        buildProject = new BuildProjectAction(context, saveAll, this::setTaskRunning);
-        cleanProject = new CleanProjectAction(context, this::setTaskRunning);
+        // ActionManager owns the one active worker. Actions only request that a
+        // task be started or stopped; they do not need to find each other.
+        run = new RunAction(context, save, this::startTask);
+        stop = new StopAction(this::stopCurrentTask);
+        buildProject = new BuildProjectAction(context, saveAll, this::startTask);
+        cleanProject = new CleanProjectAction(context, this::startTask);
 
         toggleProjectTree = new ToggleViewAction("Project Explorer", null, true, workbench::setProjectTreeVisible);
         toggleConsole = new ToggleViewAction("Console", null, true, workbench::setConsoleVisible);
@@ -163,30 +165,58 @@ public final class ActionManager
         syncProjectActions();
     }
 
-    /**
-     * One call, and the Run and Build items grey out in the menu, on the
-     * toolbar, and as shortcuts — because in all three places they are these
-     * same two objects.
-     */
-    public void setTaskRunning(boolean running)
+    private void startTask(RunTask task)
     {
-        taskRunning = running;
+        if (activeTask != null) return;
+
+        activeTask = task;
+        task.addPropertyChangeListener(event ->
+        {
+            if ("state".equals(event.getPropertyName()) && event.getNewValue() == SwingWorker.StateValue.DONE)
+            {
+                finishTask(task);
+            }
+        });
+
+        syncProjectActions();
+        task.execute();
+    }
+
+    private void finishTask(RunTask task)
+    {
+        // An old completion must never clear a newer active task.
+        if (activeTask != task) return;
+
+        activeTask = null;
         syncProjectActions();
     }
 
+    private void stopCurrentTask()
+    {
+        RunTask task = activeTask;
+        if (task != null) task.stop();
+    }
+
+    /** Makes sure all project actions are enabled and disabled when necessary. */
     private void syncProjectActions()
     {
-        boolean hasToolchain = context.getWorkspace().hasProject()
-                && context.getWorkspace().getProject().language().toolchain().isPresent();
+        boolean hasToolchain = context.getWorkspace().hasProject() && context.getWorkspace().getProject().language().toolchain().isPresent();
+
+        boolean taskRunning = activeTask != null;
         boolean enabled = !taskRunning && hasToolchain;
+
         run.setEnabled(enabled);
         buildProject.setEnabled(enabled);
         cleanProject.setEnabled(enabled);
 
+        stop.setEnabled(taskRunning);
+
         boolean hasProject = context.getWorkspace().hasProject();
+        boolean hasEditor = context.getEditorManager().getCurrentTab() != null;
+
         newFile.setEnabled(hasProject);
         openFile.setEnabled(hasProject);
-        boolean hasEditor = context.getEditorManager().getCurrentTab() != null;
+
         save.setEnabled(hasProject && hasEditor);
         saveAs.setEnabled(hasProject && hasEditor);
     }

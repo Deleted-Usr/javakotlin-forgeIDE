@@ -2,6 +2,7 @@ package com.willclay.forgeide.compiler;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /**
@@ -15,60 +16,76 @@ import java.util.function.Consumer;
 public final class ProcessRunner
 {
     private static final int READ_BUFFER_SIZE = 4096;
-    private static Process currentProcess;
+    private static final AtomicReference<Process> currentProcess = new AtomicReference<>();
 
     private ProcessRunner() { }
 
     public static int execute(ProcessBuilder builder, Consumer<String> output, Consumer<Writer> onInputReady) throws IOException, InterruptedException
     {
+        if (Thread.currentThread().isInterrupted()) throw new InterruptedException();
+
         // One merged stream: simpler to drain, and errors keep their position
         // relative to the normal output instead of arriving in a clump.
         builder.redirectErrorStream(true);
 
-        currentProcess = builder.start();
-
-        Writer input = new OutputStreamWriter(currentProcess.getOutputStream(), StandardCharsets.UTF_8);
-        if (onInputReady != null) onInputReady.accept(input);
-
-        // Chunks, not lines. A BufferedReader hands back a line only once it has
-        // seen the newline that ends it, so a prompt written with print() would
-        // sit in the reader until the program's next println — which is exactly
-        // when it is least useful, because by then the answer has been typed.
-        try (Reader reader = new InputStreamReader(currentProcess.getInputStream(), StandardCharsets.UTF_8))
+        Process process = builder.start();
+        if (!currentProcess.compareAndSet(null, process))
         {
-            char[] buffer = new char[READ_BUFFER_SIZE];
-            int count;
-
-            while ((count = reader.read(buffer)) != -1)
-            {
-                output.accept(new String(buffer, 0, count));
-            }
+            process.destroy();
+            throw new IllegalStateException("A process is already running");
         }
-        catch (IOException e)
+
+        try
         {
-            currentProcess.destroy();
+            if (Thread.currentThread().isInterrupted()) throw new InterruptedException();
+
+            Writer input = new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8);
+            if (onInputReady != null) onInputReady.accept(input);
+
+            // Chunks, not lines. A BufferedReader hands back a line only once it
+            // has seen the newline that ends it, so a prompt written with print()
+            // would otherwise be held until the program's next println.
+            try (Reader reader = new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))
+            {
+                char[] buffer = new char[READ_BUFFER_SIZE];
+                int count;
+
+                while ((count = reader.read(buffer)) != -1)
+                {
+                    output.accept(new String(buffer, 0, count));
+                }
+            }
+            finally
+            {
+                // The stream ends when the child exits, so nothing can be sent
+                // after this point. Closing also releases the pipe on failure.
+                try
+                {
+                    input.close();
+                }
+                catch (IOException ignored)
+                {
+                    // Already gone.
+                }
+            }
+
+            return process.waitFor();
+        }
+        catch (IOException | InterruptedException | RuntimeException e)
+        {
+            process.destroy();
             throw e;
         }
         finally
         {
-            // The stream ends when the child exits, so nothing can be sent to it
-            // after this point. Closing here also releases the pipe if the caller
-            // forgot to.
-            try
-            {
-                input.close();
-            }
-            catch (IOException ignored)
-            {
-                // Already gone.
-            }
+            currentProcess.compareAndSet(process, null);
         }
-
-        return currentProcess.waitFor();
     }
 
-    public static Process currentProcess()
+    /** Requests termination of the process currently owned by the active task. */
+    public static void stopCurrentProcess()
     {
-        return currentProcess;
+        Process process = currentProcess.get();
+        if (process != null && process.isAlive()) process.destroy();
     }
 }

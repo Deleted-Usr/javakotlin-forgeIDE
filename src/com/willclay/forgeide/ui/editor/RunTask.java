@@ -5,7 +5,6 @@ import com.willclay.forgeide.compiler.Toolchain;
 import com.willclay.forgeide.workspace.Project;
 
 import javax.swing.SwingWorker;
-import java.io.Console;
 import java.nio.file.Path;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -13,67 +12,68 @@ import java.util.concurrent.ExecutionException;
 /** Runs build-tool operations away from Swing's Event Dispatch Thread. */
 public final class RunTask extends SwingWorker<Integer, Void>
 {
-    private enum Operation { RUN, STOP, BUILD, CLEAN }
+    private enum Operation { RUN, BUILD, CLEAN }
 
     private final Project project;
     private final Toolchain toolchain;
     private final ConsolePanel console;
     private final Path sourceFile;
-    private final Runnable onFinished;
     private final Operation operation;
 
-    private RunTask(Project project, Toolchain toolchain, ConsolePanel console, Path sourceFile, Runnable onFinished, Operation operation)
+    private RunTask(Project project, Toolchain toolchain, ConsolePanel console, Path sourceFile, Operation operation)
     {
         this.project = project;
         this.toolchain = toolchain;
         this.console = console;
         this.sourceFile = sourceFile;
-        this.onFinished = onFinished;
         this.operation = operation;
     }
 
-    public static RunTask run(Project project, Toolchain toolchain, ConsolePanel console, Path sourceFile, Runnable onFinished)
+    public static RunTask run(Project project, Toolchain toolchain, ConsolePanel console, Path sourceFile)
     {
-        return new RunTask(project, toolchain, console, sourceFile, onFinished, Operation.RUN);
+        return new RunTask(project, toolchain, console, sourceFile, Operation.RUN);
     }
 
-    public static RunTask stop(ConsolePanel console)
+    public static RunTask build(Project project, Toolchain toolchain, ConsolePanel console)
     {
-        return new RunTask(null, null, console, null, null, Operation.STOP);
+        return new RunTask(project, toolchain, console, null, Operation.BUILD);
     }
 
-    public static RunTask build(Project project, Toolchain toolchain, ConsolePanel console, Runnable onFinished)
+    public static RunTask clean(Project project, Toolchain toolchain, ConsolePanel console)
     {
-        return new RunTask(project, toolchain, console, null, onFinished, Operation.BUILD);
+        return new RunTask(project, toolchain, console, null, Operation.CLEAN);
     }
 
-    public static RunTask clean(Project project, Toolchain toolchain, ConsolePanel console, Runnable onFinished)
+    /** Stops this task and whichever child process it is currently waiting for. */
+    public void stop()
     {
-        return new RunTask(project, toolchain, console, null, onFinished, Operation.CLEAN);
+        if (isDone()) return;
+
+        console.appendLine("Stopping process...");
+        console.endInput();
+
+        cancel(true);
+        ProcessRunner.stopCurrentProcess();
     }
 
     @Override
     protected Integer doInBackground() throws Exception
     {
-        if (operation == Operation.STOP)
-        {
-            stopProcess();
-            return 0;
-        }
-
         return switch (operation)
         {
             case RUN   -> runSource();
             case BUILD -> buildProject();
             case CLEAN -> cleanProject();
-            default    -> throw new AssertionError("Unknown Operation " + operation);
         };
     }
 
     private int runSource() throws Exception
     {
         console.appendLine("Preparing " + sourceFile + " ...");
-        if (!toolchain.compile(project, sourceFile, console::append))
+        boolean prepared = toolchain.compile(project, sourceFile, console::append);
+        if (isCancelled()) return 1;
+
+        if (!prepared)
         {
             console.appendLine("");
             console.appendLine("Preparation failed.");
@@ -93,30 +93,19 @@ public final class RunTask extends SwingWorker<Integer, Void>
             console.endInput();
         }
 
+        if (isCancelled()) return exitCode;
+
         console.appendLine("");
         console.appendLine("Process finished with exit code " + exitCode + ".");
         return exitCode;
-    }
-
-    private void stopProcess()
-    {
-        console.appendLine("Stopping Process...");
-        console.endInput();
-
-        // Probably not the most safe or cleanest way to clear a process
-        Process process = ProcessRunner.currentProcess();
-        if (process != null && process.isAlive())
-        {
-            process.destroy();
-        }
-
-        cancel(true);
     }
 
     private int buildProject() throws Exception
     {
         console.appendLine("Building " + project.name() + " ...");
         boolean succeeded = toolchain.build(project, console::append);
+
+        if (isCancelled()) return 1;
 
         console.appendLine("");
         console.appendLine(succeeded ? "Build successful." : "Build failed.");
@@ -128,6 +117,8 @@ public final class RunTask extends SwingWorker<Integer, Void>
         console.appendLine("Cleaning " + project.name() + " ...");
         boolean succeeded = toolchain.clean(project, console::append);
 
+        if (isCancelled()) return 1;
+
         console.appendLine("");
         console.appendLine(succeeded ? "Clean successful." : "Clean failed.");
         return succeeded ? 0 : 1;
@@ -136,8 +127,6 @@ public final class RunTask extends SwingWorker<Integer, Void>
     @Override
     protected void done()
     {
-        onFinished.run();
-
         try
         {
             get();
@@ -150,9 +139,9 @@ public final class RunTask extends SwingWorker<Integer, Void>
         {
             console.appendLine("Task failed: " + e.getCause());
         }
-        catch (CancellationException e)
+        catch (CancellationException ignored)
         {
-            console.appendLine("Task Cancelled: " + e.getCause());
+            console.appendLine("Task cancelled by user.");
         }
     }
 }

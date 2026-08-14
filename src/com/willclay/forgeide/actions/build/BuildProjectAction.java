@@ -18,14 +18,14 @@ public final class BuildProjectAction extends ForgeAction
 {
     private final UIContext context;
     private final SaveAllAction saveAll;
-    private final Consumer<Boolean> taskRunning;
+    private final Consumer<RunTask> taskStarter;
 
-    public BuildProjectAction(UIContext context, SaveAllAction saveAll, Consumer<Boolean> taskRunning)
+    public BuildProjectAction(UIContext context, SaveAllAction saveAll, Consumer<RunTask> taskStarter)
     {
         super("Build Project", Shortcuts.menu(KeyEvent.VK_B), "Build the current project");
         this.context = context;
         this.saveAll = saveAll;
-        this.taskRunning = taskRunning;
+        this.taskStarter = taskStarter;
     }
 
     @Override
@@ -44,7 +44,6 @@ public final class BuildProjectAction extends ForgeAction
         }
 
         context.getConsole().clear();
-        taskRunning.accept(true);
-        RunTask.build(project, selected.get(), context.getConsole(), () -> taskRunning.accept(false)).execute();
+        taskStarter.accept(RunTask.build(project, selected.get(), context.getConsole()));
     }
 }

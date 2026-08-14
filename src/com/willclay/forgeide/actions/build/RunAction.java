@@ -20,14 +20,14 @@ public final class RunAction extends ForgeAction
 {
     private final UIContext context;
     private final SaveAction save;
-    private final Consumer<Boolean> taskRunning;
+    private final Consumer<RunTask> taskStarter;
 
-    public RunAction(UIContext context, SaveAction save, Consumer<Boolean> taskRunning)
+    public RunAction(UIContext context, SaveAction save, Consumer<RunTask> taskStarter)
     {
         super("Run", Shortcuts.menu(KeyEvent.VK_R), "Build and run the current file");
         this.context = context;
         this.save = save;
-        this.taskRunning = taskRunning;
+        this.taskStarter = taskStarter;
     }
 
     @Override
@@ -61,8 +61,7 @@ public final class RunAction extends ForgeAction
         }
 
         context.getConsole().clear();
-        taskRunning.accept(true);
-        RunTask.run(project, selected.get(), context.getConsole(), sourceFile, () -> taskRunning.accept(false)).execute();
+        taskStarter.accept(RunTask.run(project, selected.get(), context.getConsole(), sourceFile));
     }
 
     private void reportWrongSource(Project project)

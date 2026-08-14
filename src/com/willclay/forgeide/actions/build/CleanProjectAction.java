@@ -13,13 +13,13 @@ import java.util.function.Consumer;
 public final class CleanProjectAction extends ForgeAction
 {
     private final UIContext context;
-    private final Consumer<Boolean> taskRunning;
+    private final Consumer<RunTask> taskStarter;
 
-    public CleanProjectAction(UIContext context, Consumer<Boolean> taskRunning)
+    public CleanProjectAction(UIContext context, Consumer<RunTask> taskStarter)
     {
         super("Clean Project", null, "Delete generated project output");
         this.context = context;
-        this.taskRunning = taskRunning;
+        this.taskStarter = taskStarter;
     }
 
     @Override
@@ -32,7 +32,6 @@ public final class CleanProjectAction extends ForgeAction
         if (toolchain.isEmpty()) return;
 
         context.getConsole().clear();
-        taskRunning.accept(true);
-        RunTask.clean(project, toolchain.get(), context.getConsole(), () -> taskRunning.accept(false)).execute();
+        taskStarter.accept(RunTask.clean(project, toolchain.get(), context.getConsole()));
     }
 }

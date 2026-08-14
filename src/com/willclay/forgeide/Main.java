@@ -38,8 +38,6 @@ import javax.swing.*;
  * TODO - Get the project to a point where self-hosting is possible, that requires:
  *          - Run Configurations: Pressing run only runs the currently open file, not ForgeIDE's
  *            main method. See the run config point above.
- *          - Process Control: There is no stop action yet, so a running application could leave
- *            a hanging process on the system.
  */
 
 /*
