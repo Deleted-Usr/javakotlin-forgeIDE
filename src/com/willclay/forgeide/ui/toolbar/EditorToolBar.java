@@ -26,8 +26,10 @@ public final class EditorToolBar extends JToolBar
         setFloatable(false);
 
         Utils.addToolBarButton(this, actions.getRunAction(), "▶");
+
         addSeparator();
-        Utils.addToolBarButton(this, null, "⏹");
+
+        Utils.addToolBarButton(this, actions.getStopAction(), "⏹");
         Utils.addToolBarButton(this, actions.getBuildProjectAction(), "⚒ Build");
 
         add(Box.createHorizontalGlue()); // pushes the file buttons to the right

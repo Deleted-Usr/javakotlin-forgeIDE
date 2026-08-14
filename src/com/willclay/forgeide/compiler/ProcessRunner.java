@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 public final class ProcessRunner
 {
     private static final int READ_BUFFER_SIZE = 4096;
+    private static Process currentProcess;
 
     private ProcessRunner() { }
 
@@ -24,16 +25,16 @@ public final class ProcessRunner
         // relative to the normal output instead of arriving in a clump.
         builder.redirectErrorStream(true);
 
-        Process process = builder.start();
+        currentProcess = builder.start();
 
-        Writer input = new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8);
+        Writer input = new OutputStreamWriter(currentProcess.getOutputStream(), StandardCharsets.UTF_8);
         if (onInputReady != null) onInputReady.accept(input);
 
         // Chunks, not lines. A BufferedReader hands back a line only once it has
         // seen the newline that ends it, so a prompt written with print() would
         // sit in the reader until the program's next println — which is exactly
         // when it is least useful, because by then the answer has been typed.
-        try (Reader reader = new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))
+        try (Reader reader = new InputStreamReader(currentProcess.getInputStream(), StandardCharsets.UTF_8))
         {
             char[] buffer = new char[READ_BUFFER_SIZE];
             int count;
@@ -45,7 +46,7 @@ public final class ProcessRunner
         }
         catch (IOException e)
         {
-            process.destroy();
+            currentProcess.destroy();
             throw e;
         }
         finally
@@ -63,6 +64,11 @@ public final class ProcessRunner
             }
         }
 
-        return process.waitFor();
+        return currentProcess.waitFor();
+    }
+
+    public static Process currentProcess()
+    {
+        return currentProcess;
     }
 }

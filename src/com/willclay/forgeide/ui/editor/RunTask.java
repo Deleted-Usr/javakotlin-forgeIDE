@@ -1,5 +1,6 @@
 package com.willclay.forgeide.ui.editor;
 
+import com.willclay.forgeide.compiler.ProcessRunner;
 import com.willclay.forgeide.compiler.Toolchain;
 import com.willclay.forgeide.workspace.Project;
 
@@ -10,7 +11,7 @@ import java.util.concurrent.ExecutionException;
 /** Runs build-tool operations away from Swing's Event Dispatch Thread. */
 public final class RunTask extends SwingWorker<Integer, Void>
 {
-    private enum Operation { RUN, BUILD, CLEAN }
+    private enum Operation { RUN, STOP, BUILD, CLEAN }
 
     private final Project project;
     private final Toolchain toolchain;
@@ -19,8 +20,7 @@ public final class RunTask extends SwingWorker<Integer, Void>
     private final Runnable onFinished;
     private final Operation operation;
 
-    private RunTask(Project project, Toolchain toolchain, ConsolePanel console,
-                    Path sourceFile, Runnable onFinished, Operation operation)
+    private RunTask(Project project, Toolchain toolchain, ConsolePanel console, Path sourceFile, Runnable onFinished, Operation operation)
     {
         this.project = project;
         this.toolchain = toolchain;
@@ -30,10 +30,14 @@ public final class RunTask extends SwingWorker<Integer, Void>
         this.operation = operation;
     }
 
-    public static RunTask run(Project project, Toolchain toolchain, ConsolePanel console,
-                              Path sourceFile, Runnable onFinished)
+    public static RunTask run(Project project, Toolchain toolchain, ConsolePanel console, Path sourceFile, Runnable onFinished)
     {
         return new RunTask(project, toolchain, console, sourceFile, onFinished, Operation.RUN);
+    }
+
+    public static RunTask stop()
+    {
+        return new RunTask(null, null, null, null, null, Operation.STOP);
     }
 
     public static RunTask build(Project project, Toolchain toolchain, ConsolePanel console, Runnable onFinished)
@@ -52,6 +56,7 @@ public final class RunTask extends SwingWorker<Integer, Void>
         return switch (operation)
         {
             case RUN -> runSource();
+            case STOP -> stopProcess();
             case BUILD -> buildProject();
             case CLEAN -> cleanProject();
         };
@@ -83,6 +88,20 @@ public final class RunTask extends SwingWorker<Integer, Void>
         console.appendLine("");
         console.appendLine("Process finished with exit code " + exitCode + ".");
         return exitCode;
+    }
+
+    private int stopProcess()
+    {
+        console.appendLine("Stopping Process...");
+        console.endInput();
+
+        if (ProcessRunner.currentProcess() != null && ProcessRunner.currentProcess().isAlive())
+        {
+            ProcessRunner.currentProcess().destroy();
+            this.cancel(true);
+        }
+
+        return 0;
     }
 
     private int buildProject() throws Exception

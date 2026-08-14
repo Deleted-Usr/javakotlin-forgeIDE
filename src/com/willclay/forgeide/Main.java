@@ -25,6 +25,7 @@ import javax.swing.*;
  *  - Add an interactive introduction tutorial, like IntelliJ's or Unity's
  *  - Add developer options (like access to the ForgeIDE Self-Hosting run configuration)
  *  - Better implement dependency classpaths. Very rough right now.
+ *  - Have active processes attached to run configurations
  */
 
 /*

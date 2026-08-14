@@ -3,6 +3,7 @@ package com.willclay.forgeide.actions;
 import com.willclay.forgeide.actions.build.BuildProjectAction;
 import com.willclay.forgeide.actions.build.CleanProjectAction;
 import com.willclay.forgeide.actions.build.RunAction;
+import com.willclay.forgeide.actions.build.StopAction;
 import com.willclay.forgeide.actions.edit.RedoAction;
 import com.willclay.forgeide.actions.edit.TextEditAction;
 import com.willclay.forgeide.actions.edit.UndoAction;
@@ -75,6 +76,7 @@ public final class ActionManager
 
     // --- Build --- //
     private final RunAction run;
+    private final StopAction stop;
     private final BuildProjectAction buildProject;
     private final CleanProjectAction cleanProject;
 
@@ -135,6 +137,7 @@ public final class ActionManager
         // this::setTaskRunning is resolved when it is called, not now, so it
         // is safe to hand out before the fields it touches are assigned.
         run = new RunAction(context, save, this::setTaskRunning);
+        stop = new StopAction(context);
         buildProject = new BuildProjectAction(context, saveAll, this::setTaskRunning);
         cleanProject = new CleanProjectAction(context, this::setTaskRunning);
 
@@ -221,6 +224,8 @@ public final class ActionManager
     public TextEditAction getSelectAllAction() { return selectAll; }
 
     public RunAction getRunAction() { return run; }
+
+    public StopAction getStopAction() { return stop; }
 
     public BuildProjectAction getBuildProjectAction() { return buildProject; }
 
