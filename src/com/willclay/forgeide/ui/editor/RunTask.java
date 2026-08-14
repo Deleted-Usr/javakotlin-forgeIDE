@@ -5,7 +5,9 @@ import com.willclay.forgeide.compiler.Toolchain;
 import com.willclay.forgeide.workspace.Project;
 
 import javax.swing.SwingWorker;
+import java.io.Console;
 import java.nio.file.Path;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 /** Runs build-tool operations away from Swing's Event Dispatch Thread. */
@@ -35,9 +37,9 @@ public final class RunTask extends SwingWorker<Integer, Void>
         return new RunTask(project, toolchain, console, sourceFile, onFinished, Operation.RUN);
     }
 
-    public static RunTask stop()
+    public static RunTask stop(ConsolePanel console)
     {
-        return new RunTask(null, null, null, null, null, Operation.STOP);
+        return new RunTask(null, null, console, null, null, Operation.STOP);
     }
 
     public static RunTask build(Project project, Toolchain toolchain, ConsolePanel console, Runnable onFinished)
@@ -53,12 +55,18 @@ public final class RunTask extends SwingWorker<Integer, Void>
     @Override
     protected Integer doInBackground() throws Exception
     {
+        if (operation == Operation.STOP)
+        {
+            stopProcess();
+            return 0;
+        }
+
         return switch (operation)
         {
-            case RUN -> runSource();
-            case STOP -> stopProcess();
+            case RUN   -> runSource();
             case BUILD -> buildProject();
             case CLEAN -> cleanProject();
+            default    -> throw new AssertionError("Unknown Operation " + operation);
         };
     }
 
@@ -90,18 +98,19 @@ public final class RunTask extends SwingWorker<Integer, Void>
         return exitCode;
     }
 
-    private int stopProcess()
+    private void stopProcess()
     {
         console.appendLine("Stopping Process...");
         console.endInput();
 
-        if (ProcessRunner.currentProcess() != null && ProcessRunner.currentProcess().isAlive())
+        // Probably not the most safe or cleanest way to clear a process
+        Process process = ProcessRunner.currentProcess();
+        if (process != null && process.isAlive())
         {
-            ProcessRunner.currentProcess().destroy();
-            this.cancel(true);
+            process.destroy();
         }
 
-        return 0;
+        cancel(true);
     }
 
     private int buildProject() throws Exception
@@ -140,6 +149,10 @@ public final class RunTask extends SwingWorker<Integer, Void>
         catch (ExecutionException e)
         {
             console.appendLine("Task failed: " + e.getCause());
+        }
+        catch (CancellationException e)
+        {
+            console.appendLine("Task Cancelled: " + e.getCause());
         }
     }
 }

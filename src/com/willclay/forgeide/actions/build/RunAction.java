@@ -67,8 +67,6 @@ public final class RunAction extends ForgeAction
 
     private void reportWrongSource(Project project)
     {
-        Utils.showErrorMessage(
-                context.getFrame(),
-                "Save a " + project.language().displayName() + " source file inside " + project.sourceRoot() + " before running.");
+        Utils.showErrorMessage(context.getFrame(), "Save a " + project.language().displayName() + " source file inside " + project.sourceRoot() + " before running.");
     }
 }

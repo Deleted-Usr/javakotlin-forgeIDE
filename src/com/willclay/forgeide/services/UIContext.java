@@ -48,12 +48,12 @@ public final class UIContext
                      ConsolePanel console,
                      WorkbenchPanel workbench,
                      ProjectTree projectTree,
-                      Workspace workspace,
-                      WorkspaceService workspaceService,
-                      FileDialogs dialogs,
-                      SettingsService settingsService,
-                      ThemeService themeService,
-                      SettingsDialogController settingsDialogController)
+                     Workspace workspace,
+                     WorkspaceService workspaceService,
+                     FileDialogs dialogs,
+                     SettingsService settingsService,
+                     ThemeService themeService,
+                     SettingsDialogController settingsDialogController)
     {
         this.frame = frame;
         this.editorPanel = editorPanel;
