@@ -1,7 +1,8 @@
-package com.willclay.forgeide.ui.editor;
+package com.willclay.forgeide.execution;
 
 import com.willclay.forgeide.compiler.ProcessRunner;
 import com.willclay.forgeide.compiler.Toolchain;
+import com.willclay.forgeide.ui.editor.ConsolePanel;
 import com.willclay.forgeide.workspace.Project;
 
 import javax.swing.SwingWorker;

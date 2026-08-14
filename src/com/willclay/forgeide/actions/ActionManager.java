@@ -28,9 +28,10 @@ import com.willclay.forgeide.actions.help.AboutAction;
 import com.willclay.forgeide.actions.settings.OpenSettingsAction;
 import com.willclay.forgeide.actions.view.ResetLayoutAction;
 import com.willclay.forgeide.actions.view.ToggleViewAction;
+import com.willclay.forgeide.execution.ExecutionManager;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.WorkbenchPanel;
-import com.willclay.forgeide.ui.editor.RunTask;
+import com.willclay.forgeide.execution.RunTask;
 
 import javax.swing.JTextPane;
 import javax.swing.SwingWorker;
@@ -54,7 +55,7 @@ import java.awt.event.KeyEvent;
 public final class ActionManager
 {
     private final UIContext context;
-    private RunTask activeTask;
+    private final ExecutionManager execution;
 
     // --- File --- //
     private final NewProjectAction newProject;
@@ -107,6 +108,7 @@ public final class ActionManager
     public ActionManager(UIContext context)
     {
         this.context = context;
+        execution = new ExecutionManager();
 
         WorkbenchPanel workbench = context.getWorkbench();
 
@@ -138,10 +140,10 @@ public final class ActionManager
 
         // ActionManager owns the one active worker. Actions only request that a
         // task be started or stopped; they do not need to find each other.
-        run = new RunAction(context, save, this::startTask);
-        stop = new StopAction(this::stopCurrentTask);
-        buildProject = new BuildProjectAction(context, saveAll, this::startTask);
-        cleanProject = new CleanProjectAction(context, this::startTask);
+        run = new RunAction(context, save, execution::start);
+        stop = new StopAction(execution::stop);
+        buildProject = new BuildProjectAction(context, saveAll, execution::start);
+        cleanProject = new CleanProjectAction(context, execution::start);
 
         toggleProjectTree = new ToggleViewAction("Project Explorer", null, true, workbench::setProjectTreeVisible);
         toggleConsole = new ToggleViewAction("Console", null, true, workbench::setConsoleVisible);
@@ -162,57 +164,33 @@ public final class ActionManager
 
         context.getWorkspace().addChangeListener(this::syncProjectActions);
         context.getEditorManager().addChangeListener(this::syncProjectActions);
+        execution.addChangeListener(this::syncProjectActions);
         syncProjectActions();
-    }
-
-    private void startTask(RunTask task)
-    {
-        if (activeTask != null) return;
-
-        activeTask = task;
-        task.addPropertyChangeListener(event ->
-        {
-            if ("state".equals(event.getPropertyName()) && event.getNewValue() == SwingWorker.StateValue.DONE)
-            {
-                finishTask(task);
-            }
-        });
-
-        syncProjectActions();
-        task.execute();
-    }
-
-    private void finishTask(RunTask task)
-    {
-        // An old completion must never clear a newer active task.
-        if (activeTask != task) return;
-
-        activeTask = null;
-        syncProjectActions();
-    }
-
-    private void stopCurrentTask()
-    {
-        RunTask task = activeTask;
-        if (task != null) task.stop();
     }
 
     /** Makes sure all project actions are enabled and disabled when necessary. */
     private void syncProjectActions()
     {
-        boolean hasToolchain = context.getWorkspace().hasProject() && context.getWorkspace().getProject().language().toolchain().isPresent();
-
-        boolean taskRunning = activeTask != null;
-        boolean enabled = !taskRunning && hasToolchain;
-
-        run.setEnabled(enabled);
-        buildProject.setEnabled(enabled);
-        cleanProject.setEnabled(enabled);
-
-        stop.setEnabled(taskRunning);
-
         boolean hasProject = context.getWorkspace().hasProject();
+
+        boolean hasToolchain =
+                hasProject &&
+                        context.getWorkspace()
+                                .getProject()
+                                .language()
+                                .toolchain()
+                                .isPresent();
+
         boolean hasEditor = context.getEditorManager().getCurrentTab() != null;
+
+        boolean running = execution.isRunning();
+        boolean canExecute = hasToolchain && !running;
+
+        run.setEnabled(canExecute);
+        buildProject.setEnabled(canExecute);
+        cleanProject.setEnabled(canExecute);
+
+        stop.setEnabled(running);
 
         newFile.setEnabled(hasProject);
         openFile.setEnabled(hasProject);
