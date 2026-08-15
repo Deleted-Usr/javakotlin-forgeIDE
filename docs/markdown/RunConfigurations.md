@@ -39,12 +39,12 @@ The text in the Run Configuration GUI would display differently depending on the
 - If Python, runtimeOptions would be labeled as Interpreter Options, entryPoint would be labeled as Script Path or Module
 - If C++, runtimeOptions would be labeled as Compiler Options, entryPoint would therefore be labeled as `main` Method
 
+`sourceFile` and `workingDirectory` should be stored relative to the project root. That keeps configurations
+portable if the project is moved or shared.
+
 In a traditional IDE setup, a Run Configuration normally points to a compiled executable or class files rather compiling 
 it. But that's where the Before Launch Options come in: before the launch of a C++ project, the user can choose to 
 automatically compile the `main` method, and point the configuration to the executable's path.
-
-`sourceFile` and `workingDirectory` should be stored relative to the project root. That keeps configurations
-portable if the project is moved or shared.
 
 Run configurations in IDEs built on the IntelliJ Platform utilise a "Before Launch" process, where the
 configuration can either compile the entry point, build the project, or do nothing.
@@ -74,6 +74,9 @@ This would mean that RunAction would stop deriving the target directly from the 
 it gets selected from the current configuration in the RunConfigurationManager. RunTask would receive the Before Launch
 option and perform it, and after, `Toolchain.run(...)` would receive a language-neutral launch request containing the
 resolved target, arguments, environment, and working directory.
+
+From everything within the run configuration, a class such as a config reader could create a terminal command that gets run
+through `ProcessRunner`.
 
 <span style="color:red">IMPORTANT</span>: The configuration must remain immutable data! It should not contain a `Process`,
 `RunTask`, console, or running state. Those remain owned by the `ActionManager` and `RunTask`.
@@ -159,7 +162,7 @@ And the editor dialog could show:
 ## Storing Configurations
 
 And then the whole idea is to save these configurations as files in the `.forge` directory of the project. Shared
-configuration belongs to something like`.forge/run-configuration.json`, and a stored configuration could look like:
+configurations belong to something like`.forge/run-configuration.json`, and a stored configuration could look like:
 
 ```json
 {

@@ -2,11 +2,17 @@ package com.willclay.forgeide.ui;
 
 import javax.swing.*;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionListener;
 
 /** Every modal message the IDE shows, so the wording and icons stay consistent. */
 public final class Utils
 {
+    private static final Insets SETTINGS_ROW_INSETS = new Insets(4, 4, 4, 4);
+
     private Utils() { }
 
     // --- Dialog Factories --- //
@@ -139,5 +145,46 @@ public final class Utils
         toolBar.add(button);
 
         return button;
+    }
+
+    // --- Settings Layout Factories --- //
+
+    /** Creates a full-width titled section for a settings form. */
+    public static JPanel createSettingsSection(String title)
+    {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder(title));
+        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, panel.getMaximumSize().height));
+
+        return panel;
+    }
+
+    /** Adds one aligned label-and-control row to a settings section. */
+    public static void addSettingsFormRow(JPanel panel, int row, String labelText, Component field)
+    {
+        GridBagConstraints labelConstraints = createSettingsRowConstraints(row);
+        labelConstraints.anchor = GridBagConstraints.LINE_END;
+        labelConstraints.fill = GridBagConstraints.NONE;
+        labelConstraints.weightx = 0;
+        panel.add(new JLabel(labelText), labelConstraints);
+
+        GridBagConstraints fieldConstraints = createSettingsRowConstraints(row);
+        fieldConstraints.gridx = 1;
+        fieldConstraints.weightx = 1;
+        panel.add(field, fieldConstraints);
+    }
+
+    /** Returns the shared starting constraints for a settings-form row. */
+    public static GridBagConstraints createSettingsRowConstraints(int row)
+    {
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = row;
+        constraints.weightx = 1;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.insets = SETTINGS_ROW_INSETS;
+
+        return constraints;
     }
 }

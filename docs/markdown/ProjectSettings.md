@@ -41,6 +41,26 @@ project.lineSeparator=PRESERVE
 project.excludedPaths=.git;.forge
 ```
 
+```json
+{
+  "version": 1,
+  "project": {
+    "name": "ForgeIDE",
+    "language": "java"
+  },
+  
+  "fileHandling": {
+    "encoding": "UTF-8",
+    "lineSeparators": "preserve"
+  },
+  
+  "excludedPaths": [
+    ".git",
+    ".forge"
+  ]
+}
+```
+
 There are two especially natural settings because [`SourceFileIO`](C:/Users/willc/OneDrive/Documents/GitHub/Java_ForgeIDE/src/com/willclay/forgeide/files/SourceFileIO.java:19) currently hard-codes UTF-8 and normalizes line endings to LF. Moving those decisions into project configuration gives General settings real consumers.
 
 I would not put these in General:

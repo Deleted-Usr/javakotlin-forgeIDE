@@ -16,6 +16,8 @@ import java.awt.*;
  */
 public final class SettingsWindow extends JDialog
 {
+    private final ThemeService themeService;
+
     public SettingsWindow(Window owner, ThemeService themeService)
     {
         super(owner, "IDE Settings", ModalityType.MODELESS);
@@ -24,14 +26,16 @@ public final class SettingsWindow extends JDialog
         setSize(500, 600);
         setLocationRelativeTo(owner);
 
+        this.themeService = themeService;
+
         // If this grows past a window full of tabs, switch to side buttons with a card layout.
         JTabbedPane tabs = new JTabbedPane();
-        addTabs(tabs, themeService);
+        addTabs(tabs);
 
         add(tabs, BorderLayout.CENTER);
     }
 
-    private void addTabs(JTabbedPane tabs, ThemeService themeService)
+    private void addTabs(JTabbedPane tabs)
     {
         tabs.addTab("Project", new ProjectSettings());
         tabs.addTab("Theme",   new ThemeSettings(themeService));
