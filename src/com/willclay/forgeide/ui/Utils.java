@@ -8,7 +8,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionListener;
 
-/** Every modal message the IDE shows, so the wording and icons stay consistent. */
+/** A central factory for every repetitively used UI component used in Forge. */
 public final class Utils
 {
     private static final Insets SETTINGS_ROW_INSETS = new Insets(4, 4, 4, 4);
@@ -205,12 +205,7 @@ public final class Utils
         addSettingsFormRow(panel, row, labelText, field, true, false);
     }
 
-    private static void addSettingsFormRow(JPanel panel,
-                                           int row,
-                                           String labelText,
-                                           Component field,
-                                           boolean nameBeforeComponent,
-                                           boolean stretchField)
+    private static void addSettingsFormRow(JPanel panel, int row, String labelText, Component field, boolean nameBeforeComponent, boolean stretchField)
     {
         GridBagConstraints labelConstraints = createSettingsRowConstraints(row);
         labelConstraints.anchor = GridBagConstraints.LINE_END;

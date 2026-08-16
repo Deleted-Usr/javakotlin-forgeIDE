@@ -2,14 +2,14 @@ I’ll check the current settings notes and project model, then narrow the Gener
 
 The General Project Settings tab should contain only settings that apply regardless of whether the project uses Java or another language. For ForgeIDE, I’d keep it deliberately small.
 
-| Section | Setting | Notes |
-|---|---|---|
-| Project | Display name | Optional metadata override; otherwise derive it from the root directory as today. |
-| Project | Project location | Read-only normalized path. |
-| Project | Language | Read-only initially; changing it would require a project migration. |
-| Files | Character encoding | UTF-8 by default. Applies to editor file I/O across languages. |
-| Files | Line separators | Preserve, LF, CRLF, or system default. |
-| Files | Excluded paths | Project-relative directories hidden from indexing, searching, and possibly the explorer. |
+| Section | Setting            | Notes                                                                                    |
+|---------|--------------------|------------------------------------------------------------------------------------------|
+| Project | Display name       | Optional metadata override; otherwise derive it from the root directory as today.        |
+| Project | Project location   | Read-only normalized path.                                                               |
+| Project | Language           | Read-only initially; changing it would require a project migration.                      |
+| Files   | Character encoding | UTF-8 by default. Applies to editor file I/O across languages.                           |
+| Files   | Line separators    | Preserve, LF, CRLF, or system default.                                                   |
+| Files   | Excluded paths     | Project-relative directories hidden from indexing, searching, and possibly the explorer. |
 
 A possible layout:
 
@@ -46,6 +46,7 @@ project.excludedPaths=.git;.forge
   "version": 1,
   "project": {
     "name": "ForgeIDE",
+    "workingDirectory": "C:\\...\\Java_ForgeIDE",
     "language": "java"
   },
   

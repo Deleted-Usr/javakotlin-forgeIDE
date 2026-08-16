@@ -2,12 +2,12 @@ I’ll turn the current project-settings notes into a broader settings taxonomy,
 
 The most important design decision is setting scope. An IDE normally has at least four kinds of persisted configuration:
 
-| Scope | Examples | Storage |
-|---|---|---|
-| IDE-wide | Theme, editor font, keymap, autosave behaviour | User preferences/config directory |
-| Project-shared | Encoding, Java release, dependencies | `.forge/project.properties` |
-| Project-local | Local JDK path, environment variables, last run configuration | Ignored workspace file |
-| Session state | Open tabs, divider positions, last selected file | Local state file |
+| Scope          | Examples                                                      | Storage                           |
+|----------------|---------------------------------------------------------------|-----------------------------------|
+| IDE-wide       | Theme, editor font, keymap, autosave behaviour                | User preferences/config directory |
+| Project-shared | Encoding, Java release, dependencies                          | `.forge/project.properties`       |
+| Project-local  | Local JDK path, environment variables, last run configuration | Ignored workspace file            |
+| Session state  | Open tabs, divider positions, last selected file              | Local state file                  |
 
 Machine-specific paths and secrets should never be written into shared project metadata.
 IDE wide configurations could be stored in a config file, and the path to that can be configured.
