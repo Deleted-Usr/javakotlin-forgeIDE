@@ -37,6 +37,7 @@ public final class SettingsWindow extends JDialog
 
     private void addTabs(JTabbedPane tabs)
     {
+        tabs.addTab("General", new GeneralSettings());
         tabs.addTab("Project", new ProjectSettings());
         tabs.addTab("Theme",   new ThemeSettings(themeService));
     }

@@ -2,9 +2,6 @@ package com.willclay.forgeide.ui.settings;
 
 import com.willclay.forgeide.ui.Utils;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -29,15 +26,10 @@ public final class ProjectSettings extends JPanel
     {
         super(new BorderLayout());
 
-        JPanel sections = new JPanel();
-        sections.setLayout(new BoxLayout(sections, BoxLayout.Y_AXIS));
-        sections.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
-
-        sections.add(createProjectSection());
-        sections.add(Box.createVerticalStrut(12));
-        sections.add(createFileHandlingSection());
-        sections.add(Box.createVerticalStrut(12));
-        sections.add(createExcludedPathsSection());
+        JPanel sections = Utils.createSettingsPage();
+        Utils.addSettingsSection(sections, createProjectSection());
+        Utils.addSettingsSection(sections, createFileHandlingSection());
+        Utils.addSettingsSection(sections, createExcludedPathsSection());
 
         add(sections, BorderLayout.NORTH);
     }
@@ -47,12 +39,14 @@ public final class ProjectSettings extends JPanel
         JPanel panel = Utils.createSettingsSection("Project");
 
         JTextField name = new JTextField("New Forge Project", 24);
-        JTextField location = readOnlyField("C:\\...\\Java_ForgeIDE");
-        JTextField language = readOnlyField("Java");
+        JTextField location = Utils.readOnlyField("C:\\...\\Java_ForgeIDE");
+        JTextField workDir  = Utils.readOnlyField("C:\\...\\Java_ForgeIDE");
+        JTextField language = Utils.readOnlyField("Java");
 
         Utils.addSettingsFormRow(panel, 0, "Name:", name);
         Utils.addSettingsFormRow(panel, 1, "Location:", location);
-        Utils.addSettingsFormRow(panel, 2, "Language:", language);
+        Utils.addSettingsFormRow(panel, 2, "Working Directory:", workDir);
+        Utils.addSettingsFormRow(panel, 3, "Language:", language);
 
         return panel;
     }
@@ -142,13 +136,5 @@ public final class ProjectSettings extends JPanel
         excludedPaths.addElement(displayPath);
         paths.setSelectedIndex(excludedPaths.size() - 1);
         paths.ensureIndexIsVisible(excludedPaths.size() - 1);
-    }
-
-    private static JTextField readOnlyField(String value)
-    {
-        JTextField field = new JTextField(value, 24);
-        field.setEditable(false);
-
-        return field;
     }
 }

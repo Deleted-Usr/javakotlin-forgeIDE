@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
 public final class Utils
 {
     private static final Insets SETTINGS_ROW_INSETS = new Insets(4, 4, 4, 4);
+    private static final int SETTINGS_SECTION_GAP = 12;
 
     private Utils() { }
 
@@ -149,6 +150,23 @@ public final class Utils
 
     // --- Settings Layout Factories --- //
 
+    /** Creates the vertically stacked, padded body shared by settings tabs. */
+    public static JPanel createSettingsPage()
+    {
+        JPanel page = new JPanel();
+        page.setLayout(new BoxLayout(page, BoxLayout.Y_AXIS));
+        page.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
+
+        return page;
+    }
+
+    /** Adds a section to a settings page, including spacing after earlier sections. */
+    public static void addSettingsSection(JPanel page, JPanel section)
+    {
+        if (page.getComponentCount() > 0) page.add(Box.createVerticalStrut(SETTINGS_SECTION_GAP));
+        page.add(section);
+    }
+
     /** Creates a full-width titled section for a settings form. */
     public static JPanel createSettingsSection(String title)
     {
@@ -160,19 +178,85 @@ public final class Utils
         return panel;
     }
 
-    /** Adds one aligned label-and-control row to a settings section. */
+    /** Creates a JTextField at a set column count, and sets it uneditable. */
+    public static JTextField readOnlyField(String value)
+    {
+        JTextField field = new JTextField(value, 24);
+        field.setEditable(false);
+
+        return field;
+    }
+
+    /** Adds a conventional label-then-control row to a settings section. */
     public static void addSettingsFormRow(JPanel panel, int row, String labelText, Component field)
+    {
+        addSettingsFormRow(panel, row, labelText, field, true, true);
+    }
+
+    /** Adds one aligned label-and-control row to a settings section. */
+    public static void addSettingsFormRow(JPanel panel, int row, String labelText, Component field, boolean nameBeforeComponent)
+    {
+        addSettingsFormRow(panel, row, labelText, field, nameBeforeComponent, true);
+    }
+
+    /** Adds a form row whose control keeps its preferred width. */
+    public static void addCompactSettingsFormRow(JPanel panel, int row, String labelText, Component field)
+    {
+        addSettingsFormRow(panel, row, labelText, field, true, false);
+    }
+
+    private static void addSettingsFormRow(JPanel panel,
+                                           int row,
+                                           String labelText,
+                                           Component field,
+                                           boolean nameBeforeComponent,
+                                           boolean stretchField)
     {
         GridBagConstraints labelConstraints = createSettingsRowConstraints(row);
         labelConstraints.anchor = GridBagConstraints.LINE_END;
         labelConstraints.fill = GridBagConstraints.NONE;
         labelConstraints.weightx = 0;
-        panel.add(new JLabel(labelText), labelConstraints);
 
         GridBagConstraints fieldConstraints = createSettingsRowConstraints(row);
         fieldConstraints.gridx = 1;
         fieldConstraints.weightx = 1;
+        if (!stretchField)
+        {
+            fieldConstraints.fill = GridBagConstraints.NONE;
+            fieldConstraints.anchor = GridBagConstraints.LINE_START;
+        }
+
+        if (!nameBeforeComponent)
+        {
+            labelConstraints.gridx = 1;
+            labelConstraints.anchor = GridBagConstraints.LINE_START;
+            fieldConstraints.gridx = 0;
+            fieldConstraints.weightx = 0;
+        }
+
+        panel.add(new JLabel(labelText), labelConstraints);
         panel.add(field, fieldConstraints);
+    }
+
+    /** Adds a full-width check box row and returns it for optional listener wiring. */
+    public static JCheckBox addSettingsCheckBoxRow(JPanel panel, int row, String text, boolean selected)
+    {
+        JCheckBox checkBox = new JCheckBox(text, selected);
+
+        GridBagConstraints constraints = createSettingsRowConstraints(row);
+        constraints.gridwidth = 2;
+        panel.add(checkBox, constraints);
+
+        return checkBox;
+    }
+
+    /** Creates a compact spinner for a bounded whole-number setting. */
+    public static JSpinner integerSpinner(int value, int minimum, int maximum, int stepSize)
+    {
+        JSpinner spinner = new JSpinner(new SpinnerNumberModel(value, minimum, maximum, stepSize));
+        spinner.setEditor(new JSpinner.NumberEditor(spinner, "#"));
+
+        return spinner;
     }
 
     /** Returns the shared starting constraints for a settings-form row. */
