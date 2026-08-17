@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Immutable catalogue of languages installed in Forge.
@@ -16,6 +17,8 @@ import java.util.Optional;
  */
 public final class LanguageRegistry
 {
+    private static final Pattern LANGUAGE_ID = Pattern.compile("[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*");
+
     private final Map<String, Language> languagesById;
 
     public LanguageRegistry(Collection<? extends Language> languages)
@@ -27,13 +30,14 @@ public final class LanguageRegistry
         {
             Objects.requireNonNull(language, "language");
 
-            if (language.id().isBlank())
+            String id = Objects.requireNonNull(language.id(), "language.id()");
+            if (!LANGUAGE_ID.matcher(id).matches())
             {
-                throw new IllegalArgumentException("A language id cannot be blank.");
+                throw new IllegalArgumentException("Invalid language id '" + id + "'. Use lowercase alphanumeric segments separated by '.', '_', or '-'.");
             }
-            if (indexed.putIfAbsent(language.id(), language) != null)
+            if (indexed.putIfAbsent(id, language) != null)
             {
-                throw new IllegalArgumentException("Duplicate language id: " + language.id());
+                throw new IllegalArgumentException("Duplicate language id: " + id);
             }
         }
 

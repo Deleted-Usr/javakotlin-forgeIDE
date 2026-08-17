@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -42,7 +43,7 @@ public final class CodeEditorPanel extends JPanel
     private final List<Runnable> stateChangeListeners = new ArrayList<>();
     private final List<Runnable> undoStateListeners = new ArrayList<>();
 
-    private Lexer lexer = Lexer.PLAIN;
+    private Function<Path, Lexer> lexerResolver = file -> Lexer.PLAIN;
     private TokenTheme theme = TokenTheme.materialDarker();
     private Predicate<EditorTab> closeRequestHandler = tab -> true;
 
@@ -136,6 +137,7 @@ public final class CodeEditorPanel extends JPanel
         if (tabs.indexOfComponent(tab) < 0) return;
 
         tab.setFile(file);
+        tab.setLexer(resolveLexer(file));
         tab.markSaved();
         updateTabTitle(tab);
         fireStateChanged();
@@ -177,11 +179,21 @@ public final class CodeEditorPanel extends JPanel
         if (tab != null) tab.redo();
     }
 
-    /** Applies the project's language to existing tabs and all tabs opened later. */
+    /** Applies one lexer to existing tabs and all tabs opened later. */
     public void setLexer(Lexer lexer)
     {
-        this.lexer = Objects.requireNonNull(lexer);
-        for (EditorTab tab : getOpenTabs()) tab.setLexer(lexer);
+        Objects.requireNonNull(lexer);
+        setLexerResolver(file -> lexer);
+    }
+
+    /**
+     * Selects a lexer from each tab's path. A {@code null} path represents an
+     * untitled file and can use the current project's default lexer.
+     */
+    public void setLexerResolver(Function<Path, Lexer> lexerResolver)
+    {
+        this.lexerResolver = Objects.requireNonNull(lexerResolver);
+        for (EditorTab tab : getOpenTabs()) tab.setLexer(resolveLexer(tab.getFile()));
     }
 
     public void setTheme(TokenTheme theme)
@@ -225,7 +237,7 @@ public final class CodeEditorPanel extends JPanel
         applyTabSize(tab.getTextPane(), TAB_SIZE_IN_CHARACTERS);
 
         tab.setTheme(theme);
-        tab.setLexer(lexer);
+        tab.setLexer(resolveLexer(file));
 
         tab.addTextChangeListener(() -> tabTextChanged(tab));
         tab.addUndoStateListener(() ->
@@ -306,6 +318,11 @@ public final class CodeEditorPanel extends JPanel
     private static Path normalize(Path file)
     {
         return file.toAbsolutePath().normalize();
+    }
+
+    private Lexer resolveLexer(Path file)
+    {
+        return Objects.requireNonNull(lexerResolver.apply(file), "lexerResolver result");
     }
 
     private static void applyTabSize(JTextPane textPane, int charactersPerTab)

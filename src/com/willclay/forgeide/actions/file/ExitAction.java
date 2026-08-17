@@ -3,7 +3,6 @@ package com.willclay.forgeide.actions.file;
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
 import com.willclay.forgeide.services.UIContext;
-import com.willclay.forgeide.ui.Utils;
 
 import java.awt.event.KeyEvent;
 
@@ -21,13 +20,6 @@ public final class ExitAction extends ForgeAction
     @Override
     protected void perform()
     {
-        if (context.getEditorManager().hasModifiedFiles() && !Utils.confirmDiscardChanges(context.getFrame(), "Exit")) return;
-
-        // Releases the watcher's thread and its watch keys. A daemon thread
-        // would die with the JVM anyway; closing tidily means the same code
-        // works when the IDE learns to close a window without exiting.
-        context.getWorkspaceService().close();
-
-        context.getFrame().dispose();
+        context.getApplicationShutdown().requestExit();
     }
 }

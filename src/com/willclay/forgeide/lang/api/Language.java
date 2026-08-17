@@ -20,7 +20,12 @@ import java.util.Set;
  */
 public interface Language
 {
-    /** Stable identifier written to project metadata, for example {@code java}. */
+    /**
+     * Stable identifier written to project metadata, for example {@code java}
+     * or {@code forge.python}. IDs are lowercase and may contain separated
+     * alphanumeric segments using {@code .}, {@code _}, or {@code -}.
+     * Once released, an ID must not be changed because projects persist it.
+     */
     String id();
 
     /** Human-readable name shown in dialogs. */

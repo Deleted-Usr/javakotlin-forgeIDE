@@ -2,12 +2,14 @@ package com.willclay.forgeide.ui;
 
 import com.willclay.forgeide.actions.ActionManager;
 import com.willclay.forgeide.editor.EditorManager;
+import com.willclay.forgeide.execution.ExecutionManager;
 import com.willclay.forgeide.highlighting.Lexer;
 import com.willclay.forgeide.lang.api.LanguageRegistry;
 import com.willclay.forgeide.lang.java.JavaLanguage;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ApplicationShutdown;
 import com.willclay.forgeide.services.SettingsService;
 import com.willclay.forgeide.services.ThemeService;
+import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 import com.willclay.forgeide.ui.editor.ConsolePanel;
@@ -89,9 +91,13 @@ public final class Window extends JFrame
         // toolbar and the context menu — and both of those live on components
         // the context already holds. Hence the two setters below rather than
         // constructor arguments.
+        ExecutionManager executionManager = new ExecutionManager();
+        ApplicationShutdown applicationShutdown =
+                new ApplicationShutdown(this, editorManager, executionManager, workspaceService);
+
         UIContext context = new UIContext(this, editorPanel, editorManager, console, workbench, projectTree,
-                workspace, workspaceService, new FileDialogs(this, languages), settingsService, themeService,
-                settingsDialogController);
+                workspace, workspaceService, executionManager, applicationShutdown,
+                new FileDialogs(this, languages), settingsService, themeService, settingsDialogController);
 
         ActionManager actions = new ActionManager(context);
 
@@ -148,7 +154,13 @@ public final class Window extends JFrame
         Project project = workspace.getProject();
 
         projectTree.showRoot(project == null ? null : project.rootItem());
-        editorPanel.setLexer(project == null ? Lexer.PLAIN : project.language().lexer());
+        editorPanel.setLexerResolver(file ->
+        {
+            if (project == null) return Lexer.PLAIN;
+            if (file != null && !project.language().recognises(file)) return Lexer.PLAIN;
+
+            return project.language().lexer();
+        });
     }
 
     private void updateTitle()

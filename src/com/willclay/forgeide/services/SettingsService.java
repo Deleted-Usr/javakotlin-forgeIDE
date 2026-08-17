@@ -16,6 +16,8 @@ import java.util.prefs.Preferences;
  */
 public final class SettingsService
 {
+    // Persist only the stable AppTheme ID. User-authored themes will be
+    // separate versioned documents rather than values embedded in settings.
     private static final String THEME = "appearance.theme";
 
     private final Preferences preferences = Preferences.userNodeForPackage(SettingsService.class);

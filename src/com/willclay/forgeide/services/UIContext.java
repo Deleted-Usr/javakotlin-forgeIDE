@@ -1,6 +1,7 @@
 package com.willclay.forgeide.services;
 
 import com.willclay.forgeide.editor.EditorManager;
+import com.willclay.forgeide.execution.ExecutionManager;
 import com.willclay.forgeide.ui.WorkbenchPanel;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
@@ -37,6 +38,8 @@ public final class UIContext
     private final ProjectTree projectTree;
     private final Workspace workspace;
     private final WorkspaceService workspaceService;
+    private final ExecutionManager executionManager;
+    private final ApplicationShutdown applicationShutdown;
     private final FileDialogs dialogs;
     private final SettingsService settingsService;
     private final ThemeService themeService;
@@ -50,6 +53,8 @@ public final class UIContext
                      ProjectTree projectTree,
                      Workspace workspace,
                      WorkspaceService workspaceService,
+                     ExecutionManager executionManager,
+                     ApplicationShutdown applicationShutdown,
                      FileDialogs dialogs,
                      SettingsService settingsService,
                      ThemeService themeService,
@@ -63,6 +68,8 @@ public final class UIContext
         this.projectTree = projectTree;
         this.workspace = workspace;
         this.workspaceService = workspaceService;
+        this.executionManager = executionManager;
+        this.applicationShutdown = applicationShutdown;
         this.dialogs = dialogs;
         this.settingsService = settingsService;
         this.themeService = themeService;
@@ -95,6 +102,10 @@ public final class UIContext
     public Workspace getWorkspace() { return workspace; }
 
     public WorkspaceService getWorkspaceService() { return workspaceService; }
+
+    public ExecutionManager getExecutionManager() { return executionManager; }
+
+    public ApplicationShutdown getApplicationShutdown() { return applicationShutdown; }
 
     public FileDialogs getDialogs() { return dialogs; }
 

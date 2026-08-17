@@ -13,12 +13,12 @@ import javax.swing.*;
  *  - Project settings that read the metadata to determine language
  *  - Use a JToggleButton for compiler options, in language settings menu
  *  - Give the actions icons (ForgeAction already has the hook)
- *  - Automatic Lexing (Detecting file extension and lex accordingly)
- *  - Theme selection menu and service, complete allowing the user to save custom token/swing combos or make their own
+ *  - Finish settings Apply/OK/Cancel semantics before adding more theme options
  *  - Run Configurations (Like IntelliJ)
  *  - Support for libs in JavacToolchain
  *  - Launch Forge through a bootstrap sequence
- *  - Store registered languages in a cache upon app close, access that cache and load registry in bootstrap sequence
+ *  - Discover registered languages from providers on each launch. Cache only plugin scan
+ *    metadata if profiling justifies it
  *  - Fix performance concerned with Undo/Redo actions in the editor panel
  *  - Drag, shift/ctrl select, reordering files and folders MUST be added to the explorer!!!
  *  - Project templates, Language Dependent (Empty, Basic, Console App)
@@ -56,6 +56,7 @@ import javax.swing.*;
  *          - Project Explorer (Icons, Better Spacing, Coloured Text, Inline Rename, Speed Search, Lazy Loading)
  *          - Status Bar (Compiler Status, Caret Position, Encoding, Line Endings, Project Name)
  *          - Full AI Agent Implementation (Writing Code, Reading and Writing to Files, Full Project Context, Agent Pet like GPT)
+ *          - Custom theme documents for user-authored Swing/token theme combinations
  */
 
 /*

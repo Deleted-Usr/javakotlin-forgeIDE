@@ -108,7 +108,7 @@ public final class ActionManager
     public ActionManager(UIContext context)
     {
         this.context = context;
-        execution = new ExecutionManager();
+        execution = context.getExecutionManager();
 
         WorkbenchPanel workbench = context.getWorkbench();
 
