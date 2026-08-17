@@ -23,6 +23,7 @@ classes/
 *.tar.gz
 
 !libs/*.jar
+!libs/**/*.jar
 
 # ...EXCEPT the build-tool wrappers, which must be committed so
 # a fresh clone can build without a preinstalled Maven/Gradle.
@@ -75,7 +76,7 @@ jdtls/
 # Forge writes layout, open tabs, caret positions here.
 .forge/
 !examples/**/.forge/
-!examples/**/.forge/*.properties
+!examples/**/.forge/*.json
 # If you later decide run configurations SHOULD be shared
 # across machines, uncomment the negation below:
 # !.forge/runConfigurations/

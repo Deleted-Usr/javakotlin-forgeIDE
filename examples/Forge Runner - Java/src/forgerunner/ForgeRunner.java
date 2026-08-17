@@ -27,6 +27,6 @@ public final class ForgeRunner
         frame.setVisible(true);
 
         game.start();
-        System.out.println("Forge Runner started. Use A/D, Space and Shift to play.");
+        System.out.println("Forge Runner started. Use A/D, Space, and Shift to play.");
     }
 }

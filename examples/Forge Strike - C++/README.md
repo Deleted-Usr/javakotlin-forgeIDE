@@ -32,7 +32,7 @@ directory containing `SFMLConfig.cmake` when configuring.
 
 ## Future ForgeIDE support
 
-The included `.forge/project.properties` uses the planned language ID `cpp`.
+The included `.forge/project.json` uses the planned language ID `cpp`.
 ForgeIDE will be able to open it once a C++ language with that ID is registered.
 The intended source root is `src`, while headers live in `include` and the
 build output belongs in `build`.

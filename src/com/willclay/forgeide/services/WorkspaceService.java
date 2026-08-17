@@ -5,6 +5,7 @@ import com.willclay.forgeide.filesystem.FileWatcher;
 import com.willclay.forgeide.lang.api.Language;
 import com.willclay.forgeide.lang.api.LanguageRegistry;
 import com.willclay.forgeide.workspace.Project;
+import com.willclay.forgeide.workspace.ProjectConfiguration;
 import com.willclay.forgeide.workspace.ProjectItem;
 import com.willclay.forgeide.workspace.ProjectMetadata;
 import com.willclay.forgeide.workspace.Workspace;
@@ -58,7 +59,7 @@ public final class WorkspaceService implements AutoCloseable
 
         Project project = Project.at(root, language);
         language.initializeProject(project);
-        ProjectMetadata.write(project);
+        ProjectMetadata.write(root, ProjectConfiguration.forLanguage(language.id()));
         open(project);
     }
 
@@ -75,7 +76,7 @@ public final class WorkspaceService implements AutoCloseable
 
         Project project = Project.at(root, language);
         language.initializeProject(project);
-        ProjectMetadata.write(project);
+        ProjectMetadata.write(root, ProjectConfiguration.forLanguage(language.id()));
         open(project);
     }
 
@@ -83,7 +84,11 @@ public final class WorkspaceService implements AutoCloseable
     public void openProject(Path root) throws IOException
     {
         FileOperations.ensureDirectory(root);
-        open(ProjectMetadata.read(root, languages));
+        ProjectConfiguration configuration = ProjectMetadata.read(root);
+        Language language = languages.find(configuration.language()).orElseThrow(
+                () -> new IOException("Project language is not installed: " + configuration.language()));
+
+        open(Project.at(root, language));
     }
 
     public void closeProject()
