@@ -4,6 +4,7 @@ import com.willclay.forgeide.editor.SyntaxUndoManager;
 import com.willclay.forgeide.highlighting.Lexer;
 import com.willclay.forgeide.highlighting.SyntaxHighlighter;
 import com.willclay.forgeide.highlighting.TokenTheme;
+import com.willclay.forgeide.workspace.LineEnding;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -18,11 +19,13 @@ import java.awt.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /** One open editor document and all state that must follow it between selections. */
 public final class EditorTab extends JPanel
 {
     private Path file;
+    private LineEnding lineEnding;
     private boolean modified;
 
     /** Enough to undo a session's worth of typing without holding the file's whole history. */
@@ -46,9 +49,15 @@ public final class EditorTab extends JPanel
 
     public EditorTab(Path file)
     {
+        this(file, LineEnding.LF);
+    }
+
+    public EditorTab(Path file, LineEnding lineEnding)
+    {
         super(new BorderLayout());
 
         this.file = file;
+        this.lineEnding = Objects.requireNonNull(lineEnding, "lineEnding");
 
         setLexer(Lexer.PLAIN);
 
@@ -114,6 +123,16 @@ public final class EditorTab extends JPanel
     public void setFile(Path file)
     {
         this.file = file;
+    }
+
+    public LineEnding getLineEnding()
+    {
+        return lineEnding;
+    }
+
+    public void setLineEnding(LineEnding lineEnding)
+    {
+        this.lineEnding = Objects.requireNonNull(lineEnding, "lineEnding");
     }
 
     public boolean isModified()

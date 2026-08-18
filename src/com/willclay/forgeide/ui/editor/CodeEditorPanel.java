@@ -2,6 +2,7 @@ package com.willclay.forgeide.ui.editor;
 
 import com.willclay.forgeide.highlighting.Lexer;
 import com.willclay.forgeide.highlighting.TokenTheme;
+import com.willclay.forgeide.workspace.LineEnding;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -79,12 +80,23 @@ public final class CodeEditorPanel extends JPanel
 
     public EditorTab newFile(String contents)
     {
-        return addUntitledTab(contents, true);
+        return newFile(contents, LineEnding.LF);
+    }
+
+    public EditorTab newFile(String contents, LineEnding lineEnding)
+    {
+        return addUntitledTab(contents, lineEnding, true);
     }
 
     public EditorTab openFile(Path file, String contents)
     {
+        return openFile(file, contents, LineEnding.LF);
+    }
+
+    public EditorTab openFile(Path file, String contents, LineEnding lineEnding)
+    {
         Objects.requireNonNull(file);
+        Objects.requireNonNull(lineEnding);
 
         EditorTab existing = findTab(file);
         if (existing != null)
@@ -93,7 +105,7 @@ public final class CodeEditorPanel extends JPanel
             return existing;
         }
 
-        EditorTab tab = createTab(file);
+        EditorTab tab = createTab(file, lineEnding);
         tab.setText(contents);
         addTab(tab);
 
@@ -221,7 +233,12 @@ public final class CodeEditorPanel extends JPanel
 
     private EditorTab addUntitledTab(String contents, boolean modified)
     {
-        EditorTab tab = createTab(null);
+        return addUntitledTab(contents, LineEnding.LF, modified);
+    }
+
+    private EditorTab addUntitledTab(String contents, LineEnding lineEnding, boolean modified)
+    {
+        EditorTab tab = createTab(null, lineEnding);
         tab.setText(contents);
         if (modified) tab.markModified();
         addTab(tab);
@@ -229,9 +246,9 @@ public final class CodeEditorPanel extends JPanel
         return tab;
     }
 
-    private EditorTab createTab(Path file)
+    private EditorTab createTab(Path file, LineEnding lineEnding)
     {
-        EditorTab tab = new EditorTab(file);
+        EditorTab tab = new EditorTab(file, lineEnding);
 
         tab.getTextPane().setFont(editorFont);
         applyTabSize(tab.getTextPane(), TAB_SIZE_IN_CHARACTERS);

@@ -14,9 +14,12 @@ import java.util.Properties;
 public final class ProjectMetadata
 {
     private static final String DIRECTORY = ".forge";
+
     private static final String FILE = "project.json";
     private static final String LEGACY_FILE = "project.properties";
+
     private static final String LANGUAGE = "language";
+
     private static final JsonFileStore JSON = new JsonFileStore(new JacksonJsonCodec());
 
     private ProjectMetadata() { }
@@ -52,9 +55,7 @@ public final class ProjectMetadata
         String language = properties.getProperty(LANGUAGE, "").trim();
         if (language.isEmpty()) throw new IOException("Project metadata has no language: " + legacyMetadata);
 
-        ProjectConfiguration configuration = new ProjectConfiguration(
-                ProjectConfiguration.CURRENT_SCHEMA_VERSION,
-                language);
+        ProjectConfiguration configuration = ProjectConfiguration.forLanguage(language);
 
         Path metadata = pathFor(root, FILE);
         JSON.write(metadata, configuration);

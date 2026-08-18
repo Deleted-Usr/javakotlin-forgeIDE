@@ -3,6 +3,8 @@ package com.willclay.forgeide.editor;
 import com.willclay.forgeide.files.SourceFileIO;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 import com.willclay.forgeide.ui.editor.EditorTab;
+import com.willclay.forgeide.workspace.LineEnding;
+import com.willclay.forgeide.workspace.LineSeparatorPolicy;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -21,6 +23,7 @@ public final class EditorManager
 
     private final CodeEditorPanel editor;
     private final List<Runnable> listeners = new ArrayList<>();
+    private LineSeparatorPolicy lineSeparatorPolicy = LineSeparatorPolicy.PRESERVE;
 
     public EditorManager(CodeEditorPanel editor)
     {
@@ -91,14 +94,20 @@ public final class EditorManager
             return;
         }
 
-        String text = SourceFileIO.read(file);
-        editor.openFile(file, text);
+        SourceFileIO.LoadedDocument document = SourceFileIO.read(file);
+        editor.openFile(file, document.text(), document.lineEnding());
     }
 
     /** Opens a fresh unsaved tab. */
     public void newFile(String template)
     {
-        editor.newFile(template);
+        editor.newFile(template, lineSeparatorPolicy.resolve(LineEnding.LF));
+    }
+
+    /** Applies to subsequent saves; open documents retain their detected format for PRESERVE. */
+    public void setLineSeparatorPolicy(LineSeparatorPolicy lineSeparatorPolicy)
+    {
+        this.lineSeparatorPolicy = Objects.requireNonNull(lineSeparatorPolicy, "lineSeparatorPolicy");
     }
 
     /** Closes every document when its project is closed or replaced. */
@@ -145,7 +154,9 @@ public final class EditorManager
             throw new IOException("That file is already open in another editor tab.");
         }
 
-        SourceFileIO.write(target, tab.getText());
+        LineEnding lineEnding = lineSeparatorPolicy.resolve(tab.getLineEnding());
+        SourceFileIO.write(target, tab.getText(), lineEnding);
+        tab.setLineEnding(lineEnding);
         editor.markSaved(tab, target);
     }
 

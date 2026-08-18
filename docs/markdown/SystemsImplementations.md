@@ -84,13 +84,17 @@ model to edit. A reasonable first project document is:
 ```json
 {
   "schemaVersion": 1,
+  
   "name": "ForgeIDE",
   "language": "java",
+  
   "workingDirectory": ".",
+  
   "fileHandling": {
     "encoding": "UTF-8",
     "lineSeparators": "preserve"
   },
+  
   "excludedPaths": [
     ".git",
     ".forge"

@@ -37,6 +37,7 @@ public final class WorkspaceService implements AutoCloseable
     private final LanguageRegistry languages;
     private final FileWatcher watcher;
     private final List<WorkspaceListener> listeners = new ArrayList<>();
+    private ProjectConfiguration configuration;
 
     public WorkspaceService(Workspace workspace, LanguageRegistry languages) throws IOException
     {
@@ -52,6 +53,11 @@ public final class WorkspaceService implements AutoCloseable
         return workspace;
     }
 
+    public ProjectConfiguration getConfiguration()
+    {
+        return configuration;
+    }
+
     /** Creates, configures and opens a new project. */
     public void createProject(Path root, Language language) throws IOException
     {
@@ -59,8 +65,11 @@ public final class WorkspaceService implements AutoCloseable
 
         Project project = Project.at(root, language);
         language.initializeProject(project);
-        ProjectMetadata.write(root, ProjectConfiguration.forLanguage(language.id()));
-        open(project);
+
+        ProjectConfiguration configuration = ProjectConfiguration.forLanguage(language.id());
+        ProjectMetadata.write(root, configuration);
+
+        open(project, configuration);
     }
 
     /** Returns whether a directory already contains Forge project metadata. */
@@ -76,8 +85,11 @@ public final class WorkspaceService implements AutoCloseable
 
         Project project = Project.at(root, language);
         language.initializeProject(project);
-        ProjectMetadata.write(root, ProjectConfiguration.forLanguage(language.id()));
-        open(project);
+
+        ProjectConfiguration configuration = ProjectConfiguration.forLanguage(language.id());
+        ProjectMetadata.write(root, configuration);
+
+        open(project, configuration);
     }
 
     /** Opens a configured project, restoring its persisted language. */
@@ -88,12 +100,13 @@ public final class WorkspaceService implements AutoCloseable
         Language language = languages.find(configuration.language()).orElseThrow(
                 () -> new IOException("Project language is not installed: " + configuration.language()));
 
-        open(Project.at(root, language));
+        open(Project.at(root, language), configuration);
     }
 
     public void closeProject()
     {
         watcher.unwatchAll();
+        configuration = null;
         workspace.closeProject();
     }
 
@@ -177,9 +190,10 @@ public final class WorkspaceService implements AutoCloseable
         return item.path().getParent();
     }
 
-    private void open(Project project)
+    private void open(Project project, ProjectConfiguration configuration)
     {
         watcher.unwatchAll();
+        this.configuration = configuration;
         workspace.openProject(project);
     }
 

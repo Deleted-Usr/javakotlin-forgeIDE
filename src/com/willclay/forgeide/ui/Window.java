@@ -10,6 +10,7 @@ import com.willclay.forgeide.services.ApplicationShutdown;
 import com.willclay.forgeide.services.SettingsService;
 import com.willclay.forgeide.services.ThemeService;
 import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.WorkspaceService;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 import com.willclay.forgeide.ui.editor.ConsolePanel;
@@ -22,9 +23,10 @@ import com.willclay.forgeide.ui.fonts.EditorFonts;
 import com.willclay.forgeide.ui.menu.EditorMenuBar;
 import com.willclay.forgeide.ui.settings.SettingsDialogController;
 import com.willclay.forgeide.ui.toolbar.EditorToolBar;
+import com.willclay.forgeide.workspace.LineSeparatorPolicy;
 import com.willclay.forgeide.workspace.Project;
+import com.willclay.forgeide.workspace.ProjectConfiguration;
 import com.willclay.forgeide.workspace.Workspace;
-import com.willclay.forgeide.services.WorkspaceService;
 
 import javax.swing.JFrame;
 import java.awt.Font;
@@ -152,6 +154,11 @@ public final class Window extends JFrame
     private void showCurrentProject()
     {
         Project project = workspace.getProject();
+        ProjectConfiguration configuration = workspaceService.getConfiguration();
+
+        editorManager.setLineSeparatorPolicy(configuration == null
+                ? LineSeparatorPolicy.PRESERVE
+                : configuration.fileHandling().lineSeparators());
 
         projectTree.showRoot(project == null ? null : project.rootItem());
         editorPanel.setLexerResolver(file ->

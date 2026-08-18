@@ -1,5 +1,8 @@
 package com.willclay.forgeide.files;
 
+import com.willclay.forgeide.workspace.LineEnding;
+import com.willclay.forgeide.workspace.LineSeparators;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -17,19 +20,29 @@ public final class SourceFileIO
 {
     private SourceFileIO() { }
 
-    /** Line separators are normalised to \n, which is what the editor works in. */
-    public static String read(Path file) throws IOException
+    /**
+     * Reads text for the editor, normalising its line separators to {@code \n}
+     * while retaining the detected on-disk format for the next save.
+     */
+    public static LoadedDocument read(Path file) throws IOException
     {
-        return Files.readString(file, StandardCharsets.UTF_8).replace("\r\n", "\n");
+        String diskText = Files.readString(file, StandardCharsets.UTF_8);
+        LineEnding lineEnding = LineEnding.detect(diskText);
+
+        return new LoadedDocument(LineSeparators.normalise(diskText), lineEnding);
     }
 
-    /** Creates any missing parent directories, then overwrites the file. */
-    public static void write(Path file, String contents) throws IOException
+    /**
+     * Creates any missing parent directories, then writes the editor's
+     * normalised text using the requested line ending.
+     */
+    public static void write(Path file, String contents, LineEnding lineEnding) throws IOException
     {
         Path parent = file.getParent();
         if (parent != null) Files.createDirectories(parent);
 
-        Files.writeString(file, contents, StandardCharsets.UTF_8);
+        String diskText = LineSeparators.forWriting(contents, lineEnding);
+        Files.writeString(file, diskText, StandardCharsets.UTF_8);
     }
 
     /** Appends the extension if the user typed a bare name into the save dialog. */
@@ -46,4 +59,6 @@ public final class SourceFileIO
         Path name = file.getFileName();
         return name == null ? "" : name.toString();
     }
+
+    public record LoadedDocument(String text, LineEnding lineEnding) { }
 }
