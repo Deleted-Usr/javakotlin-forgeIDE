@@ -44,7 +44,7 @@ public interface Language
     Path sourceRoot(Project project);
 
     /** Creates this language's initial project structure. */
-    default void initializeProject(Project project) throws IOException
+    default void createProjectStructure(Project project) throws IOException
     {
         Files.createDirectories(sourceRoot(project));
     }

@@ -2,7 +2,7 @@ package com.willclay.forgeide.ui.editor;
 
 import com.willclay.forgeide.highlighting.Lexer;
 import com.willclay.forgeide.highlighting.TokenTheme;
-import com.willclay.forgeide.workspace.LineEnding;
+import com.willclay.forgeide.workspace.metadata.LineEnding;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -78,19 +78,9 @@ public final class CodeEditorPanel extends JPanel
         return List.copyOf(result);
     }
 
-    public EditorTab newFile(String contents)
-    {
-        return newFile(contents, LineEnding.LF);
-    }
-
     public EditorTab newFile(String contents, LineEnding lineEnding)
     {
         return addUntitledTab(contents, lineEnding, true);
-    }
-
-    public EditorTab openFile(Path file, String contents)
-    {
-        return openFile(file, contents, LineEnding.LF);
     }
 
     public EditorTab openFile(Path file, String contents, LineEnding lineEnding)
@@ -191,13 +181,6 @@ public final class CodeEditorPanel extends JPanel
         if (tab != null) tab.redo();
     }
 
-    /** Applies one lexer to existing tabs and all tabs opened later. */
-    public void setLexer(Lexer lexer)
-    {
-        Objects.requireNonNull(lexer);
-        setLexerResolver(file -> lexer);
-    }
-
     /**
      * Selects a lexer from each tab's path. A {@code null} path represents an
      * untitled file and can use the current project's default lexer.
@@ -267,7 +250,7 @@ public final class CodeEditorPanel extends JPanel
 
     private void addTab(EditorTab tab)
     {
-        tabs.addTab(displayName(tab), tab);
+        tabs.addTab(tab.getDisplayTitle(), tab);
 
         int index = tabs.indexOfComponent(tab);
 
@@ -308,18 +291,12 @@ public final class CodeEditorPanel extends JPanel
         int index = tabs.indexOfComponent(tab);
         if (index < 0) return;
 
-        String title = displayName(tab);
+        String title = tab.getDisplayTitle();
         tabs.setTitleAt(index, title);
         tabs.setToolTipTextAt(index, tab.getFile() == null ? "Unsaved file" : tab.getFile().toString());
 
         Component header = tabs.getTabComponentAt(index);
         if (header instanceof TabHeader tabHeader) tabHeader.setTitle(title);
-    }
-
-    private static String displayName(EditorTab tab)
-    {
-        String filename = tab.getFile() == null ? "Untitled" : tab.getFile().getFileName().toString();
-        return filename + (tab.isModified() ? " *" : "");
     }
 
     private void fireStateChanged()
@@ -380,7 +357,7 @@ public final class CodeEditorPanel extends JPanel
             close.addActionListener(event -> requestClose(tab));
             add(close);
 
-            setTitle(displayName(tab));
+            setTitle(tab.getDisplayTitle());
         }
 
         private void setTitle(String value)

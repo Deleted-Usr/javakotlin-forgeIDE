@@ -1,4 +1,4 @@
-package com.willclay.forgeide.workspace;
+package com.willclay.forgeide.workspace.metadata;
 
 import java.util.Objects;
 

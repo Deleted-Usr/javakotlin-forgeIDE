@@ -1,4 +1,7 @@
-package com.willclay.forgeide.workspace;
+package com.willclay.forgeide.workspace.metadata;
+
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -7,7 +10,7 @@ import java.util.Objects;
 /** The persisted, language-independent description of a Forge project. */
 public record ProjectConfiguration(
         int schemaVersion,
-        String projectName,
+        @JsonProperty("name") @JsonAlias("projectName") String projectName,
         String language,
         Path workingDirectory,
         FileHandling fileHandling,
@@ -23,6 +26,10 @@ public record ProjectConfiguration(
             throw new IllegalArgumentException("Unsupported project schema version: " + schemaVersion);
         }
 
+        // A missing name is accepted at the persistence boundary so metadata
+        // written before this field existed can be upgraded by ProjectMetadata.
+        projectName = projectName == null ? "" : projectName.trim();
+
         language = Objects.requireNonNull(language, "language").trim();
         if (language.isEmpty()) throw new IllegalArgumentException("Project language must not be blank");
 
@@ -33,6 +40,9 @@ public record ProjectConfiguration(
 
     public static ProjectConfiguration defaultsForLanguage(String name, String language)
     {
+        name = Objects.requireNonNull(name, "name").trim();
+        if (name.isEmpty()) throw new IllegalArgumentException("Project name must not be blank");
+
         return new ProjectConfiguration(
                 CURRENT_SCHEMA_VERSION,
                 name,
@@ -40,6 +50,21 @@ public record ProjectConfiguration(
                 Path.of("."),
                 FileHandling.defaults(),
                 List.of(".git", ".forge")
+        );
+    }
+
+    public ProjectConfiguration withProjectName(String name)
+    {
+        name = Objects.requireNonNull(name, "name").trim();
+        if (name.isEmpty()) throw new IllegalArgumentException("Project name must not be blank");
+
+        return new ProjectConfiguration(
+                schemaVersion,
+                name,
+                language,
+                workingDirectory,
+                fileHandling,
+                excludedPaths
         );
     }
 

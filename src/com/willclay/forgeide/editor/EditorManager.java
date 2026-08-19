@@ -3,8 +3,8 @@ package com.willclay.forgeide.editor;
 import com.willclay.forgeide.files.SourceFileIO;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 import com.willclay.forgeide.ui.editor.EditorTab;
-import com.willclay.forgeide.workspace.LineEnding;
-import com.willclay.forgeide.workspace.LineSeparatorPolicy;
+import com.willclay.forgeide.workspace.metadata.LineEnding;
+import com.willclay.forgeide.workspace.metadata.LineSeparatorPolicy;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -19,8 +19,6 @@ import java.util.Objects;
  */
 public final class EditorManager
 {
-    public static final String UNTITLED = "Untitled";
-
     private final CodeEditorPanel editor;
     private final List<Runnable> listeners = new ArrayList<>();
     private LineSeparatorPolicy lineSeparatorPolicy = LineSeparatorPolicy.PRESERVE;
@@ -61,10 +59,7 @@ public final class EditorManager
     public String getDisplayName()
     {
         EditorTab tab = editor.getSelectedTab();
-        if (tab == null) return UNTITLED;
-
-        String name = tab.getFile() == null ? UNTITLED : tab.getFile().getFileName().toString();
-        return tab.isModified() ? name + " *" : name;
+        return tab == null ? EditorTab.UNTITLED : tab.getDisplayTitle();
     }
 
     public List<EditorTab> getOpenTabs()
@@ -132,11 +127,6 @@ public final class EditorManager
     public void saveTo(Path file) throws IOException
     {
         writeAndAdopt(requireCurrentTab(), file);
-    }
-
-    public void writeAndAdopt(Path target) throws IOException
-    {
-        writeAndAdopt(requireCurrentTab(), target);
     }
 
     public void addChangeListener(Runnable listener)

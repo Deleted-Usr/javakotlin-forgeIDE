@@ -42,7 +42,7 @@ public final class NewProjectAction extends ForgeAction
 
         try
         {
-            context.getWorkspaceService().createProject(root, details.language());
+            context.getWorkspaceService().createProject(root, details.name(), details.language());
             context.getEditorManager().closeFile();
         }
         catch (IOException e)

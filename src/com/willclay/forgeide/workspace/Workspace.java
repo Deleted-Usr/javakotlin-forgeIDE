@@ -4,6 +4,7 @@ import com.willclay.forgeide.services.WorkspaceService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Which project is open.
@@ -37,6 +38,21 @@ public final class Workspace
 
     public void openProject(Project project)
     {
+        this.project = Objects.requireNonNull(project, "project");
+        fireChanged();
+    }
+
+    /** Replaces the immutable runtime view after its configuration changes. */
+    public void updateProject(Project project)
+    {
+        if (this.project == null) throw new IllegalStateException("No project is open.");
+
+        project = Objects.requireNonNull(project, "project");
+        if (!this.project.root().equals(project.root()))
+        {
+            throw new IllegalArgumentException("A project update cannot change its root");
+        }
+
         this.project = project;
         fireChanged();
     }

@@ -9,9 +9,6 @@ package com.willclay.forgeide.workspace;
  */
 public enum ProjectItemType
 {
-    /** The container the projects sit in. Unused while only one project can be open. */
-    WORKSPACE,
-
     PROJECT,
     DIRECTORY,
     FILE

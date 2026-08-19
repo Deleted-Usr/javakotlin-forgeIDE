@@ -1,13 +1,16 @@
-package com.willclay.forgeide.workspace;
+package com.willclay.forgeide.workspace.metadata;
+
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
 
 public enum LineSeparatorPolicy
 {
-    PRESERVE,
-    LF,
-    CRLF,
-    SYSTEM;
+    @JsonProperty("preserve") @JsonAlias("PRESERVE") PRESERVE,
+    @JsonProperty("lf") @JsonAlias("LF") LF,
+    @JsonProperty("crlf") @JsonAlias("CRLF") CRLF,
+    @JsonProperty("system") @JsonAlias("SYSTEM") SYSTEM;
 
     public LineEnding resolve(LineEnding original)
     {

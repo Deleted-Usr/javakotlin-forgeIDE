@@ -103,7 +103,7 @@ public final class RunTask extends SwingWorker<Integer, Void>
 
     private int buildProject() throws Exception
     {
-        console.appendLine("Building " + project.name() + " ...");
+        console.appendLine("Building " + project.displayName() + " ...");
         boolean succeeded = toolchain.build(project, console::append);
 
         if (isCancelled()) return 1;
@@ -115,7 +115,7 @@ public final class RunTask extends SwingWorker<Integer, Void>
 
     private int cleanProject() throws Exception
     {
-        console.appendLine("Cleaning " + project.name() + " ...");
+        console.appendLine("Cleaning " + project.displayName() + " ...");
         boolean succeeded = toolchain.clean(project, console::append);
 
         if (isCancelled()) return 1;

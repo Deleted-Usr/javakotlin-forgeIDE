@@ -11,6 +11,7 @@ import com.willclay.forgeide.services.SettingsService;
 import com.willclay.forgeide.services.ThemeService;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.services.WorkspaceService;
+import com.willclay.forgeide.settings.project.ProjectSettingsService;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 import com.willclay.forgeide.ui.editor.ConsolePanel;
@@ -23,9 +24,8 @@ import com.willclay.forgeide.ui.fonts.EditorFonts;
 import com.willclay.forgeide.ui.menu.EditorMenuBar;
 import com.willclay.forgeide.ui.settings.SettingsDialogController;
 import com.willclay.forgeide.ui.toolbar.EditorToolBar;
-import com.willclay.forgeide.workspace.LineSeparatorPolicy;
+import com.willclay.forgeide.workspace.metadata.LineSeparatorPolicy;
 import com.willclay.forgeide.workspace.Project;
-import com.willclay.forgeide.workspace.ProjectConfiguration;
 import com.willclay.forgeide.workspace.Workspace;
 
 import javax.swing.JFrame;
@@ -76,10 +76,6 @@ public final class Window extends JFrame
 
         editorPanel = new CodeEditorPanel(editorFont);
 
-        SettingsService settingsService = new SettingsService();
-        ThemeService themeService = new ThemeService(this, editorPanel, settingsService);
-        SettingsDialogController settingsDialogController = new SettingsDialogController(this, themeService);
-
         languages = new LanguageRegistry(List.of(new JavaLanguage()));
         editorManager = new EditorManager(editorPanel);
         console = new ConsolePanel(editorFont.deriveFont(CONSOLE_FONT_SIZE));
@@ -97,10 +93,15 @@ public final class Window extends JFrame
         ApplicationShutdown applicationShutdown =
                 new ApplicationShutdown(this, editorManager, executionManager, workspaceService);
 
+        SettingsService settingsService = new SettingsService();
+        ThemeService themeService = new ThemeService(this, editorPanel, settingsService);
+        ProjectSettingsService projectService = new ProjectSettingsService(workspaceService);
+
+        SettingsDialogController settingsDialogController = new SettingsDialogController(this, projectService, themeService);
+
         UIContext context = new UIContext(this, editorPanel, editorManager, console, workbench, projectTree,
                 workspace, workspaceService, executionManager, applicationShutdown,
                 new FileDialogs(this, languages), settingsService, themeService, settingsDialogController);
-
         ActionManager actions = new ActionManager(context);
 
         editorPanel.setCloseRequestHandler(this::confirmCloseTab);
@@ -136,8 +137,7 @@ public final class Window extends JFrame
     {
         if (!tab.isModified()) return true;
 
-        String name = tab.getFile() == null ? EditorManager.UNTITLED : tab.getFile().getFileName().toString();
-        return Utils.confirmDiscardChanges(this, "Close " + name);
+        return Utils.confirmDiscardChanges(this, "Close " + tab.getDisplayName());
     }
 
     /**
@@ -154,11 +154,10 @@ public final class Window extends JFrame
     private void showCurrentProject()
     {
         Project project = workspace.getProject();
-        ProjectConfiguration configuration = workspaceService.getConfiguration();
 
-        editorManager.setLineSeparatorPolicy(configuration == null
+        editorManager.setLineSeparatorPolicy(project == null
                 ? LineSeparatorPolicy.PRESERVE
-                : configuration.fileHandling().lineSeparators());
+                : project.configuration().fileHandling().lineSeparators());
 
         projectTree.showRoot(project == null ? null : project.rootItem());
         editorPanel.setLexerResolver(file ->

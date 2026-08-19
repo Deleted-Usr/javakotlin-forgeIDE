@@ -12,20 +12,20 @@ import java.util.Objects;
 
 public final class ThemeSettings extends JPanel
 {
-    public ThemeSettings(ThemeService themeService)
+    public ThemeSettings(ThemeService service)
     {
         super(new FlowLayout(FlowLayout.LEADING, 8, 8));
 
-        Objects.requireNonNull(themeService, "themeService");
+        Objects.requireNonNull(service, "themeService");
 
         JComboBox<AppTheme> themes = new JComboBox<>(AppTheme.values());
-        themes.setSelectedItem(themeService.getTheme());
+        themes.setSelectedItem(service.getTheme());
         themes.addActionListener(event ->
         {
             Object selected = themes.getSelectedItem();
-            if (selected instanceof AppTheme theme && theme != themeService.getTheme())
+            if (selected instanceof AppTheme theme && theme != service.getTheme())
             {
-                if (!themeService.setTheme(theme)) themes.setSelectedItem(themeService.getTheme());
+                if (!service.setTheme(theme)) themes.setSelectedItem(service.getTheme());
             }
         });
 

@@ -5,9 +5,9 @@ import com.willclay.forgeide.filesystem.FileWatcher;
 import com.willclay.forgeide.lang.api.Language;
 import com.willclay.forgeide.lang.api.LanguageRegistry;
 import com.willclay.forgeide.workspace.Project;
-import com.willclay.forgeide.workspace.ProjectConfiguration;
+import com.willclay.forgeide.workspace.metadata.ProjectConfiguration;
 import com.willclay.forgeide.workspace.ProjectItem;
-import com.willclay.forgeide.workspace.ProjectMetadata;
+import com.willclay.forgeide.workspace.metadata.ProjectMetadata;
 import com.willclay.forgeide.workspace.Workspace;
 import com.willclay.forgeide.workspace.WorkspaceListener;
 
@@ -37,7 +37,6 @@ public final class WorkspaceService implements AutoCloseable
     private final LanguageRegistry languages;
     private final FileWatcher watcher;
     private final List<WorkspaceListener> listeners = new ArrayList<>();
-    private ProjectConfiguration configuration;
 
     public WorkspaceService(Workspace workspace, LanguageRegistry languages) throws IOException
     {
@@ -53,23 +52,18 @@ public final class WorkspaceService implements AutoCloseable
         return workspace;
     }
 
-    public ProjectConfiguration getConfiguration()
+    /** Creates, configures and opens a new project using the dialog's display name. */
+    public void createProject(Path root, String displayName, Language language) throws IOException
     {
-        return configuration;
-    }
+        ProjectConfiguration configuration = ProjectConfiguration.defaultsForLanguage(displayName, language.id());
+        Project project = Project.at(root, language, configuration);
 
-    /** Creates, configures and opens a new project. */
-    public void createProject(Path root, Language language) throws IOException
-    {
-        FileOperations.ensureDirectory(root);
+        FileOperations.ensureDirectory(root); // Creates the project root
+        language.createProjectStructure(project); // Creates the source root
 
-        Project project = Project.at(root, language);
-        language.initializeProject(project);
-
-        ProjectConfiguration configuration = ProjectConfiguration.defaultsForLanguage(language.id());
         ProjectMetadata.write(root, configuration);
 
-        open(project, configuration);
+        open(project);
     }
 
     /** Returns whether a directory already contains Forge project metadata. */
@@ -83,30 +77,31 @@ public final class WorkspaceService implements AutoCloseable
     {
         FileOperations.ensureDirectory(root);
 
-        Project project = Project.at(root, language);
-        language.initializeProject(project);
+        ProjectConfiguration configuration = defaultConfigurationForDirectory(root, language);
+        Project project = Project.at(root, language, configuration);
+        language.createProjectStructure(project);
 
-        ProjectConfiguration configuration = ProjectConfiguration.defaultsForLanguage(language.id());
         ProjectMetadata.write(root, configuration);
 
-        open(project, configuration);
+        open(project);
     }
 
     public void updateConfiguration(ProjectConfiguration next) throws IOException
     {
         Project project = workspace.getProject();
-        if(project == null)
+        if (project == null)
         {
             throw new IllegalStateException("No project is open.");
         }
 
-        if (!next.language().equals(configuration.language()))
+        if (!next.language().equals(project.configuration().language()))
         {
             throw new IllegalArgumentException("Changing the language requires reconfiguration.");
         }
 
+        Project updatedProject = project.withConfiguration(next);
         ProjectMetadata.write(project.root(), next);
-        configuration = next;
+        workspace.updateProject(updatedProject);
 
         fireConfigurationChanged();
     }
@@ -119,13 +114,12 @@ public final class WorkspaceService implements AutoCloseable
         Language language = languages.find(configuration.language()).orElseThrow(
                 () -> new IOException("Project language is not installed: " + configuration.language()));
 
-        open(Project.at(root, language), configuration);
+        open(Project.at(root, language, configuration));
     }
 
     public void closeProject()
     {
         watcher.unwatchAll();
-        configuration = null;
         workspace.closeProject();
     }
 
@@ -209,11 +203,19 @@ public final class WorkspaceService implements AutoCloseable
         return item.path().getParent();
     }
 
-    private void open(Project project, ProjectConfiguration configuration)
+    private void open(Project project)
     {
         watcher.unwatchAll();
-        this.configuration = configuration;
         workspace.openProject(project);
+    }
+
+    private static ProjectConfiguration defaultConfigurationForDirectory(Path root, Language language)
+    {
+        Path normalisedRoot = root.toAbsolutePath().normalize();
+        Path fileName = normalisedRoot.getFileName();
+        String displayName = fileName == null ? normalisedRoot.toString() : fileName.toString();
+
+        return ProjectConfiguration.defaultsForLanguage(displayName, language.id());
     }
 
     private void fireDirectoryChanged(Path directory)

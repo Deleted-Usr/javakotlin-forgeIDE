@@ -4,7 +4,7 @@ import com.willclay.forgeide.editor.SyntaxUndoManager;
 import com.willclay.forgeide.highlighting.Lexer;
 import com.willclay.forgeide.highlighting.SyntaxHighlighter;
 import com.willclay.forgeide.highlighting.TokenTheme;
-import com.willclay.forgeide.workspace.LineEnding;
+import com.willclay.forgeide.workspace.metadata.LineEnding;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -24,6 +24,8 @@ import java.util.Objects;
 /** One open editor document and all state that must follow it between selections. */
 public final class EditorTab extends JPanel
 {
+    public static final String UNTITLED = "Untitled";
+
     private Path file;
     private LineEnding lineEnding;
     private boolean modified;
@@ -123,6 +125,21 @@ public final class EditorTab extends JPanel
     public void setFile(Path file)
     {
         this.file = file;
+    }
+
+    /** The filename shown anywhere this document is identified to the user. */
+    public String getDisplayName()
+    {
+        if (file == null) return UNTITLED;
+
+        Path fileName = file.getFileName();
+        return fileName == null ? file.toString() : fileName.toString();
+    }
+
+    /** The display name decorated with the editor's unsaved-change marker. */
+    public String getDisplayTitle()
+    {
+        return getDisplayName() + (modified ? " *" : "");
     }
 
     public LineEnding getLineEnding()

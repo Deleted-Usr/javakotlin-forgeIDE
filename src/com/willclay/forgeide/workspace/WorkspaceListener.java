@@ -19,5 +19,5 @@ import java.nio.file.Path;
 public interface WorkspaceListener
 {
     void directoryChanged(Path directory);
-    void configurationChanged();
+    default void configurationChanged() { }
 }

@@ -64,7 +64,7 @@ public final class JavaLanguage implements Language
     }
 
     @Override
-    public void initializeProject(Project project) throws IOException
+    public void createProjectStructure(Project project) throws IOException
     {
         Files.createDirectories(JavaProjectPaths.librariesRoot(project));
         Files.createDirectories(JavaProjectPaths.sourceRoot(project));

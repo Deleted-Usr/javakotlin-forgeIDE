@@ -1,34 +1,51 @@
 package com.willclay.forgeide.workspace;
 
 import com.willclay.forgeide.lang.api.Language;
+import com.willclay.forgeide.workspace.metadata.ProjectConfiguration;
 
 import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * One project directory and the language permanently assigned to it.
+ * One project directory, its persisted configuration and resolved language.
  *
- * <p>Language-specific layout stays behind {@link Language}; this record only
- * owns project identity and delegates questions about its sources.</p>
+ * <p>The configuration is the source of truth for project settings. The
+ * language object is the runtime implementation resolved from the persisted
+ * language ID when the project is opened.</p>
  */
-public record Project(Path root, Language language)
+public record Project(Path root, Language language, ProjectConfiguration configuration)
 {
     public Project
     {
         root = Objects.requireNonNull(root, "root").toAbsolutePath().normalize();
         Objects.requireNonNull(language, "language");
+        Objects.requireNonNull(configuration, "configuration");
+
+        if (configuration.projectName().isEmpty())
+        {
+            throw new IllegalArgumentException("Project name must not be blank");
+        }
+
+        if (!language.id().equals(configuration.language()))
+        {
+            throw new IllegalArgumentException("Language does not match project configuration");
+        }
     }
 
-    public static Project at(Path root, Language language)
+    public static Project at(Path root, Language language, ProjectConfiguration configuration)
     {
-        Path normalisedRoot = Objects.requireNonNull(root, "root").toAbsolutePath().normalize();
-        return new Project(normalisedRoot, language);
+        return new Project(root, language, configuration);
     }
 
-    public String name()
+    /** The editable project label; changing it never changes {@link #root()}. */
+    public String displayName()
     {
-        Path fileName = root.getFileName();
-        return fileName == null ? root.toString() : fileName.toString();
+        return configuration.projectName();
+    }
+
+    public Project withConfiguration(ProjectConfiguration next)
+    {
+        return new Project(root, language, next);
     }
 
     public Path sourceRoot()
@@ -43,6 +60,6 @@ public record Project(Path root, Language language)
 
     public ProjectItem rootItem()
     {
-        return new ProjectItem(root, ProjectItemType.PROJECT, language);
+        return new ProjectItem(root, ProjectItemType.PROJECT, language, displayName());
     }
 }

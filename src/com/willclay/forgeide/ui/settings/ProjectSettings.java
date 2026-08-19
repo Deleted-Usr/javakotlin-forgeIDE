@@ -1,12 +1,18 @@
 package com.willclay.forgeide.ui.settings;
 
+import com.willclay.forgeide.settings.project.ProjectSettingsService;
+import com.willclay.forgeide.settings.project.ProjectSettingsService.ProjectSettingsState;
+import com.willclay.forgeide.settings.project.ProjectSettingsValues;
 import com.willclay.forgeide.ui.Utils;
+import com.willclay.forgeide.workspace.metadata.LineSeparatorPolicy;
 
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JList;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -15,16 +21,39 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
+import java.awt.Component;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Optional;
 
 /** General settings shared by every Forge project language. */
 public final class ProjectSettings extends JPanel
 {
+    private final JTextField name = new JTextField(24);
+    private final JTextField location = Utils.readOnlyField("");
+    private final JTextField workDir = new JTextField(24);
+    private final JTextField language = Utils.readOnlyField("");
+    private final JComboBox<String> encoding = new JComboBox<>(new String[] { "UTF-8" });
+    private final JComboBox<LineSeparatorPolicy> lineSeparators = new JComboBox<>(LineSeparatorPolicy.values());
     private final DefaultListModel<String> excludedPaths = new DefaultListModel<>();
 
-    public ProjectSettings()
+    private Path projectRoot;
+
+    public ProjectSettings(ProjectSettingsService service)
     {
         super(new BorderLayout());
+
+        Optional<ProjectSettingsState> state = service.readConfiguration();
+        if (state.isEmpty())
+        {
+            JPanel message = Utils.createSettingsPage();
+            message.add(new JLabel("Open a project to edit its settings."));
+            add(message, BorderLayout.NORTH);
+            return;
+        }
+
+        load(state.get());
+        configureLineSeparatorRenderer();
 
         JPanel sections = Utils.createSettingsPage();
         Utils.addSettingsSection(sections, createProjectSection());
@@ -34,14 +63,39 @@ public final class ProjectSettings extends JPanel
         add(sections, BorderLayout.NORTH);
     }
 
+    public boolean isAvailable()
+    {
+        return projectRoot != null;
+    }
+
+    public Path getProjectRoot()
+    {
+        if (projectRoot == null) throw new IllegalStateException("No project settings are available.");
+        return projectRoot;
+    }
+
+    public ProjectSettingsValues getValues()
+    {
+        if (!isAvailable()) throw new IllegalStateException("No project settings are available.");
+
+        String workingDirectoryText = workDir.getText().trim();
+        if (workingDirectoryText.isEmpty())
+        {
+            throw new IllegalArgumentException("Working directory must not be blank.");
+        }
+
+        return new ProjectSettingsValues(
+                name.getText(),
+                Path.of(workingDirectoryText),
+                (String) encoding.getSelectedItem(),
+                (LineSeparatorPolicy) lineSeparators.getSelectedItem(),
+                Collections.list(excludedPaths.elements())
+        );
+    }
+
     private JPanel createProjectSection()
     {
         JPanel panel = Utils.createSettingsSection("Project");
-
-        JTextField name = new JTextField("New Forge Project", 24);
-        JTextField location = Utils.readOnlyField("C:\\...\\Java_ForgeIDE");
-        JTextField workDir  = Utils.readOnlyField("C:\\...\\Java_ForgeIDE");
-        JTextField language = Utils.readOnlyField("Java");
 
         Utils.addSettingsFormRow(panel, 0, "Name:", name);
         Utils.addSettingsFormRow(panel, 1, "Location:", location);
@@ -55,11 +109,6 @@ public final class ProjectSettings extends JPanel
     {
         JPanel panel = Utils.createSettingsSection("File handling");
 
-        JComboBox<String> encoding = new JComboBox<>(new String[] { "UTF-8" });
-        JComboBox<String> lineSeparators = new JComboBox<>(new String[] {
-                "Preserve", "LF", "CRLF", "System default"
-        });
-
         Utils.addSettingsFormRow(panel, 0, "Encoding:", encoding);
         Utils.addSettingsFormRow(panel, 1, "Line separators:", lineSeparators);
 
@@ -69,9 +118,6 @@ public final class ProjectSettings extends JPanel
     private JPanel createExcludedPathsSection()
     {
         JPanel panel = Utils.createSettingsSection("Excluded paths");
-
-        excludedPaths.addElement(".git");
-        excludedPaths.addElement(".forge");
 
         JList<String> paths = new JList<>(excludedPaths);
         paths.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -112,6 +158,49 @@ public final class ProjectSettings extends JPanel
         panel.add(buttons, buttonConstraints);
 
         return panel;
+    }
+
+    private void load(ProjectSettingsState state)
+    {
+        ProjectSettingsValues values = state.values();
+
+        projectRoot = state.projectRoot();
+        name.setText(values.projectName());
+        location.setText(projectRoot.toString());
+        workDir.setText(values.workingDirectory().toString());
+        language.setText(state.languageDisplayName());
+        encoding.setSelectedItem(values.encoding());
+        lineSeparators.setSelectedItem(values.lineSeparators());
+
+        excludedPaths.clear();
+        values.excludedPaths().forEach(excludedPaths::addElement);
+    }
+
+    private void configureLineSeparatorRenderer()
+    {
+        lineSeparators.setRenderer(new DefaultListCellRenderer()
+        {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+            {
+                Component component = super.getListCellRendererComponent(
+                        list, value, index, isSelected, cellHasFocus);
+
+                if (component instanceof JLabel label && value instanceof LineSeparatorPolicy policy)
+                {
+                    label.setText(switch (policy)
+                    {
+                        case PRESERVE -> "Preserve";
+                        case LF       -> "LF";
+                        case CRLF     -> "CRLF";
+                        case SYSTEM   -> "System default";
+                    });
+                }
+
+                return component;
+            }
+        });
     }
 
     private void chooseExcludedPath(JList<String> paths)

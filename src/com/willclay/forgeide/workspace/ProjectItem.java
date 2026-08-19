@@ -9,7 +9,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 /** One typed entry in the project explorer. */
-public record ProjectItem(Path path, ProjectItemType type, Language language)
+public record ProjectItem(Path path, ProjectItemType type, Language language, String displayName)
 {
     public static final Comparator<ProjectItem> EXPLORER_ORDER =
             Comparator.comparing((ProjectItem item) -> !item.isDirectory())
@@ -22,6 +22,11 @@ public record ProjectItem(Path path, ProjectItemType type, Language language)
         Objects.requireNonNull(language, "language");
     }
 
+    public ProjectItem(Path path, ProjectItemType type, Language language)
+    {
+        this(path, type, language, null);
+    }
+
     /** Probes the disk once, at the moment the item is created. */
     public static ProjectItem of(Path path, Language language)
     {
@@ -31,6 +36,8 @@ public record ProjectItem(Path path, ProjectItemType type, Language language)
 
     public String name()
     {
+        if (displayName != null) return displayName;
+
         Path fileName = path.getFileName();
         return fileName == null ? path.toString() : fileName.toString();
     }
@@ -38,8 +45,7 @@ public record ProjectItem(Path path, ProjectItemType type, Language language)
     public boolean isDirectory()
     {
         return type == ProjectItemType.DIRECTORY
-                || type == ProjectItemType.PROJECT
-                || type == ProjectItemType.WORKSPACE;
+                || type == ProjectItemType.PROJECT;
     }
 
     public boolean isHidden()
