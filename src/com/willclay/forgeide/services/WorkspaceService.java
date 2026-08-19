@@ -66,7 +66,7 @@ public final class WorkspaceService implements AutoCloseable
         Project project = Project.at(root, language);
         language.initializeProject(project);
 
-        ProjectConfiguration configuration = ProjectConfiguration.forLanguage(language.id());
+        ProjectConfiguration configuration = ProjectConfiguration.defaultsForLanguage(language.id());
         ProjectMetadata.write(root, configuration);
 
         open(project, configuration);
@@ -86,10 +86,29 @@ public final class WorkspaceService implements AutoCloseable
         Project project = Project.at(root, language);
         language.initializeProject(project);
 
-        ProjectConfiguration configuration = ProjectConfiguration.forLanguage(language.id());
+        ProjectConfiguration configuration = ProjectConfiguration.defaultsForLanguage(language.id());
         ProjectMetadata.write(root, configuration);
 
         open(project, configuration);
+    }
+
+    public void updateConfiguration(ProjectConfiguration next) throws IOException
+    {
+        Project project = workspace.getProject();
+        if(project == null)
+        {
+            throw new IllegalStateException("No project is open.");
+        }
+
+        if (!next.language().equals(configuration.language()))
+        {
+            throw new IllegalArgumentException("Changing the language requires reconfiguration.");
+        }
+
+        ProjectMetadata.write(project.root(), next);
+        configuration = next;
+
+        fireConfigurationChanged();
     }
 
     /** Opens a configured project, restoring its persisted language. */
@@ -202,5 +221,10 @@ public final class WorkspaceService implements AutoCloseable
         if (directory == null) return;
 
         for (WorkspaceListener listener : listeners) listener.directoryChanged(directory);
+    }
+
+    private void fireConfigurationChanged()
+    {
+        for (WorkspaceListener listener : listeners) listener.configurationChanged();
     }
 }

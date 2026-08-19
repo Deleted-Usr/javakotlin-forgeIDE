@@ -31,11 +31,11 @@ public record ProjectConfiguration(
         excludedPaths = excludedPaths == null ? List.of(".git", ".forge") : List.copyOf(excludedPaths);
     }
 
-    public static ProjectConfiguration forLanguage(String language)
+    public static ProjectConfiguration defaultsForLanguage(String name, String language)
     {
         return new ProjectConfiguration(
                 CURRENT_SCHEMA_VERSION,
-                null,
+                name,
                 language,
                 Path.of("."),
                 FileHandling.defaults(),

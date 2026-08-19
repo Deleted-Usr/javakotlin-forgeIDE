@@ -13,13 +13,22 @@ import java.util.Properties;
 /** Reads and writes the JSON configuration that makes a directory a Forge project. */
 public final class ProjectMetadata
 {
+    // --- Directories --- //
     private static final String DIRECTORY = ".forge";
 
     private static final String FILE = "project.json";
     private static final String LEGACY_FILE = "project.properties";
 
+    // --- JSON Keys --- //
+    private static final String NAME = "name";
     private static final String LANGUAGE = "language";
 
+    private static final String WORKING_DIR = "workingDirectory";
+    private static final String FILE_HANDLING = "fileHandling";
+
+    private static final String EXCLUDED_PATHS = "excludedPaths";
+
+    // --- File Storage --- //
     private static final JsonFileStore JSON = new JsonFileStore(new JacksonJsonCodec());
 
     private ProjectMetadata() { }
@@ -55,7 +64,7 @@ public final class ProjectMetadata
         String language = properties.getProperty(LANGUAGE, "").trim();
         if (language.isEmpty()) throw new IOException("Project metadata has no language: " + legacyMetadata);
 
-        ProjectConfiguration configuration = ProjectConfiguration.forLanguage(language);
+        ProjectConfiguration configuration = ProjectConfiguration.defaultsForLanguage("", language);
 
         Path metadata = pathFor(root, FILE);
         JSON.write(metadata, configuration);

@@ -32,7 +32,11 @@ public final class SettingsWindow extends JDialog
         JTabbedPane tabs = new JTabbedPane();
         addTabs(tabs);
 
+        JPanel buttonPanel = new JPanel();
+        addButtons(buttonPanel);
+
         add(tabs, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
     }
 
     private void addTabs(JTabbedPane tabs)
@@ -40,5 +44,14 @@ public final class SettingsWindow extends JDialog
         tabs.addTab("General", new GeneralSettings());
         tabs.addTab("Project", new ProjectSettings());
         tabs.addTab("Theme",   new ThemeSettings(themeService));
+    }
+
+    private void addButtons(JPanel buttonPanel)
+    {
+        JButton apply  = new JButton("Apply");
+        JButton cancel = new JButton("Cancel");
+
+        apply.setFocusable(false); cancel.setFocusable(false);
+        buttonPanel.add(apply); buttonPanel.add(cancel);
     }
 }
