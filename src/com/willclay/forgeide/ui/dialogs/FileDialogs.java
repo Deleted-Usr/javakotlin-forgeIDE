@@ -1,17 +1,17 @@
 package com.willclay.forgeide.ui.dialogs;
 
+import com.formdev.flatlaf.util.SystemFileChooser;
+import com.formdev.flatlaf.util.SystemFileChooser.FileNameExtensionFilter;
 import com.willclay.forgeide.files.SourceFileIO;
 import com.willclay.forgeide.lang.api.Language;
 import com.willclay.forgeide.lang.api.LanguageRegistry;
 import com.willclay.forgeide.ui.Utils;
 
 import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.Component;
 import java.awt.GridLayout;
 import java.nio.file.Files;
@@ -25,8 +25,8 @@ public final class FileDialogs
 {
     private final Component parent;
     private final LanguageRegistry languages;
-    private final JFileChooser fileChooser = new JFileChooser();
-    private final JFileChooser directoryChooser = new JFileChooser();
+    private final SystemFileChooser fileChooser = new SystemFileChooser();
+    private final SystemFileChooser directoryChooser = new SystemFileChooser();
 
     public FileDialogs(Component parent, LanguageRegistry languages)
     {
@@ -34,7 +34,7 @@ public final class FileDialogs
         this.languages = languages;
 
         fileChooser.setAcceptAllFileFilterUsed(false);
-        directoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        directoryChooser.setFileSelectionMode(SystemFileChooser.DIRECTORIES_ONLY);
     }
 
     /** Values collected by the New Project dialog. */
@@ -44,7 +44,7 @@ public final class FileDialogs
     public Path chooseDirectory(String title)
     {
         directoryChooser.setDialogTitle(title);
-        if (directoryChooser.showOpenDialog(parent) != JFileChooser.APPROVE_OPTION) return null;
+        if (directoryChooser.showOpenDialog(parent) != SystemFileChooser.APPROVE_OPTION) return null;
 
         return directoryChooser.getSelectedFile().toPath();
     }
@@ -99,7 +99,7 @@ public final class FileDialogs
         configureFileChooser(language);
         fileChooser.setDialogTitle("Open " + language.displayName() + " File");
 
-        if (fileChooser.showOpenDialog(parent) != JFileChooser.APPROVE_OPTION) return null;
+        if (fileChooser.showOpenDialog(parent) != SystemFileChooser.APPROVE_OPTION) return null;
 
         Path file = fileChooser.getSelectedFile().toPath();
         if (!language.recognises(file))
@@ -121,7 +121,7 @@ public final class FileDialogs
         fileChooser.setDialogTitle("Save " + language.displayName() + " File");
 
         if (suggested != null) fileChooser.setSelectedFile(suggested.toFile());
-        if (fileChooser.showSaveDialog(parent) != JFileChooser.APPROVE_OPTION) return null;
+        if (fileChooser.showSaveDialog(parent) != SystemFileChooser.APPROVE_OPTION) return null;
 
         Path file = SourceFileIO.withExtension(fileChooser.getSelectedFile().toPath(), language.defaultExtension());
         if (Files.exists(file) && !Utils.confirm(parent, "Overwrite?", file.getFileName() + " already exists. Overwrite it?"))

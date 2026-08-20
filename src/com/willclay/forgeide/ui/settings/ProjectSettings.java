@@ -1,5 +1,6 @@
 package com.willclay.forgeide.ui.settings;
 
+import com.formdev.flatlaf.util.SystemFileChooser;
 import com.willclay.forgeide.settings.project.ProjectSettingsService;
 import com.willclay.forgeide.settings.project.ProjectSettingsService.ProjectSettingsState;
 import com.willclay.forgeide.settings.project.ProjectSettingsValues;
@@ -11,7 +12,6 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JList;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -133,11 +133,13 @@ public final class ProjectSettings extends JPanel
         listConstraints.fill = GridBagConstraints.BOTH;
         panel.add(scrollPane, listConstraints);
 
-        JButton add = new JButton("+ Add");
+        JButton addFile = new JButton("+ File");
+        JButton addFolder = new JButton("+ Folder");
         JButton remove = new JButton("Remove");
         remove.setEnabled(false);
 
-        add.addActionListener(event -> chooseExcludedPath(paths));
+        addFile.addActionListener(event -> chooseExcludedPath(paths, SystemFileChooser.FILES_ONLY));
+        addFolder.addActionListener(event -> chooseExcludedPath(paths, SystemFileChooser.DIRECTORIES_ONLY));
         remove.addActionListener(event ->
         {
             int selectedIndex = paths.getSelectedIndex();
@@ -149,7 +151,8 @@ public final class ProjectSettings extends JPanel
         });
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEADING, 6, 0));
-        buttons.add(add);
+        buttons.add(addFile);
+        buttons.add(addFolder);
         buttons.add(remove);
 
         GridBagConstraints buttonConstraints = Utils.createSettingsRowConstraints(1);
@@ -202,14 +205,16 @@ public final class ProjectSettings extends JPanel
         });
     }
 
-    private void chooseExcludedPath(JList<String> paths)
+    private void chooseExcludedPath(JList<String> paths, int selectionMode)
     {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Add Excluded Path");
-        chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        SystemFileChooser chooser = new SystemFileChooser();
+        chooser.setDialogTitle(selectionMode == SystemFileChooser.DIRECTORIES_ONLY
+                ? "Add Excluded Folder"
+                : "Add Excluded File");
+        chooser.setFileSelectionMode(selectionMode);
         chooser.setCurrentDirectory(projectRoot.toFile());
 
-        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
+        if (chooser.showOpenDialog(this) != SystemFileChooser.APPROVE_OPTION) return;
 
         Path selected = chooser.getSelectedFile().toPath().toAbsolutePath().normalize();
         if (!selected.startsWith(projectRoot) || selected.equals(projectRoot))

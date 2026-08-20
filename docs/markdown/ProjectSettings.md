@@ -63,6 +63,7 @@ project.excludedPaths=.git;.forge
 ```
 
 There are two especially natural settings because [`SourceFileIO`](C:/Users/willc/OneDrive/Documents/GitHub/Java_ForgeIDE/src/com/willclay/forgeide/files/SourceFileIO.java:19) currently hard-codes UTF-8 and normalizes line endings to LF. Moving those decisions into project configuration gives General settings real consumers.
+(This feature is now fully implemented)
 
 I would not put these in General:
 
@@ -74,3 +75,4 @@ I would not put these in General:
 - Build-before-run or save-before-build: preferably run configuration or IDE workflow settings.
 
 For the first implementation, General could even begin as read-only project information plus encoding. Adding unused controls makes a settings window feel substantial but creates misleading promises. Each editable setting should already affect file handling, the explorer, or another concrete subsystem described in [`Settings.md`](C:/Users/willc/OneDrive/Documents/GitHub/Java_ForgeIDE/src/com/willclay/forgeide/ui/settings/Settings.md:1).
+(This is now obsolete, as all current editable controls now have a runtime consumer)

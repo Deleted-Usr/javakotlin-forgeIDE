@@ -101,6 +101,8 @@ Currently [`SourceFileIO.java`](C:/Users/willc/OneDrive/Documents/GitHub/Java_Fo
 - Normalizes CRLF to LF.
 - Discards knowledge of the original line endings.
 
+(The points above are stale docs, these have been fixed and implemented)
+
 Change its read operation to return both normalized text and detected format:
 
 ```java
@@ -166,7 +168,7 @@ Your existing [`EditorManager.java`](C:/Users/willc/OneDrive/Documents/GitHub/Ja
 
 ## 4. Make project settings observable
 
-The current [`SettingsService.java`](C:/Users/willc/OneDrive/Documents/GitHub/Java_ForgeIDE/src/com/willclay/forgeide/services/SettingsService.java:15) stores only the theme and has no change notification. Encoding and line-ending settings belong in a separate per-project service backed by `.forge/project.properties`.
+The current [`SettingsService.java`](C:/Users/willc/OneDrive/Documents/GitHub/Java_ForgeIDE/src/com/willclay/forgeide/services/SettingsService.java:15) stores only the theme and has no change notification. Encoding and line-ending settings belong in a separate per-project service backed by `.forge/project.properties`. (Is now `.forge/project.json`)
 
 ```java
 public final class ProjectSettingsService

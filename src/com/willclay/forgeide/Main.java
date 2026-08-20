@@ -1,5 +1,6 @@
 package com.willclay.forgeide;
 
+import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMTMaterialDarkerIJTheme;
 import com.willclay.forgeide.application.ForgeApplication;
@@ -12,12 +13,11 @@ import java.io.IOException;
 /*
  * TODO (For school project)
  *  - IDE Status Bar (Not fully custom swing)
- *  - Project settings that read the metadata to determine language for language settings panel
+ *  - Add language-specific project settings panels using the language resolved from project metadata
  *  - Use a JToggleButton for compiler options, in language settings menu
  *  - Run Configurations (Like IntelliJ)
  *  - Launch Forge through a bootstrap sequence
- *  - Discover registered languages from providers on each launch. Cache only plugin scan
- *    metadata if profiling justifies it
+ *  - Discover registered languages from providers on each launch
  *  - Fix performance concerned with Undo/Redo actions in the editor panel
  *  - Drag, shift/ctrl select, reordering files and folders MUST be added to the explorer!!!
  *  - Project templates, Language Dependent (Empty, Basic, Console App)
@@ -25,12 +25,6 @@ import java.io.IOException;
  *  - Add developer options (like access to the ForgeIDE Self-Hosting run configuration)
  *  - Better implement dependency classpaths. Very rough right now.
  *  - Have active processes attached to run configurations
- */
-
-/*
- * TODO - Settings Menus
- *          - Project Menu: Similar to project structure in IntelliJ. Provides general
- *            and language specific settings for the current project.
  */
 
 /*
