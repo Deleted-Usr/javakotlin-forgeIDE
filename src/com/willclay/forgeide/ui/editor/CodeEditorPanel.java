@@ -2,7 +2,7 @@ package com.willclay.forgeide.ui.editor;
 
 import com.willclay.forgeide.highlighting.Lexer;
 import com.willclay.forgeide.highlighting.TokenTheme;
-import com.willclay.forgeide.workspace.metadata.LineEnding;
+import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;

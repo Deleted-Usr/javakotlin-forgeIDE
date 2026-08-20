@@ -8,4 +8,9 @@ public final class ForgeApplication
     {
         AppDirectories directories = AppDirectories.resolve();
     }
+
+    private void readSettingsConfig()
+    {
+
+    }
 }

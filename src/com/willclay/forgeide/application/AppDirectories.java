@@ -14,6 +14,7 @@ public record AppDirectories(Path configDirectory)
 
         if (!Files.exists(path))
         {
+            System.out.println("Creating new configuration path...");
             Files.createDirectories(path);
         }
 

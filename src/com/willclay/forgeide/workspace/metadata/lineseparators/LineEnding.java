@@ -1,4 +1,4 @@
-package com.willclay.forgeide.workspace.metadata;
+package com.willclay.forgeide.workspace.metadata.lineseparators;
 
 import java.util.Objects;
 

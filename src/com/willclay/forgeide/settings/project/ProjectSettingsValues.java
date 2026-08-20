@@ -1,6 +1,6 @@
 package com.willclay.forgeide.settings.project;
 
-import com.willclay.forgeide.workspace.metadata.LineSeparatorPolicy;
+import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 
 import java.nio.file.Path;
 import java.util.List;

@@ -2,6 +2,7 @@ package com.willclay.forgeide.workspace.metadata;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 
 import java.nio.file.Path;
 import java.util.List;

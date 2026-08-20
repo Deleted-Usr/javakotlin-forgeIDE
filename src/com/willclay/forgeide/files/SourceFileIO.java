@@ -1,7 +1,7 @@
 package com.willclay.forgeide.files;
 
-import com.willclay.forgeide.workspace.metadata.LineEnding;
-import com.willclay.forgeide.workspace.metadata.LineSeparators;
+import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
+import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparators;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

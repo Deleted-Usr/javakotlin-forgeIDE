@@ -24,7 +24,7 @@ import com.willclay.forgeide.ui.fonts.EditorFonts;
 import com.willclay.forgeide.ui.menu.EditorMenuBar;
 import com.willclay.forgeide.ui.settings.SettingsDialogController;
 import com.willclay.forgeide.ui.toolbar.EditorToolBar;
-import com.willclay.forgeide.workspace.metadata.LineSeparatorPolicy;
+import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 import com.willclay.forgeide.workspace.Project;
 import com.willclay.forgeide.workspace.Workspace;
 

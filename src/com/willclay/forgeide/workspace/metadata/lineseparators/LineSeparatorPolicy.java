@@ -1,4 +1,4 @@
-package com.willclay.forgeide.workspace.metadata;
+package com.willclay.forgeide.workspace.metadata.lineseparators;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -4,7 +4,7 @@ import com.willclay.forgeide.settings.project.ProjectSettingsService;
 import com.willclay.forgeide.settings.project.ProjectSettingsService.ProjectSettingsState;
 import com.willclay.forgeide.settings.project.ProjectSettingsValues;
 import com.willclay.forgeide.ui.Utils;
-import com.willclay.forgeide.workspace.metadata.LineSeparatorPolicy;
+import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
@@ -33,7 +33,7 @@ public final class ProjectSettings extends JPanel
     private final JTextField location = Utils.readOnlyField("");
     private final JTextField workDir = new JTextField(24);
     private final JTextField language = Utils.readOnlyField("");
-    private final JComboBox<String> encoding = new JComboBox<>(new String[] { "UTF-8" });
+    private final JComboBox<String> encoding = new JComboBox<>(new String[] { "UTF-8", "UTF-16", "US-ASCII", "ISO-8859-1" });
     private final JComboBox<LineSeparatorPolicy> lineSeparators = new JComboBox<>(LineSeparatorPolicy.values());
     private final DefaultListModel<String> excludedPaths = new DefaultListModel<>();
 

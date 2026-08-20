@@ -2,9 +2,11 @@ package com.willclay.forgeide;
 
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMTMaterialDarkerIJTheme;
+import com.willclay.forgeide.application.ForgeApplication;
 import com.willclay.forgeide.ui.Window;
 
 import javax.swing.*;
+import java.io.IOException;
 
 
 /*
@@ -96,6 +98,15 @@ public final class Main
 
     public static void main(String[] args) // The Entry Point for the Program
     {
+        try
+        {
+            ForgeApplication app = new ForgeApplication();
+        }
+        catch (IOException _)
+        {
+
+        }
+
         SwingUtilities.invokeLater(() ->
         {
             setLookAndFeel();

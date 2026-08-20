@@ -4,7 +4,7 @@ import com.willclay.forgeide.editor.SyntaxUndoManager;
 import com.willclay.forgeide.highlighting.Lexer;
 import com.willclay.forgeide.highlighting.SyntaxHighlighter;
 import com.willclay.forgeide.highlighting.TokenTheme;
-import com.willclay.forgeide.workspace.metadata.LineEnding;
+import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
