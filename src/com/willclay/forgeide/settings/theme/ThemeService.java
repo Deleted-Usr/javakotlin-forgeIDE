@@ -1,8 +1,8 @@
-package com.willclay.forgeide.services;
+package com.willclay.forgeide.settings.theme;
 
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
-import com.willclay.forgeide.settings.theme.AppTheme;
+import com.willclay.forgeide.services.SettingsService;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 

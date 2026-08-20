@@ -8,7 +8,7 @@ import com.willclay.forgeide.lang.api.LanguageRegistry;
 import com.willclay.forgeide.lang.java.JavaLanguage;
 import com.willclay.forgeide.services.ApplicationShutdown;
 import com.willclay.forgeide.services.SettingsService;
-import com.willclay.forgeide.services.ThemeService;
+import com.willclay.forgeide.settings.theme.ThemeService;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.services.WorkspaceService;
 import com.willclay.forgeide.settings.project.ProjectSettingsService;

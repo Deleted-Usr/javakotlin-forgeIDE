@@ -181,11 +181,9 @@ public final class ProjectSettings extends JPanel
         lineSeparators.setRenderer(new DefaultListCellRenderer()
         {
             @Override
-            public Component getListCellRendererComponent(
-                    JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
             {
-                Component component = super.getListCellRendererComponent(
-                        list, value, index, isSelected, cellHasFocus);
+                Component component = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
                 if (component instanceof JLabel label && value instanceof LineSeparatorPolicy policy)
                 {

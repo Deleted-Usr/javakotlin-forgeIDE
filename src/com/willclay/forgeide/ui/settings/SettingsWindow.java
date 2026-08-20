@@ -1,6 +1,6 @@
 package com.willclay.forgeide.ui.settings;
 
-import com.willclay.forgeide.services.ThemeService;
+import com.willclay.forgeide.settings.theme.ThemeService;
 import com.willclay.forgeide.settings.project.ProjectSettingsService;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.menu.SettingsButton;

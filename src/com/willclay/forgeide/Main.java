@@ -10,12 +10,9 @@ import javax.swing.*;
 /*
  * TODO (For school project)
  *  - IDE Status Bar (Not fully custom swing)
- *  - Project settings that read the metadata to determine language
+ *  - Project settings that read the metadata to determine language for language settings panel
  *  - Use a JToggleButton for compiler options, in language settings menu
- *  - Give the actions icons (ForgeAction already has the hook)
- *  - Finish settings Apply/OK/Cancel semantics before adding more theme options
  *  - Run Configurations (Like IntelliJ)
- *  - Support for libs in JavacToolchain
  *  - Launch Forge through a bootstrap sequence
  *  - Discover registered languages from providers on each launch. Cache only plugin scan
  *    metadata if profiling justifies it
