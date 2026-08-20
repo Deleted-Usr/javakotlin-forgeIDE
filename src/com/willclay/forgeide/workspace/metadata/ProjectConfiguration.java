@@ -2,6 +2,7 @@ package com.willclay.forgeide.workspace.metadata;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 
 import java.nio.file.Path;
@@ -70,7 +71,7 @@ public record ProjectConfiguration(
     }
 
     public record FileHandling(
-            String encoding,
+            Encoding encoding,
             LineSeparatorPolicy lineSeparators
     )
     {
@@ -82,7 +83,7 @@ public record ProjectConfiguration(
 
         public static FileHandling defaults()
         {
-            return new FileHandling("UTF-8", LineSeparatorPolicy.PRESERVE);
+            return new FileHandling(Encoding.UTF8, LineSeparatorPolicy.PRESERVE);
         }
     }
 }

@@ -145,6 +145,28 @@ public final class CodeEditorPanel extends JPanel
         fireStateChanged();
     }
 
+    /** Updates a document's path without changing its contents or dirty state. */
+    public void updateFilePath(EditorTab tab, Path file)
+    {
+        if (tabs.indexOfComponent(tab) < 0) return;
+
+        tab.setFile(Objects.requireNonNull(file, "file"));
+        tab.setLexer(resolveLexer(file));
+        updateTabTitle(tab);
+        fireStateChanged();
+    }
+
+    /** Removes a tab after the owning workflow has already confirmed the operation. */
+    public void closeTab(EditorTab tab)
+    {
+        int index = tabs.indexOfComponent(tab);
+        if (index < 0) return;
+
+        tabs.removeTabAt(index);
+        fireStateChanged();
+        fireUndoStateChanged();
+    }
+
     public JTextPane getTextPane()
     {
         EditorTab tab = getSelectedTab();
@@ -263,12 +285,9 @@ public final class CodeEditorPanel extends JPanel
 
     private void requestClose(EditorTab tab)
     {
-        int index = tabs.indexOfComponent(tab);
-        if (index < 0 || !closeRequestHandler.test(tab)) return;
+        if (tabs.indexOfComponent(tab) < 0 || !closeRequestHandler.test(tab)) return;
 
-        tabs.removeTabAt(index);
-        fireStateChanged();
-        fireUndoStateChanged();
+        closeTab(tab);
     }
 
     private void activeTabChanged()

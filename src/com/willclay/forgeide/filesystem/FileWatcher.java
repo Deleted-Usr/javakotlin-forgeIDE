@@ -52,7 +52,7 @@ public final class FileWatcher implements AutoCloseable
     }
 
     /** Registering the same directory twice is harmless — the key is reused. */
-    public void watch(Path directory)
+    public synchronized void watch(Path directory)
     {
         if (keys.containsKey(directory)) return;
 
@@ -71,7 +71,7 @@ public final class FileWatcher implements AutoCloseable
     }
 
     /** Called when the project changes, so keys for the old tree are not held forever. */
-    public void unwatchAll()
+    public synchronized void unwatchAll()
     {
         for (WatchKey key : keys.values()) key.cancel();
         keys.clear();
@@ -120,7 +120,12 @@ public final class FileWatcher implements AutoCloseable
 
             // reset() returns false once the directory is gone; drop the key
             // rather than spinning on a watch that can never fire again.
-            if (!key.reset()) keys.values().remove(key);
+            if (!key.reset()) removeKey(key);
         }
+    }
+
+    private synchronized void removeKey(WatchKey expired)
+    {
+        keys.entrySet().removeIf(entry -> entry.getValue() == expired);
     }
 }

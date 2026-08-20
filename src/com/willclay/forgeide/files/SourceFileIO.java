@@ -4,10 +4,11 @@ import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparators;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * Reading and writing source files.
@@ -24,9 +25,11 @@ public final class SourceFileIO
      * Reads text for the editor, normalising its line separators to {@code \n}
      * while retaining the detected on-disk format for the next save.
      */
-    public static LoadedDocument read(Path file) throws IOException
+    public static LoadedDocument read(Path file, Charset charset) throws IOException
     {
-        String diskText = Files.readString(file, StandardCharsets.UTF_8);
+        Objects.requireNonNull(charset, "charset");
+
+        String diskText = Files.readString(file, charset);
         LineEnding lineEnding = LineEnding.detect(diskText);
 
         return new LoadedDocument(LineSeparators.normalise(diskText), lineEnding);
@@ -36,13 +39,15 @@ public final class SourceFileIO
      * Creates any missing parent directories, then writes the editor's
      * normalised text using the requested line ending.
      */
-    public static void write(Path file, String contents, LineEnding lineEnding) throws IOException
+    public static void write(Path file, String contents, LineEnding lineEnding, Charset charset) throws IOException
     {
+        Objects.requireNonNull(charset, "charset");
+
         Path parent = file.getParent();
         if (parent != null) Files.createDirectories(parent);
 
         String diskText = LineSeparators.forWriting(contents, lineEnding);
-        Files.writeString(file, diskText, StandardCharsets.UTF_8);
+        Files.writeString(file, diskText, charset);
     }
 
     /** Appends the extension if the user typed a bare name into the save dialog. */

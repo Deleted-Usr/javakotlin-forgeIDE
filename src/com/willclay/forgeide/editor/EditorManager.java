@@ -3,6 +3,7 @@ package com.willclay.forgeide.editor;
 import com.willclay.forgeide.files.SourceFileIO;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 import com.willclay.forgeide.ui.editor.EditorTab;
+import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 
@@ -21,6 +22,7 @@ public final class EditorManager
 {
     private final CodeEditorPanel editor;
     private final List<Runnable> listeners = new ArrayList<>();
+    private Encoding encoding = Encoding.UTF8;
     private LineSeparatorPolicy lineSeparatorPolicy = LineSeparatorPolicy.PRESERVE;
 
     public EditorManager(CodeEditorPanel editor)
@@ -89,7 +91,7 @@ public final class EditorManager
             return;
         }
 
-        SourceFileIO.LoadedDocument document = SourceFileIO.read(file);
+        SourceFileIO.LoadedDocument document = SourceFileIO.read(file, encoding.charset());
         editor.openFile(file, document.text(), document.lineEnding());
     }
 
@@ -103,6 +105,42 @@ public final class EditorManager
     public void setLineSeparatorPolicy(LineSeparatorPolicy lineSeparatorPolicy)
     {
         this.lineSeparatorPolicy = Objects.requireNonNull(lineSeparatorPolicy, "lineSeparatorPolicy");
+    }
+
+    /** Applies the project encoding to subsequent file reads and writes. */
+    public void setEncoding(Encoding encoding)
+    {
+        this.encoding = Objects.requireNonNull(encoding, "encoding");
+    }
+
+    /** Rebases open files after a file or directory is moved on disk. */
+    public void fileMoved(Path oldPath, Path newPath)
+    {
+        Path oldRoot = normalize(oldPath);
+        Path newRoot = normalize(newPath);
+
+        for (EditorTab tab : editor.getOpenTabs())
+        {
+            Path file = tab.getFile();
+            if (file == null) continue;
+
+            Path normalizedFile = normalize(file);
+            if (!normalizedFile.startsWith(oldRoot)) continue;
+
+            editor.updateFilePath(tab, newRoot.resolve(oldRoot.relativize(normalizedFile)));
+        }
+    }
+
+    /** Closes open files removed by an already-confirmed explorer deletion. */
+    public void fileDeleted(Path path)
+    {
+        Path deletedRoot = normalize(path);
+
+        for (EditorTab tab : editor.getOpenTabs())
+        {
+            Path file = tab.getFile();
+            if (file != null && normalize(file).startsWith(deletedRoot)) editor.closeTab(tab);
+        }
     }
 
     /** Closes every document when its project is closed or replaced. */
@@ -145,7 +183,7 @@ public final class EditorManager
         }
 
         LineEnding lineEnding = lineSeparatorPolicy.resolve(tab.getLineEnding());
-        SourceFileIO.write(target, tab.getText(), lineEnding);
+        SourceFileIO.write(target, tab.getText(), lineEnding, encoding.charset());
         tab.setLineEnding(lineEnding);
         editor.markSaved(tab, target);
     }
@@ -160,5 +198,10 @@ public final class EditorManager
     private void fireChanged()
     {
         for (Runnable listener : List.copyOf(listeners)) listener.run();
+    }
+
+    private static Path normalize(Path path)
+    {
+        return Objects.requireNonNull(path, "path").toAbsolutePath().normalize();
     }
 }

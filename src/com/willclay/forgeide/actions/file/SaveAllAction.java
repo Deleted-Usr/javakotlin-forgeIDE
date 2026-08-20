@@ -44,15 +44,21 @@ public final class SaveAllAction extends ForgeAction
         EditorManager manager = context.getEditorManager();
         EditorTab original = manager.getCurrentTab();
 
-        for (EditorTab tab : manager.getOpenTabs())
+        try
         {
-            if (!tab.isModified()) continue;
+            for (EditorTab tab : manager.getOpenTabs())
+            {
+                if (!tab.isModified()) continue;
 
-            manager.selectTab(tab);
-            if (!save.saveCurrent()) return false;
+                manager.selectTab(tab);
+                if (!save.saveCurrent()) return false;
+            }
+
+            return true;
         }
-
-        if (original != null) manager.selectTab(original);
-        return true;
+        finally
+        {
+            if (original != null) manager.selectTab(original);
+        }
     }
 }

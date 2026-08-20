@@ -186,7 +186,7 @@ public final class ActionManager
         boolean running = execution.isRunning();
         boolean canExecute = hasToolchain && !running;
 
-        run.setEnabled(canExecute);
+        run.setEnabled(canExecute && hasEditor);
         buildProject.setEnabled(canExecute);
         cleanProject.setEnabled(canExecute);
 

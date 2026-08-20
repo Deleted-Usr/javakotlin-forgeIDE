@@ -38,7 +38,8 @@ public final class RenameItemAction extends ExplorerAction
 
         try
         {
-            context.getWorkspaceService().rename(item, name);
+            ProjectItem renamed = context.getWorkspaceService().rename(item, name);
+            context.getEditorManager().fileMoved(item.path(), renamed.path());
         }
         catch (IOException e)
         {

@@ -3,6 +3,7 @@ package com.willclay.forgeide.workspace;
 import com.willclay.forgeide.lang.api.Language;
 import com.willclay.forgeide.workspace.metadata.ProjectConfiguration;
 
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -53,6 +54,32 @@ public record Project(Path root, Language language, ProjectConfiguration configu
         return language.sourceRoot(this).toAbsolutePath().normalize();
     }
 
+    /** Resolves the configured process directory against the project root. */
+    public Path workingDirectory()
+    {
+        return resolve(configuration.workingDirectory());
+    }
+
+    /** Returns whether an explorer path is at or below a configured exclusion. */
+    public boolean isExcluded(Path path)
+    {
+        Path candidate = Objects.requireNonNull(path, "path").toAbsolutePath().normalize();
+
+        for (String value : configuration.excludedPaths())
+        {
+            try
+            {
+                if (candidate.startsWith(resolve(Path.of(value)))) return true;
+            }
+            catch (InvalidPathException ignored)
+            {
+                // Invalid user-edited metadata should not make the explorer unusable.
+            }
+        }
+
+        return false;
+    }
+
     public boolean isSourceFile(Path file)
     {
         return language.isProjectSource(this, file);
@@ -61,5 +88,11 @@ public record Project(Path root, Language language, ProjectConfiguration configu
     public ProjectItem rootItem()
     {
         return new ProjectItem(root, ProjectItemType.PROJECT, language, displayName());
+    }
+
+    private Path resolve(Path path)
+    {
+        Path resolved = path.isAbsolute() ? path : root.resolve(path);
+        return resolved.toAbsolutePath().normalize();
     }
 }

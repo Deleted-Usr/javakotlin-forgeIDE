@@ -38,6 +38,7 @@ public final class DeleteItemAction extends ExplorerAction
         try
         {
             context.getWorkspaceService().delete(item);
+            context.getEditorManager().fileDeleted(item.path());
         }
         catch (IOException e)
         {

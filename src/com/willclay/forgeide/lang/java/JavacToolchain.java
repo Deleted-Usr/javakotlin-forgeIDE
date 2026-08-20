@@ -32,7 +32,7 @@ public final class JavacToolchain implements Toolchain
         List<String> command = new ArrayList<>();
         command.add("javac");
         command.add("-encoding");
-        command.add("UTF-8");
+        command.add(project.configuration().fileHandling().encoding().charset().name());
         command.add("-classpath");
         command.add(JavaClassNames.classPath(out, libs));
         command.add("-sourcepath");
@@ -43,6 +43,7 @@ public final class JavacToolchain implements Toolchain
         for (Path sourceFile : sourceFiles) command.add(sourceFile.toString());
 
         ProcessBuilder builder = new ProcessBuilder(command);
+        builder.directory(project.workingDirectory().toFile());
 
         return ProcessRunner.execute(builder, output, null) == 0;
     }
@@ -112,6 +113,7 @@ public final class JavacToolchain implements Toolchain
                 "java", "-cp", JavaClassNames.classPath(out, libs).toString(),
                 JavaClassNames.of(project, sourceFile)
         );
+        builder.directory(project.workingDirectory().toFile());
 
         return ProcessRunner.execute(builder, output, onInputReady);
     }

@@ -4,6 +4,7 @@ import com.willclay.forgeide.settings.project.ProjectSettingsService;
 import com.willclay.forgeide.settings.project.ProjectSettingsService.ProjectSettingsState;
 import com.willclay.forgeide.settings.project.ProjectSettingsValues;
 import com.willclay.forgeide.ui.Utils;
+import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 
 import javax.swing.DefaultListCellRenderer;
@@ -33,7 +34,7 @@ public final class ProjectSettings extends JPanel
     private final JTextField location = Utils.readOnlyField("");
     private final JTextField workDir = new JTextField(24);
     private final JTextField language = Utils.readOnlyField("");
-    private final JComboBox<String> encoding = new JComboBox<>(new String[] { "UTF-8", "UTF-16", "US-ASCII", "ISO-8859-1" });
+    private final JComboBox<Encoding> encoding = new JComboBox<>(Encoding.values());
     private final JComboBox<LineSeparatorPolicy> lineSeparators = new JComboBox<>(LineSeparatorPolicy.values());
     private final DefaultListModel<String> excludedPaths = new DefaultListModel<>();
 
@@ -87,7 +88,7 @@ public final class ProjectSettings extends JPanel
         return new ProjectSettingsValues(
                 name.getText(),
                 Path.of(workingDirectoryText),
-                (String) encoding.getSelectedItem(),
+                (Encoding) encoding.getSelectedItem(),
                 (LineSeparatorPolicy) lineSeparators.getSelectedItem(),
                 Collections.list(excludedPaths.elements())
         );
@@ -206,11 +207,18 @@ public final class ProjectSettings extends JPanel
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Add Excluded Path");
         chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        chooser.setCurrentDirectory(projectRoot.toFile());
 
         if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
 
         Path selected = chooser.getSelectedFile().toPath().toAbsolutePath().normalize();
-        String displayPath = selected.toString();
+        if (!selected.startsWith(projectRoot) || selected.equals(projectRoot))
+        {
+            Utils.showErrorMessage(this, "Excluded paths must be inside the project.");
+            return;
+        }
+
+        String displayPath = projectRoot.relativize(selected).toString().replace('\\', '/');
         int existingIndex = excludedPaths.indexOf(displayPath);
 
         if (existingIndex >= 0)

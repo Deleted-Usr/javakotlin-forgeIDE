@@ -24,6 +24,7 @@ import com.willclay.forgeide.ui.fonts.EditorFonts;
 import com.willclay.forgeide.ui.menu.EditorMenuBar;
 import com.willclay.forgeide.ui.settings.SettingsDialogController;
 import com.willclay.forgeide.ui.toolbar.EditorToolBar;
+import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 import com.willclay.forgeide.workspace.Project;
 import com.willclay.forgeide.workspace.Workspace;
@@ -155,6 +156,9 @@ public final class Window extends JFrame
     {
         Project project = workspace.getProject();
 
+        editorManager.setEncoding(project == null
+                ? Encoding.UTF8
+                : project.configuration().fileHandling().encoding());
         editorManager.setLineSeparatorPolicy(project == null
                 ? LineSeparatorPolicy.PRESERVE
                 : project.configuration().fileHandling().lineSeparators());

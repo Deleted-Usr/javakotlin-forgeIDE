@@ -1,5 +1,6 @@
 package com.willclay.forgeide.settings.project;
 
+import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 
 import java.nio.file.Path;
@@ -9,7 +10,7 @@ import java.util.Objects;
 public record ProjectSettingsValues(
         String projectName,
         Path workingDirectory,
-        String encoding,
+        Encoding encoding,
         LineSeparatorPolicy lineSeparators,
         List<String> excludedPaths
 )
@@ -21,8 +22,7 @@ public record ProjectSettingsValues(
 
         Objects.requireNonNull(workingDirectory, "workingDirectory");
 
-        encoding = Objects.requireNonNull(encoding, "encoding").trim();
-        if (encoding.isEmpty()) throw new IllegalArgumentException("Encoding must not be blank.");
+        Objects.requireNonNull(encoding, "encoding");
 
         Objects.requireNonNull(lineSeparators, "lineSeparators");
         excludedPaths = List.copyOf(excludedPaths);

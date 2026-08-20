@@ -135,9 +135,11 @@ public final class WorkspaceService implements AutoCloseable
         try
         {
             List<ProjectItem> children = new ArrayList<>();
+            Project project = workspace.getProject();
 
             for (Path child : FileOperations.listChildren(parent.path()))
             {
+                if (project != null && project.isExcluded(child)) continue;
                 children.add(ProjectItem.of(child, parent.language()));
             }
 
