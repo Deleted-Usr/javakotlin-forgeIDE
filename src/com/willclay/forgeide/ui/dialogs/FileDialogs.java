@@ -4,7 +4,7 @@ import com.formdev.flatlaf.util.SystemFileChooser;
 import com.formdev.flatlaf.util.SystemFileChooser.FileNameExtensionFilter;
 import com.willclay.forgeide.files.SourceFileIO;
 import com.willclay.forgeide.lang.api.Language;
-import com.willclay.forgeide.lang.api.LanguageRegistry;
+import com.willclay.forgeide.lang.LanguageRegistry;
 import com.willclay.forgeide.ui.Utils;
 
 import javax.swing.JComboBox;

@@ -1,7 +1,7 @@
 package com.willclay.forgeide.actions.build;
 
 import com.willclay.forgeide.actions.ForgeAction;
-import com.willclay.forgeide.compiler.Toolchain;
+import com.willclay.forgeide.lang.api.Toolchain;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.execution.RunTask;
 import com.willclay.forgeide.workspace.Project;

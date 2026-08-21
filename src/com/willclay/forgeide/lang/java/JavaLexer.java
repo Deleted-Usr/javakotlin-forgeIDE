@@ -1,6 +1,6 @@
 package com.willclay.forgeide.lang.java;
 
-import com.willclay.forgeide.highlighting.Lexer;
+import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.highlighting.Token;
 import com.willclay.forgeide.highlighting.TokenType;
 

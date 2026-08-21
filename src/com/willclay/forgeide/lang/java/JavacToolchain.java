@@ -1,7 +1,7 @@
 package com.willclay.forgeide.lang.java;
 
 import com.willclay.forgeide.compiler.ProcessRunner;
-import com.willclay.forgeide.compiler.Toolchain;
+import com.willclay.forgeide.lang.api.Toolchain;
 import com.willclay.forgeide.workspace.Project;
 
 import java.io.IOException;

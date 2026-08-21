@@ -1,4 +1,4 @@
-package com.willclay.forgeide.compiler;
+package com.willclay.forgeide.lang.api;
 
 import com.willclay.forgeide.workspace.Project;
 

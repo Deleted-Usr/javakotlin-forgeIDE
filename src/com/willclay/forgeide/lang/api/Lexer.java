@@ -1,4 +1,7 @@
-package com.willclay.forgeide.highlighting;
+package com.willclay.forgeide.lang.api;
+
+import com.willclay.forgeide.highlighting.SyntaxHighlighter;
+import com.willclay.forgeide.highlighting.Token;
 
 import java.util.List;
 

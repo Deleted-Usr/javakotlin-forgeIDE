@@ -1,6 +1,6 @@
 package com.willclay.forgeide.ui.editor;
 
-import com.willclay.forgeide.highlighting.Lexer;
+import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.highlighting.TokenTheme;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 

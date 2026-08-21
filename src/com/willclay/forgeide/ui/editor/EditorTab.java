@@ -1,7 +1,7 @@
 package com.willclay.forgeide.ui.editor;
 
 import com.willclay.forgeide.editor.SyntaxUndoManager;
-import com.willclay.forgeide.highlighting.Lexer;
+import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.highlighting.SyntaxHighlighter;
 import com.willclay.forgeide.highlighting.TokenTheme;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;

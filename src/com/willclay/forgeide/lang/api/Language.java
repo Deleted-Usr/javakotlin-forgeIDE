@@ -1,7 +1,5 @@
 package com.willclay.forgeide.lang.api;
 
-import com.willclay.forgeide.compiler.Toolchain;
-import com.willclay.forgeide.highlighting.Lexer;
 import com.willclay.forgeide.workspace.Project;
 
 import java.io.IOException;

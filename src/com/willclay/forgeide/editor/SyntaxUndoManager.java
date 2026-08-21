@@ -20,7 +20,7 @@ import javax.swing.undo.UndoableEdit;
  * This class filters out the highlighting edits separately, leaving time for the
  * edit tree to catch up and resync.
  */
-public class SyntaxUndoManager extends UndoManager
+public final class SyntaxUndoManager extends UndoManager
 {
     @Override
     public synchronized void undo() throws CannotUndoException

@@ -25,6 +25,7 @@ import java.io.IOException;
  *  - Add developer options (like access to the ForgeIDE Self-Hosting run configuration)
  *  - Better implement dependency classpaths. Very rough right now.
  *  - Have active processes attached to run configurations
+ *  - A BlueJ style class diagram mode/setting
  */
 
 /*
@@ -38,6 +39,7 @@ import java.io.IOException;
  *  - Python
  *  - C++
  *  - Kotlin
+ *  - Lua
  */
 
 /*

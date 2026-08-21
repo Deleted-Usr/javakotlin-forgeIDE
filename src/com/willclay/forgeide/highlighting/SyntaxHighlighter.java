@@ -1,5 +1,7 @@
 package com.willclay.forgeide.highlighting;
 
+import com.willclay.forgeide.lang.api.Lexer;
+
 import javax.swing.JTextPane;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
