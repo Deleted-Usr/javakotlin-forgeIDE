@@ -26,6 +26,7 @@ import java.io.IOException;
  *  - Better implement dependency classpaths. Very rough right now.
  *  - Have active processes attached to run configurations
  *  - A BlueJ style class diagram mode/setting
+ *  - File dependent icons (Custom Icons for Java, Kotlin, C++, Python, etc.)
  */
 
 /*
@@ -38,7 +39,6 @@ import java.io.IOException;
  * TODO - Language Plugins
  *  - Python
  *  - C++
- *  - Kotlin
  *  - Lua
  */
 
