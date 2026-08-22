@@ -6,6 +6,7 @@ import com.willclay.forgeide.execution.ExecutionManager;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.lang.LanguageRegistry;
 import com.willclay.forgeide.lang.java.JavaLanguage;
+import com.willclay.forgeide.lang.kotlin.KotlinLanguage;
 import com.willclay.forgeide.services.ApplicationShutdown;
 import com.willclay.forgeide.services.SettingsService;
 import com.willclay.forgeide.settings.theme.ThemeService;
@@ -76,10 +77,15 @@ public final class Window extends JFrame
         Font editorFont = EditorFonts.load(EDITOR_FONT_SIZE);
 
         editorPanel = new CodeEditorPanel(editorFont);
-
-        languages = new LanguageRegistry(List.of(new JavaLanguage()));
         editorManager = new EditorManager(editorPanel);
         console = new ConsolePanel(editorFont.deriveFont(CONSOLE_FONT_SIZE));
+
+        languages = new LanguageRegistry(
+                List.of(
+                        new JavaLanguage(),
+                        new KotlinLanguage()
+                )
+        );
 
         workspaceService = createWorkspaceService();
         projectTree = new ProjectTree(new ProjectTreeModel(workspaceService));

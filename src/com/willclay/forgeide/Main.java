@@ -89,8 +89,8 @@ import java.io.IOException;
  */
 public final class Main
 {
-    private static final int INITIAL_WIDTH = 1100;
-    private static final int INITIAL_HEIGHT = 700;
+    private static final int INITIAL_WIDTH = 1920;
+    private static final int INITIAL_HEIGHT = 1080;
 
     public static void main(String[] args) // The Entry Point for the Program
     {
@@ -111,9 +111,9 @@ public final class Main
             Window w = new Window("Forge IDE");
 
             // No setDefaultCloseOperation here because it would override the save changes dialog
-            w.setLocationRelativeTo(null);
-
             w.setSize(INITIAL_WIDTH, INITIAL_HEIGHT);
+
+            w.setLocationRelativeTo(null);
             w.setVisible(true);
         });
     }
