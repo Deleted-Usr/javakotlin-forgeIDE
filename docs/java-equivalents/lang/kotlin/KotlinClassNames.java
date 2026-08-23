@@ -1,20 +1,16 @@
 package com.willclay.forgeide.lang.kotlin;
 
+import com.willclay.forgeide.lang.jvm.JvmClassPath;
 import com.willclay.forgeide.workspace.Project;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 public final class KotlinClassNames
 {
@@ -67,20 +63,7 @@ public final class KotlinClassNames
 
     public static String classPath(Path outputRoot, Path librariesRoot) throws IOException
     {
-        List<String> entries = new ArrayList<>();
-        entries.add(outputRoot.toString());
-        if (!Files.isDirectory(librariesRoot)) return entries.getFirst();
-
-        try (Stream<Path> libraries = Files.list(librariesRoot))
-        {
-            libraries.filter(Files::isRegularFile)
-                    .filter(path -> hasExtension(path, ".jar"))
-                    .sorted(Comparator.comparing(Path::toString))
-                    .map(Path::toString)
-                    .forEach(entries::add);
-        }
-
-        return String.join(File.pathSeparator, entries);
+        return JvmClassPath.discover(outputRoot, librariesRoot);
     }
 
     public static String mainClass(Path sourceFile, Charset encoding) throws IOException

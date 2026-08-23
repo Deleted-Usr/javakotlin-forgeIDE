@@ -1,8 +1,9 @@
 package com.willclay.forgeide.lang.java;
 
+import com.willclay.forgeide.lang.jvm.JvmClassPath;
 import com.willclay.forgeide.workspace.Project;
 
-import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -107,9 +108,8 @@ public final class JavaClassNames
         return true;
     }
 
-    public static String classPath(Path out, Path libs)
+    public static String classPath(Path out, Path libs) throws IOException
     {
-        String libraryWildcard = libs + File.separator + "*";
-        return String.join(File.pathSeparator, out.toString(), libraryWildcard);
+        return JvmClassPath.discover(out, libs);
     }
 }

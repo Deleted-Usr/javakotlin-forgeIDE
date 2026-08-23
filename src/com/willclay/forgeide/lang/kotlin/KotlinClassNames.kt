@@ -3,13 +3,12 @@ package com.willclay.forgeide.lang.kotlin
 import com.willclay.forgeide.annotations.SourceEquivalent
 import com.willclay.forgeide.annotations.SourceLanguage
 import com.willclay.forgeide.lang.java.JavaClassNames
+import com.willclay.forgeide.lang.jvm.JvmClassPath
 import com.willclay.forgeide.workspace.Project
-import java.io.File
 import java.io.IOException
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.Comparator
 import java.util.Locale
 
 /**
@@ -63,19 +62,8 @@ internal object KotlinClassNames {
         if (IS_WINDOWS) "\"$argument\"" else argument
 
     @Throws(IOException::class)
-    fun classPath(outputRoot: Path, librariesRoot: Path): String {
-        val entries = mutableListOf(outputRoot.toString())
-        if (!Files.isDirectory(librariesRoot)) return entries.single()
-
-        Files.list(librariesRoot).use { libraries ->
-            libraries.filter { Files.isRegularFile(it) }
-                .filter { hasExtension(it, ".jar") }
-                .sorted(Comparator.comparing(Path::toString))
-                .forEach { entries += it.toString() }
-        }
-
-        return entries.joinToString(File.pathSeparator)
-    }
+    fun classPath(outputRoot: Path, librariesRoot: Path): String =
+        JvmClassPath.discover(outputRoot, librariesRoot)
 
     @Throws(IOException::class)
     fun mainClass(sourceFile: Path, encoding: Charset): String {

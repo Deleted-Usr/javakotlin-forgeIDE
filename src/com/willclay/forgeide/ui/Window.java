@@ -80,12 +80,10 @@ public final class Window extends JFrame
         editorManager = new EditorManager(editorPanel);
         console = new ConsolePanel(editorFont.deriveFont(CONSOLE_FONT_SIZE));
 
-        languages = new LanguageRegistry(
-                List.of(
+        languages = new LanguageRegistry(List.of(
                         new JavaLanguage(),
                         new KotlinLanguage()
-                )
-        );
+                ));
 
         workspaceService = createWorkspaceService();
         projectTree = new ProjectTree(new ProjectTreeModel(workspaceService));
