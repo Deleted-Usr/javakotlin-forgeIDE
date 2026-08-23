@@ -1,6 +1,7 @@
 package com.willclay.forgeide.lang.kotlin
 
-import com.willclay.forgeide.annotations.JavaEquivalent
+import com.willclay.forgeide.annotations.SourceEquivalent
+import com.willclay.forgeide.annotations.SourceLanguage
 import com.willclay.forgeide.highlighting.Token
 import com.willclay.forgeide.highlighting.TokenType
 import com.willclay.forgeide.lang.api.Lexer
@@ -12,7 +13,10 @@ import com.willclay.forgeide.lang.api.Lexer
  * highlighted as code. Block comments are scanned rather than matched with a
  * regular expression because Kotlin permits them to nest.
  */
-@JavaEquivalent(source = "docs/java-equivalents/lang/kotlin/KotlinLexer.java")
+@SourceEquivalent(
+    language = SourceLanguage.JAVA,
+    path = "docs/java-equivalents/lang/kotlin/KotlinLexer.java"
+)
 class KotlinLexer : Lexer {
     override fun tokenize(text: String): List<Token> = buildList {
         var index = 0

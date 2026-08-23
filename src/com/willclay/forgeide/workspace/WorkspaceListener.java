@@ -16,6 +16,7 @@ import java.nio.file.Path;
  * Notifications may arrive on the watcher's thread, so anything touching Swing
  * has to hop to the Event Dispatch Thread itself.
  */
+@FunctionalInterface
 public interface WorkspaceListener
 {
     void directoryChanged(Path directory);

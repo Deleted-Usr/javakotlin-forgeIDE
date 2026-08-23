@@ -1,6 +1,7 @@
 package com.willclay.forgeide.lang.kotlin
 
-import com.willclay.forgeide.annotations.JavaEquivalent
+import com.willclay.forgeide.annotations.SourceEquivalent
+import com.willclay.forgeide.annotations.SourceLanguage
 import com.willclay.forgeide.lang.java.JavaClassNames
 import com.willclay.forgeide.workspace.Project
 import java.io.File
@@ -20,7 +21,10 @@ import java.util.Locale
  *
  * @see JavaClassNames
  */
-@JavaEquivalent(source = "docs/java-equivalents/lang/kotlin/KotlinClassNames.java")
+@SourceEquivalent(
+    language = SourceLanguage.JAVA,
+    path = "docs/java-equivalents/lang/kotlin/KotlinClassNames.java"
+)
 internal object KotlinClassNames {
     const val EXTENSION = ".kt"
     const val SCRIPT_EXTENSION = ".kts"

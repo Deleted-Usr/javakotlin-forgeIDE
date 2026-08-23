@@ -1,6 +1,7 @@
 package com.willclay.forgeide.lang.kotlin
 
-import com.willclay.forgeide.annotations.JavaEquivalent
+import com.willclay.forgeide.annotations.SourceEquivalent
+import com.willclay.forgeide.annotations.SourceLanguage
 import com.willclay.forgeide.lang.api.Language
 import com.willclay.forgeide.lang.api.Lexer
 import com.willclay.forgeide.lang.api.Toolchain
@@ -24,7 +25,10 @@ import java.util.Optional
  *
  * @see JavaLanguage
  */
-@JavaEquivalent(source = "docs/java-equivalents/lang/kotlin/KotlinLanguage.java")
+@SourceEquivalent(
+    language = SourceLanguage.JAVA,
+    path = "docs/java-equivalents/lang/kotlin/KotlinLanguage.java"
+)
 class KotlinLanguage : Language {
     private val lexer = KotlinLexer()
     private val toolchain = KotlincToolchain()

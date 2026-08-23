@@ -1,6 +1,7 @@
 package com.willclay.forgeide.lang.kotlin
 
-import com.willclay.forgeide.annotations.JavaEquivalent
+import com.willclay.forgeide.annotations.SourceEquivalent
+import com.willclay.forgeide.annotations.SourceLanguage
 import com.willclay.forgeide.compiler.ProcessRunner
 import com.willclay.forgeide.lang.api.Toolchain
 import com.willclay.forgeide.workspace.Project
@@ -12,7 +13,10 @@ import java.util.Comparator
 import java.util.function.Consumer
 
 /** Compiles, builds, cleans, and runs conventional Kotlin/JVM projects. */
-@JavaEquivalent(source = "docs/java-equivalents/lang/kotlin/KotlincToolchain.java")
+@SourceEquivalent(
+    language = SourceLanguage.JAVA,
+    path = "docs/java-equivalents/lang/kotlin/KotlincToolchain.java"
+)
 class KotlincToolchain : Toolchain {
     @Throws(IOException::class, InterruptedException::class)
     override fun compile(
