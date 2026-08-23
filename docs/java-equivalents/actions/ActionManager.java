@@ -37,17 +37,6 @@ import javax.swing.JTextPane;
 import javax.swing.SwingWorker;
 import java.awt.event.KeyEvent;
 
-/**
- * Every command in the IDE, created once and handed out on request.
- * <p>
- * This is the piece that makes the menu bar and the toolbar stop duplicating
- * each other. Neither of them creates an action; both ask here, both get the
- * same object back, and so both show the same label and the same enabled state
- * forever after.
- * <p>
- * Nothing in here knows what a menu is. It could be handed to a command
- * palette, a keyboard-shortcut editor or a test just as easily.
- */
 public final class ActionManager
 {
     private final UIContext context;
@@ -114,7 +103,6 @@ public final class ActionManager
         newFile = new NewFileAction(context);
         openFile = new OpenFileAction(context);
 
-        // Save needs Save As to fall back to, so Save As is built first.
         saveAs = new SaveAsAction(context);
         save = new SaveAction(context, saveAs);
         saveAll = new SaveAllAction(context, save);
@@ -127,10 +115,6 @@ public final class ActionManager
         copy = new TextEditAction("Copy", Shortcuts.menu(KeyEvent.VK_C), context.getEditorPanel(), JTextPane::copy);
         paste = new TextEditAction("Paste", Shortcuts.menu(KeyEvent.VK_V), context.getEditorPanel(), JTextPane::paste);
 
-        // No accelerator on Delete on purpose. A menu accelerator is caught
-        // before the focused component sees the key, so binding the Delete key
-        // here would stop it deleting the character in front of the caret —
-        // the menu would have quietly broken the editor.
         delete = new TextEditAction("Delete", null, context.getEditorPanel(), pane -> pane.replaceSelection(""));
         selectAll = new TextEditAction("Select All", Shortcuts.menu(KeyEvent.VK_A), context.getEditorPanel(), JTextPane::selectAll);
 
@@ -139,8 +123,6 @@ public final class ActionManager
         toggleToolBar = new ToggleViewAction("Toolbar", null, true, workbench::setToolBarVisible);
         resetLayout = new ResetLayoutAction(context, toggleProjectTree, toggleConsole, toggleToolBar);
 
-        // Every process passes through one presentation gateway so console
-        // settings cannot diverge between Run, Build and Clean.
         run = new RunAction(context, save, saveAll, this::startExecution);
         stop = new StopAction(execution::stop);
         buildProject = new BuildProjectAction(context, saveAll, this::startExecution);
@@ -174,7 +156,6 @@ public final class ActionManager
         execution.start(task);
     }
 
-    /** Makes sure all project actions are enabled and disabled when necessary. */
     private void syncProjectActions()
     {
         boolean hasProject = context.getWorkspace().hasProject();
