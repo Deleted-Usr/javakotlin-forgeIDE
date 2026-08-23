@@ -1,9 +1,9 @@
-package com.willclay.forgeide.ui.settings;
+package com.willclay.forgeide.ui.settings.project;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
-import com.willclay.forgeide.settings.project.ProjectSettingsService;
-import com.willclay.forgeide.settings.project.ProjectSettingsService.ProjectSettingsState;
-import com.willclay.forgeide.settings.project.ProjectSettingsValues;
+import com.willclay.forgeide.services.settings.project.ProjectSettingsService;
+import com.willclay.forgeide.services.settings.project.ProjectSettingsService.ProjectSettingsState;
+import com.willclay.forgeide.services.settings.project.ProjectSettingsValues;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;

@@ -1,4 +1,4 @@
-package com.willclay.forgeide.settings.theme;
+package com.willclay.forgeide.services.settings.theme;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;

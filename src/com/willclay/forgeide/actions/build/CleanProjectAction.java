@@ -31,7 +31,6 @@ public final class CleanProjectAction extends ForgeAction
         Optional<Toolchain> toolchain = project.language().toolchain();
         if (toolchain.isEmpty()) return;
 
-        context.getConsole().clear();
         taskStarter.accept(RunTask.clean(project, toolchain.get(), context.getConsole()));
     }
 }

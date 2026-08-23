@@ -8,11 +8,13 @@ import com.willclay.forgeide.lang.LanguageRegistry;
 import com.willclay.forgeide.lang.java.JavaLanguage;
 import com.willclay.forgeide.lang.kotlin.KotlinLanguage;
 import com.willclay.forgeide.services.ApplicationShutdown;
-import com.willclay.forgeide.services.SettingsService;
-import com.willclay.forgeide.settings.theme.ThemeService;
+import com.willclay.forgeide.services.SessionService;
+import com.willclay.forgeide.services.settings.SettingsService;
+import com.willclay.forgeide.services.settings.IDESettingsRuntime;
+import com.willclay.forgeide.services.settings.theme.ThemeService;
 import com.willclay.forgeide.services.UIContext;
 import com.willclay.forgeide.services.WorkspaceService;
-import com.willclay.forgeide.settings.project.ProjectSettingsService;
+import com.willclay.forgeide.services.settings.project.ProjectSettingsService;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 import com.willclay.forgeide.ui.editor.ConsolePanel;
@@ -29,6 +31,8 @@ import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 import com.willclay.forgeide.workspace.Project;
 import com.willclay.forgeide.workspace.Workspace;
+import com.willclay.forgeide.application.IDESessionConfiguration;
+import com.willclay.forgeide.application.IDESettingsConfiguration;
 
 import javax.swing.JFrame;
 import java.awt.Font;
@@ -36,7 +40,11 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * The main frame, and only the composition root: it creates the parts, puts
@@ -53,28 +61,31 @@ import java.util.List;
  */
 public final class Window extends JFrame
 {
-    private static final float EDITOR_FONT_SIZE = 14f;
     private static final float CONSOLE_FONT_SIZE = 12f;
 
     private final String baseTitle;
+    private final SettingsService settingsService;
 
     private final CodeEditorPanel editorPanel;
     private final EditorManager editorManager;
     private final ConsolePanel console;
     private final WorkbenchPanel workbench;
     private final ProjectTree projectTree;
+    private final IDESettingsRuntime settingsRuntime;
 
     private final Workspace workspace = new Workspace();
     private final WorkspaceService workspaceService;
 
     private final LanguageRegistry languages;
 
-    public Window(String title)
+    public Window(String title, SettingsService settingsService, SessionService sessionService)
     {
         super(title);
         this.baseTitle = title;
 
-        Font editorFont = EditorFonts.load(EDITOR_FONT_SIZE);
+        this.settingsService = Objects.requireNonNull(settingsService, "settingsService");
+        Objects.requireNonNull(sessionService, "sessionService");
+        Font editorFont = EditorFonts.load(settingsService.get().editorFontSize());
 
         editorPanel = new CodeEditorPanel(editorFont);
         editorManager = new EditorManager(editorPanel);
@@ -96,13 +107,17 @@ public final class Window extends JFrame
         // constructor arguments.
         ExecutionManager executionManager = new ExecutionManager();
         ApplicationShutdown applicationShutdown =
-                new ApplicationShutdown(this, editorManager, executionManager, workspaceService);
+                new ApplicationShutdown(this, editorManager, executionManager, workspaceService, settingsService);
 
-        SettingsService settingsService = new SettingsService();
+        settingsRuntime = new IDESettingsRuntime(this, settingsService, editorPanel, editorManager);
+        applicationShutdown.addTask("stop automatic saving", settingsRuntime::close);
+        applicationShutdown.addTask("save the IDE session", () -> sessionService.save(captureSession()));
+
         ThemeService themeService = new ThemeService(this, editorPanel, settingsService);
         ProjectSettingsService projectService = new ProjectSettingsService(workspaceService);
 
-        SettingsDialogController settingsDialogController = new SettingsDialogController(this, projectService, themeService);
+        SettingsDialogController settingsDialogController =
+                new SettingsDialogController(this, settingsService, projectService, themeService);
 
         UIContext context = new UIContext(this, editorPanel, editorManager, console, workbench, projectTree,
                 workspace, workspaceService, executionManager, applicationShutdown,
@@ -132,15 +147,15 @@ public final class Window extends JFrame
 
         // The startup look and feel is installed before construction; this pass
         // restores the user's choice and applies its matching syntax colours.
-        themeService.applySavedTheme();
-
         wireState();
+        themeService.applySavedTheme();
+        restoreSession(sessionService);
         updateTitle();
     }
 
     private boolean confirmCloseTab(EditorTab tab)
     {
-        if (!tab.isModified()) return true;
+        if (!tab.isModified() || !settingsService.get().confirmDiscard()) return true;
 
         return Utils.confirmDiscardChanges(this, "Close " + tab.getDisplayName());
     }
@@ -180,6 +195,72 @@ public final class Window extends JFrame
     private void updateTitle()
     {
         setTitle(baseTitle + " — " + editorManager.getDisplayName());
+    }
+
+    private IDESessionConfiguration captureSession()
+    {
+        Project project = workspace.getProject();
+        Path projectRoot = project == null ? null : project.root();
+        List<Path> openFiles = editorManager.getOpenTabs().stream()
+                .map(EditorTab::getFile)
+                .filter(Objects::nonNull)
+                .toList();
+        EditorTab selected = editorManager.getCurrentTab();
+        Path selectedFile = selected == null ? null : selected.getFile();
+
+        return new IDESessionConfiguration(projectRoot, openFiles, selectedFile);
+    }
+
+    private void restoreSession(SessionService sessionService)
+    {
+        if (!IDESettingsConfiguration.REOPEN_LAST_PROJECT.equals(settingsService.get().startupAction())) return;
+
+        IDESessionConfiguration session = sessionService.get();
+        Path projectRoot = session.projectRoot();
+        if (projectRoot == null || !Files.isDirectory(projectRoot)) return;
+
+        try
+        {
+            workspaceService.openProject(projectRoot);
+        }
+        catch (IOException exception)
+        {
+            Utils.showErrorMessage(this, "Could not reopen the last project: " + exception.getMessage());
+            return;
+        }
+
+        if (!settingsService.get().restoreOpenFiles()) return;
+
+        List<Path> restorable = new ArrayList<>();
+        for (Path file : session.openFiles())
+        {
+            if (file != null && Files.isRegularFile(file)) restorable.add(file);
+        }
+        if (restorable.isEmpty()) return;
+
+        editorManager.closeFile();
+        for (Path file : restorable)
+        {
+            try
+            {
+                editorManager.openFile(file);
+            }
+            catch (IOException exception)
+            {
+                System.err.println("Could not restore open file " + file + ": " + exception.getMessage());
+            }
+        }
+
+        Path selectedFile = session.selectedFile();
+        if (selectedFile == null) return;
+        for (EditorTab tab : editorManager.getOpenTabs())
+        {
+            if (selectedFile.equals(tab.getFile()))
+            {
+                editorManager.selectTab(tab);
+                return;
+            }
+        }
     }
 
     /**

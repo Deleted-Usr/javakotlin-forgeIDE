@@ -5,12 +5,15 @@ import com.willclay.forgeide.highlighting.TokenTheme;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 
 import javax.swing.BorderFactory;
+import javax.swing.AbstractAction;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextPane;
 import javax.swing.SwingConstants;
+import javax.swing.KeyStroke;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
@@ -22,6 +25,8 @@ import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,12 +41,14 @@ import java.util.function.Predicate;
  */
 public final class CodeEditorPanel extends JPanel
 {
-    private static final int TAB_SIZE_IN_CHARACTERS = 4;
     private static final int TAB_STOP_COUNT = 60;
 
     private final JTabbedPane tabs = new JTabbedPane();
-    private final Font editorFont;
+    private Font editorFont;
+    private int tabSize = 4;
+    private boolean insertSpaces = true;
     private final List<Runnable> stateChangeListeners = new ArrayList<>();
+    private final List<Runnable> editListeners = new ArrayList<>();
     private final List<Runnable> undoStateListeners = new ArrayList<>();
 
     private Function<Path, Lexer> lexerResolver = file -> Lexer.PLAIN;
@@ -219,9 +226,26 @@ public final class CodeEditorPanel extends JPanel
         for (EditorTab tab : getOpenTabs()) tab.setTheme(theme);
     }
 
+    /** Applies editor defaults immediately to open tabs and to every future tab. */
+    public void applyEditorSettings(Font font, int tabSize, boolean insertSpaces)
+    {
+        this.editorFont = Objects.requireNonNull(font, "font");
+        if (tabSize < 1) throw new IllegalArgumentException("tabSize must be positive");
+        this.tabSize = tabSize;
+        this.insertSpaces = insertSpaces;
+
+        for (EditorTab tab : getOpenTabs()) applyEditorSettings(tab.getTextPane());
+    }
+
     public void addStateChangeListener(Runnable listener)
     {
         stateChangeListeners.add(Objects.requireNonNull(listener));
+    }
+
+    /** Fired after each text insertion or removal; useful for idle-based services. */
+    public void addEditListener(Runnable listener)
+    {
+        editListeners.add(Objects.requireNonNull(listener, "listener"));
     }
 
     /** Fired for changes to the selected tab's undo/redo availability. */
@@ -255,13 +279,14 @@ public final class CodeEditorPanel extends JPanel
     {
         EditorTab tab = new EditorTab(file, lineEnding);
 
-        tab.getTextPane().setFont(editorFont);
-        applyTabSize(tab.getTextPane(), TAB_SIZE_IN_CHARACTERS);
+        applyEditorSettings(tab.getTextPane());
+        installTabAction(tab.getTextPane());
 
         tab.setTheme(theme);
         tab.setLexer(resolveLexer(file));
 
         tab.addTextChangeListener(() -> tabTextChanged(tab));
+        tab.addEditListener(this::fireEdited);
         tab.addUndoStateListener(() ->
         {
             if (tab == getSelectedTab()) fireUndoStateChanged();
@@ -323,6 +348,11 @@ public final class CodeEditorPanel extends JPanel
         for (Runnable listener : List.copyOf(stateChangeListeners)) listener.run();
     }
 
+    private void fireEdited()
+    {
+        for (Runnable listener : List.copyOf(editListeners)) listener.run();
+    }
+
     private void fireUndoStateChanged()
     {
         for (Runnable listener : List.copyOf(undoStateListeners)) listener.run();
@@ -352,6 +382,29 @@ public final class CodeEditorPanel extends JPanel
         StyledDocument document = textPane.getStyledDocument();
         Style defaultStyle = document.getStyle(StyleContext.DEFAULT_STYLE);
         StyleConstants.setTabSet(defaultStyle, new TabSet(tabStops));
+        textPane.revalidate();
+        textPane.repaint();
+    }
+
+    private void applyEditorSettings(JTextPane textPane)
+    {
+        textPane.setFont(editorFont);
+        applyTabSize(textPane, tabSize);
+    }
+
+    private void installTabAction(JTextPane textPane)
+    {
+        String actionName = "forge.insert-tab";
+        textPane.getInputMap(JComponent.WHEN_FOCUSED)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0), actionName);
+        textPane.getActionMap().put(actionName, new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent event)
+            {
+                textPane.replaceSelection(insertSpaces ? " ".repeat(tabSize) : "\t");
+            }
+        });
     }
 
     /** A small nested class that defines the header of each panel. */

@@ -3,6 +3,7 @@ package com.willclay.forgeide.actions.build;
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
 import com.willclay.forgeide.actions.file.SaveAction;
+import com.willclay.forgeide.actions.file.SaveAllAction;
 import com.willclay.forgeide.lang.api.Toolchain;
 import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.services.UIContext;
@@ -20,13 +21,15 @@ public final class RunAction extends ForgeAction
 {
     private final UIContext context;
     private final SaveAction save;
+    private final SaveAllAction saveAll;
     private final Consumer<RunTask> taskStarter;
 
-    public RunAction(UIContext context, SaveAction save, Consumer<RunTask> taskStarter)
+    public RunAction(UIContext context, SaveAction save, SaveAllAction saveAll, Consumer<RunTask> taskStarter)
     {
         super("Run", Shortcuts.menu(KeyEvent.VK_R), "Build and run the current file");
         this.context = context;
         this.save = save;
+        this.saveAll = saveAll;
         this.taskStarter = taskStarter;
     }
 
@@ -44,7 +47,13 @@ public final class RunAction extends ForgeAction
             reportWrongSource(project);
             return;
         }
-        if ((sourceFile == null || editor.isModified()) && !save.saveCurrent()) return;
+        // An untitled current document must acquire a path even when automatic
+        // saving before execution is disabled.
+        if (sourceFile == null && !save.saveCurrent()) return;
+
+        if (context.getSettingsService().get().saveBeforeBuild()
+                && editor.hasModifiedFiles()
+                && !saveAll.saveAll()) return;
 
         sourceFile = editor.getCurrentFile();
         if (!project.isSourceFile(sourceFile))
@@ -60,7 +69,6 @@ public final class RunAction extends ForgeAction
             return;
         }
 
-        context.getConsole().clear();
         taskStarter.accept(RunTask.run(project, selected.get(), context.getConsole(), sourceFile));
     }
 

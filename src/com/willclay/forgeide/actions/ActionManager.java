@@ -47,10 +47,6 @@ import java.awt.event.KeyEvent;
  * <p>
  * Nothing in here knows what a menu is. It could be handed to a command
  * palette, a keyboard-shortcut editor or a test just as easily.
- * <p>
- * TODO - if this grows past a screenful, split it into per-area managers
- *        (FileActions, BuildActions...) that this one composes. The call sites
- *        do not have to change for that.
  */
 public final class ActionManager
 {
@@ -138,17 +134,17 @@ public final class ActionManager
         delete = new TextEditAction("Delete", null, context.getEditorPanel(), pane -> pane.replaceSelection(""));
         selectAll = new TextEditAction("Select All", Shortcuts.menu(KeyEvent.VK_A), context.getEditorPanel(), JTextPane::selectAll);
 
-        // ActionManager owns the one active worker. Actions only request that a
-        // task be started or stopped; they do not need to find each other.
-        run = new RunAction(context, save, execution::start);
-        stop = new StopAction(execution::stop);
-        buildProject = new BuildProjectAction(context, saveAll, execution::start);
-        cleanProject = new CleanProjectAction(context, execution::start);
-
         toggleProjectTree = new ToggleViewAction("Project Explorer", null, true, workbench::setProjectTreeVisible);
         toggleConsole = new ToggleViewAction("Console", null, true, workbench::setConsoleVisible);
         toggleToolBar = new ToggleViewAction("Toolbar", null, true, workbench::setToolBarVisible);
         resetLayout = new ResetLayoutAction(context, toggleProjectTree, toggleConsole, toggleToolBar);
+
+        // Every process passes through one presentation gateway so console
+        // settings cannot diverge between Run, Build and Clean.
+        run = new RunAction(context, save, saveAll, this::startExecution);
+        stop = new StopAction(execution::stop);
+        buildProject = new BuildProjectAction(context, saveAll, this::startExecution);
+        cleanProject = new CleanProjectAction(context, this::startExecution);
 
         openSelectedFile = new OpenSelectedFileAction(context);
         createFile = new CreateFileAction(context);
@@ -166,6 +162,16 @@ public final class ActionManager
         context.getEditorManager().addChangeListener(this::syncProjectActions);
         execution.addChangeListener(this::syncProjectActions);
         syncProjectActions();
+    }
+
+    private void startExecution(RunTask task)
+    {
+        var settings = context.getSettingsService().get();
+
+        if (settings.clearConsoleOnRun()) context.getConsole().clear();
+        if (settings.showConsoleOnRun()) toggleConsole.setSelected(true);
+
+        execution.start(task);
     }
 
     /** Makes sure all project actions are enabled and disabled when necessary. */

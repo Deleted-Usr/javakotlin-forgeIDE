@@ -10,7 +10,7 @@ public record AppDirectories(Path configDirectory)
     public static AppDirectories resolve() throws IOException
     {
         String homePath = System.getProperty("user.home");
-        Path path = Paths.get(homePath, "ForgeIDE", "Configuration"); // Users/../ForgeIDE/Configuration
+        Path path = Paths.get(homePath, ".forge", "config"); // Users/../.forge/config
 
         if (!Files.exists(path))
         {

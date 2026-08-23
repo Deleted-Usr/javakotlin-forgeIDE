@@ -1,9 +1,12 @@
 package com.willclay.forgeide.ui.settings;
 
-import com.willclay.forgeide.settings.theme.ThemeService;
-import com.willclay.forgeide.settings.project.ProjectSettingsService;
+import com.willclay.forgeide.services.settings.SettingsService;
+import com.willclay.forgeide.services.settings.theme.ThemeService;
+import com.willclay.forgeide.services.settings.project.ProjectSettingsService;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.menu.SettingsButton;
+import com.willclay.forgeide.ui.settings.general.GeneralSettings;
+import com.willclay.forgeide.ui.settings.project.ProjectSettings;
 import com.willclay.forgeide.ui.settings.theme.ThemeSettings;
 
 import javax.swing.*;
@@ -19,11 +22,17 @@ import java.io.IOException;
  */
 public final class SettingsWindow extends JDialog
 {
+    private final SettingsService settingsService;
     private final ProjectSettingsService projectService;
     private final ThemeService themeService;
+    private final GeneralSettings generalSettings;
     private final ProjectSettings projectSettings;
 
-    public SettingsWindow(Window owner, ProjectSettingsService projectService, ThemeService themeService)
+    public SettingsWindow(
+            Window owner,
+            SettingsService settingsService,
+            ProjectSettingsService projectService,
+            ThemeService themeService)
     {
         super(owner, "IDE Settings", ModalityType.MODELESS);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -31,9 +40,12 @@ public final class SettingsWindow extends JDialog
         setSize(500, 600);
         setLocationRelativeTo(owner);
 
+        this.settingsService = settingsService;
         this.projectService = projectService;
         this.themeService = themeService;
+        this.generalSettings = new GeneralSettings();
         this.projectSettings = new ProjectSettings(projectService);
+        this.generalSettings.load(settingsService.get());
 
         // If this grows past a window full of tabs, switch to side buttons with a card layout.
         JTabbedPane tabs = new JTabbedPane();
@@ -48,7 +60,7 @@ public final class SettingsWindow extends JDialog
 
     private void addTabs(JTabbedPane tabs)
     {
-        tabs.addTab("General", new GeneralSettings());
+        tabs.addTab("General", generalSettings);
         tabs.addTab("Project", projectSettings);
         tabs.addTab("Theme",   new ThemeSettings(themeService));
     }
@@ -59,14 +71,24 @@ public final class SettingsWindow extends JDialog
         JButton cancel = new JButton("Cancel");
 
         apply.setFocusable(false); cancel.setFocusable(false);
-        apply.addActionListener(event -> applyProjectSettings());
+        apply.addActionListener(event -> applySettings());
         cancel.addActionListener(event -> dispose());
 
         buttonPanel.add(apply); buttonPanel.add(cancel);
     }
 
-    private void applyProjectSettings()
+    private void applySettings()
     {
+        try
+        {
+            settingsService.save(generalSettings.getValues(settingsService.get().theme()));
+        }
+        catch (IOException | IllegalArgumentException exception)
+        {
+            Utils.showErrorMessage(this, "Could not apply IDE settings: " + exception.getMessage());
+            return;
+        }
+
         if (!projectSettings.isAvailable()) return;
 
         try

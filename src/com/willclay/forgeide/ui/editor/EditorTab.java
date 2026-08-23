@@ -38,6 +38,7 @@ public final class EditorTab extends JPanel
     private final SyntaxUndoManager undoManager = new SyntaxUndoManager();
 
     private final List<Runnable> textChangeListeners = new ArrayList<>();
+    private final List<Runnable> editListeners = new ArrayList<>();
     private final List<Runnable> undoStateListeners = new ArrayList<>();
 
     // Dirty lines waiting to be highlighted, merged across every edit that has
@@ -232,7 +233,13 @@ public final class EditorTab extends JPanel
     /** Fired for every insertion and removal, so keep the work small. */
     public void addTextChangeListener(Runnable listener)
     {
-        textChangeListeners.add(listener);
+        textChangeListeners.add(Objects.requireNonNull(listener, "listener"));
+    }
+
+    /** Fired for every user edit, including edits made after the tab became dirty. */
+    public void addEditListener(Runnable listener)
+    {
+        editListeners.add(Objects.requireNonNull(listener, "listener"));
     }
 
     /** Fired when undo or redo becomes possible or impossible. */
@@ -254,14 +261,14 @@ public final class EditorTab extends JPanel
             public void insertUpdate(DocumentEvent e)
             {
                 queueRefresh(e);
-                if (!loadingContents) fireTextChanged();
+                if (!loadingContents) edited();
             }
 
             @Override
             public void removeUpdate(DocumentEvent e)
             {
                 queueRefresh(e);
-                if (!loadingContents) fireTextChanged();
+                if (!loadingContents) edited();
             }
 
             @Override
@@ -302,6 +309,12 @@ public final class EditorTab extends JPanel
 
         modified = true;
         for (Runnable listener : List.copyOf(textChangeListeners)) listener.run();
+    }
+
+    private void edited()
+    {
+        fireTextChanged();
+        for (Runnable listener : List.copyOf(editListeners)) listener.run();
     }
 
     private void fireUndoStateChanged()

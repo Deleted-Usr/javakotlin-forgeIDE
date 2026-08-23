@@ -1,9 +1,11 @@
 package com.willclay.forgeide;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMTMaterialDarkerIJTheme;
 import com.willclay.forgeide.application.ForgeApplication;
+import com.willclay.forgeide.services.settings.SettingsService;
+import com.willclay.forgeide.services.SessionService;
+import com.willclay.forgeide.services.settings.theme.AppTheme;
 import com.willclay.forgeide.ui.Window;
 
 import javax.swing.*;
@@ -94,21 +96,26 @@ public final class Main
 
     public static void main(String[] args) // The Entry Point for the Program
     {
+        SettingsService settingsService;
+        SessionService sessionService;
         try
         {
-            ForgeApplication app = new ForgeApplication();
+            ForgeApplication application = new ForgeApplication();
+            settingsService = application.getSettingsService();
+            sessionService = application.getSessionService();
         }
-        catch (IOException _)
+        catch (IOException exception)
         {
-
+            System.err.println("Could not initialise Forge IDE: " + exception.getMessage());
+            return;
         }
 
         SwingUtilities.invokeLater(() ->
         {
-            setLookAndFeel();
+            setLookAndFeel(settingsService.getTheme());
             FlatAnimatedLafChange.duration = 300;
 
-            Window w = new Window("Forge IDE");
+            Window w = new Window("Forge IDE", settingsService, sessionService);
 
             // No setDefaultCloseOperation here because it would override the save changes dialog
             w.setSize(INITIAL_WIDTH, INITIAL_HEIGHT);
@@ -118,18 +125,16 @@ public final class Main
         });
     }
 
-    private static void setLookAndFeel()
+    private static void setLookAndFeel(AppTheme theme)
     {
         try
         {
-            //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-
-            //FlatDarculaLaf.setup();
-            FlatMTMaterialDarkerIJTheme.setup();
+            UIManager.setLookAndFeel(theme.getSwingTheme());
         }
         catch (Exception _)
         {
-            // The default swing look and feel is fine if the user is not on Windows.
+            // Keep a known-good bundled look and feel when a saved theme cannot be installed.
+            FlatMTMaterialDarkerIJTheme.setup();
         }
     }
 }

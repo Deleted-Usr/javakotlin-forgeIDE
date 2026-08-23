@@ -1,4 +1,4 @@
-package com.willclay.forgeide.settings.project;
+package com.willclay.forgeide.services.settings.project;
 
 import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;

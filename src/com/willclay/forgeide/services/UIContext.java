@@ -2,7 +2,8 @@ package com.willclay.forgeide.services;
 
 import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.execution.ExecutionManager;
-import com.willclay.forgeide.settings.theme.ThemeService;
+import com.willclay.forgeide.services.settings.SettingsService;
+import com.willclay.forgeide.services.settings.theme.ThemeService;
 import com.willclay.forgeide.ui.WorkbenchPanel;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;

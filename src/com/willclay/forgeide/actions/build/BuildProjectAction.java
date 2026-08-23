@@ -34,7 +34,9 @@ public final class BuildProjectAction extends ForgeAction
         Project project = context.getWorkspace().getProject();
         if (project == null) return;
 
-        if (context.getEditorManager().hasModifiedFiles() && !saveAll.saveAll()) return;
+        if (context.getSettingsService().get().saveBeforeBuild()
+                && context.getEditorManager().hasModifiedFiles()
+                && !saveAll.saveAll()) return;
 
         Optional<Toolchain> selected = project.language().toolchain();
         if (selected.isEmpty())
@@ -43,7 +45,6 @@ public final class BuildProjectAction extends ForgeAction
             return;
         }
 
-        context.getConsole().clear();
         taskStarter.accept(RunTask.build(project, selected.get(), context.getConsole()));
     }
 }

@@ -1,7 +1,7 @@
 package com.willclay.forgeide.ui.settings.theme;
 
-import com.willclay.forgeide.settings.theme.ThemeService;
-import com.willclay.forgeide.settings.theme.AppTheme;
+import com.willclay.forgeide.services.settings.theme.ThemeService;
+import com.willclay.forgeide.services.settings.theme.AppTheme;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;

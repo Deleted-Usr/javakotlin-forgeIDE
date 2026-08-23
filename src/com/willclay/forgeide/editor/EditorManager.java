@@ -161,6 +161,16 @@ public final class EditorManager
         writeAndAdopt(tab, tab.getFile());
     }
 
+    /** Saves one file-backed tab without changing the user's active tab. */
+    public void save(EditorTab tab) throws IOException
+    {
+        Objects.requireNonNull(tab, "tab");
+        if (!editor.getOpenTabs().contains(tab)) throw new IllegalArgumentException("The tab is not open.");
+        if (tab.getFile() == null) throw new IllegalStateException("An untitled tab cannot be saved automatically.");
+
+        writeAndAdopt(tab, tab.getFile());
+    }
+
     /** Writes the selected tab to a new path and adopts that path. */
     public void saveTo(Path file) throws IOException
     {
@@ -170,6 +180,11 @@ public final class EditorManager
     public void addChangeListener(Runnable listener)
     {
         listeners.add(Objects.requireNonNull(listener));
+    }
+
+    public void addEditListener(Runnable listener)
+    {
+        editor.addEditListener(listener);
     }
 
     private void writeAndAdopt(EditorTab tab, Path target) throws IOException

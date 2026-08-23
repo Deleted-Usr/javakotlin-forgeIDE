@@ -2,6 +2,7 @@ package com.willclay.forgeide.services;
 
 import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.execution.ExecutionManager;
+import com.willclay.forgeide.services.settings.SettingsService;
 import com.willclay.forgeide.ui.Utils;
 
 import javax.swing.JFrame;
@@ -22,16 +23,23 @@ public final class ApplicationShutdown
     private final EditorManager editorManager;
     private final ExecutionManager executionManager;
     private final WorkspaceService workspaceService;
+    private final SettingsService settingsService;
     private final List<RegisteredTask> tasks = new ArrayList<>();
 
     private boolean shuttingDown;
 
-    public ApplicationShutdown(JFrame frame, EditorManager editorManager, ExecutionManager executionManager, WorkspaceService workspaceService)
+    public ApplicationShutdown(
+            JFrame frame,
+            EditorManager editorManager,
+            ExecutionManager executionManager,
+            WorkspaceService workspaceService,
+            SettingsService settingsService)
     {
         this.frame = Objects.requireNonNull(frame, "frame");
         this.editorManager = Objects.requireNonNull(editorManager, "editorManager");
         this.executionManager = Objects.requireNonNull(executionManager, "executionManager");
         this.workspaceService = Objects.requireNonNull(workspaceService, "workspaceService");
+        this.settingsService = Objects.requireNonNull(settingsService, "settingsService");
     }
 
     /**
@@ -53,7 +61,9 @@ public final class ApplicationShutdown
     {
         if (shuttingDown) return true;
 
-        if (editorManager.hasModifiedFiles() && !Utils.confirmDiscardChanges(frame, "Exit"))
+        if (editorManager.hasModifiedFiles()
+                && settingsService.get().confirmDiscard()
+                && !Utils.confirmDiscardChanges(frame, "Exit"))
         {
             return false;
         }
