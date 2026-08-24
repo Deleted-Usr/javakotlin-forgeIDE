@@ -32,7 +32,8 @@ public final class IDESettingsRuntime implements AutoCloseable
             Component dialogParent,
             SettingsService settings,
             CodeEditorPanel editorPanel,
-            EditorManager editorManager)
+            EditorManager editorManager
+    )
     {
         this.dialogParent = Objects.requireNonNull(dialogParent, "dialogParent");
         this.settings = Objects.requireNonNull(settings, "settings");
