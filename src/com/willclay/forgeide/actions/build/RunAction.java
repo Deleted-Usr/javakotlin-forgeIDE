@@ -51,7 +51,7 @@ public final class RunAction extends ForgeAction
         // saving before execution is disabled.
         if (sourceFile == null && !save.saveCurrent()) return;
 
-        if (context.getSettingsService().get().saveBeforeBuild()
+        if (context.getSettingsService().get().saving().saveBeforeBuild()
                 && editor.hasModifiedFiles()
                 && !saveAll.saveAll()) return;
 

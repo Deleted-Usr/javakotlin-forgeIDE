@@ -62,7 +62,7 @@ public final class ApplicationShutdown
         if (shuttingDown) return true;
 
         if (editorManager.hasModifiedFiles()
-                && settingsService.get().confirmDiscard()
+                && settingsService.get().startup().confirmDiscard()
                 && !Utils.confirmDiscardChanges(frame, "Exit"))
         {
             return false;

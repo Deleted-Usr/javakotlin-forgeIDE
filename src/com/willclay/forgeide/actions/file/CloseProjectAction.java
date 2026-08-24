@@ -34,7 +34,7 @@ public final class CloseProjectAction extends ForgeAction
     protected void perform()
     {
         if (context.getEditorManager().hasModifiedFiles()
-                && context.getSettingsService().get().confirmDiscard()
+                && context.getSettingsService().get().startup().confirmDiscard()
                 && !Utils.confirmDiscardChanges(context.getFrame(), "Close Project")) return;
 
         context.getEditorManager().closeFile();

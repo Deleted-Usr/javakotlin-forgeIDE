@@ -25,7 +25,7 @@ public final class OpenProjectAction extends ForgeAction
     protected void perform()
     {
         if (context.getEditorManager().hasModifiedFiles()
-                && context.getSettingsService().get().confirmDiscard()
+                && context.getSettingsService().get().startup().confirmDiscard()
                 && !Utils.confirmDiscardChanges(context.getFrame(), "Open Project")) return;
 
         Path root = context.getDialogs().chooseDirectory("Open Project");

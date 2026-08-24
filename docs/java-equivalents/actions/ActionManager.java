@@ -150,8 +150,8 @@ public final class ActionManager
     {
         var settings = context.getSettingsService().get();
 
-        if (settings.clearConsoleOnRun()) context.getConsole().clear();
-        if (settings.showConsoleOnRun()) toggleConsole.setSelected(true);
+        if (settings.buildAndRun().clearConsoleOnRun()) context.getConsole().clear();
+        if (settings.buildAndRun().showConsoleOnRun()) toggleConsole.setSelected(true);
 
         execution.start(task);
     }

@@ -5,19 +5,30 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public record AppDirectories(Path configDirectory)
+public record AppDirectories(
+        Path configDirectory,
+        Path pluginDirectory
+)
 {
     public static AppDirectories resolve() throws IOException
     {
         String homePath = System.getProperty("user.home");
-        Path path = Paths.get(homePath, ".forge", "config"); // Users/../.forge/config
 
-        if (!Files.exists(path))
+        Path configPath = Paths.get(homePath, ".forge", "config");  // Users/../.forge/config
+        Path pluginPath = Paths.get(homePath, ".forge", "plugins"); // Users/../.forge/plugins
+
+        if (!Files.exists(configPath))
         {
             System.out.println("Creating new configuration path...");
-            Files.createDirectories(path);
+            Files.createDirectories(configPath);
         }
 
-        return new AppDirectories(path);
+        if (!Files.exists(pluginPath))
+        {
+            System.out.println("Creating new plugin path...");
+            Files.createDirectories(pluginPath);
+        }
+
+        return new AppDirectories(configPath, pluginPath);
     }
 }

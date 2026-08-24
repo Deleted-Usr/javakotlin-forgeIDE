@@ -2,6 +2,7 @@ package com.willclay.forgeide.services;
 
 import com.willclay.forgeide.application.IDESessionConfiguration;
 import com.willclay.forgeide.json.JsonFileStore;
+import com.willclay.forgeide.json.VersionedJsonDocument;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,8 +46,55 @@ public final class SessionService
         }
         catch (IOException exception)
         {
+            IDESessionConfiguration migrated = migrateUnversionedSession();
+            if (migrated != null) return migrated;
+
             System.err.println("Could not read IDE session from " + sessionFile + ": " + exception.getMessage());
             return IDESessionConfiguration.empty();
+        }
+    }
+
+    /** Upgrades the session document written before schema versioning. */
+    private IDESessionConfiguration migrateUnversionedSession()
+    {
+        LegacySession legacy;
+        try
+        {
+            legacy = store.read(sessionFile, LegacySession.class);
+        }
+        catch (IOException | RuntimeException ignored)
+        {
+            return null;
+        }
+
+        IDESessionConfiguration migrated = new IDESessionConfiguration(
+                IDESessionConfiguration.CURRENT_SCHEMA_VERSION,
+                legacy.projectRoot(),
+                legacy.openFiles(),
+                legacy.selectedFile()
+        );
+        try
+        {
+            store.write(sessionFile, migrated);
+        }
+        catch (IOException exception)
+        {
+            System.err.println("Could not persist migrated IDE session to "
+                    + sessionFile + ": " + exception.getMessage());
+        }
+        return migrated;
+    }
+
+    record LegacySession(
+            Path projectRoot,
+            java.util.List<Path> openFiles,
+            Path selectedFile
+    ) implements VersionedJsonDocument
+    {
+        @Override
+        public int schemaVersion()
+        {
+            return 0;
         }
     }
 }

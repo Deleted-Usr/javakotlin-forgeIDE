@@ -57,22 +57,24 @@ public final class IDESettingsRuntime implements AutoCloseable
     private void apply(IDESettingsConfiguration updated)
     {
         configuration = Objects.requireNonNull(updated, "updated");
+        IDESettingsConfiguration.Editor editor = updated.editor();
+        IDESettingsConfiguration.Saving saving = updated.saving();
         editorPanel.applyEditorSettings(
-                EditorFonts.load(updated.editorFontSize()),
-                updated.tabWidth(),
-                updated.insertSpaces()
+                EditorFonts.load(editor.fontSize()),
+                editor.tabWidth(),
+                editor.insertSpaces()
         );
 
-        autoSaveTimer.setInitialDelay(updated.autoSaveDelaySeconds() * 1_000);
-        autoSaveTimer.setDelay(updated.autoSaveDelaySeconds() * 1_000);
+        autoSaveTimer.setInitialDelay(saving.autoSaveDelaySeconds() * 1_000);
+        autoSaveTimer.setDelay(saving.autoSaveDelaySeconds() * 1_000);
 
-        if (!updated.autoSave()) autoSaveTimer.stop();
+        if (!saving.autoSave()) autoSaveTimer.stop();
         else if (editorManager.hasModifiedFiles()) autoSaveTimer.restart();
     }
 
     private void editorChanged()
     {
-        if (configuration.autoSave()) autoSaveTimer.restart();
+        if (configuration.saving().autoSave()) autoSaveTimer.restart();
     }
 
     /** Autosave never opens a Save As dialog; untitled documents remain dirty. */

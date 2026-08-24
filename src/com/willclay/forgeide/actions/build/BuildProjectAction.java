@@ -34,7 +34,7 @@ public final class BuildProjectAction extends ForgeAction
         Project project = context.getWorkspace().getProject();
         if (project == null) return;
 
-        if (context.getSettingsService().get().saveBeforeBuild()
+        if (context.getSettingsService().get().saving().saveBeforeBuild()
                 && context.getEditorManager().hasModifiedFiles()
                 && !saveAll.saveAll()) return;
 

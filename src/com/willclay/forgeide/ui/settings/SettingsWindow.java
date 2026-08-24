@@ -81,7 +81,7 @@ public final class SettingsWindow extends JDialog
     {
         try
         {
-            settingsService.save(generalSettings.getValues(settingsService.get().theme()));
+            settingsService.save(generalSettings.getValues(settingsService.get().appearance().theme()));
         }
         catch (IOException | IllegalArgumentException exception)
         {

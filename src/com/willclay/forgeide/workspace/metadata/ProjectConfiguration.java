@@ -2,6 +2,7 @@ package com.willclay.forgeide.workspace.metadata;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.willclay.forgeide.json.VersionedJsonDocument;
 import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 
@@ -17,16 +18,14 @@ public record ProjectConfiguration(
         Path workingDirectory,
         FileHandling fileHandling,
         List<String> excludedPaths
-)
+) implements VersionedJsonDocument
 {
     public static final int CURRENT_SCHEMA_VERSION = 1;
 
     public ProjectConfiguration
     {
-        if (schemaVersion != CURRENT_SCHEMA_VERSION)
-        {
-            throw new IllegalArgumentException("Unsupported project schema version: " + schemaVersion);
-        }
+        VersionedJsonDocument.requireSupportedVersion(
+                "project", schemaVersion, CURRENT_SCHEMA_VERSION);
 
         // A missing name is accepted at the persistence boundary so metadata
         // written before this field existed can be upgraded by ProjectMetadata.

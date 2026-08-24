@@ -97,23 +97,28 @@ public final class GeneralSettings extends JPanel
 
     public void load(IDESettingsConfiguration settings)
     {
-        startupAction.setSelectedItem(IDESettingsConfiguration.OPEN_EMPTY_WINDOW.equals(settings.startupAction())
+        IDESettingsConfiguration.Startup startup = settings.startup();
+        IDESettingsConfiguration.Editor editor = settings.editor();
+        IDESettingsConfiguration.Saving saving = settings.saving();
+        IDESettingsConfiguration.BuildAndRun buildAndRun = settings.buildAndRun();
+
+        startupAction.setSelectedItem(IDESettingsConfiguration.OPEN_EMPTY_WINDOW.equals(startup.action())
                 ? OPEN_EMPTY_WINDOW_LABEL
                 : REOPEN_LAST_PROJECT_LABEL);
-        restoreOpenFiles.setSelected(settings.restoreOpenFiles());
-        confirmDiscard.setSelected(settings.confirmDiscard());
+        restoreOpenFiles.setSelected(startup.restoreOpenFiles());
+        confirmDiscard.setSelected(startup.confirmDiscard());
 
-        fontSize.setValue(settings.editorFontSize());
-        tabWidth.setValue(settings.tabWidth());
-        insertSpaces.setSelected(settings.insertSpaces());
+        fontSize.setValue(editor.fontSize());
+        tabWidth.setValue(editor.tabWidth());
+        insertSpaces.setSelected(editor.insertSpaces());
 
-        autoSave.setSelected(settings.autoSave());
-        autoSaveDelay.setValue(settings.autoSaveDelaySeconds());
-        autoSaveDelay.setEnabled(settings.autoSave());
-        saveBeforeBuild.setSelected(settings.saveBeforeBuild());
+        autoSave.setSelected(saving.autoSave());
+        autoSaveDelay.setValue(saving.autoSaveDelaySeconds());
+        autoSaveDelay.setEnabled(saving.autoSave());
+        saveBeforeBuild.setSelected(saving.saveBeforeBuild());
 
-        showConsoleOnRun.setSelected(settings.showConsoleOnRun());
-        clearConsoleOnRun.setSelected(settings.clearConsoleOnRun());
+        showConsoleOnRun.setSelected(buildAndRun.showConsoleOnRun());
+        clearConsoleOnRun.setSelected(buildAndRun.clearConsoleOnRun());
     }
 
     /** Returns the edited general values while preserving the independently edited theme. */
@@ -124,18 +129,20 @@ public final class GeneralSettings extends JPanel
                 : IDESettingsConfiguration.REOPEN_LAST_PROJECT;
 
         return new IDESettingsConfiguration(
-                startup,
-                restoreOpenFiles.isSelected(),
-                confirmDiscard.isSelected(),
-                ((Number) fontSize.getValue()).intValue(),
-                ((Number) tabWidth.getValue()).intValue(),
-                insertSpaces.isSelected(),
-                autoSave.isSelected(),
-                ((Number) autoSaveDelay.getValue()).intValue(),
-                saveBeforeBuild.isSelected(),
-                showConsoleOnRun.isSelected(),
-                clearConsoleOnRun.isSelected(),
-                theme
+                IDESettingsConfiguration.CURRENT_SCHEMA_VERSION,
+                new IDESettingsConfiguration.Appearance(theme),
+                new IDESettingsConfiguration.Startup(
+                        startup, restoreOpenFiles.isSelected(), confirmDiscard.isSelected()),
+                new IDESettingsConfiguration.Editor(
+                        ((Number) fontSize.getValue()).intValue(),
+                        ((Number) tabWidth.getValue()).intValue(),
+                        insertSpaces.isSelected()),
+                new IDESettingsConfiguration.Saving(
+                        autoSave.isSelected(),
+                        ((Number) autoSaveDelay.getValue()).intValue(),
+                        saveBeforeBuild.isSelected()),
+                new IDESettingsConfiguration.BuildAndRun(
+                        showConsoleOnRun.isSelected(), clearConsoleOnRun.isSelected())
         );
     }
 }

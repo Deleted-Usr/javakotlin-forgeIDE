@@ -163,8 +163,8 @@ class ActionManager(private val context: UIContext) {
     private fun startExecution(task: RunTask) {
         val settings = context.settingsService.get()
 
-        if (settings.clearConsoleOnRun()) context.console.clear()
-        if (settings.showConsoleOnRun()) toggleConsoleAction.setSelected(true)
+        if (settings.buildAndRun().clearConsoleOnRun()) context.console.clear()
+        if (settings.buildAndRun().showConsoleOnRun()) toggleConsoleAction.setSelected(true)
 
         execution.start(task)
     }

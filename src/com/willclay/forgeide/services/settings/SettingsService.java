@@ -2,8 +2,8 @@ package com.willclay.forgeide.services.settings;
 
 import com.willclay.forgeide.application.IDESettingsConfiguration;
 import com.willclay.forgeide.json.JsonFileStore;
+import com.willclay.forgeide.json.VersionedJsonDocument;
 import com.willclay.forgeide.services.settings.theme.AppTheme;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -105,15 +105,56 @@ public final class SettingsService
         }
         catch (IOException e)
         {
+            IDESettingsConfiguration migrated = migrateUnversionedSettings();
+            if (migrated != null) return migrated;
+
             System.err.println("Could not read IDE settings from " + settingsFile + ": " + e.getMessage());
             return IDESettingsConfiguration.defaults();
         }
     }
 
+    /** Upgrades the flat settings document written before schema versioning. */
+    private IDESettingsConfiguration migrateUnversionedSettings()
+    {
+        LegacySettings legacy;
+        try
+        {
+            legacy = store.read(settingsFile, LegacySettings.class);
+        }
+        catch (IOException | RuntimeException ignored)
+        {
+            return null;
+        }
+
+        IDESettingsConfiguration migrated = new IDESettingsConfiguration(
+                IDESettingsConfiguration.CURRENT_SCHEMA_VERSION,
+                new IDESettingsConfiguration.Appearance(legacy.theme()),
+                new IDESettingsConfiguration.Startup(
+                        legacy.startupAction(), legacy.restoreOpenFiles(), legacy.confirmDiscard()),
+                new IDESettingsConfiguration.Editor(
+                        legacy.editorFontSize(), legacy.tabWidth(), legacy.insertSpaces()),
+                new IDESettingsConfiguration.Saving(
+                        legacy.autoSave(), legacy.autoSaveDelaySeconds(), legacy.saveBeforeBuild()),
+                new IDESettingsConfiguration.BuildAndRun(
+                        legacy.showConsoleOnRun(), legacy.clearConsoleOnRun())
+        );
+
+        try
+        {
+            store.write(settingsFile, migrated);
+        }
+        catch (IOException exception)
+        {
+            System.err.println("Could not persist migrated IDE settings to "
+                    + settingsFile + ": " + exception.getMessage());
+        }
+        return migrated;
+    }
+
     /** Ensures persisted theme identifiers refer to a theme available at runtime. */
     private static IDESettingsConfiguration normalise(IDESettingsConfiguration config)
     {
-        if (AppTheme.find(config.theme()).isPresent()) return config;
+        if (AppTheme.find(config.appearance().theme()).isPresent()) return config;
         return config.withTheme(AppTheme.DEFAULT.id());
     }
 
@@ -124,7 +165,7 @@ public final class SettingsService
      */
     public synchronized AppTheme getTheme()
     {
-        return AppTheme.find(config.theme()).orElse(AppTheme.DEFAULT);
+        return AppTheme.find(config.appearance().theme()).orElse(AppTheme.DEFAULT);
     }
 
     /**
@@ -151,5 +192,27 @@ public final class SettingsService
     public synchronized void addChangeListener(Consumer<IDESettingsConfiguration> listener)
     {
         listeners.add(Objects.requireNonNull(listener, "listener"));
+    }
+
+    record LegacySettings(
+            String startupAction,
+            boolean restoreOpenFiles,
+            boolean confirmDiscard,
+            int editorFontSize,
+            int tabWidth,
+            boolean insertSpaces,
+            boolean autoSave,
+            int autoSaveDelaySeconds,
+            boolean saveBeforeBuild,
+            boolean showConsoleOnRun,
+            boolean clearConsoleOnRun,
+            String theme
+    ) implements VersionedJsonDocument
+    {
+        @Override
+        public int schemaVersion()
+        {
+            return 0;
+        }
     }
 }

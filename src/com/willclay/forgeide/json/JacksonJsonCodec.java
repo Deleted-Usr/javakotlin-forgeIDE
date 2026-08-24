@@ -34,13 +34,27 @@ public final class JacksonJsonCodec implements JsonCodec
     @Override
     public <T> T read(Reader reader, Class<T> type) throws IOException
     {
-        return mapper.readValue(reader, type);
+        try
+        {
+            return mapper.readValue(reader, type);
+        }
+        catch (JacksonException exception)
+        {
+            throw new IOException("Could not decode JSON: " + exception.getMessage(), exception);
+        }
     }
 
     @Override
     public void write(Writer writer, Object value) throws IOException
     {
-        mapper.writerWithDefaultPrettyPrinter().writeValue(writer, value);
+        try
+        {
+            mapper.writerWithDefaultPrettyPrinter().writeValue(writer, value);
+        }
+        catch (JacksonException exception)
+        {
+            throw new IOException("Could not encode JSON: " + exception.getMessage(), exception);
+        }
     }
 
     /** Keeps project-relative paths as portable JSON strings instead of file URIs. */

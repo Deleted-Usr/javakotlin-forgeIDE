@@ -85,7 +85,7 @@ public final class Window extends JFrame
 
         this.settingsService = Objects.requireNonNull(settingsService, "settingsService");
         Objects.requireNonNull(sessionService, "sessionService");
-        Font editorFont = EditorFonts.load(settingsService.get().editorFontSize());
+        Font editorFont = EditorFonts.load(settingsService.get().editor().fontSize());
 
         editorPanel = new CodeEditorPanel(editorFont);
         editorManager = new EditorManager(editorPanel);
@@ -155,7 +155,7 @@ public final class Window extends JFrame
 
     private boolean confirmCloseTab(EditorTab tab)
     {
-        if (!tab.isModified() || !settingsService.get().confirmDiscard()) return true;
+        if (!tab.isModified() || !settingsService.get().startup().confirmDiscard()) return true;
 
         return Utils.confirmDiscardChanges(this, "Close " + tab.getDisplayName());
     }
@@ -208,12 +208,13 @@ public final class Window extends JFrame
         EditorTab selected = editorManager.getCurrentTab();
         Path selectedFile = selected == null ? null : selected.getFile();
 
-        return new IDESessionConfiguration(projectRoot, openFiles, selectedFile);
+        return new IDESessionConfiguration(
+                IDESessionConfiguration.CURRENT_SCHEMA_VERSION, projectRoot, openFiles, selectedFile);
     }
 
     private void restoreSession(SessionService sessionService)
     {
-        if (!IDESettingsConfiguration.REOPEN_LAST_PROJECT.equals(settingsService.get().startupAction())) return;
+        if (!IDESettingsConfiguration.REOPEN_LAST_PROJECT.equals(settingsService.get().startup().action())) return;
 
         IDESessionConfiguration session = sessionService.get();
         Path projectRoot = session.projectRoot();
@@ -229,7 +230,7 @@ public final class Window extends JFrame
             return;
         }
 
-        if (!settingsService.get().restoreOpenFiles()) return;
+        if (!settingsService.get().startup().restoreOpenFiles()) return;
 
         List<Path> restorable = new ArrayList<>();
         for (Path file : session.openFiles())

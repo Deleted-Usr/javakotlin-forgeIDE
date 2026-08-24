@@ -34,7 +34,7 @@ public enum AppTheme
 
     ;
 
-    public static final AppTheme DEFAULT = DARK;
+    public static final AppTheme DEFAULT = MATERIAL_DARKER;
 
     private final String id;
     private final String displayName;

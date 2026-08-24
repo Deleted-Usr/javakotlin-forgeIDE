@@ -8,6 +8,7 @@ import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Objects;
 
 /** Persists typed JSON documents as UTF-8 without exposing half-written files. */
 public final class JsonFileStore
@@ -16,10 +17,10 @@ public final class JsonFileStore
 
     public JsonFileStore(JsonCodec codec)
     {
-        this.codec = codec;
+        this.codec = Objects.requireNonNull(codec, "codec");
     }
 
-    public <T> T read(Path path, Class<T> type) throws IOException
+    public <T extends VersionedJsonDocument> T read(Path path, Class<T> type) throws IOException
     {
         try (Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8))
         {
@@ -27,8 +28,9 @@ public final class JsonFileStore
         }
     }
 
-    public void write(Path path, Object value) throws IOException
+    public void write(Path path, VersionedJsonDocument value) throws IOException
     {
+        Objects.requireNonNull(value, "value");
         Path directory = path.toAbsolutePath().normalize().getParent();
         Files.createDirectories(directory);
 
