@@ -1,5 +1,7 @@
 package com.willclay.forgeide.lang.kotlin
 
+import com.willclay.forgeide.annotations.SourceEquivalent
+import com.willclay.forgeide.annotations.SourceLanguage
 import com.willclay.forgeide.lang.api.Language
 import com.willclay.forgeide.lang.api.LanguageProvider
 
@@ -10,6 +12,10 @@ import com.willclay.forgeide.lang.api.LanguageProvider
  * Keeping Kotlin behind [LanguageProvider] gives it the same construction
  * boundary as built-in Java support and externally loaded language plugins.
  */
+@SourceEquivalent(
+    language = SourceLanguage.JAVA,
+    path = "docs/java-equivalents/lang/kotlin/KotlinLanguageProvider.java"
+)
 class KotlinLanguageProvider : LanguageProvider {
     /** Returns the stable identifier for the ForgeIDE Kotlin plugin. */
     override fun pluginId() = "forge.kotlin"
