@@ -46,33 +46,50 @@ public final class TokenTheme
     {
         Map<TokenType, AttributeSet> styles = new EnumMap<>(TokenType.class);
 
-        styles.put(TokenType.PLAIN,      style(new Color(0x2B2B2B), false));
-        styles.put(TokenType.KEYWORD,    style(new Color(0x7F0055), true));
-        styles.put(TokenType.LITERAL,    style(new Color(0x7F0055), true));
-        styles.put(TokenType.TYPE,       style(new Color(0x267F99), false));
-        styles.put(TokenType.STRING,     style(new Color(0x067D17), false));
-        styles.put(TokenType.CHARACTER,  style(new Color(0x067D17), false));
-        styles.put(TokenType.NUMBER,     style(new Color(0x1750EB), false));
-        styles.put(TokenType.COMMENT,    style(new Color(0x8C8C8C), false));
-        styles.put(TokenType.ANNOTATION, style(new Color(0x9E880D), false));
+        styles.put(TokenType.PLAIN,              style(new Color(0x2B2B2B), false));
+        styles.put(TokenType.KEYWORD,            style(new Color(0x0033B3), true));
+        styles.put(TokenType.LITERAL,            style(new Color(0x0033B3), true));
+        styles.put(TokenType.TYPE,               style(new Color(0x067D17), false));
+        styles.put(TokenType.TYPE_DECLARATION,   style(new Color(0x067D17), true));
+        styles.put(TokenType.METHOD_DECLARATION, style(new Color(0x00627A), true));
+        styles.put(TokenType.METHOD_CALL,        style(new Color(0x00627A), false));
+        styles.put(TokenType.STRING,             style(new Color(0x067D17), false));
+        styles.put(TokenType.CHARACTER,          style(new Color(0x067D17), false));
+        styles.put(TokenType.NUMBER,             style(new Color(0x1750EB), false));
+        styles.put(TokenType.COMMENT,            style(new Color(0x8C8C8C), false));
+        styles.put(TokenType.DOC_COMMENT,        style(new Color(0x66747B), false));
+        styles.put(TokenType.ANNOTATION,         style(new Color(0x9E880D), false));
+        styles.put(TokenType.PARENTHESES,        style(new Color(0x174AD4), false));
+        styles.put(TokenType.BRACKETS,           style(new Color(0x174AD4), false));
+        styles.put(TokenType.BRACES,             style(new Color(0x174AD4), false));
+        styles.put(TokenType.OPERATOR,           style(new Color(0x174AD4), false));
+        styles.put(TokenType.PUNCTUATION,        style(new Color(0x5C6370), false));
 
         return new TokenTheme(styles);
     }
 
-    /** For a dark editor background — call after setting one on the text pane. */
     public static TokenTheme dark()
     {
         Map<TokenType, AttributeSet> styles = new EnumMap<>(TokenType.class);
 
-        styles.put(TokenType.PLAIN,      style(new Color(0xA9B7C6), false));
-        styles.put(TokenType.KEYWORD,    style(new Color(0xCC7832), true));
-        styles.put(TokenType.LITERAL,    style(new Color(0xCC7832), true));
-        styles.put(TokenType.TYPE,       style(new Color(0x4EC9B0), false));
-        styles.put(TokenType.STRING,     style(new Color(0x6A8759), false));
-        styles.put(TokenType.CHARACTER,  style(new Color(0x6A8759), false));
-        styles.put(TokenType.NUMBER,     style(new Color(0x6897BB), false));
-        styles.put(TokenType.COMMENT,    style(new Color(0x808080), false));
-        styles.put(TokenType.ANNOTATION, style(new Color(0xBBB529), false));
+        styles.put(TokenType.PLAIN,              style(new Color(0xA9B7C6), false));
+        styles.put(TokenType.KEYWORD,            style(new Color(0xCC7832), true));
+        styles.put(TokenType.LITERAL,            style(new Color(0xCC7832), true));
+        styles.put(TokenType.TYPE,               style(new Color(0xA9B7C6), false));
+        styles.put(TokenType.TYPE_DECLARATION,   style(new Color(0xA9B7C6), true));
+        styles.put(TokenType.METHOD_DECLARATION, style(new Color(0xFFC66D), true));
+        styles.put(TokenType.METHOD_CALL,        style(new Color(0xFFC66D), false));
+        styles.put(TokenType.STRING,             style(new Color(0x6A8759), false));
+        styles.put(TokenType.CHARACTER,          style(new Color(0x6A8759), false));
+        styles.put(TokenType.NUMBER,             style(new Color(0x6897BB), false));
+        styles.put(TokenType.COMMENT,            style(new Color(0x808080), false));
+        styles.put(TokenType.DOC_COMMENT,        style(new Color(0x629755), false));
+        styles.put(TokenType.ANNOTATION,         style(new Color(0xBBB529), false));
+        styles.put(TokenType.PARENTHESES,        style(new Color(0xA9B7C6), false));
+        styles.put(TokenType.BRACKETS,           style(new Color(0xA9B7C6), false));
+        styles.put(TokenType.BRACES,             style(new Color(0xA9B7C6), false));
+        styles.put(TokenType.OPERATOR,           style(new Color(0xA9B7C6), false));
+        styles.put(TokenType.PUNCTUATION,        style(new Color(0x7F8C8D), false));
 
         return new TokenTheme(styles);
     }
@@ -81,15 +98,24 @@ public final class TokenTheme
     {
         Map<TokenType, AttributeSet> styles = new EnumMap<>(TokenType.class);
 
-        styles.put(TokenType.PLAIN,      style(new Color(0xEEFFFF), false));
-        styles.put(TokenType.KEYWORD,    style(new Color(0xC792EA), false));
-        styles.put(TokenType.LITERAL,    style(new Color(0xFF5370), false));
-        styles.put(TokenType.TYPE,       style(new Color(0xFFCB6B), false));
-        styles.put(TokenType.STRING,     style(new Color(0xC3E88D), false));
-        styles.put(TokenType.CHARACTER,  style(new Color(0xC3E88D), false));
-        styles.put(TokenType.NUMBER,     style(new Color(0xF78C6C), false));
-        styles.put(TokenType.COMMENT,    style(new Color(0x616161), false));
-        styles.put(TokenType.ANNOTATION, style(new Color(0x82AAFF), false));
+        styles.put(TokenType.PLAIN,              style(new Color(0xEEFFFF), false));
+        styles.put(TokenType.KEYWORD,            style(new Color(0xC792EA), false));
+        styles.put(TokenType.LITERAL,            style(new Color(0xFF5370), false));
+        styles.put(TokenType.TYPE,               style(new Color(0xFFCB6B), false));
+        styles.put(TokenType.TYPE_DECLARATION,   style(new Color(0xFFCB6B), true));
+        styles.put(TokenType.METHOD_DECLARATION, style(new Color(0x82AAFF), true));
+        styles.put(TokenType.METHOD_CALL,        style(new Color(0x82AAFF), false));
+        styles.put(TokenType.STRING,             style(new Color(0xC3E88D), false));
+        styles.put(TokenType.CHARACTER,          style(new Color(0xC3E88D), false));
+        styles.put(TokenType.NUMBER,             style(new Color(0xF78C6C), false));
+        styles.put(TokenType.COMMENT,            style(new Color(0x616161), false));
+        styles.put(TokenType.DOC_COMMENT,        style(new Color(0x546E7A), false));
+        styles.put(TokenType.ANNOTATION,         style(new Color(0x82AAFF), false));
+        styles.put(TokenType.PARENTHESES,        style(new Color(0x89DDFF), false));
+        styles.put(TokenType.BRACKETS,           style(new Color(0x89DDFF), false));
+        styles.put(TokenType.BRACES,             style(new Color(0x89DDFF), false));
+        styles.put(TokenType.OPERATOR,           style(new Color(0x89DDFF), false));
+        styles.put(TokenType.PUNCTUATION,        style(new Color(0x89DDFF), false));
 
         return new TokenTheme(styles);
     }

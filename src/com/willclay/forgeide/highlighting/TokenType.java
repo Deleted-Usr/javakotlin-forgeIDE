@@ -14,16 +14,27 @@ public enum TokenType
     PLAIN,
 
     KEYWORD,
-
-    /** true, false, null. Separate from KEYWORD only so a theme can split them. */
     LITERAL,
 
-    /** A capitalised identifier. A convention, not a fact — see JavaLexer. */
+    /** A type reference, including a constructor target. */
     TYPE,
+
+    /** The declared name of a class, interface, enum, record, or annotation type */
+    TYPE_DECLARATION,
+
+    METHOD_DECLARATION,
+    METHOD_CALL,
 
     STRING,
     CHARACTER,
     NUMBER,
     COMMENT,
-    ANNOTATION
+    DOC_COMMENT,
+    ANNOTATION,
+
+    PARENTHESES,
+    BRACKETS,
+    BRACES,
+    OPERATOR,
+    PUNCTUATION
 }
