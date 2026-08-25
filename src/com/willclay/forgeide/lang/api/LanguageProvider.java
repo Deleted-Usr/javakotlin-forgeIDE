@@ -1,7 +1,5 @@
 package com.willclay.forgeide.lang.api;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * Supplies plugin metadata and constructs a language implementation for ForgeIDE.
  * <p>

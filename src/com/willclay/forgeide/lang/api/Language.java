@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -49,6 +50,17 @@ public interface Language
 
     /** Empty for languages the IDE can highlight but not execute. */
     Optional<Toolchain> toolchain();
+
+    /**
+     * Creates the project-settings tabs owned by this language.
+     *
+     * <p>Most languages contribute one tab. A future mixed JVM language can
+     * return a shared JVM tab followed by separate Java and Kotlin tabs.</p>
+     */
+    default List<LanguageSettingsPage> settingsPages(Project project)
+    {
+        return List.of();
+    }
 
     /** Returns whether a file has an extension owned by this language. */
     default boolean recognises(Path file)

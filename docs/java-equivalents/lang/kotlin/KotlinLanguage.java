@@ -1,6 +1,7 @@
 package com.willclay.forgeide.lang.kotlin;
 
 import com.willclay.forgeide.lang.api.Language;
+import com.willclay.forgeide.lang.api.LanguageSettingsPage;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.lang.api.Toolchain;
 import com.willclay.forgeide.workspace.Project;
@@ -9,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.List;
 import java.util.Set;
 
 public final class KotlinLanguage implements Language
@@ -25,12 +27,21 @@ public final class KotlinLanguage implements Language
     @Override public Lexer lexer() { return lexer; }
     @Override public Optional<Toolchain> toolchain() { return Optional.of(toolchain); }
 
-    @Override public Path sourceRoot(Project project) { return KotlinClassNames.sourceRoot(project); }
+    @Override public Path sourceRoot(Project project) { return KotlinSettings.from(project).jvm().sourceRoot(project); }
+
+    @Override
+    public List<LanguageSettingsPage> settingsPages(Project project)
+    {
+        return List.of(new KotlinSettingsPage(project.root(), KotlinSettings.from(project)));
+    }
 
     @Override
     public void createProjectStructure(Project project) throws IOException
     {
-        Files.createDirectories(KotlinClassNames.librariesRoot(project));
+        for (Path library : KotlinClassNames.libraryRoots(project))
+        {
+            if (!library.toString().toLowerCase().endsWith(".jar")) Files.createDirectories(library);
+        }
         Files.createDirectories(sourceRoot(project));
         Files.createDirectories(KotlinClassNames.outputRoot(project));
     }

@@ -24,18 +24,29 @@ public final class KotlincToolchain implements Toolchain
                 .toList();
         if (sources.isEmpty()) return true;
 
-        Path libraries = KotlinClassNames.librariesRoot(project);
+        KotlinSettings settings = KotlinSettings.from(project);
+        List<Path> libraries = KotlinClassNames.libraryRoots(project);
         Path outputRoot = KotlinClassNames.outputRoot(project);
-        Files.createDirectories(libraries);
+        for (Path library : libraries)
+        {
+            if (!library.toString().toLowerCase().endsWith(".jar")) Files.createDirectories(library);
+        }
         Files.createDirectories(KotlinClassNames.sourceRoot(project));
         Files.createDirectories(outputRoot);
 
         List<String> command = new ArrayList<>();
-        command.add(KotlinClassNames.COMPILER_COMMAND);
+        command.add(settings.compilerCommand());
         command.add(KotlinClassNames.batchSafeArgument(
                 "-J-Dfile.encoding=" + project.configuration().fileHandling().encoding().charset().name()));
         command.add("-classpath");
         command.add(KotlinClassNames.classPath(outputRoot, libraries));
+        command.add("-jdk-home");
+        command.add(settings.jvm().jdkPath().toString());
+        command.add("-jvm-target");
+        command.add(settings.jvmTarget());
+        command.add("-language-version");
+        command.add(settings.languageVersion());
+        if (settings.progressiveMode()) command.add("-progressive");
         command.add("-d");
         command.add(outputRoot.toString());
         sources.stream().map(Path::toString).forEach(command::add);
@@ -97,9 +108,10 @@ public final class KotlincToolchain implements Toolchain
     public int run(Project project, Path sourceFile, Consumer<String> output, Consumer<Writer> onInputReady) throws IOException, InterruptedException
     {
         var encoding = project.configuration().fileHandling().encoding().charset();
+        KotlinSettings settings = KotlinSettings.from(project);
         String classPath = KotlinClassNames.classPath(
                 KotlinClassNames.outputRoot(project),
-                KotlinClassNames.librariesRoot(project));
+                KotlinClassNames.libraryRoots(project));
 
         List<String> command = List.of(
                 KotlinClassNames.RUNNER_COMMAND,
@@ -111,6 +123,7 @@ public final class KotlincToolchain implements Toolchain
                         : KotlinClassNames.mainClass(sourceFile, encoding));
 
         ProcessBuilder builder = new ProcessBuilder(command).directory(project.workingDirectory().toFile());
+        builder.environment().put("JAVA_HOME", settings.jvm().jdkPath().toString());
         return ProcessRunner.execute(builder, output, onInputReady);
     }
 }

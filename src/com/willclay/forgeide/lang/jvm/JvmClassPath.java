@@ -24,18 +24,32 @@ public final class JvmClassPath
      */
     public static String discover(Path outputRoot, Path librariesRoot) throws IOException
     {
+        return discover(outputRoot, List.of(librariesRoot));
+    }
+
+    /** Builds a classpath from any number of library directories or JAR files. */
+    public static String discover(Path outputRoot, List<Path> libraryPaths) throws IOException
+    {
         List<String> entries = new ArrayList<>();
         entries.add(outputRoot.toString());
 
-        if (!Files.isDirectory(librariesRoot)) return entries.getFirst();
-
-        try (Stream<Path> libraries = Files.walk(librariesRoot))
+        for (Path libraryPath : libraryPaths)
         {
-            libraries.filter(Files::isRegularFile)
-                    .filter(JvmClassPath::isJar)
-                    .sorted(Comparator.comparing(Path::toString))
-                    .map(Path::toString)
-                    .forEach(entries::add);
+            if (Files.isRegularFile(libraryPath) && isJar(libraryPath))
+            {
+                entries.add(libraryPath.toString());
+                continue;
+            }
+            if (!Files.isDirectory(libraryPath)) continue;
+
+            try (Stream<Path> libraries = Files.walk(libraryPath))
+            {
+                libraries.filter(Files::isRegularFile)
+                        .filter(JvmClassPath::isJar)
+                        .sorted(Comparator.comparing(Path::toString))
+                        .map(Path::toString)
+                        .forEach(entries::add);
+            }
         }
 
         return String.join(File.pathSeparator, entries);

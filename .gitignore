@@ -143,3 +143,5 @@ secrets.properties
 *.keystore
 *.jks
 *.pem
+
+AGENTS.md

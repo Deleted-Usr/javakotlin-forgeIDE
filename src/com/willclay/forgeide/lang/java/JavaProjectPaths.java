@@ -9,18 +9,18 @@ final class JavaProjectPaths
 {
     private JavaProjectPaths() { }
 
-    static Path librariesRoot(Project project)
+    static java.util.List<Path> libraryRoots(Project project)
     {
-        return project.root().resolve("libs");
+        return JavaSettings.from(project).jvm().libraryRoots(project);
     }
 
     static Path sourceRoot(Project project)
     {
-        return project.root().resolve("src");
+        return JavaSettings.from(project).jvm().sourceRoot(project);
     }
 
     static Path outputRoot(Project project)
     {
-        return project.root().resolve("out");
+        return JavaSettings.from(project).jvm().outputRoot(project);
     }
 }

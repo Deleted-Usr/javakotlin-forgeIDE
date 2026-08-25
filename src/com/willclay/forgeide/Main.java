@@ -84,10 +84,6 @@ import java.io.IOException;
  * <p>
  * The look and feel is installed before the first component exists, since it is
  * only consulted when a component is created.
- * <p>
- * TODO - becomes a two-phase launcher once there are plugins: services and
- *        plugin discovery off the EDT, then the UI, then anything that needs a
- *        window to report into. See, in future, ForgeApplication.
  */
 public final class Main
 {

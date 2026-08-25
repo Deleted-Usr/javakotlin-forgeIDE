@@ -1,6 +1,8 @@
 package com.willclay.forgeide.ui.settings.project;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
+import com.willclay.forgeide.lang.api.LanguageSettings;
+import com.willclay.forgeide.lang.api.LanguageSettingsPage;
 import com.willclay.forgeide.services.settings.project.ProjectSettingsService;
 import com.willclay.forgeide.services.settings.project.ProjectSettingsService.ProjectSettingsState;
 import com.willclay.forgeide.services.settings.project.ProjectSettingsValues;
@@ -17,6 +19,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JTabbedPane;
 import javax.swing.ListSelectionModel;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -24,7 +27,9 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Component;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 /** General settings shared by every Forge project language. */
@@ -37,6 +42,7 @@ public final class ProjectSettings extends JPanel
     private final JComboBox<Encoding> encoding = new JComboBox<>(Encoding.values());
     private final JComboBox<LineSeparatorPolicy> lineSeparators = new JComboBox<>(LineSeparatorPolicy.values());
     private final DefaultListModel<String> excludedPaths = new DefaultListModel<>();
+    private final List<LanguageSettingsPage> languagePages = new ArrayList<>();
 
     private Path projectRoot;
 
@@ -53,7 +59,8 @@ public final class ProjectSettings extends JPanel
             return;
         }
 
-        load(state.get());
+        ProjectSettingsState projectState = state.get();
+        load(projectState);
         configureLineSeparatorRenderer();
 
         JPanel sections = Utils.createSettingsPage();
@@ -61,7 +68,16 @@ public final class ProjectSettings extends JPanel
         Utils.addSettingsSection(sections, createFileHandlingSection());
         Utils.addSettingsSection(sections, createExcludedPathsSection());
 
-        add(sections, BorderLayout.NORTH);
+        JTabbedPane tabs = new JTabbedPane();
+        tabs.addTab("General", wrapAtTop(sections));
+
+        languagePages.addAll(projectState.language().settingsPages(projectState.project()));
+        for (LanguageSettingsPage page : languagePages)
+        {
+            tabs.addTab(page.title(), page.component());
+        }
+
+        add(tabs, BorderLayout.CENTER);
     }
 
     public boolean isAvailable()
@@ -85,12 +101,17 @@ public final class ProjectSettings extends JPanel
             throw new IllegalArgumentException("Working directory must not be blank.");
         }
 
+        List<LanguageSettings> settings = languagePages.stream()
+                .map(LanguageSettingsPage::getValues)
+                .toList();
+
         return new ProjectSettingsValues(
                 name.getText(),
                 Path.of(workingDirectoryText),
                 (Encoding) encoding.getSelectedItem(),
                 (LineSeparatorPolicy) lineSeparators.getSelectedItem(),
-                Collections.list(excludedPaths.elements())
+                Collections.list(excludedPaths.elements()),
+                settings
         );
     }
 
@@ -203,6 +224,13 @@ public final class ProjectSettings extends JPanel
                 return component;
             }
         });
+    }
+
+    private static JPanel wrapAtTop(JPanel content)
+    {
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.add(content, BorderLayout.NORTH);
+        return wrapper;
     }
 
     private void chooseExcludedPath(JList<String> paths, int selectionMode)

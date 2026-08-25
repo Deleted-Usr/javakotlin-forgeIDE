@@ -7,17 +7,21 @@ import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
-/** The persisted, language-independent description of a Forge project. */
+/** Project metadata plus opaque settings maps owned by the selected language. */
 public record ProjectConfiguration(
         int schemaVersion,
         @JsonProperty("name") @JsonAlias("projectName") String projectName,
         String language,
         Path workingDirectory,
         FileHandling fileHandling,
-        List<String> excludedPaths
+        List<String> excludedPaths,
+        Map<String, Map<String, Object>> languageSettings
 ) implements VersionedJsonDocument
 {
     public static final int CURRENT_SCHEMA_VERSION = 1;
@@ -37,6 +41,7 @@ public record ProjectConfiguration(
         workingDirectory = workingDirectory == null ? Path.of(".") : workingDirectory;
         fileHandling = fileHandling == null ? FileHandling.defaults() : fileHandling;
         excludedPaths = excludedPaths == null ? List.of(".git", ".forge") : List.copyOf(excludedPaths);
+        languageSettings = copyLanguageSettings(languageSettings);
     }
 
     public static ProjectConfiguration defaultsForLanguage(String name, String language)
@@ -50,7 +55,8 @@ public record ProjectConfiguration(
                 language,
                 Path.of("."),
                 FileHandling.defaults(),
-                List.of(".git", ".forge")
+                List.of(".git", ".forge"),
+                Map.of()
         );
     }
 
@@ -65,8 +71,22 @@ public record ProjectConfiguration(
                 language,
                 workingDirectory,
                 fileHandling,
-                excludedPaths
+                excludedPaths,
+                languageSettings
         );
+    }
+
+    private static Map<String, Map<String, Object>> copyLanguageSettings(
+            Map<String, Map<String, Object>> settings)
+    {
+        if (settings == null || settings.isEmpty()) return Map.of();
+
+        Map<String, Map<String, Object>> copy = new LinkedHashMap<>();
+        settings.forEach((id, values) -> copy.put(
+                Objects.requireNonNull(id, "language settings id"),
+                Collections.unmodifiableMap(new LinkedHashMap<>(
+                        Objects.requireNonNull(values, "language settings values")))));
+        return Collections.unmodifiableMap(copy);
     }
 
     public record FileHandling(

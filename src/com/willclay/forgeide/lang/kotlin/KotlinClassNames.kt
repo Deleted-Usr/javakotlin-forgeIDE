@@ -46,9 +46,9 @@ internal object KotlinClassNames {
         """(?m)^\s*@file:\s*(?:kotlin\.jvm\.)?JvmName\s*\(\s*\"([^\"\\]+)\"\s*\)"""
     )
 
-    fun librariesRoot(project: Project): Path = project.root().resolve("libs")
-    fun sourceRoot(project: Project): Path = project.root().resolve("src")
-    fun outputRoot(project: Project): Path = project.root().resolve("out")
+    fun libraryRoots(project: Project): List<Path> = KotlinSettings.from(project).jvm.libraryRoots(project)
+    fun sourceRoot(project: Project): Path = KotlinSettings.from(project).jvm.sourceRoot(project)
+    fun outputRoot(project: Project): Path = KotlinSettings.from(project).jvm.outputRoot(project)
 
     fun hasExtension(path: Path, extension: String): Boolean =
         path.fileName?.toString()?.lowercase(Locale.ROOT)?.endsWith(extension) == true
@@ -62,8 +62,8 @@ internal object KotlinClassNames {
         if (IS_WINDOWS) "\"$argument\"" else argument
 
     @Throws(IOException::class)
-    fun classPath(outputRoot: Path, librariesRoot: Path): String =
-        JvmClassPath.discover(outputRoot, librariesRoot)
+    fun classPath(outputRoot: Path, libraryRoots: List<Path>): String =
+        JvmClassPath.discover(outputRoot, libraryRoots)
 
     @Throws(IOException::class)
     fun mainClass(sourceFile: Path, encoding: Charset): String {

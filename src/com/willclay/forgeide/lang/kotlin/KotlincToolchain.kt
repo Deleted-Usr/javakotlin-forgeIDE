@@ -27,17 +27,26 @@ class KotlincToolchain : Toolchain {
         val sources = sourceFiles.filter { KotlinClassNames.hasExtension(it, KotlinClassNames.EXTENSION) }
         if (sources.isEmpty()) return true
 
-        val libraries = KotlinClassNames.librariesRoot(project)
+        val settings = KotlinSettings.from(project)
+        val libraries = KotlinClassNames.libraryRoots(project)
         val outputRoot = KotlinClassNames.outputRoot(project)
-        Files.createDirectories(libraries)
+        libraries.filterNot { it.toString().endsWith(".jar", ignoreCase = true) }
+            .forEach(Files::createDirectories)
         Files.createDirectories(KotlinClassNames.sourceRoot(project))
         Files.createDirectories(outputRoot)
 
         val command = buildList {
-            add(KotlinClassNames.COMPILER_COMMAND)
+            add(settings.compilerCommand)
             add(KotlinClassNames.batchSafeArgument("-J-Dfile.encoding=${project.configuration.fileHandling.encoding.charset().name()}"))
             add("-classpath")
             add(KotlinClassNames.classPath(outputRoot, libraries))
+            add("-jdk-home")
+            add(settings.jvm.jdkPath.toString())
+            add("-jvm-target")
+            add(settings.jvmTarget)
+            add("-language-version")
+            add(settings.languageVersion)
+            if (settings.progressiveMode) add("-progressive")
             add("-d")
             add(outputRoot.toString())
             sources.forEach { add(it.toString()) }
@@ -96,9 +105,10 @@ class KotlincToolchain : Toolchain {
         output: Consumer<String>,
         onInputReady: Consumer<Writer>
     ): Int {
+        val settings = KotlinSettings.from(project)
         val classPath = KotlinClassNames.classPath(
             KotlinClassNames.outputRoot(project),
-            KotlinClassNames.librariesRoot(project)
+            KotlinClassNames.libraryRoots(project)
         )
         val encoding = project.configuration.fileHandling.encoding.charset()
 
@@ -117,6 +127,7 @@ class KotlincToolchain : Toolchain {
         }
 
         val builder = ProcessBuilder(command).directory(project.workingDirectory().toFile())
+        builder.environment()["JAVA_HOME"] = settings.jvm.jdkPath.toString()
 
         return ProcessRunner.execute(builder, output, onInputReady)
     }

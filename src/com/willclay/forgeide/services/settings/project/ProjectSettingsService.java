@@ -1,5 +1,7 @@
 package com.willclay.forgeide.services.settings.project;
 
+import com.willclay.forgeide.lang.api.Language;
+import com.willclay.forgeide.lang.api.LanguageSettings;
 import com.willclay.forgeide.services.WorkspaceService;
 import com.willclay.forgeide.workspace.Project;
 import com.willclay.forgeide.workspace.metadata.ProjectConfiguration;
@@ -8,8 +10,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -36,14 +40,11 @@ public final class ProjectSettingsService
                 configuration.workingDirectory(),
                 fileHandling.encoding(),
                 fileHandling.lineSeparators(),
-                configuration.excludedPaths()
+                configuration.excludedPaths(),
+                List.of()
         );
 
-        return Optional.of(new ProjectSettingsState(
-                project.root(),
-                project.language().displayName(),
-                values
-        ));
+        return Optional.of(new ProjectSettingsState(project, values));
     }
 
     public void apply(Path expectedProjectRoot, ProjectSettingsValues values) throws IOException
@@ -61,13 +62,20 @@ public final class ProjectSettingsService
         ProjectConfiguration current = project.configuration();
         Path workingDirectory = normaliseWorkingDirectory(project.root(), values.workingDirectory());
         List<String> excludedPaths = normaliseExcludedPaths(project.root(), values.excludedPaths());
+        Map<String, Map<String, Object>> languageSettings = new LinkedHashMap<>(current.languageSettings());
+        for (LanguageSettings settings : values.languageSettings())
+        {
+            languageSettings.put(settings.languageId(), settings.toJson());
+        }
+
         ProjectConfiguration updated = new ProjectConfiguration(
                 current.schemaVersion(),
                 values.projectName(),
                 current.language(),
                 workingDirectory,
                 new ProjectConfiguration.FileHandling(values.encoding(), values.lineSeparators()),
-                excludedPaths
+                excludedPaths,
+                languageSettings
         );
 
         workspaceService.updateConfiguration(updated);
@@ -137,15 +145,28 @@ public final class ProjectSettingsService
 
     /** Project identity and read-only display data accompanying the editable values. */
     public record ProjectSettingsState(
-            Path projectRoot,
-            String languageDisplayName,
+            Project project,
             ProjectSettingsValues values)
     {
         public ProjectSettingsState
         {
-            projectRoot = Objects.requireNonNull(projectRoot, "projectRoot").toAbsolutePath().normalize();
-            languageDisplayName = Objects.requireNonNull(languageDisplayName, "languageDisplayName");
+            Objects.requireNonNull(project, "project");
             Objects.requireNonNull(values, "values");
+        }
+
+        public Path projectRoot()
+        {
+            return project.root();
+        }
+
+        public Language language()
+        {
+            return project.language();
+        }
+
+        public String languageDisplayName()
+        {
+            return project.language().displayName();
         }
     }
 }

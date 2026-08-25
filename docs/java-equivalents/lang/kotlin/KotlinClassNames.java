@@ -8,6 +8,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,17 +34,17 @@ public final class KotlinClassNames
 
     private KotlinClassNames() { }
 
-    public static Path librariesRoot(Project project)
+    public static List<Path> libraryRoots(Project project)
     {
-        return project.root().resolve("libs");
+        return KotlinSettings.from(project).jvm().libraryRoots(project);
     }
     public static Path sourceRoot(Project project)
     {
-        return project.root().resolve("src");
+        return KotlinSettings.from(project).jvm().sourceRoot(project);
     }
     public static Path outputRoot(Project project)
     {
-        return project.root().resolve("out");
+        return KotlinSettings.from(project).jvm().outputRoot(project);
     }
 
     public static boolean hasExtension(Path path, String extension)
@@ -61,9 +62,9 @@ public final class KotlinClassNames
         return IS_WINDOWS ? "\"" + argument + "\"" : argument;
     }
 
-    public static String classPath(Path outputRoot, Path librariesRoot) throws IOException
+    public static String classPath(Path outputRoot, List<Path> libraryRoots) throws IOException
     {
-        return JvmClassPath.discover(outputRoot, librariesRoot);
+        return JvmClassPath.discover(outputRoot, libraryRoots);
     }
 
     public static String mainClass(Path sourceFile, Charset encoding) throws IOException

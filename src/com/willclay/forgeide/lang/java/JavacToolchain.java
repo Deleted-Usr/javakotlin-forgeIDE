@@ -20,21 +20,28 @@ public final class JavacToolchain implements Toolchain
     @Override
     public boolean compile(Project project, List<Path> sourceFiles, Consumer<String> output) throws IOException, InterruptedException
     {
-        Path libs = JavaProjectPaths.librariesRoot(project);
+        JavaSettings settings = JavaSettings.from(project);
+        List<Path> libraries = JavaProjectPaths.libraryRoots(project);
         Path src  = JavaProjectPaths.sourceRoot(project);
         Path out  = JavaProjectPaths.outputRoot(project);
 
-        Files.createDirectories(libs);
+        for (Path library : libraries)
+        {
+            if (!library.toString().toLowerCase(Locale.ROOT).endsWith(".jar")) Files.createDirectories(library);
+        }
         Files.createDirectories(src);
         Files.createDirectories(out);
 
         // -d redirects the .class output away from the source tree.
         List<String> command = new ArrayList<>();
-        command.add("javac");
+        command.add(settings.jvm().jdkExecutable("javac").toString());
         command.add("-encoding");
         command.add(project.configuration().fileHandling().encoding().charset().name());
+        command.add("--release");
+        command.add(Integer.toString(settings.release()));
+        if (settings.previewFeatures()) command.add("--enable-preview");
         command.add("-classpath");
-        command.add(JavaClassNames.classPath(out, libs));
+        command.add(JavaClassNames.classPath(out, libraries));
         command.add("-sourcepath");
         command.add(src.toString());
         command.add("-d");
@@ -106,13 +113,18 @@ public final class JavacToolchain implements Toolchain
     @Override
     public int run(Project project, Path sourceFile, Consumer<String> output, Consumer<Writer> onInputReady) throws IOException, InterruptedException
     {
-        Path libs = JavaProjectPaths.librariesRoot(project);
+        JavaSettings settings = JavaSettings.from(project);
+        List<Path> libraries = JavaProjectPaths.libraryRoots(project);
         Path out  = JavaProjectPaths.outputRoot(project);
 
-        ProcessBuilder builder = new ProcessBuilder(
-                "java", "-cp", JavaClassNames.classPath(out, libs).toString(),
-                JavaClassNames.of(project, sourceFile)
-        );
+        List<String> command = new ArrayList<>();
+        command.add(settings.jvm().jdkExecutable("java").toString());
+        if (settings.previewFeatures()) command.add("--enable-preview");
+        command.add("-cp");
+        command.add(JavaClassNames.classPath(out, libraries));
+        command.add(JavaClassNames.of(project, sourceFile));
+
+        ProcessBuilder builder = new ProcessBuilder(command);
         builder.directory(project.workingDirectory().toFile());
 
         return ProcessRunner.execute(builder, output, onInputReady);

@@ -3,12 +3,15 @@ package com.willclay.forgeide.lang.java;
 import com.willclay.forgeide.lang.api.Toolchain;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.lang.api.Language;
+import com.willclay.forgeide.lang.api.LanguageSettingsPage;
 import com.willclay.forgeide.workspace.Project;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /** Java language support and its project conventions. */
@@ -60,13 +63,16 @@ public final class JavaLanguage implements Language
     @Override
     public Path sourceRoot(Project project)
     {
-        return JavaProjectPaths.sourceRoot(project);
+        return JavaSettings.from(project).jvm().sourceRoot(project);
     }
 
     @Override
     public void createProjectStructure(Project project) throws IOException
     {
-        Files.createDirectories(JavaProjectPaths.librariesRoot(project));
+        for (Path library : JavaProjectPaths.libraryRoots(project))
+        {
+            if (!library.toString().toLowerCase(Locale.ROOT).endsWith(".jar")) Files.createDirectories(library);
+        }
         Files.createDirectories(JavaProjectPaths.sourceRoot(project));
         Files.createDirectories(JavaProjectPaths.outputRoot(project));
     }
@@ -75,5 +81,11 @@ public final class JavaLanguage implements Language
     public Optional<Toolchain> toolchain()
     {
         return Optional.of(toolchain);
+    }
+
+    @Override
+    public List<LanguageSettingsPage> settingsPages(Project project)
+    {
+        return List.of(new JavaSettingsPage(project.root(), JavaSettings.from(project)));
     }
 }

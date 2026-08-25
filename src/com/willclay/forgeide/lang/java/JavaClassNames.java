@@ -6,6 +6,7 @@ import com.willclay.forgeide.workspace.Project;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -111,5 +112,10 @@ public final class JavaClassNames
     public static String classPath(Path out, Path libs) throws IOException
     {
         return JvmClassPath.discover(out, libs);
+    }
+
+    public static String classPath(Path out, List<Path> libraries) throws IOException
+    {
+        return JvmClassPath.discover(out, libraries);
     }
 }

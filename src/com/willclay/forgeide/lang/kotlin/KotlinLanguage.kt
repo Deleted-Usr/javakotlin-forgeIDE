@@ -3,6 +3,7 @@ package com.willclay.forgeide.lang.kotlin
 import com.willclay.forgeide.annotations.SourceEquivalent
 import com.willclay.forgeide.annotations.SourceLanguage
 import com.willclay.forgeide.lang.api.Language
+import com.willclay.forgeide.lang.api.LanguageSettingsPage
 import com.willclay.forgeide.lang.api.Lexer
 import com.willclay.forgeide.lang.api.Toolchain
 import com.willclay.forgeide.workspace.Project
@@ -42,11 +43,16 @@ class KotlinLanguage : Language {
     override fun lexer(): Lexer = lexer
     override fun toolchain(): Optional<Toolchain> = Optional.of(toolchain)
 
-    override fun sourceRoot(project: Project): Path = KotlinClassNames.sourceRoot(project)
+    override fun sourceRoot(project: Project): Path = KotlinSettings.from(project).jvm.sourceRoot(project)
+
+    override fun settingsPages(project: Project): List<LanguageSettingsPage> =
+        listOf(KotlinSettingsPage(project.root(), KotlinSettings.from(project)))
 
     @Throws(IOException::class)
     override fun createProjectStructure(project: Project) {
-        Files.createDirectories(KotlinClassNames.librariesRoot(project))
+        KotlinClassNames.libraryRoots(project)
+            .filterNot { it.toString().endsWith(".jar", ignoreCase = true) }
+            .forEach(Files::createDirectories)
         Files.createDirectories(sourceRoot(project))
         Files.createDirectories(KotlinClassNames.outputRoot(project))
     }
