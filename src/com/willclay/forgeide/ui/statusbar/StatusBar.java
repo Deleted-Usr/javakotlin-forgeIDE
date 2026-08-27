@@ -35,13 +35,13 @@ public final class StatusBar extends JToolBar
     private final EditorManager editorManager;
     private final SettingsService settingsService;
 
-    private final JLabel compilerStatus = createField("Ready", "Build and run status");
-    private final JLabel lineEnding = createField("LF", "Line endings in the current file");
-    private final JLabel encoding = createField("UTF-8", "Project file encoding");
-    private final JLabel project = createField("No Project", "Current project");
-    private final JLabel caretPosition = createField("Ln 1, Col 1", "Caret position");
-    private final JLabel tabSize = createField("Spaces: 4", "Indentation used by the editor");
-    private final JLabel theme = createField("Material Darker", "Current theme");
+    private final JLabel compilerStatus = Utils.addStatusBarField("Ready", "Build and run status");
+    private final JLabel lineEnding     = Utils.addStatusBarField("LF", "Line endings in the current file");
+    private final JLabel encoding       = Utils.addStatusBarField("UTF-8", "Project file encoding");
+    private final JLabel project        = Utils.addStatusBarField("No Project", "Current project");
+    private final JLabel caretPosition  = Utils.addStatusBarField("Ln 1, Col 1", "Caret position");
+    private final JLabel tabSize        = Utils.addStatusBarField("Spaces: 4", "Indentation used by the editor");
+    private final JLabel theme          = Utils.addStatusBarField("Material Darker", "Current theme");
 
     private final CaretListener caretListener = this::caretMoved;
     private JTextPane observedTextPane;
@@ -51,22 +51,22 @@ public final class StatusBar extends JToolBar
         super(HORIZONTAL);
 
         this.executionManager = Objects.requireNonNull(executionManager, "executionManager");
-        this.workspace = Objects.requireNonNull(workspace, "workspace");
-        this.editorManager = Objects.requireNonNull(editorManager, "editorManager");
-        this.settingsService = Objects.requireNonNull(settingsService, "settingsService");
+        this.workspace        = Objects.requireNonNull(workspace, "workspace");
+        this.editorManager    = Objects.requireNonNull(editorManager, "editorManager");
+        this.settingsService  = Objects.requireNonNull(settingsService, "settingsService");
 
 
         setFloatable(false);
         setRollover(false);
         setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
 
+        add(project);
+        addSeparator();
         add(compilerStatus);
         add(Box.createHorizontalGlue());
         add(lineEnding);
         addSeparator();
         add(encoding);
-        addSeparator();
-        add(project);
         addSeparator();
         add(caretPosition);
         addSeparator();
@@ -87,13 +87,6 @@ public final class StatusBar extends JToolBar
         updateProjectInformation();
         updateEditorInformation();
         updateSettings(settingsService.get());
-    }
-
-    private JLabel createField(String text, String toolTip)
-    {
-        JLabel field = Utils.addStatusBarField(text);
-        field.setToolTipText(toolTip);
-        return field;
     }
 
     private void updateCompilerStatus()

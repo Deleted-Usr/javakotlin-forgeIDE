@@ -2,7 +2,7 @@ package com.willclay.forgeide.lang.kotlin
 
 import com.willclay.forgeide.annotations.SourceEquivalent
 import com.willclay.forgeide.annotations.SourceLanguage
-import com.willclay.forgeide.compiler.ProcessRunner
+import com.willclay.forgeide.execution.ProcessRunner
 import com.willclay.forgeide.lang.api.Toolchain
 import com.willclay.forgeide.workspace.Project
 import java.io.IOException

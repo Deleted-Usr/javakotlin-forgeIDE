@@ -1,4 +1,4 @@
-package com.willclay.forgeide.compiler;
+package com.willclay.forgeide.execution;
 
 public enum CompilerStatus
 {

@@ -19,7 +19,7 @@ public final class EditorToolBar extends JToolBar
 {
     public EditorToolBar(ActionManager actions)
     {
-        setFloatable(true);
+        setFloatable(false);
 
         Utils.addToolBarButton(this, actions.getRunAction(), "▶");
 

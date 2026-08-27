@@ -148,11 +148,18 @@ public final class Utils
         return button;
     }
 
+    public static JComboBox<String> addToolBarDropdown()
+    {
+        return new JComboBox<>();
+    }
+
     // --- Status Bar Factories --- //
 
-    public static JLabel addStatusBarField(String text)
+    public static JLabel addStatusBarField(String text, String tooltip)
     {
         JLabel label = new JLabel(text);
+
+        label.setToolTipText(tooltip);
         label.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
 
         return label;
