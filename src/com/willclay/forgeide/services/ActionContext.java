@@ -28,7 +28,7 @@ import javax.swing.JFrame;
  * behaved one from reaching too far. That is a convention rather than a
  * compiler guarantee.
  */
-public final class UIContext
+public final class ActionContext
 {
     private final JFrame frame;
     private final CodeEditorPanel editorPanel;
@@ -36,29 +36,25 @@ public final class UIContext
     private final ConsolePanel console;
     private final WorkbenchPanel workbench;
     private final ProjectTree projectTree;
-    private final Workspace workspace;
     private final WorkspaceService workspaceService;
     private final ExecutionManager executionManager;
     private final ApplicationShutdown applicationShutdown;
     private final FileDialogs dialogs;
     private final SettingsService settingsService;
-    private final ThemeService themeService;
     private final SettingsDialogController settingsDialogController;
 
-    public UIContext(JFrame frame,
-                     CodeEditorPanel editorPanel,
-                     EditorManager editorManager,
-                     ConsolePanel console,
-                     WorkbenchPanel workbench,
-                     ProjectTree projectTree,
-                     Workspace workspace,
-                     WorkspaceService workspaceService,
-                     ExecutionManager executionManager,
-                     ApplicationShutdown applicationShutdown,
-                     FileDialogs dialogs,
-                     SettingsService settingsService,
-                     ThemeService themeService,
-                     SettingsDialogController settingsDialogController)
+    public ActionContext(JFrame frame,
+                         CodeEditorPanel editorPanel,
+                         EditorManager editorManager,
+                         ConsolePanel console,
+                         WorkbenchPanel workbench,
+                         ProjectTree projectTree,
+                         WorkspaceService workspaceService,
+                         ExecutionManager executionManager,
+                         ApplicationShutdown applicationShutdown,
+                         FileDialogs dialogs,
+                         SettingsService settingsService,
+                         SettingsDialogController settingsDialogController)
     {
         this.frame = frame;
         this.editorPanel = editorPanel;
@@ -66,13 +62,11 @@ public final class UIContext
         this.console = console;
         this.workbench = workbench;
         this.projectTree = projectTree;
-        this.workspace = workspace;
         this.workspaceService = workspaceService;
         this.executionManager = executionManager;
         this.applicationShutdown = applicationShutdown;
         this.dialogs = dialogs;
         this.settingsService = settingsService;
-        this.themeService = themeService;
         this.settingsDialogController = settingsDialogController;
     }
 
@@ -99,7 +93,14 @@ public final class UIContext
 
     public ProjectTree getProjectTree() { return projectTree; }
 
-    public Workspace getWorkspace() { return workspace; }
+    /**
+     * The workspace is derived from the service to avoid constructing
+     * a context with one {@code Workspace} while the service manages
+     * another one.
+     *
+     * @return Workspace derived from {@code workspaceService.getWorkspace();}
+     */
+    public Workspace getWorkspace() { return workspaceService.getWorkspace(); }
 
     public WorkspaceService getWorkspaceService() { return workspaceService; }
 
@@ -110,8 +111,6 @@ public final class UIContext
     public FileDialogs getDialogs() { return dialogs; }
 
     public SettingsService getSettingsService() { return settingsService; }
-
-    public ThemeService getThemeService() { return themeService; }
 
     public SettingsDialogController getSettingsDialogController() { return settingsDialogController; }
 

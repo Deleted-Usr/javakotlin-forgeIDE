@@ -4,7 +4,7 @@ import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
 import com.willclay.forgeide.actions.file.SaveAllAction;
 import com.willclay.forgeide.lang.api.Toolchain;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.execution.RunTask;
 import com.willclay.forgeide.workspace.Project;
@@ -16,11 +16,11 @@ import java.util.function.Consumer;
 /** Builds every source file in the current project. */
 public final class BuildProjectAction extends ForgeAction
 {
-    private final UIContext context;
+    private final ActionContext context;
     private final SaveAllAction saveAll;
     private final Consumer<RunTask> taskStarter;
 
-    public BuildProjectAction(UIContext context, SaveAllAction saveAll, Consumer<RunTask> taskStarter)
+    public BuildProjectAction(ActionContext context, SaveAllAction saveAll, Consumer<RunTask> taskStarter)
     {
         super("Build Project", Shortcuts.menu(KeyEvent.VK_B), "Build the current project");
         this.context = context;

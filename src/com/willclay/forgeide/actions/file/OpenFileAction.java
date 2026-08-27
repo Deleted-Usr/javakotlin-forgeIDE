@@ -2,7 +2,7 @@ package com.willclay.forgeide.actions.file;
 
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.workspace.Project;
 
@@ -13,9 +13,9 @@ import java.nio.file.Path;
 /** Opens a source file using the current project's language. */
 public final class OpenFileAction extends ForgeAction
 {
-    private final UIContext context;
+    private final ActionContext context;
 
-    public OpenFileAction(UIContext context)
+    public OpenFileAction(ActionContext context)
     {
         super("Open File...", Shortcuts.menu(KeyEvent.VK_O), "Open a source file");
         this.context = context;

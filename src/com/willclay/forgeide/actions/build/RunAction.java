@@ -6,7 +6,7 @@ import com.willclay.forgeide.actions.file.SaveAction;
 import com.willclay.forgeide.actions.file.SaveAllAction;
 import com.willclay.forgeide.lang.api.Toolchain;
 import com.willclay.forgeide.editor.EditorManager;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.execution.RunTask;
 import com.willclay.forgeide.workspace.Project;
@@ -19,12 +19,12 @@ import java.util.function.Consumer;
 /** Prepares and runs the current source file with its project's toolchain. */
 public final class RunAction extends ForgeAction
 {
-    private final UIContext context;
+    private final ActionContext context;
     private final SaveAction save;
     private final SaveAllAction saveAll;
     private final Consumer<RunTask> taskStarter;
 
-    public RunAction(UIContext context, SaveAction save, SaveAllAction saveAll, Consumer<RunTask> taskStarter)
+    public RunAction(ActionContext context, SaveAction save, SaveAllAction saveAll, Consumer<RunTask> taskStarter)
     {
         super("Run", Shortcuts.menu(KeyEvent.VK_R), "Build and run the current file");
         this.context = context;

@@ -1,7 +1,7 @@
 package com.willclay.forgeide.actions.view;
 
 import com.willclay.forgeide.actions.ForgeAction;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.WorkbenchPanel;
 
 /**
@@ -16,7 +16,7 @@ public final class ResetLayoutAction extends ForgeAction
     private final WorkbenchPanel workbench;
     private final ToggleViewAction[] toggles;
 
-    public ResetLayoutAction(UIContext context, ToggleViewAction... toggles)
+    public ResetLayoutAction(ActionContext context, ToggleViewAction... toggles)
     {
         super("Reset Layout", null, "Restore the default arrangement");
 

@@ -1,6 +1,6 @@
 package com.willclay.forgeide.actions.explorer;
 
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.workspace.ProjectItem;
 
 import java.awt.Toolkit;
@@ -9,7 +9,7 @@ import java.awt.datatransfer.StringSelection;
 /** Puts the selected item's absolute path on the clipboard. */
 public final class CopyPathAction extends ExplorerAction
 {
-    public CopyPathAction(UIContext context)
+    public CopyPathAction(ActionContext context)
     {
         super(context, "Copy Path", null, "Copy the full path to the clipboard");
     }

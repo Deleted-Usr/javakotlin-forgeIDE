@@ -2,7 +2,7 @@ package com.willclay.forgeide.actions.file;
 
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.dialogs.FileDialogs.NewProjectDetails;
 
@@ -14,9 +14,9 @@ import java.nio.file.Path;
 /** Creates a project with one language selected for its lifetime. */
 public final class NewProjectAction extends ForgeAction
 {
-    private final UIContext context;
+    private final ActionContext context;
 
-    public NewProjectAction(UIContext context)
+    public NewProjectAction(ActionContext context)
     {
         super("New Project...", Shortcuts.menuShift(KeyEvent.VK_N), "Create a new project");
         this.context = context;

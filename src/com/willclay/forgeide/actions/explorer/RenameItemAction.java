@@ -1,6 +1,6 @@
 package com.willclay.forgeide.actions.explorer;
 
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.workspace.ProjectItem;
 
@@ -16,7 +16,7 @@ import java.io.IOException;
  */
 public final class RenameItemAction extends ExplorerAction
 {
-    public RenameItemAction(UIContext context)
+    public RenameItemAction(ActionContext context)
     {
         super(context, "Rename...", null, "Rename the selected item");
     }

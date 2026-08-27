@@ -3,7 +3,7 @@ package com.willclay.forgeide.actions.file;
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
 import com.willclay.forgeide.lang.api.Language;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
 
 import java.awt.event.KeyEvent;
@@ -13,9 +13,9 @@ import java.nio.file.Path;
 /** Opens a Forge project, restoring its persisted language. */
 public final class OpenProjectAction extends ForgeAction
 {
-    private final UIContext context;
+    private final ActionContext context;
 
-    public OpenProjectAction(UIContext context)
+    public OpenProjectAction(ActionContext context)
     {
         super("Open Project...", Shortcuts.menuShift(KeyEvent.VK_O), "Open an existing project");
         this.context = context;

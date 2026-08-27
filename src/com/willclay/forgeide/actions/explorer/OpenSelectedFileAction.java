@@ -1,6 +1,6 @@
 package com.willclay.forgeide.actions.explorer;
 
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.workspace.ProjectItem;
 
 import java.io.IOException;
@@ -14,7 +14,7 @@ import java.io.IOException;
  */
 public final class OpenSelectedFileAction extends ExplorerAction
 {
-    public OpenSelectedFileAction(UIContext context)
+    public OpenSelectedFileAction(ActionContext context)
     {
         super(context, "Open", null, "Open the selected file in the editor");
     }

@@ -1,7 +1,7 @@
 package com.willclay.forgeide.actions.file;
 
 import com.willclay.forgeide.actions.ForgeAction;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
 
 /**
@@ -13,9 +13,9 @@ import com.willclay.forgeide.ui.Utils;
  */
 public final class CloseProjectAction extends ForgeAction
 {
-    private final UIContext context;
+    private final ActionContext context;
 
-    public CloseProjectAction(UIContext context)
+    public CloseProjectAction(ActionContext context)
     {
         super("Close Project", null, "Close the current project");
 

@@ -12,7 +12,7 @@ import com.willclay.forgeide.services.SessionService;
 import com.willclay.forgeide.services.settings.SettingsService;
 import com.willclay.forgeide.services.settings.IDESettingsRuntime;
 import com.willclay.forgeide.services.settings.theme.ThemeService;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.services.WorkspaceService;
 import com.willclay.forgeide.services.settings.project.ProjectSettingsService;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
@@ -49,7 +49,7 @@ import java.util.Objects;
 
 /**
  * The main frame, and only the composition root: it creates the parts, puts
- * them in a {@link UIContext}, and lets the {@link ActionManager} build
+ * them in a {@link ActionContext}, and lets the {@link ActionManager} build
  * everything that can be clicked.
  * <p>
  * Note what is <em>not</em> here. No runCode method, no save handler, no
@@ -122,12 +122,23 @@ public final class Window extends JFrame
         SettingsDialogController settingsDialogController =
                 new SettingsDialogController(this, settingsService, projectService, themeService);
 
-        UIContext context = new UIContext(this, editorPanel, editorManager, console, workbench, projectTree,
-                workspace, workspaceService, executionManager, applicationShutdown,
-                new FileDialogs(this, languages), settingsService, themeService, settingsDialogController);
+        ActionContext context = new ActionContext(
+                this,
+                editorPanel,
+                editorManager,
+                console,
+                workbench,
+                projectTree,
+                workspaceService,
+                executionManager,
+                applicationShutdown,
+                new FileDialogs(this, languages),
+                settingsService,
+                settingsDialogController
+        );
         ActionManager actions = new ActionManager(context);
 
-        statusBar = new StatusBar(context);
+        statusBar = new StatusBar(executionManager, workspace, editorManager, settingsService);
 
         editorPanel.setCloseRequestHandler(this::confirmCloseTab);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);

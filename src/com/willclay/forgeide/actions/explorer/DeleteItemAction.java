@@ -1,6 +1,6 @@
 package com.willclay.forgeide.actions.explorer;
 
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.workspace.ProjectItem;
 
@@ -9,7 +9,7 @@ import java.io.IOException;
 /** Deletes the selected file, or the selected folder and everything in it. */
 public final class DeleteItemAction extends ExplorerAction
 {
-    public DeleteItemAction(UIContext context)
+    public DeleteItemAction(ActionContext context)
     {
         super(context, "Delete", null, "Delete the selected item");
     }

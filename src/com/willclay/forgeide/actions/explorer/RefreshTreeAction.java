@@ -2,7 +2,7 @@ package com.willclay.forgeide.actions.explorer;
 
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 
 import java.awt.event.KeyEvent;
 
@@ -18,9 +18,9 @@ import java.awt.event.KeyEvent;
  */
 public final class RefreshTreeAction extends ForgeAction
 {
-    private final UIContext context;
+    private final ActionContext context;
 
-    public RefreshTreeAction(UIContext context)
+    public RefreshTreeAction(ActionContext context)
     {
         super("Refresh", Shortcuts.plain(KeyEvent.VK_F5), "Re-read the project from disk");
 

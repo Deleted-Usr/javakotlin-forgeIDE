@@ -1,6 +1,6 @@
 package com.willclay.forgeide.actions.explorer;
 
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.workspace.ProjectItem;
 
 import java.awt.Desktop;
@@ -19,7 +19,7 @@ import java.nio.file.Path;
  */
 public final class RevealInFilesAction extends ExplorerAction
 {
-    public RevealInFilesAction(UIContext context)
+    public RevealInFilesAction(ActionContext context)
     {
         super(context, "Reveal in File Manager", null, "Show the item in the system file manager");
     }

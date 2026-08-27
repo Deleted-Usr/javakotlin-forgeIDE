@@ -1,6 +1,6 @@
 package com.willclay.forgeide.actions.explorer;
 
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.workspace.ProjectItem;
 
@@ -9,7 +9,7 @@ import java.io.IOException;
 /** Creates a folder in the selected folder. */
 public final class CreateFolderAction extends ExplorerAction
 {
-    public CreateFolderAction(UIContext context)
+    public CreateFolderAction(ActionContext context)
     {
         super(context, "New Folder...", null, "Create a folder in the selected folder");
     }

@@ -1,7 +1,7 @@
 package com.willclay.forgeide.actions.explorer;
 
 import com.willclay.forgeide.lang.api.Language;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.workspace.ProjectItem;
 
@@ -10,7 +10,7 @@ import java.io.IOException;
 /** Creates an empty file in the selected folder and opens it. */
 public final class CreateFileAction extends ExplorerAction
 {
-    public CreateFileAction(UIContext context)
+    public CreateFileAction(ActionContext context)
     {
         super(context, "New File...", null, "Create a file in the selected folder");
     }

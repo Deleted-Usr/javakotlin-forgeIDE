@@ -1,7 +1,7 @@
 package com.willclay.forgeide.actions.explorer;
 
 import com.willclay.forgeide.actions.ForgeAction;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.workspace.ProjectItem;
 import com.willclay.forgeide.workspace.ProjectItemType;
@@ -23,9 +23,9 @@ import javax.swing.KeyStroke;
  */
 public abstract class ExplorerAction extends ForgeAction
 {
-    protected final UIContext context;
+    protected final ActionContext context;
 
-    protected ExplorerAction(UIContext context, String name, KeyStroke shortcut, String tooltip)
+    protected ExplorerAction(ActionContext context, String name, KeyStroke shortcut, String tooltip)
     {
         super(name, shortcut, tooltip);
 

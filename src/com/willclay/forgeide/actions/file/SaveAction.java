@@ -3,7 +3,7 @@ package com.willclay.forgeide.actions.file;
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
 import com.willclay.forgeide.lang.api.Language;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.workspace.Project;
 
@@ -19,10 +19,10 @@ import java.nio.file.Path;
  */
 public final class SaveAction extends ForgeAction
 {
-    private final UIContext context;
+    private final ActionContext context;
     private final SaveAsAction saveAs;
 
-    public SaveAction(UIContext context, SaveAsAction saveAs)
+    public SaveAction(ActionContext context, SaveAsAction saveAs)
     {
         super("Save", Shortcuts.menu(KeyEvent.VK_S), "Save the current file");
 

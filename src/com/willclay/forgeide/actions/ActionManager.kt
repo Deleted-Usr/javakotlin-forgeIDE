@@ -31,7 +31,7 @@ import com.willclay.forgeide.actions.view.ToggleViewAction
 import com.willclay.forgeide.annotations.SourceEquivalent
 import com.willclay.forgeide.annotations.SourceLanguage
 import com.willclay.forgeide.execution.RunTask
-import com.willclay.forgeide.services.UIContext
+import com.willclay.forgeide.services.ActionContext
 import java.awt.event.KeyEvent
 
 /**
@@ -49,7 +49,7 @@ import java.awt.event.KeyEvent
     language = SourceLanguage.JAVA,
     path = "docs/java-equivalents/actions/ActionManager.java",
 )
-class ActionManager(private val context: UIContext) {
+class ActionManager(private val context: ActionContext) {
     private val execution = context.executionManager
     private val workbench = context.workbench
 

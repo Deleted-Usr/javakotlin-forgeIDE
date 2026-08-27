@@ -2,7 +2,7 @@ package com.willclay.forgeide.actions.build;
 
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.lang.api.Toolchain;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.execution.RunTask;
 import com.willclay.forgeide.workspace.Project;
 
@@ -12,10 +12,10 @@ import java.util.function.Consumer;
 /** Cleans generated output on the same worker used by build and run. */
 public final class CleanProjectAction extends ForgeAction
 {
-    private final UIContext context;
+    private final ActionContext context;
     private final Consumer<RunTask> taskStarter;
 
-    public CleanProjectAction(UIContext context, Consumer<RunTask> taskStarter)
+    public CleanProjectAction(ActionContext context, Consumer<RunTask> taskStarter)
     {
         super("Clean Project", null, "Delete generated project output");
         this.context = context;

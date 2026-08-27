@@ -1,11 +1,14 @@
 package com.willclay.forgeide.ui.statusbar;
 
 import com.willclay.forgeide.application.IDESettingsConfiguration;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.editor.EditorManager;
+import com.willclay.forgeide.execution.ExecutionManager;
+import com.willclay.forgeide.services.settings.SettingsService;
 import com.willclay.forgeide.services.settings.theme.AppTheme;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.editor.EditorTab;
 import com.willclay.forgeide.workspace.Project;
+import com.willclay.forgeide.workspace.Workspace;
 
 import javax.swing.Box;
 import javax.swing.BorderFactory;
@@ -27,7 +30,10 @@ import java.util.Objects;
  */
 public final class StatusBar extends JToolBar
 {
-    private final UIContext context;
+    private final ExecutionManager executionManager;
+    private final Workspace workspace;
+    private final EditorManager editorManager;
+    private final SettingsService settingsService;
 
     private final JLabel compilerStatus = createField("Ready", "Build and run status");
     private final JLabel lineEnding = createField("LF", "Line endings in the current file");
@@ -40,11 +46,15 @@ public final class StatusBar extends JToolBar
     private final CaretListener caretListener = this::caretMoved;
     private JTextPane observedTextPane;
 
-    public StatusBar(UIContext context)
+    public StatusBar(ExecutionManager executionManager, Workspace workspace, EditorManager editorManager, SettingsService settingsService)
     {
         super(HORIZONTAL);
 
-        this.context = Objects.requireNonNull(context, "context");
+        this.executionManager = Objects.requireNonNull(executionManager, "executionManager");
+        this.workspace = Objects.requireNonNull(workspace, "workspace");
+        this.editorManager = Objects.requireNonNull(editorManager, "editorManager");
+        this.settingsService = Objects.requireNonNull(settingsService, "settingsService");
+
 
         setFloatable(false);
         setRollover(false);
@@ -64,19 +74,19 @@ public final class StatusBar extends JToolBar
         addSeparator();
         add(theme);
 
-        context.getExecutionManager().addChangeListener(
+        executionManager.addChangeListener(
                 () -> onEventDispatchThread(this::updateCompilerStatus));
-        context.getWorkspace().addChangeListener(
+        workspace.addChangeListener(
                 () -> onEventDispatchThread(this::updateProjectInformation));
-        context.getEditorManager().addChangeListener(
+        editorManager.addChangeListener(
                 () -> onEventDispatchThread(this::updateEditorInformation));
-        context.getSettingsService().addChangeListener(settings ->
+        settingsService.addChangeListener(settings ->
                 onEventDispatchThread(() -> updateSettings(settings)));
 
         updateCompilerStatus();
         updateProjectInformation();
         updateEditorInformation();
-        updateSettings(context.getSettingsService().get());
+        updateSettings(settingsService.get());
     }
 
     private JLabel createField(String text, String toolTip)
@@ -88,12 +98,12 @@ public final class StatusBar extends JToolBar
 
     private void updateCompilerStatus()
     {
-        compilerStatus.setText(context.getExecutionManager().isRunning() ? "Running" : "Ready");
+        compilerStatus.setText(executionManager.isRunning() ? "Running" : "Ready");
     }
 
     private void updateProjectInformation()
     {
-        Project currentProject = context.getWorkspace().getProject();
+        Project currentProject = workspace.getProject();
 
         if (currentProject == null)
         {
@@ -113,7 +123,7 @@ public final class StatusBar extends JToolBar
     /** Rebinds the caret listener when the selected editor tab changes. */
     private void updateEditorInformation()
     {
-        EditorTab currentTab = context.getEditorManager().getCurrentTab();
+        EditorTab currentTab = editorManager.getCurrentTab();
         JTextPane currentTextPane = currentTab == null ? null : currentTab.getTextPane();
 
         if (observedTextPane != currentTextPane)

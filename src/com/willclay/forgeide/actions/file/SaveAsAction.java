@@ -2,7 +2,7 @@ package com.willclay.forgeide.actions.file;
 
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.workspace.Project;
 
@@ -13,9 +13,9 @@ import java.nio.file.Path;
 /** Always asks where to write. {@link SaveAction} falls back to this one. */
 public final class SaveAsAction extends ForgeAction
 {
-    private final UIContext context;
+    private final ActionContext context;
 
-    public SaveAsAction(UIContext context)
+    public SaveAsAction(ActionContext context)
     {
         super("Save As...", Shortcuts.menuShift(KeyEvent.VK_S), "Save the current file under a new name");
         this.context = context;

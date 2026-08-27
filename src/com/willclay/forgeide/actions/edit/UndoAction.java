@@ -2,7 +2,7 @@ package com.willclay.forgeide.actions.edit;
 
 import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
-import com.willclay.forgeide.services.UIContext;
+import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 
 import java.awt.event.KeyEvent;
@@ -17,7 +17,7 @@ public final class UndoAction extends ForgeAction
 {
     private final CodeEditorPanel editor;
 
-    public UndoAction(UIContext context)
+    public UndoAction(ActionContext context)
     {
         super("Undo", Shortcuts.menu(KeyEvent.VK_Z), "Undo the last edit");
 
