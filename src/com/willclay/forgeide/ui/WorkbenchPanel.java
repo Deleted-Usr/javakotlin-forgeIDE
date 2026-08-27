@@ -36,6 +36,7 @@ public final class WorkbenchPanel extends JPanel
     private final int dividerSize;
 
     private JComponent toolBar;
+    private JComponent statusBar;
 
     public WorkbenchPanel(JComponent projectTree, JComponent editor, JComponent console)
     {
@@ -68,6 +69,20 @@ public final class WorkbenchPanel extends JPanel
 
         this.toolBar = toolBar;
         add(toolBar, BorderLayout.NORTH);
+
+        revalidate();
+    }
+
+    /**
+     * This is set after construction much for the same reason that the toolbar is,
+     * because the status bar needs the UI context.
+     */
+    public void setStatusBar(JComponent statusBar)
+    {
+        if (this.statusBar != null) remove(this.statusBar);
+
+        this.statusBar = statusBar;
+        add(statusBar, BorderLayout.SOUTH);
 
         revalidate();
     }
@@ -106,11 +121,22 @@ public final class WorkbenchPanel extends JPanel
         repaint();
     }
 
+    public void setStatusBarVisible(boolean visible)
+    {
+        if (statusBar == null) return;
+
+        statusBar.setVisible(visible);
+
+        revalidate();
+        repaint();
+    }
+
     /** Everything back on screen, dividers back where they started. */
     public void resetLayout()
     {
         setToolBarVisible(true);
         setProjectTreeVisible(true);
         setConsoleVisible(true);
+        setStatusBarVisible(true);
     }
 }

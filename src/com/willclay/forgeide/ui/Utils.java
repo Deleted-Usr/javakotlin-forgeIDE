@@ -148,6 +148,16 @@ public final class Utils
         return button;
     }
 
+    // --- Status Bar Factories --- //
+
+    public static JLabel addStatusBarField(String text)
+    {
+        JLabel label = new JLabel(text);
+        label.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+
+        return label;
+    }
+
     // --- Settings Layout Factories --- //
 
     /** Creates the vertically stacked, padded body shared by settings tabs. */

@@ -116,11 +116,17 @@ class ActionManager(private val context: UIContext) {
         null,
         true
     ) { visible -> workbench.setToolBarVisible(visible) }
+    val toggleStatusBarAction = ToggleViewAction(
+        "Status Bar",
+        null,
+        true
+    ) { visible -> workbench.setStatusBarVisible(visible) }
     val resetLayoutAction = ResetLayoutAction(
         context,
         toggleProjectTreeAction,
         toggleConsoleAction,
-        toggleToolBarAction
+        toggleToolBarAction,
+        toggleStatusBarAction
     )
 
     // Every process passes through one presentation gateway so console

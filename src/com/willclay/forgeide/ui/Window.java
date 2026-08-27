@@ -26,6 +26,7 @@ import com.willclay.forgeide.ui.explorer.ProjectTreePanel;
 import com.willclay.forgeide.ui.fonts.EditorFonts;
 import com.willclay.forgeide.ui.menu.EditorMenuBar;
 import com.willclay.forgeide.ui.settings.SettingsDialogController;
+import com.willclay.forgeide.ui.statusbar.StatusBar;
 import com.willclay.forgeide.ui.toolbar.EditorToolBar;
 import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
@@ -72,6 +73,8 @@ public final class Window extends JFrame
     private final WorkbenchPanel workbench;
     private final ProjectTree projectTree;
     private final IDESettingsRuntime settingsRuntime;
+
+    private final StatusBar statusBar;
 
     private final Workspace workspace = new Workspace();
     private final WorkspaceService workspaceService;
@@ -124,6 +127,8 @@ public final class Window extends JFrame
                 new FileDialogs(this, languages), settingsService, themeService, settingsDialogController);
         ActionManager actions = new ActionManager(context);
 
+        statusBar = new StatusBar(context);
+
         editorPanel.setCloseRequestHandler(this::confirmCloseTab);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter()
@@ -137,6 +142,7 @@ public final class Window extends JFrame
 
         setJMenuBar(new EditorMenuBar(actions));
         workbench.setToolBar(new EditorToolBar(actions));
+        workbench.setStatusBar(statusBar);
         projectTree.setContextMenu(new ProjectContextMenu(actions));
 
         // The tree reports that a file was activated; what that means is the

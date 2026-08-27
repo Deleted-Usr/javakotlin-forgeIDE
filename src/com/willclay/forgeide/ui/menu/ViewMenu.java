@@ -31,6 +31,7 @@ public final class ViewMenu extends JMenu
         Utils.addCheckMenuItem(this, actions.getToggleProjectTreeAction());
         Utils.addCheckMenuItem(this, actions.getToggleConsoleAction());
         Utils.addCheckMenuItem(this, actions.getToggleToolBarAction());
+        Utils.addCheckMenuItem(this, actions.getToggleStatusBarAction());
     }
 
     private void createLayoutItems()

@@ -14,16 +14,12 @@ import javax.swing.JToolBar;
  * button and wire each one up; now it takes the shared actions and adds them,
  * which is why nothing here has to be told that a build has started before Run
  * greys out.
- * <p>
- * TODO - turn the compiler options into JToggleButtons once there are any. A
- *        toggle backed by an Action with SELECTED_KEY works the same way the
- *        View menu's tick boxes do.
  */
 public final class EditorToolBar extends JToolBar
 {
     public EditorToolBar(ActionManager actions)
     {
-        setFloatable(false);
+        setFloatable(true);
 
         Utils.addToolBarButton(this, actions.getRunAction(), "▶");
 

@@ -27,8 +27,6 @@ import javax.swing.JFrame;
  * The cost is honest: an action can reach anything, so nothing stops a badly
  * behaved one from reaching too far. That is a convention rather than a
  * compiler guarantee.
- * <p>
- * TODO - add status-bar and terminal services as those features arrive.
  */
 public final class UIContext
 {
