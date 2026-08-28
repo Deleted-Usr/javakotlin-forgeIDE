@@ -1,4 +1,4 @@
-package com.willclay.forgeide.runconfigurations;
+package com.willclay.forgeide.workspace.runconfig;
 
 import java.nio.file.Path;
 import java.util.List;
