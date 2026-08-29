@@ -26,6 +26,7 @@ import com.willclay.forgeide.actions.file.SaveAllAction
 import com.willclay.forgeide.actions.file.SaveAsAction
 import com.willclay.forgeide.actions.help.AboutAction
 import com.willclay.forgeide.actions.settings.OpenSettingsAction
+import com.willclay.forgeide.actions.tools.OpenRunConfigAction
 import com.willclay.forgeide.actions.view.ResetLayoutAction
 import com.willclay.forgeide.actions.view.ToggleViewAction
 import com.willclay.forgeide.annotations.SourceEquivalent
@@ -158,6 +159,7 @@ class ActionManager(private val context: ActionContext) {
 
     // Settings
     val openSettingsAction = OpenSettingsAction(context)
+    val openRunConfigAction = OpenRunConfigAction(context)
 
     init {
         context.workspace.addChangeListener { syncProjectActions() }

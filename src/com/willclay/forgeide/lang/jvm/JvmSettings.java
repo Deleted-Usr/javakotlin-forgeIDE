@@ -15,7 +15,8 @@ public record JvmSettings(
         Path sourcePath,
         Path outputPath,
         List<Path> libraryPaths,
-        Path jdkPath)
+        Path jdkPath
+)
 {
     public JvmSettings
     {

@@ -28,6 +28,7 @@ import com.willclay.forgeide.ui.menu.EditorMenuBar;
 import com.willclay.forgeide.ui.settings.SettingsDialogController;
 import com.willclay.forgeide.ui.statusbar.StatusBar;
 import com.willclay.forgeide.ui.toolbar.EditorToolBar;
+import com.willclay.forgeide.ui.toolbar.RunConfigDialogController;
 import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 import com.willclay.forgeide.workspace.Project;
@@ -74,12 +75,13 @@ public final class Window extends JFrame
     private final ProjectTree projectTree;
     private final IDESettingsRuntime settingsRuntime;
 
-    private final StatusBar statusBar;
-
     private final Workspace workspace = new Workspace();
     private final WorkspaceService workspaceService;
 
     private final LanguageRegistry languages;
+
+    private final ActionContext context;
+    private final ActionManager actions;
 
     public Window(String title, SettingsService settingsService, SessionService sessionService)
     {
@@ -122,7 +124,10 @@ public final class Window extends JFrame
         SettingsDialogController settingsDialogController =
                 new SettingsDialogController(this, settingsService, projectService, themeService);
 
-        ActionContext context = new ActionContext(
+        RunConfigDialogController configDialogController =
+                new RunConfigDialogController(this);
+
+        context = new ActionContext(
                 this,
                 editorPanel,
                 editorManager,
@@ -134,11 +139,10 @@ public final class Window extends JFrame
                 applicationShutdown,
                 new FileDialogs(this, languages),
                 settingsService,
-                settingsDialogController
+                settingsDialogController,
+                configDialogController
         );
-        ActionManager actions = new ActionManager(context);
-
-        statusBar = new StatusBar(executionManager, workspace, editorManager, settingsService);
+        actions = new ActionManager(context);
 
         editorPanel.setCloseRequestHandler(this::confirmCloseTab);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -152,8 +156,8 @@ public final class Window extends JFrame
         });
 
         setJMenuBar(new EditorMenuBar(actions));
-        workbench.setToolBar(new EditorToolBar(actions));
-        workbench.setStatusBar(statusBar);
+        workbench.setToolBar(new EditorToolBar(actions, this));
+        workbench.setStatusBar(new StatusBar(executionManager, workspace, editorManager, settingsService));
         projectTree.setContextMenu(new ProjectContextMenu(actions));
 
         // The tree reports that a file was activated; what that means is the
