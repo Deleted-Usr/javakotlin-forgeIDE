@@ -1,4 +1,4 @@
-package com.willclay.forgeide.runconfigurations;
+package com.willclay.forgeide.workspace.runconfig;
 
 public enum BeforeLaunch
 {

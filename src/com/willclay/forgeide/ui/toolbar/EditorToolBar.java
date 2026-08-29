@@ -21,6 +21,10 @@ public final class EditorToolBar extends JToolBar
     {
         setFloatable(false);
 
+        add(new RunConfigurationDropdown());
+
+        addSeparator();
+
         Utils.addToolBarButton(this, actions.getRunAction(), "▶");
 
         addSeparator();
