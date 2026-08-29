@@ -13,19 +13,25 @@ import java.util.Objects;
 public record JavaSettings(
         JvmSettings jvm,
         int release,
-        boolean previewFeatures) implements LanguageSettings
+        boolean previewFeatures,
+        JavaCompilerBackend compilerBackend) implements LanguageSettings
 {
     public static final String ID = "java";
 
     public JavaSettings
     {
         Objects.requireNonNull(jvm, "jvm");
+        Objects.requireNonNull(compilerBackend, "compilerBackend");
         if (release < 8) throw new IllegalArgumentException("Java release must be at least 8.");
     }
 
     public static JavaSettings defaults()
     {
-        return new JavaSettings(JvmSettings.defaults(), Runtime.version().feature(), false);
+        return new JavaSettings(
+                JvmSettings.defaults(),
+                Runtime.version().feature(),
+                false,
+                JavaCompilerBackend.EXTERNAL_JAVAC);
     }
 
     public static JavaSettings from(Project project)
@@ -42,7 +48,8 @@ public record JavaSettings(
         return new JavaSettings(
                 JvmSettings.fromJson(json),
                 releaseNumber,
-                Boolean.TRUE.equals(json.get("previewFeatures")));
+                Boolean.TRUE.equals(json.get("previewFeatures")),
+                JavaCompilerBackend.fromJson(json.get("compilerBackend")));
     }
 
     @Override
@@ -57,6 +64,7 @@ public record JavaSettings(
         Map<String, Object> json = new LinkedHashMap<>(jvm.toJson());
         json.put("release", release);
         json.put("previewFeatures", previewFeatures);
+        json.put("compilerBackend", compilerBackend.persistedName());
         return Collections.unmodifiableMap(json);
     }
 }

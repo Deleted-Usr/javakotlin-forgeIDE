@@ -11,6 +11,8 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
+import javax.swing.JToggleButton;
+import javax.tools.ToolProvider;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -20,17 +22,25 @@ final class JavaSettingsPage implements LanguageSettingsPage
     private final JvmSettingsForm jvm;
     private final JSpinner release;
     private final JCheckBox previewFeatures;
+    private final JToggleButton compilerBackend;
     private final JComponent component;
 
     JavaSettingsPage(Path projectRoot, JavaSettings initial)
     {
         jvm = new JvmSettingsForm(projectRoot, initial.jvm());
         release = Utils.integerSpinner(initial.release(), 8, 99, 1);
+        compilerBackend = new JToggleButton();
+        compilerBackend.setSelected(initial.compilerBackend() == JavaCompilerBackend.JAVA_COMPILER_API);
+        compilerBackend.setToolTipText(
+                "The JavaCompiler API uses the JDK running Forge; external javac uses the selected project JDK.");
+        compilerBackend.addActionListener(event -> updateCompilerBackendText());
+        updateCompilerBackendText();
 
         JPanel compiler = Utils.createSettingsSection("Java compiler");
-        Utils.addCompactSettingsFormRow(compiler, 0, "Language level:", release);
+        Utils.addCompactSettingsFormRow(compiler, 0, "Compiler backend:", compilerBackend);
+        Utils.addCompactSettingsFormRow(compiler, 1, "Language level:", release);
         previewFeatures = Utils.addSettingsCheckBoxRow(
-                compiler, 1, "Enable preview language features", initial.previewFeatures());
+                compiler, 2, "Enable preview language features", initial.previewFeatures());
 
         JPanel page = Utils.createSettingsPage();
         Utils.addSettingsSection(page, jvm.createPathsSection());
@@ -60,15 +70,40 @@ final class JavaSettingsPage implements LanguageSettingsPage
     public LanguageSettings getValues()
     {
         JvmSettings values = jvm.getValues();
-        Path javac = values.jdkExecutable("javac");
-        if (!Files.isRegularFile(javac))
+        JavaCompilerBackend backend = selectedCompilerBackend();
+
+        if (backend == JavaCompilerBackend.EXTERNAL_JAVAC)
         {
-            throw new IllegalArgumentException("The selected JDK does not contain " + javac.getFileName() + ".");
+            Path javac = values.jdkExecutable("javac");
+            if (!Files.isRegularFile(javac))
+            {
+                throw new IllegalArgumentException("The selected JDK does not contain " + javac.getFileName() + ".");
+            }
+        }
+        else if (ToolProvider.getSystemJavaCompiler() == null)
+        {
+            throw new IllegalArgumentException(
+                    "The JavaCompiler API is unavailable. Run ForgeIDE with a full JDK, not a JRE.");
         }
 
         return new JavaSettings(
                 values,
                 ((Number) release.getValue()).intValue(),
-                previewFeatures.isSelected());
+                previewFeatures.isSelected(),
+                backend);
+    }
+
+    private JavaCompilerBackend selectedCompilerBackend()
+    {
+        return compilerBackend.isSelected()
+                ? JavaCompilerBackend.JAVA_COMPILER_API
+                : JavaCompilerBackend.EXTERNAL_JAVAC;
+    }
+
+    private void updateCompilerBackendText()
+    {
+        compilerBackend.setText(compilerBackend.isSelected()
+                ? "JavaCompiler API (in process)"
+                : "javac executable (external process)");
     }
 }

@@ -7,7 +7,7 @@ public class RunConfigurationDropdown extends JComboBox<String>
 {
     public RunConfigurationDropdown()
     {
-        super(new String[]{ "Current File", "Edit Configurations"});
+        super();
 
         setMaximumSize(new Dimension(2000, 50));
         setFocusable(false);
@@ -15,6 +15,7 @@ public class RunConfigurationDropdown extends JComboBox<String>
         setRenderer(new DefaultListCellRenderer());
 
         addItem("Current File");
-        addItem()
+        addItem("-------------------");
+        addItem("Edit Configurations");
     }
 }

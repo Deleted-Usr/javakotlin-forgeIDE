@@ -14,7 +14,6 @@ import java.io.IOException;
 
 /*
  * TODO (For school project)
- *  - Use a JToggleButton for compiler options, in language settings menu
  *  - Run Configurations (Like IntelliJ)
  *  - Launch Forge through a bootstrap sequence
  *  - Discover registered languages from providers on each launch

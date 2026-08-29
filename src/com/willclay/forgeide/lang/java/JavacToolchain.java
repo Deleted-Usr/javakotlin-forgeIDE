@@ -6,6 +6,7 @@ import com.willclay.forgeide.workspace.Project;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -32,20 +33,52 @@ public final class JavacToolchain implements Toolchain
         Files.createDirectories(src);
         Files.createDirectories(out);
 
-        // -d redirects the .class output away from the source tree.
+        Charset encoding = project.configuration().fileHandling().encoding().charset();
+        List<String> options = compilerOptions(settings, encoding, libraries, src, out);
+
+        if (settings.compilerBackend() == JavaCompilerBackend.JAVA_COMPILER_API)
+        {
+            return InProcessJavaCompiler.compile(sourceFiles, options, encoding, output);
+        }
+
+        return compileWithJavacProcess(project, settings, sourceFiles, options, output);
+    }
+
+    private static List<String> compilerOptions(
+            JavaSettings settings,
+            Charset encoding,
+            List<Path> libraries,
+            Path src,
+            Path out) throws IOException
+    {
+        // -d redirects the .class output away from the source tree. These are
+        // deliberately shared by both backends so switching does not change
+        // the meaning of a project's Java settings.
+        List<String> options = new ArrayList<>();
+        options.add("-encoding");
+        options.add(encoding.name());
+        options.add("--release");
+        options.add(Integer.toString(settings.release()));
+        if (settings.previewFeatures()) options.add("--enable-preview");
+        options.add("-classpath");
+        options.add(JavaClassNames.classPath(out, libraries));
+        options.add("-sourcepath");
+        options.add(src.toString());
+        options.add("-d");
+        options.add(out.toString());
+        return options;
+    }
+
+    private static boolean compileWithJavacProcess(
+            Project project,
+            JavaSettings settings,
+            List<Path> sourceFiles,
+            List<String> options,
+            Consumer<String> output) throws IOException, InterruptedException
+    {
         List<String> command = new ArrayList<>();
         command.add(settings.jvm().jdkExecutable("javac").toString());
-        command.add("-encoding");
-        command.add(project.configuration().fileHandling().encoding().charset().name());
-        command.add("--release");
-        command.add(Integer.toString(settings.release()));
-        if (settings.previewFeatures()) command.add("--enable-preview");
-        command.add("-classpath");
-        command.add(JavaClassNames.classPath(out, libraries));
-        command.add("-sourcepath");
-        command.add(src.toString());
-        command.add("-d");
-        command.add(out.toString());
+        command.addAll(options);
 
         for (Path sourceFile : sourceFiles) command.add(sourceFile.toString());
 
