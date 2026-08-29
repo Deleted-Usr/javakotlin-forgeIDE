@@ -1,51 +1,24 @@
-package com.willclay.forgeide.lang.lua;
+package com.willclay.forgeide.lang.lua
 
-import com.willclay.forgeide.lang.api.Language;
-import com.willclay.forgeide.lang.api.Lexer;
-import com.willclay.forgeide.lang.api.Toolchain;
-import com.willclay.forgeide.workspace.Project;
+import com.willclay.forgeide.lang.api.Language
+import com.willclay.forgeide.lang.api.Lexer
+import com.willclay.forgeide.lang.api.Toolchain
+import com.willclay.forgeide.workspace.Project
+import java.nio.file.Path
+import java.util.Optional
 
-import java.nio.file.Path;
-import java.util.Optional;
-import java.util.Set;
+class LuaLanguage : Language {
+    override fun id(): String = "lua"
+    override fun displayName(): String = "Lua"
 
-public class LuaLanguage implements Language
-{
-    @Override
-    public String id()
-    {
-        return "lua";
-    }
+    override fun extensions(): Set<String> = setOf(".lua")
+    override fun defaultExtension(): String = ".lua"
 
-    @Override
-    public String displayName()
-    {
-        return "Lua";
-    }
+    override fun lexer(): Lexer? = null
+    override fun toolchain(): Optional<Toolchain>? = null
 
-    @Override
-    public Set<String> extensions()
-    {
-        return Set.of(".lua");
-    }
-
-    @Override
-    public String defaultExtension()
-    {
-        return ".lua";
-    }
-
-    @Override
-    public Lexer lexer()
-    {
-        return null;
-    }
-
-    @Override
-    public String newFileTemplate(String typeName)
-    {
-        return """
-               #!/usr/bin/env lua
+    override fun newFileTemplate(typeName: String): String = """
+        #!/usr/bin/env lua
                -- ============================================================================
                -- Title:       Script Name
                -- Description: Short description of what this script does.
@@ -77,24 +50,12 @@ public class LuaLanguage implements Language
                local success, err = pcall(main, args)
                 
                if not success then
-                   io.stderr:write("Error encountered: " .. tostring(err) .. "\\n")
+                   io.stderr:write("Error encountered: " .. tostring(err) .. "\n")
                    os.exit(1)
                else
                    os.exit(0)
                end
-                
-               """;
-    }
+    """.trimIndent()
 
-    @Override
-    public Path sourceRoot(Project project)
-    {
-        return null;
-    }
-
-    @Override
-    public Optional<Toolchain> toolchain()
-    {
-        return Optional.empty();
-    }
+    override fun sourceRoot(project: Project?): Path = Path.of("")
 }
