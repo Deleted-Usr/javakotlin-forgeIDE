@@ -14,6 +14,7 @@ import java.io.IOException;
 
 /*
  * TODO (For school project)
+ *  - Custom Gutter (School Project Ver - Line Numbers, breakpoints, javadocs rendering)
  *  - Run Configurations (Like IntelliJ)
  *  - Launch Forge through a bootstrap sequence
  *  - Discover registered languages from providers on each launch
