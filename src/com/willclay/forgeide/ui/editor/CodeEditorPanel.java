@@ -6,6 +6,7 @@ import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 
 import javax.swing.BorderFactory;
 import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -21,6 +22,7 @@ import javax.swing.text.StyledDocument;
 import javax.swing.text.TabSet;
 import javax.swing.text.TabStop;
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -42,8 +44,13 @@ import java.util.function.Predicate;
 public final class CodeEditorPanel extends JPanel
 {
     private static final int TAB_STOP_COUNT = 60;
+    private static final String EMPTY_CARD = "empty";
+    private static final String TABS_CARD = "tabs";
 
     private final JTabbedPane tabs = new JTabbedPane();
+    private final EditorEmptyState emptyState = new EditorEmptyState();
+    private final CardLayout contentLayout = new CardLayout();
+    private final JPanel content = new JPanel(contentLayout);
     private Font editorFont;
     private int tabSize = 4;
     private boolean insertSpaces = true;
@@ -62,8 +69,22 @@ public final class CodeEditorPanel extends JPanel
         this.editorFont = Objects.requireNonNull(editorFont);
         tabs.addChangeListener(event -> activeTabChanged());
 
-        add(tabs, BorderLayout.CENTER);
-        addUntitledTab("", false);
+        content.add(emptyState, EMPTY_CARD);
+        content.add(tabs, TABS_CARD);
+        add(content, BorderLayout.CENTER);
+        updateVisibleContent();
+    }
+
+    /** Supplies the shared commands displayed while no document is open. */
+    public void setEmptyStateActions(Action newFile, Action openFile, Action newProject, Action openProject)
+    {
+        emptyState.setActions(newFile, openFile, newProject, openProject);
+    }
+
+    /** Switches the empty-state choices between project and no-project workflows. */
+    public void setProjectOpen(boolean projectOpen)
+    {
+        emptyState.setProjectOpen(projectOpen);
     }
 
     public EditorTab getSelectedTab()
@@ -132,6 +153,7 @@ public final class CodeEditorPanel extends JPanel
     public void closeAllTabs()
     {
         tabs.removeAll();
+        updateVisibleContent();
         fireStateChanged();
         fireUndoStateChanged();
     }
@@ -170,6 +192,7 @@ public final class CodeEditorPanel extends JPanel
         if (index < 0) return;
 
         tabs.removeTabAt(index);
+        updateVisibleContent();
         fireStateChanged();
         fireUndoStateChanged();
     }
@@ -298,6 +321,7 @@ public final class CodeEditorPanel extends JPanel
     private void addTab(EditorTab tab)
     {
         tabs.addTab(tab.getDisplayTitle(), tab);
+        updateVisibleContent();
 
         int index = tabs.indexOfComponent(tab);
 
@@ -306,6 +330,11 @@ public final class CodeEditorPanel extends JPanel
         tabs.setSelectedComponent(tab);
 
         fireStateChanged();
+    }
+
+    private void updateVisibleContent()
+    {
+        contentLayout.show(content, tabs.getTabCount() == 0 ? EMPTY_CARD : TABS_CARD);
     }
 
     private void requestClose(EditorTab tab)

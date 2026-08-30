@@ -143,6 +143,13 @@ public final class Window extends JFrame
                 configDialogController
         );
         actions = new ActionManager(context);
+        editorPanel.setEmptyStateActions(
+                actions.getNewFileAction(),
+                actions.getOpenFileAction(),
+                actions.getNewProjectAction(),
+                actions.getOpenProjectAction()
+        );
+        console.setOnMinimise(() -> actions.getToggleConsoleAction().setSelected(false));
 
         editorPanel.setCloseRequestHandler(this::confirmCloseTab);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -156,7 +163,7 @@ public final class Window extends JFrame
         });
 
         setJMenuBar(new EditorMenuBar(actions));
-        workbench.setToolBar(new EditorToolBar(actions, this));
+        workbench.setToolBar(new EditorToolBar(actions));
         workbench.setStatusBar(new StatusBar(executionManager, workspace, editorManager, settingsService));
         projectTree.setContextMenu(new ProjectContextMenu(actions));
 
@@ -195,6 +202,7 @@ public final class Window extends JFrame
     private void showCurrentProject()
     {
         Project project = workspace.getProject();
+        editorPanel.setProjectOpen(project != null);
 
         editorManager.setEncoding(project == null
                 ? Encoding.UTF8
@@ -211,11 +219,20 @@ public final class Window extends JFrame
 
             return project.language().lexer();
         });
+        updateTitle();
     }
 
     private void updateTitle()
     {
-        setTitle(baseTitle + " — " + editorManager.getDisplayName());
+        EditorTab tab = editorManager.getCurrentTab();
+        if (tab != null)
+        {
+            setTitle(baseTitle + " — " + tab.getDisplayTitle());
+            return;
+        }
+
+        Project project = workspace.getProject();
+        setTitle(project == null ? baseTitle : baseTitle + " — " + project.displayName());
     }
 
     private IDESessionConfiguration captureSession()

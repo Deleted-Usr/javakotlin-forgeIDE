@@ -18,11 +18,11 @@ import javax.swing.JToolBar;
  */
 public final class EditorToolBar extends JToolBar
 {
-    public EditorToolBar(ActionManager actions, Window parent)
+    public EditorToolBar(ActionManager actions)
     {
         setFloatable(false);
 
-        add(new RunConfigurationDropdown(parent, actions.getOpenRunConfigAction()));
+        add(new RunConfigurationDropdown(actions.getOpenRunConfigAction()));
 
         addSeparator();
 

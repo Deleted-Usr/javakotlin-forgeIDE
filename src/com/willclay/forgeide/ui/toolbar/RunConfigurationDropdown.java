@@ -19,15 +19,12 @@ public final class RunConfigurationDropdown extends JComboBox<Object>
 
     private Object selectedConfiguration = CURRENT_FILE;
 
-    private final Window parent;
-
     private RunConfigurationDialog dialog;
     private final ForgeAction openDialog;
 
-    public RunConfigurationDropdown(Window parent, ForgeAction openDialog)
+    public RunConfigurationDropdown(ForgeAction openDialog)
     {
         super();
-        this.parent = Objects.requireNonNull(parent, "parent");
         this.openDialog = Objects.requireNonNull(openDialog, "openDialog");
 
         setFocusable(false);

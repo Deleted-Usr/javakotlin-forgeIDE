@@ -1,5 +1,7 @@
 package com.willclay.forgeide.ui.editor;
 
+import com.formdev.flatlaf.FlatClientProperties;
+
 import javax.swing.*;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.AttributeSet;
@@ -12,6 +14,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Objects;
 
 /**
  * The output pane at the bottom of the window, and the running program's input.
@@ -43,6 +46,9 @@ public final class ConsolePanel extends JPanel
     /** The running program's stdin, or null when nothing is reading. */
     private Writer processInput;
 
+    /** Supplied by the window after the shared view actions have been created. */
+    private Runnable onMinimise = () -> { };
+
     public ConsolePanel(Font font)
     {
         super(new BorderLayout());
@@ -66,8 +72,26 @@ public final class ConsolePanel extends JPanel
         install(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.CTRL_DOWN_MASK),
                 "console.eof", this::endInput);
 
-        add(new JLabel(" Console Output:"), BorderLayout.NORTH);
+        JPanel header = new JPanel(new BorderLayout());
+        header.add(new JLabel(" Console Output:"), BorderLayout.CENTER);
+
+        JButton minimise = new JButton("−");
+        minimise.setToolTipText("Minimise Console");
+        minimise.setFocusable(false);
+        minimise.putClientProperty(
+                FlatClientProperties.BUTTON_TYPE,
+                FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
+        minimise.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+        minimise.addActionListener(event -> onMinimise.run());
+        header.add(minimise, BorderLayout.LINE_END);
+
+        add(header, BorderLayout.NORTH);
         add(new JScrollPane(output), BorderLayout.CENTER);
+    }
+
+    public void setOnMinimise(Runnable onMinimise)
+    {
+        this.onMinimise = Objects.requireNonNull(onMinimise, "onMinimise");
     }
 
     // --- Output --- //

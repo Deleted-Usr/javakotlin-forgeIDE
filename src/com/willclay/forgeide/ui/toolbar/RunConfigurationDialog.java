@@ -7,7 +7,8 @@ public class RunConfigurationDialog extends JDialog
 {
     public RunConfigurationDialog(Window parent)
     {
-        super();
+        super(parent, "Edit Run Configurations", ModalityType.MODELESS);
+        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
         setMinimumSize(new Dimension(200, 200));
 

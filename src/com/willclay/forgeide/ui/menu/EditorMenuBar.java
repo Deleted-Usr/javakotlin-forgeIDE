@@ -6,9 +6,6 @@ import javax.swing.*;
 
 /**
  * The menu bar, assembled from one class per menu.
- * <p>
- * Adding a Git menu later is a line here and a new file — not an edit to a
- * three-hundred-line builder method.
  */
 public final class EditorMenuBar extends JMenuBar
 {
