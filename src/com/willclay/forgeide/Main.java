@@ -18,12 +18,8 @@ import java.io.IOException;
  *  - Run Configurations (Like IntelliJ)
  *  - Launch Forge through a bootstrap sequence
  *  - Discover registered languages from providers on each launch
- *  - Fix performance concerned with Undo/Redo actions in the editor panel
  *  - Drag, shift/ctrl select, reordering files and folders MUST be added to the explorer!!!
- *  - Project templates, Language Dependent (Empty, Basic, Console App)
  *  - Add an interactive introduction tutorial, like IntelliJ's or Unity's
- *  - Add developer options (like access to the ForgeIDE Self-Hosting run configuration)
- *  - Better implement dependency classpaths. Very rough right now.
  *  - Have active processes attached to run configurations
  *  - A BlueJ style class diagram mode/setting
  *  - File dependent icons (Custom Icons for Java, Kotlin, C++, Python, etc.)

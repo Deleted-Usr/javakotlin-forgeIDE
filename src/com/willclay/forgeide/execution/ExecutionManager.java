@@ -21,6 +21,8 @@ public class ExecutionManager
         activeTask = task;
         fireChanged();
 
+        // This listens for the "state" property of the SwingWorker, checks to see if
+        // that property is equal to StateValue.DONE, and if it is, calls finish(task)
         task.addPropertyChangeListener(event ->
         {
             if ("state".equals(event.getPropertyName()) && event.getNewValue() == SwingWorker.StateValue.DONE)
