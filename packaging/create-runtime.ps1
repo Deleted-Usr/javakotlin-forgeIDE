@@ -1,0 +1,1 @@
+jlink --add-modules java.base,java.desktop,java.logging --strip-debug --no-header-files --no-man-pages --output dist/runtime
