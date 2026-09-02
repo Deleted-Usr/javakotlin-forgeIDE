@@ -1,18 +1,17 @@
 # ============================================================
 #  Forge — .gitignore
-#  Rule of thumb: commit what a human writes, ignore what a
-#  machine derives from it. All .java files are COMMITTED.
 # ============================================================
 
 # ---------- Compiled output ----------
 *.class
 target/
 build/
-!src/com/willclay/**/build/
-!examples/**/build
+dist/
 out/
 bin/
 classes/
+
+!src/com/willclay/**/build/
 
 # ---------- Packaged artifacts ----------
 *.jar
@@ -25,8 +24,8 @@ classes/
 !libs/*.jar
 !libs/**/*.jar
 
-# ...EXCEPT the build-tool wrappers, which must be committed so
-# a fresh clone can build without a preinstalled Maven/Gradle.
+# The build-tool wrappers must be committed so a fresh clone can
+# build without a preinstalled Maven/Gradle.
 !gradle/wrapper/gradle-wrapper.jar
 !.mvn/wrapper/maven-wrapper.jar
 
@@ -39,11 +38,11 @@ local.properties
 dependency-reduced-pom.xml
 
 # ============================================================
-#  IDE-PROJECT-SPECIFIC — read the comments before editing
+#  IDE-PROJECT-SPECIFIC
 # ============================================================
 
 # ---------- Test fixture projects ----------
-# Sample projects your tests open are REAL projects, so their
+# Sample projects that tests open are REAL projects, so their
 # build output has to be ignored explicitly and narrowly.
 # Their sources are committed — that's the point of a fixture.
 src/test/resources/fixtures/**/target/
@@ -53,17 +52,9 @@ src/test/resources/fixtures/**/.gradle/
 
 # ---------- Precompiled .class fixtures ----------
 # The ASM classpath indexer needs real .class files to parse.
-# Generating them at test time is fragile, so commit a few.
-#
-# NOTE: this negation only works because no PARENT directory of
-# this path is ignored. Git cannot re-include a file whose
-# parent dir is excluded — if you ever add `fixtures/` or
-# `classes/` as a rule above, this line silently stops working.
+# Generating them at test time is fragile.
 !src/test/resources/fixtures/binary/**/*.class
 !src/test/resources/fixtures/binary/**/*.jar
-
-# ---------- Line-ending / encoding fixtures ----------
-# See .gitattributes — these need `-text` there, not a rule here.
 
 # ---------- Downloaded language server ----------
 # JDT LS is a few hundred MB, fetched on first run.
@@ -77,8 +68,8 @@ jdtls/
 .forge/
 !examples/**/.forge/
 !examples/**/.forge/*.json
-# If you later decide run configurations SHOULD be shared
-# across machines, uncomment the negation below:
+# If its later decided run configurations SHOULD be shared
+# across machines, add:
 # !.forge/runConfigurations/
 
 # ---------- Local indexes / caches ----------
@@ -86,7 +77,7 @@ jdtls/
 .forge-cache/
 
 # ============================================================
-#  Developer tooling (the IDE you build Forge IN)
+#  Developer tooling (Mainly IntelliJ IDEA)
 # ============================================================
 
 # IntelliJ
@@ -94,6 +85,7 @@ jdtls/
 *.iml
 *.ipr
 *.iws
+**/META-INF/MANIFEST.MF
 
 # Eclipse / VS Code
 .settings/
