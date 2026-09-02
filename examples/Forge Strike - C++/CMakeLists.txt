@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.20)
-
 project(ForgeStrike LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
