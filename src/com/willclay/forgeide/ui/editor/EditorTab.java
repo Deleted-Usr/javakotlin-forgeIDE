@@ -4,6 +4,7 @@ import com.willclay.forgeide.editor.SyntaxUndoManager;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.highlighting.SyntaxHighlighter;
 import com.willclay.forgeide.highlighting.TokenTheme;
+import com.willclay.forgeide.ui.gutter.TabGutter;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 
 import javax.swing.*;
@@ -69,7 +70,12 @@ public final class EditorTab extends JPanel
 
         installUndoSupport();
 
-        add(new JScrollPane(textPane), BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(textPane);
+        TabGutter gutter = new TabGutter(textPane);
+
+        scrollPane.setRowHeaderView(gutter);
+
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     public void setLexer(Lexer lexer)

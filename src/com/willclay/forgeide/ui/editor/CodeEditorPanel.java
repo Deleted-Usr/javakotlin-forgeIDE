@@ -48,12 +48,15 @@ public final class CodeEditorPanel extends JPanel
     private static final String TABS_CARD = "tabs";
 
     private final JTabbedPane tabs = new JTabbedPane();
-    private final EditorEmptyState emptyState = new EditorEmptyState();
     private final CardLayout contentLayout = new CardLayout();
+
+    private final EditorEmptyState emptyState = new EditorEmptyState();
     private final JPanel content = new JPanel(contentLayout);
+
     private Font editorFont;
     private int tabSize = 4;
     private boolean insertSpaces = true;
+
     private final List<Runnable> stateChangeListeners = new ArrayList<>();
     private final List<Runnable> editListeners = new ArrayList<>();
     private final List<Runnable> undoStateListeners = new ArrayList<>();
@@ -170,7 +173,9 @@ public final class CodeEditorPanel extends JPanel
         tab.setFile(file);
         tab.setLexer(resolveLexer(file));
         tab.markSaved();
+
         updateTabTitle(tab);
+
         fireStateChanged();
     }
 
@@ -181,7 +186,9 @@ public final class CodeEditorPanel extends JPanel
 
         tab.setFile(Objects.requireNonNull(file, "file"));
         tab.setLexer(resolveLexer(file));
+
         updateTabTitle(tab);
+
         fireStateChanged();
     }
 
@@ -193,6 +200,7 @@ public final class CodeEditorPanel extends JPanel
 
         tabs.removeTabAt(index);
         updateVisibleContent();
+
         fireStateChanged();
         fireUndoStateChanged();
     }
@@ -253,7 +261,9 @@ public final class CodeEditorPanel extends JPanel
     public void applyEditorSettings(Font font, int tabSize, boolean insertSpaces)
     {
         this.editorFont = Objects.requireNonNull(font, "font");
+
         if (tabSize < 1) throw new IllegalArgumentException("tabSize must be positive");
+
         this.tabSize = tabSize;
         this.insertSpaces = insertSpaces;
 
@@ -411,6 +421,7 @@ public final class CodeEditorPanel extends JPanel
         StyledDocument document = textPane.getStyledDocument();
         Style defaultStyle = document.getStyle(StyleContext.DEFAULT_STYLE);
         StyleConstants.setTabSet(defaultStyle, new TabSet(tabStops));
+
         textPane.revalidate();
         textPane.repaint();
     }
@@ -424,8 +435,8 @@ public final class CodeEditorPanel extends JPanel
     private void installTabAction(JTextPane textPane)
     {
         String actionName = "forge.insert-tab";
-        textPane.getInputMap(JComponent.WHEN_FOCUSED)
-                .put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0), actionName);
+
+        textPane.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0), actionName);
         textPane.getActionMap().put(actionName, new AbstractAction()
         {
             @Override
