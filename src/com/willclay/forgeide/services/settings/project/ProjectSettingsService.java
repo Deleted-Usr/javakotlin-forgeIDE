@@ -1,7 +1,7 @@
 package com.willclay.forgeide.services.settings.project;
 
 import com.willclay.forgeide.lang.api.Language;
-import com.willclay.forgeide.lang.api.LanguageSettings;
+import com.willclay.forgeide.lang.api.settings.LanguageSettings;
 import com.willclay.forgeide.services.WorkspaceService;
 import com.willclay.forgeide.workspace.Project;
 import com.willclay.forgeide.workspace.metadata.ProjectConfiguration;

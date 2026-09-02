@@ -3,7 +3,7 @@ package com.willclay.forgeide.lang.java;
 import com.willclay.forgeide.lang.api.Toolchain;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.lang.api.Language;
-import com.willclay.forgeide.lang.api.LanguageSettingsPage;
+import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage;
 import com.willclay.forgeide.workspace.Project;
 
 import java.io.IOException;

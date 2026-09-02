@@ -1,7 +1,7 @@
 package com.willclay.forgeide.lang.java;
 
-import com.willclay.forgeide.lang.api.LanguageSettings;
-import com.willclay.forgeide.lang.api.LanguageSettingsPage;
+import com.willclay.forgeide.lang.api.settings.LanguageSettings;
+import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage;
 import com.willclay.forgeide.lang.jvm.JvmSettings;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.settings.project.JvmSettingsForm;

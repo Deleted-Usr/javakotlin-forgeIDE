@@ -1,5 +1,6 @@
 package com.willclay.forgeide.lang.api;
 
+import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage;
 import com.willclay.forgeide.workspace.Project;
 
 import java.io.IOException;

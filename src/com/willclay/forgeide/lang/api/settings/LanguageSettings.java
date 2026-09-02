@@ -1,4 +1,4 @@
-package com.willclay.forgeide.lang.api;
+package com.willclay.forgeide.lang.api.settings;
 
 import java.util.Map;
 

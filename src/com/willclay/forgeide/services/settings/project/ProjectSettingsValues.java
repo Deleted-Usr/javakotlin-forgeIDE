@@ -1,6 +1,6 @@
 package com.willclay.forgeide.services.settings.project;
 
-import com.willclay.forgeide.lang.api.LanguageSettings;
+import com.willclay.forgeide.lang.api.settings.LanguageSettings;
 import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 

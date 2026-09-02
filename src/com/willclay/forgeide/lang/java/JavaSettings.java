@@ -1,6 +1,6 @@
 package com.willclay.forgeide.lang.java;
 
-import com.willclay.forgeide.lang.api.LanguageSettings;
+import com.willclay.forgeide.lang.api.settings.LanguageSettings;
 import com.willclay.forgeide.lang.jvm.JvmSettings;
 import com.willclay.forgeide.workspace.Project;
 

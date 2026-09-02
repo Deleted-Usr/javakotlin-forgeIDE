@@ -1,8 +1,8 @@
 package com.willclay.forgeide.ui.settings.project;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
-import com.willclay.forgeide.lang.api.LanguageSettings;
-import com.willclay.forgeide.lang.api.LanguageSettingsPage;
+import com.willclay.forgeide.lang.api.settings.LanguageSettings;
+import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage;
 import com.willclay.forgeide.services.settings.project.ProjectSettingsService;
 import com.willclay.forgeide.services.settings.project.ProjectSettingsService.ProjectSettingsState;
 import com.willclay.forgeide.services.settings.project.ProjectSettingsValues;
