@@ -1,0 +1,20 @@
+[package]
+name = "rust-native"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "ForgeIDE"
+path = "src/main.rs"
+
+[dependencies]
+# The raw JNI types and function tables - the Rust equivalent of #include <jni.h>
+jni-sys = "0.3"
+
+[dependencies.windows-sys]
+version = "0.59"
+features = [
+    "Win32_Foundation",
+    "Win32_System_LibraryLoader",
+    "Win32_UI_WindowsAndMessaging"
+]
