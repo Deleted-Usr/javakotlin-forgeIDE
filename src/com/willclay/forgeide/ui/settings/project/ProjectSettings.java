@@ -32,7 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-/** General settings shared by every Forge project language. */
+/// General settings shared by every Forge project language.
 public final class ProjectSettings extends JPanel
 {
     private final JTextField name = new JTextField(24);

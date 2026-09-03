@@ -5,13 +5,11 @@ import com.willclay.forgeide.ui.settings.general.GeneralSettings;
 
 import java.util.Objects;
 
-/**
- * Holds the versioned global IDE settings stored in {@code settings.json}.
- * Values are grouped by concern so the persisted document remains readable as
- * the settings UI grows.
- *
- * @see GeneralSettings
- */
+/// Holds the versioned global IDE settings stored in `settings.json`.
+/// Values are grouped by concern so the persisted document remains readable as
+/// the settings UI grows.
+///
+/// @see GeneralSettings
 public record IDESettingsConfiguration(
         int schemaVersion,
         Appearance appearance,

@@ -15,20 +15,18 @@ import com.willclay.forgeide.workspace.Workspace;
 
 import javax.swing.JFrame;
 
-/**
- * Everything an action might need, in one object.
- * <p>
- * The alternative is a constructor per action listing exactly its own
- * dependencies, which reads well right up until the day {@code RunAction} needs
- * the status bar too and four call sites have to change. Every action takes one
- * of these instead, so adding a subsystem is a field here and nothing else —
- * which is exactly what happened when the project tree arrived: four new
- * fields, and not one existing action's constructor changed.
- * <p>
- * The cost is honest: an action can reach anything, so nothing stops a badly
- * behaved one from reaching too far. That is a convention rather than a
- * compiler guarantee.
- */
+/// Everything an action might need, in one object.
+///
+/// The alternative is a constructor per action listing exactly its own
+/// dependencies, which reads well right up until the day `RunAction` needs
+/// the status bar too and four call sites have to change. Every action takes one
+/// of these instead, so adding a subsystem is a field here and nothing else —
+/// which is exactly what happened when the project tree arrived: four new
+/// fields, and not one existing action's constructor changed.
+///
+/// The cost is honest: an action can reach anything, so nothing stops a badly
+/// behaved one from reaching too far. That is a convention rather than a
+/// compiler guarantee.
 public final class ActionContext
 {
     private final JFrame frame;
@@ -75,21 +73,17 @@ public final class ActionContext
         this.runConfigDialogController = runConfigDialogController;
     }
 
-    /**
-     * Only for parenting dialogs and for closing the application. An action
-     * that starts calling layout methods on the frame has bypassed
-     * {@link WorkbenchPanel} and should be using that instead.
-     */
+    /// Only for parenting dialogs and for closing the application. An action
+    /// that starts calling layout methods on the frame has bypassed
+    /// [WorkbenchPanel] and should be using that instead.
     public JFrame getFrame() { return frame; }
 
-    /**
-     * The widget. Only for operations that are about the caret and the
-     * selection — cut, paste, undo. Anything about <em>which file is open</em>
-     * belongs to {@link #getEditorManager()}.
-     */
+    /// The widget. Only for operations that are about the caret and the
+    /// selection — cut, paste, undo. Anything about *which file is open*
+    /// belongs to [#getEditorManager()].
     public CodeEditorPanel getEditorPanel() { return editorPanel; }
 
-    /** The document: what is open, where it came from, whether it is modified. */
+    /// The document: what is open, where it came from, whether it is modified.
     public EditorManager getEditorManager() { return editorManager; }
 
     public ConsolePanel getConsole() { return console; }
@@ -98,13 +92,11 @@ public final class ActionContext
 
     public ProjectTree getProjectTree() { return projectTree; }
 
-    /**
-     * The workspace is derived from the service to avoid constructing
-     * a context with one {@code Workspace} while the service manages
-     * another one.
-     *
-     * @return Workspace derived from {@code workspaceService.getWorkspace();}
-     */
+    /// The workspace is derived from the service to avoid constructing
+    /// a context with one `Workspace` while the service manages
+    /// another one.
+    ///
+    /// @return Workspace derived from `workspaceService.getWorkspace();`
     public Workspace getWorkspace() { return workspaceService.getWorkspace(); }
 
     public WorkspaceService getWorkspaceService() { return workspaceService; }

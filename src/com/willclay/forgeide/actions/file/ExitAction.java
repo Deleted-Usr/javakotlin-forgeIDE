@@ -6,7 +6,7 @@ import com.willclay.forgeide.services.ActionContext;
 
 import java.awt.event.KeyEvent;
 
-/** Closes the IDE, checking for unsaved work on the way out. */
+/// Closes the IDE, checking for unsaved work on the way out.
 public final class ExitAction extends ForgeAction
 {
     private final ActionContext context;

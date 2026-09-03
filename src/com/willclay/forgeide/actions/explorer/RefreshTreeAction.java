@@ -6,16 +6,14 @@ import com.willclay.forgeide.services.ActionContext;
 
 import java.awt.event.KeyEvent;
 
-/**
- * Re-reads everything on screen, keeping the open folders open.
- * <p>
- * The file watcher makes this unnecessary most of the time, which is the point
- * of having it. It stays for the cases the watcher cannot cover: network
- * shares, and platforms where notifications are best-effort.
- * <p>
- * Not an ExplorerAction — it does not care what is selected, only whether there
- * is a project at all.
- */
+/// Re-reads everything on screen, keeping the open folders open.
+///
+/// The file watcher makes this unnecessary most of the time, which is the point
+/// of having it. It stays for the cases the watcher cannot cover: network
+/// shares, and platforms where notifications are best-effort.
+///
+/// Not an ExplorerAction — it does not care what is selected, only whether there
+/// is a project at all.
 public final class RefreshTreeAction extends ForgeAction
 {
     private final ActionContext context;

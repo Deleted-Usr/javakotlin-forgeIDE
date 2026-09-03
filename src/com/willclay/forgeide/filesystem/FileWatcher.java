@@ -11,22 +11,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-/**
- * Watches directories and reports that one of them changed.
- * <p>
- * Files are edited outside the IDE constantly — a terminal, a git checkout, the
- * file manager — and a tree that only updates when the IDE itself does
- * something is a tree that is quietly wrong most of the time.
- * <p>
- * <b>CREATE and DELETE only, deliberately.</b> Registering ENTRY_MODIFY as well
- * is the obvious thing to do and it floods: a single save can produce several
- * modify events, and a compiler writing class files produces hundreds. The
- * project tree does not display file contents, so a modification is not news.
- * Filtering at registration is free; filtering afterwards is not.
- * <p>
- * The callback runs on this watcher's own thread. Anything Swing-shaped has to
- * hop to the Event Dispatch Thread itself — see {@code ProjectTreeModel}.
- */
+/// Watches directories and reports that one of them changed.
+///
+/// Files are edited outside the IDE constantly — a terminal, a git checkout, the
+/// file manager — and a tree that only updates when the IDE itself does
+/// something is a tree that is quietly wrong most of the time.
+///
+/// **CREATE and DELETE only, deliberately.** Registering ENTRY_MODIFY as well
+/// is the obvious thing to do and it floods: a single save can produce several
+/// modify events, and a compiler writing class files produces hundreds. The
+/// project tree does not display file contents, so a modification is not news.
+/// Filtering at registration is free; filtering afterwards is not.
+///
+/// The callback runs on this watcher's own thread. Anything Swing-shaped has to
+/// hop to the Event Dispatch Thread itself — see `ProjectTreeModel`.
 public final class FileWatcher implements AutoCloseable
 {
     private final WatchService service;
@@ -41,7 +39,7 @@ public final class FileWatcher implements AutoCloseable
         this.service = FileSystems.getDefault().newWatchService();
     }
 
-    /** A daemon thread, so a watcher nobody stopped cannot keep the JVM alive. */
+    /// A daemon thread, so a watcher nobody stopped cannot keep the JVM alive.
     public void start()
     {
         if (thread != null) return;
@@ -51,7 +49,7 @@ public final class FileWatcher implements AutoCloseable
         thread.start();
     }
 
-    /** Registering the same directory twice is harmless — the key is reused. */
+    /// Registering the same directory twice is harmless — the key is reused.
     public synchronized void watch(Path directory)
     {
         if (keys.containsKey(directory)) return;
@@ -70,7 +68,7 @@ public final class FileWatcher implements AutoCloseable
         }
     }
 
-    /** Called when the project changes, so keys for the old tree are not held forever. */
+    /// Called when the project changes, so keys for the old tree are not held forever.
     public synchronized void unwatchAll()
     {
         for (WatchKey key : keys.values()) key.cancel();

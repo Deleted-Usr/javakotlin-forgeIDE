@@ -7,7 +7,7 @@ import com.willclay.forgeide.workspace.ProjectItem;
 
 import java.io.IOException;
 
-/** Creates an empty file in the selected folder and opens it. */
+/// Creates an empty file in the selected folder and opens it.
 public final class CreateFileAction extends ExplorerAction
 {
     public CreateFileAction(ActionContext context)

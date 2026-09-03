@@ -16,7 +16,7 @@ import javax.tools.ToolProvider;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/** Swing editor for {@link JavaSettings}. */
+/// Swing editor for [JavaSettings].
 final class JavaSettingsPage implements LanguageSettingsPage
 {
     private final JvmSettingsForm jvm;

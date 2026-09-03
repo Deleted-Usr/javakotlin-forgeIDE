@@ -17,13 +17,11 @@ import java.awt.GridBagLayout;
 import java.awt.event.KeyEvent;
 import java.util.Objects;
 
-/**
- * The editor's intentional no-document state.
- *
- * <p>The buttons use the same {@link Action} instances as Forge's menus and
- * toolbar, so their enabled state, shortcuts and behaviour cannot drift apart.
- * Which actions are offered depends on whether a project is currently open.</p>
- */
+/// The editor's intentional no-document state.
+///
+/// The buttons use the same [Action] instances as Forge's menus and
+/// toolbar, so their enabled state, shortcuts and behaviour cannot drift apart.
+/// Which actions are offered depends on whether a project is currently open.
 final class EditorEmptyState extends JPanel
 {
     private static final int CONTENT_WIDTH = 360;

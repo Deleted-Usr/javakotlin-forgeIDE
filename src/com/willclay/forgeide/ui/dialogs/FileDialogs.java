@@ -20,7 +20,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/** Owns Forge's file and project-selection dialogs. */
+/// Owns Forge's file and project-selection dialogs.
 public final class FileDialogs
 {
     private final Component parent;
@@ -37,10 +37,10 @@ public final class FileDialogs
         directoryChooser.setFileSelectionMode(SystemFileChooser.DIRECTORIES_ONLY);
     }
 
-    /** Values collected by the New Project dialog. */
+    /// Values collected by the New Project dialog.
     public record NewProjectDetails(String name, Language language) { }
 
-    /** @return the chosen directory, or {@code null} if cancelled */
+    /// @return the chosen directory, or `null` if cancelled
     public Path chooseDirectory(String title)
     {
         directoryChooser.setDialogTitle(title);
@@ -49,7 +49,7 @@ public final class FileDialogs
         return directoryChooser.getSelectedFile().toPath();
     }
 
-    /** Prompts for both the new project's name and its permanent language. */
+    /// Prompts for both the new project's name and its permanent language.
     public NewProjectDetails chooseNewProjectDetails()
     {
         JTextField name = new JTextField("MyProject", 24);
@@ -76,7 +76,7 @@ public final class FileDialogs
         }
     }
 
-    /** Asks which language should be assigned to an unconfigured directory. */
+    /// Asks which language should be assigned to an unconfigured directory.
     public Language chooseLanguage(String title, String message)
     {
         List<Language> available = languages.languages();
@@ -93,7 +93,7 @@ public final class FileDialogs
         return null;
     }
 
-    /** @return a source file recognised by {@code language}, or {@code null} */
+    /// @return a source file recognised by `language`, or `null`
     public Path chooseFileToOpen(Language language)
     {
         configureFileChooser(language);
@@ -111,10 +111,8 @@ public final class FileDialogs
         return file;
     }
 
-    /**
-     * Asks where to save, appends the language's default extension to a bare
-     * name and confirms before overwriting an existing file.
-     */
+    /// Asks where to save, appends the language's default extension to a bare
+    /// name and confirms before overwriting an existing file.
     public Path chooseFileToSave(Language language, Path suggested)
     {
         configureFileChooser(language);

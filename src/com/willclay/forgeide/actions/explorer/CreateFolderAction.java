@@ -6,7 +6,7 @@ import com.willclay.forgeide.workspace.ProjectItem;
 
 import java.io.IOException;
 
-/** Creates a folder in the selected folder. */
+/// Creates a folder in the selected folder.
 public final class CreateFolderAction extends ExplorerAction
 {
     public CreateFolderAction(ActionContext context)

@@ -20,7 +20,7 @@ import java.awt.GridBagConstraints;
 import java.nio.file.Path;
 import java.util.Collections;
 
-/** Reusable controls for the JVM portion of Java and Kotlin settings. */
+/// Reusable controls for the JVM portion of Java and Kotlin settings.
 public final class JvmSettingsForm
 {
     private final Path projectRoot;

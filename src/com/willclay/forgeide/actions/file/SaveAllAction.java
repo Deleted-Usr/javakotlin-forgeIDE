@@ -8,7 +8,7 @@ import com.willclay.forgeide.ui.editor.EditorTab;
 
 import java.awt.event.KeyEvent;
 
-/** Saves each modified editor tab, asking for a path for untitled documents. */
+/// Saves each modified editor tab, asking for a path for untitled documents.
 public final class SaveAllAction extends ForgeAction
 {
     private final ActionContext context;
@@ -38,7 +38,7 @@ public final class SaveAllAction extends ForgeAction
         saveAll();
     }
 
-    /** @return true only when every modified tab was saved successfully */
+    /// @return true only when every modified tab was saved successfully
     public boolean saveAll()
     {
         EditorManager manager = context.getEditorManager();

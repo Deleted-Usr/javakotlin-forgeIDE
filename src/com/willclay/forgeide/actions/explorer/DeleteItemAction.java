@@ -6,7 +6,7 @@ import com.willclay.forgeide.workspace.ProjectItem;
 
 import java.io.IOException;
 
-/** Deletes the selected file, or the selected folder and everything in it. */
+/// Deletes the selected file, or the selected folder and everything in it.
 public final class DeleteItemAction extends ExplorerAction
 {
     public DeleteItemAction(ActionContext context)

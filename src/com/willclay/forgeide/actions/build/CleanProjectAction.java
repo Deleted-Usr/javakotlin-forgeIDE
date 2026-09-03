@@ -9,7 +9,7 @@ import com.willclay.forgeide.workspace.Project;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-/** Cleans generated output on the same worker used by build and run. */
+/// Cleans generated output on the same worker used by build and run.
 public final class CleanProjectAction extends ForgeAction
 {
     private final ActionContext context;

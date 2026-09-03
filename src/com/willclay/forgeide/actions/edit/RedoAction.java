@@ -7,7 +7,7 @@ import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 
 import java.awt.event.KeyEvent;
 
-/** @see UndoAction */
+/// @see UndoAction
 public final class RedoAction extends ForgeAction
 {
     private final CodeEditorPanel editor;

@@ -4,13 +4,11 @@ import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
 
-/**
- * Empties the explorer and stops watching the project's directories.
- * <p>
- * The enabled state is not managed by whoever calls this — the action watches
- * the workspace itself, so the File menu item greys out the moment there is no
- * project, wherever the close came from.
- */
+/// Empties the explorer and stops watching the project's directories.
+///
+/// The enabled state is not managed by whoever calls this — the action watches
+/// the workspace itself, so the File menu item greys out the moment there is no
+/// project, wherever the close came from.
 public final class CloseProjectAction extends ForgeAction
 {
     private final ActionContext context;

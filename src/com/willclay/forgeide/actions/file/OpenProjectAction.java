@@ -10,7 +10,7 @@ import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.nio.file.Path;
 
-/** Opens a Forge project, restoring its persisted language. */
+/// Opens a Forge project, restoring its persisted language.
 public final class OpenProjectAction extends ForgeAction
 {
     private final ActionContext context;

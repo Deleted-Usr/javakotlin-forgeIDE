@@ -7,15 +7,13 @@ import com.willclay.forgeide.ui.Window;
 import javax.swing.Box;
 import javax.swing.JToolBar;
 
-/**
- * The strip of buttons across the top — the handful of commands worth reaching
- * for constantly, next to a menu bar that lists everything.
- * <p>
- * There are no listeners left in this class. It used to take a Runnable per
- * button and wire each one up; now it takes the shared actions and adds them,
- * which is why nothing here has to be told that a build has started before Run
- * greys out.
- */
+/// The strip of buttons across the top — the handful of commands worth reaching
+/// for constantly, next to a menu bar that lists everything.
+///
+/// There are no listeners left in this class. It used to take a Runnable per
+/// button and wire each one up; now it takes the shared actions and adds them,
+/// which is why nothing here has to be told that a build has started before Run
+/// greys out.
 public final class EditorToolBar extends JToolBar
 {
     public EditorToolBar(ActionManager actions)

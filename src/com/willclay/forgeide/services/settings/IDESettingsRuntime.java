@@ -13,11 +13,9 @@ import java.awt.Component;
 import java.io.IOException;
 import java.util.Objects;
 
-/**
- * Applies IDE settings whose effects are long-lived rather than tied to one
- * command. Command-specific settings are read directly by their action when it
- * runs; editor defaults and autosave are kept live here.
- */
+/// Applies IDE settings whose effects are long-lived rather than tied to one
+/// command. Command-specific settings are read directly by their action when it
+/// runs; editor defaults and autosave are kept live here.
 public final class IDESettingsRuntime implements AutoCloseable
 {
     private final Component dialogParent;
@@ -77,7 +75,7 @@ public final class IDESettingsRuntime implements AutoCloseable
         if (configuration.saving().autoSave()) autoSaveTimer.restart();
     }
 
-    /** Autosave never opens a Save As dialog; untitled documents remain dirty. */
+    /// Autosave never opens a Save As dialog; untitled documents remain dirty.
     private void saveFileBackedTabs()
     {
         for (EditorTab tab : editorManager.getOpenTabs())

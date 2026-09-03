@@ -21,13 +21,11 @@ import javax.swing.event.CaretListener;
 import javax.swing.text.Element;
 import java.util.Objects;
 
-/**
- * A compact, live summary of the current editor and project state.
- * <p>
- * The bar only observes existing services. It deliberately does not own editor
- * settings, project metadata, or execution state, so changing a value here can
- * never make the displayed state drift away from the rest of the IDE.
- */
+/// A compact, live summary of the current editor and project state.
+///
+/// The bar only observes existing services. It deliberately does not own editor
+/// settings, project metadata, or execution state, so changing a value here can
+/// never make the displayed state drift away from the rest of the IDE.
 public final class StatusBar extends JToolBar
 {
     private final ExecutionManager executionManager;
@@ -113,7 +111,7 @@ public final class StatusBar extends JToolBar
         encoding.setToolTipText("Project file encoding");
     }
 
-    /** Rebinds the caret listener when the selected editor tab changes. */
+    /// Rebinds the caret listener when the selected editor tab changes.
     private void updateEditorInformation()
     {
         EditorTab currentTab = editorManager.getCurrentTab();
@@ -162,11 +160,9 @@ public final class StatusBar extends JToolBar
         theme.setText(currentTheme.getDisplayName());
     }
 
-    /**
-     * Settings and workspace services are not Swing classes and may eventually
-     * publish from worker threads. Keeping the boundary here makes every label
-     * update safe even if their callers change later.
-     */
+    /// Settings and workspace services are not Swing classes and may eventually
+    /// publish from worker threads. Keeping the boundary here makes every label
+    /// update safe even if their callers change later.
     private static void onEventDispatchThread(Runnable update)
     {
         Objects.requireNonNull(update, "update");

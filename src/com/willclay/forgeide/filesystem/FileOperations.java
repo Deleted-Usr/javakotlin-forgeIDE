@@ -8,21 +8,17 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
-/**
- * The disk, and nothing else.
- * <p>
- * Every create, rename and delete the IDE performs goes through here, so there
- * is one place to look when something has gone wrong on disk and one place to
- * add the safety checks. Nothing in this class knows a tree exists.
- */
+/// The disk, and nothing else.
+///
+/// Every create, rename and delete the IDE performs goes through here, so there
+/// is one place to look when something has gone wrong on disk and one place to
+/// add the safety checks. Nothing in this class knows a tree exists.
 public final class FileOperations
 {
     private FileOperations() { }
 
-    /**
-     * @return the directory's entries, unsorted — ordering is a display
-     *         decision and belongs with {@code ProjectItem.EXPLORER_ORDER}
-     */
+    /// @return the directory's entries, unsorted — ordering is a display
+    ///         decision and belongs with `ProjectItem.EXPLORER_ORDER`
     public static List<Path> listChildren(Path directory) throws IOException
     {
         if (!Files.isDirectory(directory)) return List.of();
@@ -64,7 +60,7 @@ public final class FileOperations
         return Files.move(source, target);
     }
 
-    /** Directories are deleted with everything inside them. */
+    /// Directories are deleted with everything inside them.
     public static void delete(Path path) throws IOException
     {
         if (!Files.isDirectory(path))
@@ -87,13 +83,11 @@ public final class FileOperations
         Files.createDirectories(directory);
     }
 
-    /**
-     * Refuses anything that is not a plain name.
-     * <p>
-     * {@code parent.resolve("../../etc/passwd")} is a perfectly valid Path, and
-     * the name arrives from a text field the user typed into. A rename dialog
-     * should not be able to move a file three directories up.
-     */
+    /// Refuses anything that is not a plain name.
+    ///
+    /// `parent.resolve("../../etc/passwd")` is a perfectly valid Path, and
+    /// the name arrives from a text field the user typed into. A rename dialog
+    /// should not be able to move a file three directories up.
     private static Path resolveChild(Path parent, String name) throws IOException
     {
         String trimmed = name.trim();

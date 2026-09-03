@@ -7,16 +7,14 @@ import java.awt.Desktop;
 import java.io.IOException;
 import java.nio.file.Path;
 
-/**
- * Opens the containing folder in the platform's file manager.
- * <p>
- * Desktop.open on the parent directory rather than on the file: opening the
- * file itself would launch whatever application is registered for .java, which
- * is not what "reveal" means. Selecting the file inside the window needs a
- * per-platform command line, hence the TODO.
- * <p>
- * TODO - explorer /select, open -R, and a best-effort fall back elsewhere.
- */
+/// Opens the containing folder in the platform's file manager.
+///
+/// Desktop.open on the parent directory rather than on the file: opening the
+/// file itself would launch whatever application is registered for .java, which
+/// is not what "reveal" means. Selecting the file inside the window needs a
+/// per-platform command line, hence the TODO.
+///
+/// TODO - explorer /select, open -R, and a best-effort fall back elsewhere.
 public final class RevealInFilesAction extends ExplorerAction
 {
     public RevealInFilesAction(ActionContext context)

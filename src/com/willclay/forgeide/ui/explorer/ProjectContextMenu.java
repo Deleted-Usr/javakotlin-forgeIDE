@@ -4,13 +4,11 @@ import com.willclay.forgeide.actions.ActionManager;
 
 import javax.swing.JPopupMenu;
 
-/**
- * The explorer's right-click menu.
- * <p>
- * Built the same way the menu bar is — from shared actions, with no listeners.
- * Every item here greys itself out when it does not apply to what is selected,
- * and this class does not know which ones those are.
- */
+/// The explorer's right-click menu.
+///
+/// Built the same way the menu bar is — from shared actions, with no listeners.
+/// Every item here greys itself out when it does not apply to what is selected,
+/// and this class does not know which ones those are.
 public final class ProjectContextMenu extends JPopupMenu
 {
     public ProjectContextMenu(ActionManager actions)

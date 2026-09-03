@@ -17,7 +17,7 @@ import java.io.Writer;
 import java.net.URI;
 import java.nio.file.Path;
 
-/** Reads and writes JSON through the application's shared Jackson configuration. */
+/// Reads and writes JSON through the application's shared Jackson configuration.
 public final class JacksonJsonCodec implements JsonCodec
 {
     private final ObjectMapper mapper;
@@ -57,7 +57,7 @@ public final class JacksonJsonCodec implements JsonCodec
         }
     }
 
-    /** Keeps project-relative paths as portable JSON strings instead of file URIs. */
+    /// Keeps project-relative paths as portable JSON strings instead of file URIs.
     private static final class PathSerializer extends StdScalarSerializer<Path>
     {
         private PathSerializer()

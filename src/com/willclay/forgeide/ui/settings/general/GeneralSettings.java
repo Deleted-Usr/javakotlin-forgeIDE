@@ -9,10 +9,8 @@ import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import java.awt.BorderLayout;
 
-/**
- * Settings specific to the IDE. These are stored in the user's Forge
- * configuration directory rather than in an individual project's metadata.
- */
+/// Settings specific to the IDE. These are stored in the user's Forge
+/// configuration directory rather than in an individual project's metadata.
 public final class GeneralSettings extends JPanel
 {
     private static final String REOPEN_LAST_PROJECT_LABEL = "Reopen the last project";
@@ -121,7 +119,7 @@ public final class GeneralSettings extends JPanel
         clearConsoleOnRun.setSelected(buildAndRun.clearConsoleOnRun());
     }
 
-    /** Returns the edited general values while preserving the independently edited theme. */
+    /// Returns the edited general values while preserving the independently edited theme.
     public IDESettingsConfiguration getValues(String theme)
     {
         String startup = OPEN_EMPTY_WINDOW_LABEL.equals(startupAction.getSelectedItem())

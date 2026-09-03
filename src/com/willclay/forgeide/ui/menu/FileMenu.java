@@ -5,13 +5,11 @@ import com.willclay.forgeide.actions.ActionManager;
 import javax.swing.JMenu;
 import java.awt.event.KeyEvent;
 
-/**
- * File.
- * <p>
- * Split into sections rather than written as one long constructor, so the
- * separators are structure rather than punctuation and a new item has an
- * obvious place to go.
- */
+/// File.
+///
+/// Split into sections rather than written as one long constructor, so the
+/// separators are structure rather than punctuation and a new item has an
+/// obvious place to go.
 public final class FileMenu extends JMenu
 {
     private final ActionManager actions;

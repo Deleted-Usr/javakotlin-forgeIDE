@@ -7,15 +7,13 @@ import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import java.util.function.Consumer;
 
-/**
- * Cut, Copy, Paste, Delete and Select All — one class, because the only thing
- * that differs between them is a single call on the text pane.
- * <p>
- * Five near-identical classes would have been the consistent thing to write,
- * and would have been five files to open the next time the editor gains a
- * second text pane. A method reference says the same thing in a line:
- * {@code new TextEditAction("Cut", shortcut, editor, JTextPane::cut)}.
- */
+/// Cut, Copy, Paste, Delete and Select All — one class, because the only thing
+/// that differs between them is a single call on the text pane.
+///
+/// Five near-identical classes would have been the consistent thing to write,
+/// and would have been five files to open the next time the editor gains a
+/// second text pane. A method reference says the same thing in a line:
+/// `new TextEditAction("Cut", shortcut, editor, JTextPane::cut)`.
 public final class TextEditAction extends ForgeAction
 {
     private final CodeEditorPanel editor;

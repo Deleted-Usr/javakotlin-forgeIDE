@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/** Project metadata plus opaque settings maps owned by the selected language. */
+/// Project metadata plus opaque settings maps owned by the selected language.
 public record ProjectConfiguration(
         int schemaVersion,
         @JsonProperty("name") @JsonAlias("projectName") String projectName,

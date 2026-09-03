@@ -11,12 +11,10 @@ import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.nio.file.Path;
 
-/**
- * Writes straight back to the file the editor was loaded from, with no dialog.
- * <p>
- * Before the editor remembered where its text came from, every save was really
- * a Save As. Holding one small piece of state is the whole difference.
- */
+/// Writes straight back to the file the editor was loaded from, with no dialog.
+///
+/// Before the editor remembered where its text came from, every save was really
+/// a Save As. Holding one small piece of state is the whole difference.
 public final class SaveAction extends ForgeAction
 {
     private final ActionContext context;
@@ -36,11 +34,9 @@ public final class SaveAction extends ForgeAction
         saveCurrent();
     }
 
-    /**
-     * Saves the current document, asking for a name when necessary.
-     *
-     * @return true only when the document is safely stored on disk
-     */
+    /// Saves the current document, asking for a name when necessary.
+    ///
+    /// @return true only when the document is safely stored on disk
     public boolean saveCurrent()
     {
         Project project = context.getWorkspace().getProject();

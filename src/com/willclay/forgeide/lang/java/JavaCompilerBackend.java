@@ -1,6 +1,6 @@
 package com.willclay.forgeide.lang.java;
 
-/** Selects how Forge invokes the Java compiler for a project. */
+/// Selects how Forge invokes the Java compiler for a project.
 public enum JavaCompilerBackend
 {
     EXTERNAL_JAVAC("externalJavac"),

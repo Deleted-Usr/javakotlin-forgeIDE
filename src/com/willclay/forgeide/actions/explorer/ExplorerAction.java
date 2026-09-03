@@ -8,19 +8,17 @@ import com.willclay.forgeide.workspace.ProjectItemType;
 
 import javax.swing.KeyStroke;
 
-/**
- * The shared half of every context-menu command: which item is selected, and
- * whether this command applies to it.
- * <p>
- * Each subclass answers {@link #appliesTo} and Swing does the rest — Delete
- * greys itself out when nothing is selected, Rename greys itself out on the
- * project root, and no menu code is involved in either.
- * <p>
- * Note what these actions are handed: a {@link ProjectItem}, never a tree node.
- * Swing's tree classes stop at the explorer package, so an action can be
- * triggered from a context menu, a keyboard shortcut, or a test that never
- * built a JTree.
- */
+/// The shared half of every context-menu command: which item is selected, and
+/// whether this command applies to it.
+///
+/// Each subclass answers [#appliesTo] and Swing does the rest — Delete
+/// greys itself out when nothing is selected, Rename greys itself out on the
+/// project root, and no menu code is involved in either.
+///
+/// Note what these actions are handed: a [ProjectItem], never a tree node.
+/// Swing's tree classes stop at the explorer package, so an action can be
+/// triggered from a context menu, a keyboard shortcut, or a test that never
+/// built a JTree.
 public abstract class ExplorerAction extends ForgeAction
 {
     protected final ActionContext context;
@@ -35,7 +33,7 @@ public abstract class ExplorerAction extends ForgeAction
         syncEnabled();
     }
 
-    /** @param item the selected item, or null when nothing is selected */
+    /// @param item the selected item, or null when nothing is selected
     protected abstract boolean appliesTo(ProjectItem item);
 
     protected final ProjectItem getSelection()
@@ -43,11 +41,9 @@ public abstract class ExplorerAction extends ForgeAction
         return context.getProjectTree().getSelectedItem();
     }
 
-    /**
-     * Where a new file or folder should go: the selection when it is a folder,
-     * and the folder containing it when it is a file. Right-clicking Main.java
-     * and choosing New File means "next to this one".
-     */
+    /// Where a new file or folder should go: the selection when it is a folder,
+    /// and the folder containing it when it is a file. Right-clicking Main.java
+    /// and choosing New File means "next to this one".
     protected final ProjectItem targetFolder()
     {
         ProjectItem selected = getSelection();

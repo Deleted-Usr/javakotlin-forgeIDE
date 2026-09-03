@@ -13,17 +13,15 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.Path2D;
 
-/**
- * Draws one row: an icon, the item's name, and its full path as a tooltip.
- * <p>
- * The icons are painted rather than loaded, so there is nothing to ship
- * alongside the jar and nothing to go missing the way the editor font can.
- * They are also resolution-independent, which a 16x16 PNG is not.
- * <p>
- * One renderer instance is reused for every row — that is how
- * DefaultTreeCellRenderer is meant to work. It is a rubber stamp, configured
- * and drawn once per row, so it must not hold per-row state.
- */
+/// Draws one row: an icon, the item's name, and its full path as a tooltip.
+///
+/// The icons are painted rather than loaded, so there is nothing to ship
+/// alongside the jar and nothing to go missing the way the editor font can.
+/// They are also resolution-independent, which a 16x16 PNG is not.
+///
+/// One renderer instance is reused for every row — that is how
+/// DefaultTreeCellRenderer is meant to work. It is a rubber stamp, configured
+/// and drawn once per row, so it must not hold per-row state.
 public final class ProjectTreeRenderer extends DefaultTreeCellRenderer
 {
     private static final Color FOLDER = new Color(0xD8A25A);
@@ -59,7 +57,7 @@ public final class ProjectTreeRenderer extends DefaultTreeCellRenderer
         return item.isSourceFile() ? SOURCE_ICON : FILE_ICON;
     }
 
-    /** A folder with a tab, filled and outlined in the same hue. */
+    /// A folder with a tab, filled and outlined in the same hue.
     private static final class FolderIcon implements Icon
     {
         private static final int SIZE = 16;
@@ -93,7 +91,7 @@ public final class ProjectTreeRenderer extends DefaultTreeCellRenderer
         public int getIconHeight() { return SIZE; }
     }
 
-    /** A page with the top-right corner folded over. */
+    /// A page with the top-right corner folded over.
     private static final class FileIcon implements Icon
     {
         private static final int SIZE = 16;

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/** The hand-authored course and its lightweight game objects. */
+/// The hand-authored course and its lightweight game objects.
 final class Level
 {
     static final double WORLD_WIDTH = 6_650;

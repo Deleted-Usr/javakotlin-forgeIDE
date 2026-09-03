@@ -36,11 +36,9 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-/**
- * Owns the editor tab strip and routes editor commands to the selected tab.
- * Each {@link EditorTab} owns its document, dirty state, highlighter and undo
- * history; this class owns only operations that span or select documents.
- */
+/// Owns the editor tab strip and routes editor commands to the selected tab.
+/// Each [EditorTab] owns its document, dirty state, highlighter and undo
+/// history; this class owns only operations that span or select documents.
 public final class CodeEditorPanel extends JPanel
 {
     private static final int TAB_STOP_COUNT = 60;
@@ -78,13 +76,13 @@ public final class CodeEditorPanel extends JPanel
         updateVisibleContent();
     }
 
-    /** Supplies the shared commands displayed while no document is open. */
+    /// Supplies the shared commands displayed while no document is open.
     public void setEmptyStateActions(Action newFile, Action openFile, Action newProject, Action openProject)
     {
         emptyState.setActions(newFile, openFile, newProject, openProject);
     }
 
-    /** Switches the empty-state choices between project and no-project workflows. */
+    /// Switches the empty-state choices between project and no-project workflows.
     public void setProjectOpen(boolean projectOpen)
     {
         emptyState.setProjectOpen(projectOpen);
@@ -133,7 +131,7 @@ public final class CodeEditorPanel extends JPanel
         return tab;
     }
 
-    /** Prevents the same file from being opened in two tabs. */
+    /// Prevents the same file from being opened in two tabs.
     public EditorTab findTab(Path file)
     {
         if (file == null) return null;
@@ -152,7 +150,7 @@ public final class CodeEditorPanel extends JPanel
         if (tabs.indexOfComponent(tab) >= 0) tabs.setSelectedComponent(tab);
     }
 
-    /** Removes every document, used when a project is closed or replaced. */
+    /// Removes every document, used when a project is closed or replaced.
     public void closeAllTabs()
     {
         tabs.removeAll();
@@ -179,7 +177,7 @@ public final class CodeEditorPanel extends JPanel
         fireStateChanged();
     }
 
-    /** Updates a document's path without changing its contents or dirty state. */
+    /// Updates a document's path without changing its contents or dirty state.
     public void updateFilePath(EditorTab tab, Path file)
     {
         if (tabs.indexOfComponent(tab) < 0) return;
@@ -192,7 +190,7 @@ public final class CodeEditorPanel extends JPanel
         fireStateChanged();
     }
 
-    /** Removes a tab after the owning workflow has already confirmed the operation. */
+    /// Removes a tab after the owning workflow has already confirmed the operation.
     public void closeTab(EditorTab tab)
     {
         int index = tabs.indexOfComponent(tab);
@@ -241,10 +239,8 @@ public final class CodeEditorPanel extends JPanel
         if (tab != null) tab.redo();
     }
 
-    /**
-     * Selects a lexer from each tab's path. A {@code null} path represents an
-     * untitled file and can use the current project's default lexer.
-     */
+    /// Selects a lexer from each tab's path. A `null` path represents an
+    /// untitled file and can use the current project's default lexer.
     public void setLexerResolver(Function<Path, Lexer> lexerResolver)
     {
         this.lexerResolver = Objects.requireNonNull(lexerResolver);
@@ -257,7 +253,7 @@ public final class CodeEditorPanel extends JPanel
         for (EditorTab tab : getOpenTabs()) tab.setTheme(theme);
     }
 
-    /** Applies editor defaults immediately to open tabs and to every future tab. */
+    /// Applies editor defaults immediately to open tabs and to every future tab.
     public void applyEditorSettings(Font font, int tabSize, boolean insertSpaces)
     {
         this.editorFont = Objects.requireNonNull(font, "font");
@@ -275,19 +271,19 @@ public final class CodeEditorPanel extends JPanel
         stateChangeListeners.add(Objects.requireNonNull(listener));
     }
 
-    /** Fired after each text insertion or removal; useful for idle-based services. */
+    /// Fired after each text insertion or removal; useful for idle-based services.
     public void addEditListener(Runnable listener)
     {
         editListeners.add(Objects.requireNonNull(listener, "listener"));
     }
 
-    /** Fired for changes to the selected tab's undo/redo availability. */
+    /// Fired for changes to the selected tab's undo/redo availability.
     public void addUndoStateListener(Runnable listener)
     {
         undoStateListeners.add(Objects.requireNonNull(listener));
     }
 
-    /** Called before a tab-close button removes its document. */
+    /// Called before a tab-close button removes its document.
     public void setCloseRequestHandler(Predicate<EditorTab> handler)
     {
         closeRequestHandler = Objects.requireNonNull(handler);
@@ -447,7 +443,7 @@ public final class CodeEditorPanel extends JPanel
         });
     }
 
-    /** A small nested class that defines the header of each panel. */
+    /// A small nested class that defines the header of each panel.
     private final class TabHeader extends JPanel
     {
         private final JLabel title = new JLabel();

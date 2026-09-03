@@ -5,12 +5,10 @@ import com.willclay.forgeide.actions.ActionManager;
 import javax.swing.JMenu;
 import java.awt.event.KeyEvent;
 
-/**
- * Edit.
- * <p>
- * Undo and Redo grey themselves out as the undo stack empties and fills — the
- * action knows, so the menu does not have to.
- */
+/// Edit.
+///
+/// Undo and Redo grey themselves out as the undo stack empties and fills — the
+/// action knows, so the menu does not have to.
 public final class EditMenu extends JMenu
 {
     private final ActionManager actions;

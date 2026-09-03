@@ -2,7 +2,7 @@ package forgerunner;
 
 import java.awt.geom.Rectangle2D;
 
-/** Player movement, including forgiving coyote-time jumps and a short dash. */
+/// Player movement, including forgiving coyote-time jumps and a short dash.
 final class Player
 {
     static final double WIDTH = 34;

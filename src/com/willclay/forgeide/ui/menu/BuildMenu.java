@@ -5,13 +5,11 @@ import com.willclay.forgeide.actions.ActionManager;
 import javax.swing.JMenu;
 import java.awt.event.KeyEvent;
 
-/**
- * Build.
- * <p>
- * Run appears here and on the toolbar, and while a build is in flight both go
- * grey. Neither this class nor the toolbar arranges that — they are showing the
- * same object.
- */
+/// Build.
+///
+/// Run appears here and on the toolbar, and while a build is in flight both go
+/// grey. Neither this class nor the toolbar arranges that — they are showing the
+/// same object.
 public final class BuildMenu extends JMenu
 {
     private final ActionManager actions;

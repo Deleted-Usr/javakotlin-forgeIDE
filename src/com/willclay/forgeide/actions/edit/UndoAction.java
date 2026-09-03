@@ -7,12 +7,10 @@ import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 
 import java.awt.event.KeyEvent;
 
-/**
- * The clearest demonstration of why the action layer is worth having: the
- * editor reports that its undo stack changed, this action greys itself out, and
- * the menu item and any toolbar button follow without either of them being
- * mentioned here.
- */
+/// The clearest demonstration of why the action layer is worth having: the
+/// editor reports that its undo stack changed, this action greys itself out, and
+/// the menu item and any toolbar button follow without either of them being
+/// mentioned here.
 public final class UndoAction extends ForgeAction
 {
     private final CodeEditorPanel editor;

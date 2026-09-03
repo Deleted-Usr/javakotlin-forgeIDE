@@ -4,7 +4,7 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import java.awt.Dimension;
 
-/** Application entry point. Open this file and press Run in ForgeIDE. */
+/// Application entry point. Open this file and press Run in ForgeIDE.
 public final class ForgeRunner
 {
     private ForgeRunner() { }

@@ -7,19 +7,17 @@ import java.awt.Color;
 import java.util.EnumMap;
 import java.util.Map;
 
-/**
- * The colours, as one immutable {@link AttributeSet} per {@link TokenType}.
- * <p>
- * Built once and shared by every token of that type. Handing the same instance
- * to the document over and over is the difference between a smooth pass and a
- * stuttering one: a fresh {@code SimpleAttributeSet} per token would allocate
- * thousands of objects per keystroke and defeat the document's own attribute
- * caching, which stores styles by identity.
- * <p>
- * A theme carries no background colour. The editor's background belongs to the
- * text pane, and setting it per character would paint a ragged rectangle behind
- * every token.
- */
+/// The colours, as one immutable [AttributeSet] per [TokenType].
+///
+/// Built once and shared by every token of that type. Handing the same instance
+/// to the document over and over is the difference between a smooth pass and a
+/// stuttering one: a fresh `SimpleAttributeSet` per token would allocate
+/// thousands of objects per keystroke and defeat the document's own attribute
+/// caching, which stores styles by identity.
+///
+/// A theme carries no background colour. The editor's background belongs to the
+/// text pane, and setting it per character would paint a ragged rectangle behind
+/// every token.
 public final class TokenTheme
 {
     private final Map<TokenType, AttributeSet> styles;
@@ -29,19 +27,19 @@ public final class TokenTheme
         this.styles = styles;
     }
 
-    /** Falls back to PLAIN so a newly added token type cannot turn text invisible. */
+    /// Falls back to PLAIN so a newly added token type cannot turn text invisible.
     public AttributeSet attributesFor(TokenType type)
     {
         return styles.getOrDefault(type, styles.get(TokenType.PLAIN));
     }
 
-    /** The attributes every character is reset to before a pass. */
+    /// The attributes every character is reset to before a pass.
     public AttributeSet plain()
     {
         return styles.get(TokenType.PLAIN);
     }
 
-    /** For the default light editor background. */
+    /// For the default light editor background.
     public static TokenTheme light()
     {
         Map<TokenType, AttributeSet> styles = new EnumMap<>(TokenType.class);
@@ -120,11 +118,9 @@ public final class TokenTheme
         return new TokenTheme(styles);
     }
 
-    /**
-     * No italics anywhere, deliberately. The bundled editor face is already the
-     * italic cut, so asking for italic on top of it either does nothing or makes
-     * the toolkit synthesise a second slant.
-     */
+    /// No italics anywhere, deliberately. The bundled editor face is already the
+    /// italic cut, so asking for italic on top of it either does nothing or makes
+    /// the toolkit synthesise a second slant.
     private static AttributeSet style(Color colour, boolean bold)
     {
         SimpleAttributeSet attributes = new SimpleAttributeSet();

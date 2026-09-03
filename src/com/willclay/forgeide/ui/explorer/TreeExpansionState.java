@@ -8,18 +8,16 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-/**
- * Remembers which folders were open, so a refresh does not collapse them.
- * <p>
- * Paths are recorded rather than TreePaths, because a TreePath holds the node
- * objects themselves and a refresh may well have replaced them. The path on
- * disk is the thing that survives.
- * <p>
- * Incremental updates keep expansion on their own — that is one of the reasons
- * {@code ProjectTreeModel} diffs instead of rebuilding. This is for the cases
- * where the tree really does have to be rebuilt: an explicit Refresh, or
- * reopening the same project.
- */
+/// Remembers which folders were open, so a refresh does not collapse them.
+///
+/// Paths are recorded rather than TreePaths, because a TreePath holds the node
+/// objects themselves and a refresh may well have replaced them. The path on
+/// disk is the thing that survives.
+///
+/// Incremental updates keep expansion on their own — that is one of the reasons
+/// `ProjectTreeModel` diffs instead of rebuilding. This is for the cases
+/// where the tree really does have to be rebuilt: an explicit Refresh, or
+/// reopening the same project.
 public final class TreeExpansionState
 {
     private TreeExpansionState() { }
@@ -44,10 +42,8 @@ public final class TreeExpansionState
         return expanded;
     }
 
-    /**
-     * Expands shallowest first: a child cannot be found until its parent has
-     * been loaded, and loading only happens when a node is expanded.
-     */
+    /// Expands shallowest first: a child cannot be found until its parent has
+    /// been loaded, and loading only happens when a node is expanded.
     public static void restore(JTree tree, ProjectTreeModel model, Set<Path> expanded)
     {
         Set<Path> remaining = new HashSet<>(expanded);

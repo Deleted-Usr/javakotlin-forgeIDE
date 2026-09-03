@@ -4,7 +4,7 @@ import com.willclay.forgeide.workspace.Project;
 
 import java.nio.file.Path;
 
-/** Shared spelling of the conventional Java project directories. */
+/// Shared spelling of the conventional Java project directories.
 final class JavaProjectPaths
 {
     private JavaProjectPaths() { }

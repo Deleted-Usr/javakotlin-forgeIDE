@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/** Creates a project with one language selected for its lifetime. */
+/// Creates a project with one language selected for its lifetime.
 public final class NewProjectAction extends ForgeAction
 {
     private final ActionContext context;

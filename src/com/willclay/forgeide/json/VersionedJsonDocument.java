@@ -1,6 +1,6 @@
 package com.willclay.forgeide.json;
 
-/** Marker and shared validation for root objects persisted as JSON documents. */
+/// Marker and shared validation for root objects persisted as JSON documents.
 public interface VersionedJsonDocument
 {
     int schemaVersion();

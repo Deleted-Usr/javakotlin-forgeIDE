@@ -13,13 +13,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 
-/**
- * The settings window {@link SettingsButton} opens
- * <p>
- * This initialises a JDialog and holds a JTabbedPane as the menu buttons. Each
- * menu is its own class that talks to a settings layer to separate the UI from
- * the IDE backend.
- */
+/// The settings window [SettingsButton] opens
+///
+/// This initialises a JDialog and holds a JTabbedPane as the menu buttons. Each
+/// menu is its own class that talks to a settings layer to separate the UI from
+/// the IDE backend.
 public final class SettingsWindow extends JDialog
 {
     private final SettingsService settingsService;

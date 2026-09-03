@@ -7,10 +7,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Objects;
 
-/**
- * Presents available run targets and keeps popup commands out of the combo
- * box's persistent selection.
- */
+/// Presents available run targets and keeps popup commands out of the combo
+/// box's persistent selection.
 public final class RunConfigurationDropdown extends JComboBox<Object>
 {
     private static final String CURRENT_FILE = "Current File";
@@ -48,7 +46,7 @@ public final class RunConfigurationDropdown extends JComboBox<Object>
         addActionListener(event -> selectionChanged());
     }
 
-    /** Separator rows divide popup sections but are not valid selections. */
+    /// Separator rows divide popup sections but are not valid selections.
     @Override
     public void setSelectedItem(Object item)
     {

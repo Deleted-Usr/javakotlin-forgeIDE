@@ -23,12 +23,10 @@ import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.util.Objects;
 
-/**
- * Paints document line numbers beside a text component.
- * <p>
- * The gutter is intended to be installed as a {@code JScrollPane} row header,
- * so its vertical coordinates and scrolling stay aligned with the editor view.
- */
+/// Paints document line numbers beside a text component.
+///
+/// The gutter is intended to be installed as a `JScrollPane` row header,
+/// so its vertical coordinates and scrolling stay aligned with the editor view.
 public final class TabGutter extends JComponent implements Scrollable
 {
     private static final int HORIZONTAL_PADDING = 8;

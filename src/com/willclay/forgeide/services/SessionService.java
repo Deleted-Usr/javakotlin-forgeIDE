@@ -9,7 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
-/** Reads and atomically writes the last workspace independently of user settings. */
+/// Reads and atomically writes the last workspace independently of user settings.
 public final class SessionService
 {
     private final Path sessionFile;
@@ -54,7 +54,7 @@ public final class SessionService
         }
     }
 
-    /** Upgrades the session document written before schema versioning. */
+    /// Upgrades the session document written before schema versioning.
     private IDESessionConfiguration migrateUnversionedSession()
     {
         LegacySession legacy;

@@ -16,21 +16,19 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Everything the project tree is allowed to know about the file system.
- * <p>
- * The tree never calls {@code Files} and never walks a directory itself. It
- * asks here, and it is told when to ask again. That one rule is what keeps
- * renaming, deleting, file watching and later drag-and-drop out of the Swing
- * classes entirely.
- * <p>
- * Every mutating method notifies listeners itself <em>and</em> the watcher will
- * notify them again a moment later. That double notification is intentional:
- * the direct one makes the tree respond instantly, the watcher's one covers
- * changes the IDE did not make, and because listeners react by re-reading a
- * directory rather than by applying a delta, running twice reaches the same
- * result as running once.
- */
+/// Everything the project tree is allowed to know about the file system.
+///
+/// The tree never calls `Files` and never walks a directory itself. It
+/// asks here, and it is told when to ask again. That one rule is what keeps
+/// renaming, deleting, file watching and later drag-and-drop out of the Swing
+/// classes entirely.
+///
+/// Every mutating method notifies listeners itself *and* the watcher will
+/// notify them again a moment later. That double notification is intentional:
+/// the direct one makes the tree respond instantly, the watcher's one covers
+/// changes the IDE did not make, and because listeners react by re-reading a
+/// directory rather than by applying a delta, running twice reaches the same
+/// result as running once.
 public final class WorkspaceService implements AutoCloseable
 {
     private final Workspace workspace;
@@ -52,7 +50,7 @@ public final class WorkspaceService implements AutoCloseable
         return workspace;
     }
 
-    /** Creates, configures and opens a new project using the dialog's display name. */
+    /// Creates, configures and opens a new project using the dialog's display name.
     public void createProject(Path root, String displayName, Language language) throws IOException
     {
         ProjectConfiguration configuration = ProjectConfiguration.defaultsForLanguage(displayName, language.id());
@@ -66,13 +64,13 @@ public final class WorkspaceService implements AutoCloseable
         open(project);
     }
 
-    /** Returns whether a directory already contains Forge project metadata. */
+    /// Returns whether a directory already contains Forge project metadata.
     public boolean isConfiguredProject(Path root)
     {
         return ProjectMetadata.exists(root);
     }
 
-    /** Assigns a language to an existing directory and opens it as a project. */
+    /// Assigns a language to an existing directory and opens it as a project.
     public void configureProject(Path root, Language language) throws IOException
     {
         FileOperations.ensureDirectory(root);
@@ -106,7 +104,7 @@ public final class WorkspaceService implements AutoCloseable
         fireConfigurationChanged();
     }
 
-    /** Opens a configured project, restoring its persisted language. */
+    /// Opens a configured project, restoring its persisted language.
     public void openProject(Path root) throws IOException
     {
         FileOperations.ensureDirectory(root);
@@ -123,11 +121,9 @@ public final class WorkspaceService implements AutoCloseable
         workspace.closeProject();
     }
 
-    /**
-     * @return the directory's contents in display order, or an empty list if it
-     *         cannot be read — a folder disappearing while the tree is looking
-     *         at it is ordinary, not exceptional
-     */
+    /// @return the directory's contents in display order, or an empty list if it
+    ///         cannot be read — a folder disappearing while the tree is looking
+    ///         at it is ordinary, not exceptional
     public List<ProjectItem> getChildren(ProjectItem parent)
     {
         if (!parent.isDirectory()) return List.of();
@@ -153,7 +149,7 @@ public final class WorkspaceService implements AutoCloseable
         }
     }
 
-    /** Called by the tree the first time a directory node is expanded. */
+    /// Called by the tree the first time a directory node is expanded.
     public void watch(ProjectItem directory)
     {
         if (directory.isDirectory()) watcher.watch(directory.path());

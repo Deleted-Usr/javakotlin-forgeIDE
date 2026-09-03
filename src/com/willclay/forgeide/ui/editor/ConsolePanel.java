@@ -16,20 +16,18 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Objects;
 
-/**
- * The output pane at the bottom of the window, and the running program's input.
- * <p>
- * The text area is genuinely editable, but a {@link DocumentFilter} refuses any
- * edit that lands before {@link #inputStart} — the offset where the program's
- * output stops and the user's half-typed line begins. That is the whole of the
- * "read-only output, editable prompt" behaviour: no second component, no
- * overlay, and copying out of the output still works because the caret is free
- * to go anywhere, only the edits are constrained.
- * <p>
- * Everything below the constructor runs on the Event Dispatch Thread, including
- * the fields: {@link #append} hops there itself, so a worker thread writing
- * compiler output never races the user typing.
- */
+/// The output pane at the bottom of the window, and the running program's input.
+///
+/// The text area is genuinely editable, but a [DocumentFilter] refuses any
+/// edit that lands before [#inputStart] — the offset where the program's
+/// output stops and the user's half-typed line begins. That is the whole of the
+/// "read-only output, editable prompt" behaviour: no second component, no
+/// overlay, and copying out of the output still works because the caret is free
+/// to go anywhere, only the edits are constrained.
+///
+/// Everything below the constructor runs on the Event Dispatch Thread, including
+/// the fields: [#append] hops there itself, so a worker thread writing
+/// compiler output never races the user typing.
 public final class ConsolePanel extends JPanel
 {
     private static final int VISIBLE_ROWS = 12;
@@ -37,16 +35,16 @@ public final class ConsolePanel extends JPanel
 
     private final JTextArea output = new JTextArea(VISIBLE_ROWS, VISIBLE_COLUMNS);
 
-    /** Offset where the editable region starts. Everything before it is output. */
+    /// Offset where the editable region starts. Everything before it is output.
     private int inputStart = 0;
 
-    /** Set while this class is writing, so the filter lets its own edits through. */
+    /// Set while this class is writing, so the filter lets its own edits through.
     private boolean writingOutput;
 
-    /** The running program's stdin, or null when nothing is reading. */
+    /// The running program's stdin, or null when nothing is reading.
     private Writer processInput;
 
-    /** Supplied by the window after the shared view actions have been created. */
+    /// Supplied by the window after the shared view actions have been created.
     private Runnable onMinimise = () -> { };
 
     public ConsolePanel(Font font)
@@ -96,15 +94,13 @@ public final class ConsolePanel extends JPanel
 
     // --- Output --- //
 
-    /**
-     * Appends raw text, newlines included or not.
-     * <p>
-     * Inserted at {@link #inputStart} rather than at the end, so output that
-     * arrives while the user is mid-line appears <em>above</em> what they have
-     * typed instead of splitting it.
-     * <p>
-     * Safe to call from any thread — compiler output arrives on a worker thread.
-     */
+    /// Appends raw text, newlines included or not.
+    ///
+    /// Inserted at [#inputStart] rather than at the end, so output that
+    /// arrives while the user is mid-line appears *above* what they have
+    /// typed instead of splitting it.
+    ///
+    /// Safe to call from any thread — compiler output arrives on a worker thread.
     public void append(String text)
     {
         onEventDispatchThread(() ->
@@ -155,10 +151,8 @@ public final class ConsolePanel extends JPanel
 
     // --- Input --- //
 
-    /**
-     * Opens the console for typing and points it at the running program's stdin.
-     * Called once the process has started; until then the console is read-only.
-     */
+    /// Opens the console for typing and points it at the running program's stdin.
+    /// Called once the process has started; until then the console is read-only.
     public void beginInput(Writer processInput)
     {
         onEventDispatchThread(() ->
@@ -170,7 +164,7 @@ public final class ConsolePanel extends JPanel
         });
     }
 
-    /** Closes stdin — the child sees end of stream — and locks the console again. */
+    /// Closes stdin — the child sees end of stream — and locks the console again.
     public void endInput()
     {
         onEventDispatchThread(() ->
@@ -191,10 +185,8 @@ public final class ConsolePanel extends JPanel
         });
     }
 
-    /**
-     * Sends the pending line to the program and moves the protected mark past it,
-     * so it can no longer be edited once it has been read.
-     */
+    /// Sends the pending line to the program and moves the protected mark past it,
+    /// so it can no longer be edited once it has been read.
     private void submitLine()
     {
         if (processInput == null) return;
@@ -231,11 +223,9 @@ public final class ConsolePanel extends JPanel
         }
     }
 
-    /**
-     * Rejects edits to the output region instead of letting them through, and
-     * redirects typing that starts up there down to the prompt — clicking in the
-     * scrollback and typing should not silently do nothing.
-     */
+    /// Rejects edits to the output region instead of letting them through, and
+    /// redirects typing that starts up there down to the prompt — clicking in the
+    /// scrollback and typing should not silently do nothing.
     private final class ConsoleFilter extends DocumentFilter
     {
         @Override

@@ -15,7 +15,7 @@ import javax.swing.JTextField;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/** Swing editor for {@link KotlinSettings}. */
+/// Swing editor for [KotlinSettings].
 final class KotlinSettingsPage implements LanguageSettingsPage
 {
     private final JvmSettingsForm jvm;

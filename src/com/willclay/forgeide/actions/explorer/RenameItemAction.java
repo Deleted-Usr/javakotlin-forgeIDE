@@ -6,14 +6,12 @@ import com.willclay.forgeide.workspace.ProjectItem;
 
 import java.io.IOException;
 
-/**
- * Renames the selected file or folder.
- * <p>
- * Not offered on the project root: renaming the directory the tree is rooted at
- * would leave the workspace holding a path that no longer exists. Closing and
- * reopening the project is the honest way to do that, and {@link #appliesTo}
- * says so in one line.
- */
+/// Renames the selected file or folder.
+///
+/// Not offered on the project root: renaming the directory the tree is rooted at
+/// would leave the workspace holding a path that no longer exists. Closing and
+/// reopening the project is the honest way to do that, and [#appliesTo]
+/// says so in one line.
 public final class RenameItemAction extends ExplorerAction
 {
     public RenameItemAction(ActionContext context)

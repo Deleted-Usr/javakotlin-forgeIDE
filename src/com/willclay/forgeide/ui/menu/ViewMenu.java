@@ -6,7 +6,7 @@ import com.willclay.forgeide.ui.Utils;
 import javax.swing.JMenu;
 import java.awt.event.KeyEvent;
 
-/** View — which parts of the workbench are on screen. */
+/// View — which parts of the workbench are on screen.
 public final class ViewMenu extends JMenu
 {
     private final ActionManager actions;

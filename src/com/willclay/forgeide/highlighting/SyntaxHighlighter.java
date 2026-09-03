@@ -8,36 +8,32 @@ import javax.swing.text.Element;
 import javax.swing.text.StyledDocument;
 import java.util.List;
 
-/**
- * Applies {@link Lexer}'s output to a text pane's document.
- * <p>
- * The split that keeps this both simple and quick: <b>tokenize globally, paint
- * locally.</b> Tokenizing is a regex over a string with no side effects, so
- * doing it for the whole document every time costs a fraction of a millisecond
- * and — more importantly — is always correct no matter which lines were edited.
- * Painting is the expensive half, because every attribute change invalidates a
- * stretch of the view and triggers a repaint, so it is limited to the lines the
- * editor reported as dirty.
- * <p>
- * All methods must be called on the Event Dispatch Thread, and never from
- * inside a document listener: a document cannot be modified while it is
- * notifying its listeners, and changing character attributes is a modification.
- * {@code CodeEditorPanel} already satisfies both by posting through
- * {@code invokeLater}.
- */
+/// Applies [Lexer]'s output to a text pane's document.
+///
+/// The split that keeps this both simple and quick: **tokenize globally, paint
+/// locally.** Tokenizing is a regex over a string with no side effects, so
+/// doing it for the whole document every time costs a fraction of a millisecond
+/// and — more importantly — is always correct no matter which lines were edited.
+/// Painting is the expensive half, because every attribute change invalidates a
+/// stretch of the view and triggers a repaint, so it is limited to the lines the
+/// editor reported as dirty.
+///
+/// All methods must be called on the Event Dispatch Thread, and never from
+/// inside a document listener: a document cannot be modified while it is
+/// notifying its listeners, and changing character attributes is a modification.
+/// `CodeEditorPanel` already satisfies both by posting through
+/// `invokeLater`.
 public final class SyntaxHighlighter
 {
-    /**
-     * Characters that can open or close something spanning more than one line:
-     * block comments and text blocks. Typing or deleting one of these can change
-     * the colour of every line below it — think of closing a comment that had
-     * swallowed the rest of the file — so the paint has to run to the end of the
-     * document rather than stopping at the dirty lines.
-     * <p>
-     * This is the whole of the multi-line handling. It costs one scan of the
-     * edited text and replaces the usual per-line state table, which has to be
-     * kept aligned with the document as lines are inserted and removed.
-     */
+    /// Characters that can open or close something spanning more than one line:
+    /// block comments and text blocks. Typing or deleting one of these can change
+    /// the colour of every line below it — think of closing a comment that had
+    /// swallowed the rest of the file — so the paint has to run to the end of the
+    /// document rather than stopping at the dirty lines.
+    ///
+    /// This is the whole of the multi-line handling. It costs one scan of the
+    /// edited text and replaces the usual per-line state table, which has to be
+    /// kept aligned with the document as lines are inserted and removed.
     private static final String SPANNING_CHARACTERS = "/*\"";
 
     private TokenTheme theme = TokenTheme.light();
@@ -46,19 +42,17 @@ public final class SyntaxHighlighter
     public void setTheme(TokenTheme theme) { this.theme = theme; }
     public void setLexer(Lexer lexer) { this.lexer = lexer; }
 
-    /** Repaints everything. Used on load, and after a theme change. */
+    /// Repaints everything. Used on load, and after a theme change.
     public void refreshAll(JTextPane pane)
     {
         StyledDocument document = pane.getStyledDocument();
         paint(document, 0, document.getLength(), false);
     }
 
-    /**
-     * Repaints an inclusive range of lines.
-     *
-     * @param firstLine first dirty line, clamped if it is out of range
-     * @param lastLine  last dirty line, clamped likewise
-     */
+    /// Repaints an inclusive range of lines.
+    ///
+    /// @param firstLine first dirty line, clamped if it is out of range
+    /// @param lastLine  last dirty line, clamped likewise
     public void refresh(JTextPane pane, int firstLine, int lastLine)
     {
         StyledDocument document = pane.getStyledDocument();
@@ -119,7 +113,7 @@ public final class SyntaxHighlighter
         return false;
     }
 
-    /** @return the document's text, or null if it changed underneath us */
+    /// @return the document's text, or null if it changed underneath us
     private static String textOf(StyledDocument document)
     {
         try

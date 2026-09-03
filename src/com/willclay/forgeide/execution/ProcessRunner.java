@@ -5,14 +5,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-/**
- * Starts a child process, drains it, and hands its stdin back.
- * <p>
- * Lives here rather than in a toolchain because every toolchain needs it and
- * none of it is language-specific. The reasoning about chunked reads and merged
- * streams was written once for javac; a Python toolchain that re-derived it
- * would get it wrong.
- */
+/// Starts a child process, drains it, and hands its stdin back.
+///
+/// Lives here rather than in a toolchain because every toolchain needs it and
+/// none of it is language-specific. The reasoning about chunked reads and merged
+/// streams was written once for javac; a Python toolchain that re-derived it
+/// would get it wrong.
 public final class ProcessRunner
 {
     private static final int READ_BUFFER_SIZE = 4096;
@@ -82,7 +80,7 @@ public final class ProcessRunner
         }
     }
 
-    /** Requests termination of the process currently owned by the active task. */
+    /// Requests termination of the process currently owned by the active task.
     public static void stopCurrentProcess()
     {
         Process process = currentProcess.get();

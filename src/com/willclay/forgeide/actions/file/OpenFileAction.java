@@ -10,7 +10,7 @@ import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.nio.file.Path;
 
-/** Opens a source file using the current project's language. */
+/// Opens a source file using the current project's language.
 public final class OpenFileAction extends ForgeAction
 {
     private final ActionContext context;

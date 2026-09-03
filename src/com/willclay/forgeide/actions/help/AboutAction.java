@@ -4,7 +4,7 @@ import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
 
-/** The About box. */
+/// The About box.
 public final class AboutAction extends ForgeAction
 {
     private static final String ABOUT_TEXT = """

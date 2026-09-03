@@ -6,7 +6,7 @@ import com.willclay.forgeide.workspace.ProjectItem;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 
-/** Puts the selected item's absolute path on the clipboard. */
+/// Puts the selected item's absolute path on the clipboard.
 public final class CopyPathAction extends ExplorerAction
 {
     public CopyPathAction(ActionContext context)

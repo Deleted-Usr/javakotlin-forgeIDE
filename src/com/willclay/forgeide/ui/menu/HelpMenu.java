@@ -5,7 +5,7 @@ import com.willclay.forgeide.actions.ActionManager;
 import javax.swing.JMenu;
 import java.awt.event.KeyEvent;
 
-/** Help. */
+/// Help.
 public final class HelpMenu extends JMenu
 {
     public HelpMenu(ActionManager actions)

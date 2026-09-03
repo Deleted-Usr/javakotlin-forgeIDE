@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/** Reads and writes the JSON configuration that makes a directory a Forge project. */
+/// Reads and writes the JSON configuration that makes a directory a Forge project.
 public final class ProjectMetadata
 {
     // --- Directories --- //

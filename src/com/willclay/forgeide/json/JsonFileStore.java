@@ -10,7 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 
-/** Persists typed JSON documents as UTF-8 without exposing half-written files. */
+/// Persists typed JSON documents as UTF-8 without exposing half-written files.
 public final class JsonFileStore
 {
     private final JsonCodec codec;

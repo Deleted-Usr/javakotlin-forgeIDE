@@ -13,7 +13,7 @@ import java.awt.event.KeyEvent;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-/** Builds every source file in the current project. */
+/// Builds every source file in the current project.
 public final class BuildProjectAction extends ForgeAction
 {
     private final ActionContext context;

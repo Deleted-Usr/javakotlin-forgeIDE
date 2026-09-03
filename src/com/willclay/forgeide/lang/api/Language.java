@@ -11,27 +11,23 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Everything Forge needs to know about one project language.
- *
- * <p>A language owns source-file recognition, project layout, syntax
- * highlighting, starter content and its optional build toolchain. A
- * {@link Project} holds exactly one instance for its entire lifetime.</p>
- */
+/// Everything Forge needs to know about one project language.
+///
+/// A language owns source-file recognition, project layout, syntax
+/// highlighting, starter content and its optional build toolchain. A
+/// [Project] holds exactly one instance for its entire lifetime.
 public interface Language
 {
-    /**
-     * Stable identifier written to project metadata, for example {@code java}
-     * or {@code forge.python}. IDs are lowercase and may contain separated
-     * alphanumeric segments using {@code .}, {@code _}, or {@code -}.
-     * Once released, an ID must not be changed because projects persist it.
-     */
+    /// Stable identifier written to project metadata, for example `java`
+    /// or `forge.python`. IDs are lowercase and may contain separated
+    /// alphanumeric segments using `.`, `_`, or `-`.
+    /// Once released, an ID must not be changed because projects persist it.
     String id();
 
-    /** Human-readable name shown in dialogs. */
+    /// Human-readable name shown in dialogs.
     String displayName();
 
-    /** Supported extensions, including the leading dot. */
+    /// Supported extensions, including the leading dot.
     Set<String> extensions();
 
     String defaultExtension();
@@ -40,30 +36,28 @@ public interface Language
 
     String newFileTemplate(String typeName);
 
-    /** Returns the directory in which this language keeps project sources. */
+    /// Returns the directory in which this language keeps project sources.
     Path sourceRoot(Project project);
 
-    /** Creates this language's initial project structure. */
+    /// Creates this language's initial project structure.
     default void createProjectStructure(Project project) throws IOException
     {
         Files.createDirectories(sourceRoot(project));
     }
 
-    /** Empty for languages the IDE can highlight but not execute. */
+    /// Empty for languages the IDE can highlight but not execute.
     Optional<Toolchain> toolchain();
 
-    /**
-     * Creates the project-settings tabs owned by this language.
-     *
-     * <p>Most languages contribute one tab. A future mixed JVM language can
-     * return a shared JVM tab followed by separate Java and Kotlin tabs.</p>
-     */
+    /// Creates the project-settings tabs owned by this language.
+    ///
+    /// Most languages contribute one tab. A future mixed JVM language can
+    /// return a shared JVM tab followed by separate Java and Kotlin tabs.
     default List<LanguageSettingsPage> settingsPages(Project project)
     {
         return List.of();
     }
 
-    /** Returns whether a file has an extension owned by this language. */
+    /// Returns whether a file has an extension owned by this language.
     default boolean recognises(Path file)
     {
         if (file == null || file.getFileName() == null) return false;
@@ -75,7 +69,7 @@ public interface Language
                 .anyMatch(name::endsWith);
     }
 
-    /** Returns whether a file is a source belonging to the given project. */
+    /// Returns whether a file is a source belonging to the given project.
     default boolean isProjectSource(Project project, Path file)
     {
         if (!recognises(file)) return false;

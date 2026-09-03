@@ -48,19 +48,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * The main frame, and only the composition root: it creates the parts, puts
- * them in a {@link ActionContext}, and lets the {@link ActionManager} build
- * everything that can be clicked.
- * <p>
- * Note what is <em>not</em> here. No runCode method, no save handler, no
- * directory scanning, no tree listeners. The frame does not know that compiling
- * or that the file system exist — it knows that actions exist, and where to
- * hang them.
- * <p>
- * The wiring at the bottom is the whole of the frame's behaviour: two
- * subscriptions, each one line.
- */
+/// The main frame, and only the composition root: it creates the parts, puts
+/// them in a [ActionContext], and lets the [ActionManager] build
+/// everything that can be clicked.
+///
+/// Note what is *not* here. No runCode method, no save handler, no
+/// directory scanning, no tree listeners. The frame does not know that compiling
+/// or that the file system exist — it knows that actions exist, and where to
+/// hang them.
+///
+/// The wiring at the bottom is the whole of the frame's behaviour: two
+/// subscriptions, each one line.
 public final class Window extends JFrame
 {
     private static final float CONSOLE_FONT_SIZE = 12f;
@@ -188,11 +186,9 @@ public final class Window extends JFrame
         return Utils.confirmDiscardChanges(this, "Close " + tab.getDisplayName());
     }
 
-    /**
-     * Every edit updates the editor's state, every change to that state redraws
-     * the title, and every change to the workspace re-roots the tree. Three
-     * subscriptions, and none of the parts involved knows about the others.
-     */
+    /// Every edit updates the editor's state, every change to that state redraws
+    /// the title, and every change to the workspace re-roots the tree. Three
+    /// subscriptions, and none of the parts involved knows about the others.
     private void wireState()
     {
         editorManager.addChangeListener(this::updateTitle);
@@ -302,11 +298,9 @@ public final class Window extends JFrame
         }
     }
 
-    /**
-     * The one thing here that cannot fail gracefully: the watcher needs a
-     * WatchService from the operating system, and without one there is no
-     * project explorer to speak of.
-     */
+    /// The one thing here that cannot fail gracefully: the watcher needs a
+    /// WatchService from the operating system, and without one there is no
+    /// project explorer to speak of.
     private WorkspaceService createWorkspaceService()
     {
         try

@@ -10,7 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-/** The complete set of Kotlin/JVM settings owned by the Kotlin language. */
+/// The complete set of Kotlin/JVM settings owned by the Kotlin language.
 public record KotlinSettings(
         JvmSettings jvm,
         String compilerCommand,

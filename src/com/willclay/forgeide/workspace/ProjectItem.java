@@ -8,7 +8,7 @@ import java.util.Comparator;
 import java.util.Locale;
 import java.util.Objects;
 
-/** One typed entry in the project explorer. */
+/// One typed entry in the project explorer.
 public record ProjectItem(Path path, ProjectItemType type, Language language, String displayName)
 {
     public static final Comparator<ProjectItem> EXPLORER_ORDER =
@@ -27,7 +27,7 @@ public record ProjectItem(Path path, ProjectItemType type, Language language, St
         this(path, type, language, null);
     }
 
-    /** Probes the disk once, at the moment the item is created. */
+    /// Probes the disk once, at the moment the item is created.
     public static ProjectItem of(Path path, Language language)
     {
         ProjectItemType type = Files.isDirectory(path) ? ProjectItemType.DIRECTORY : ProjectItemType.FILE;

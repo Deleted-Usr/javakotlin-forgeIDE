@@ -12,14 +12,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 
-/**
- * Adapts the JDK's {@link JavaCompiler} implementation to Forge's compiler
- * output and interruption conventions.
- *
- * <p>The compiler is supplied by the JDK running Forge. This class does not
- * implement a Java compiler itself; it prepares the compilation task and keeps
- * that JDK-specific detail out of {@link JavacToolchain}.</p>
- */
+/// Adapts the JDK's [JavaCompiler] implementation to Forge's compiler
+/// output and interruption conventions.
+///
+/// The compiler is supplied by the JDK running Forge. This class does not
+/// implement a Java compiler itself; it prepares the compilation task and keeps
+/// that JDK-specific detail out of [JavacToolchain].
 final class InProcessJavaCompiler
 {
     private InProcessJavaCompiler() { }

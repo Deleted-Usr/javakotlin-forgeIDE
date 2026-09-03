@@ -5,13 +5,11 @@ import com.willclay.forgeide.workspace.ProjectItem;
 
 import java.io.IOException;
 
-/**
- * Opens the selected file in the editor. Also what a double-click runs.
- * <p>
- * The tree does not open files itself — it reports that one was activated and
- * this decides what that means. When the editor becomes a tab strip, that
- * change happens in EditorManager and neither the tree nor this class notices.
- */
+/// Opens the selected file in the editor. Also what a double-click runs.
+///
+/// The tree does not open files itself — it reports that one was activated and
+/// this decides what that means. When the editor becomes a tab strip, that
+/// change happens in EditorManager and neither the tree nor this class notices.
 public final class OpenSelectedFileAction extends ExplorerAction
 {
     public OpenSelectedFileAction(ActionContext context)

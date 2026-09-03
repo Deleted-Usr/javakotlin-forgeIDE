@@ -3,7 +3,7 @@ package com.willclay.forgeide.ui.toolbar;
 import javax.swing.*;
 import java.awt.*;
 
-/** Renders separator rows while preserving the active look and feel for normal entries. */
+/// Renders separator rows while preserving the active look and feel for normal entries.
 public final class ForgeDropdownRenderer implements ListCellRenderer<Object>
 {
     private static final Insets SEPARATOR_INSETS = new Insets(4, 0, 4, 0);

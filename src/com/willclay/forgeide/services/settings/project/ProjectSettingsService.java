@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Reads and persists the settings belonging to the currently open project. */
+/// Reads and persists the settings belonging to the currently open project.
 public final class ProjectSettingsService
 {
     private final WorkspaceService workspaceService;
@@ -143,7 +143,7 @@ public final class ProjectSettingsService
         return path.toString().replace('\\', '/');
     }
 
-    /** Project identity and read-only display data accompanying the editable values. */
+    /// Project identity and read-only display data accompanying the editable values.
     public record ProjectSettingsState(
             Project project,
             ProjectSettingsValues values)

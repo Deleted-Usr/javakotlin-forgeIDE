@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-/** Java language support and its project conventions. */
+/// Java language support and its project conventions.
 public final class JavaLanguage implements Language
 {
     private final Lexer lexer = new JavaLexer();

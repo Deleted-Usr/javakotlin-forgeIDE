@@ -9,7 +9,7 @@ import com.willclay.forgeide.workspace.Project;
 
 import java.awt.event.KeyEvent;
 
-/** Starts an unsaved source file for the current project's language. */
+/// Starts an unsaved source file for the current project's language.
 public final class NewFileAction extends ForgeAction
 {
     private final ActionContext context;

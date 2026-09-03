@@ -11,12 +11,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-/**
- * Immutable catalogue of languages installed in Forge.
- *
- * <p>The registry discovers languages; it does not track a mutable "current"
- * language. The open project is the sole owner of that choice.</p>
- */
+/// Immutable catalogue of languages installed in Forge.
+///
+/// The registry discovers languages; it does not track a mutable "current"
+/// language. The open project is the sole owner of that choice.
 public final class LanguageRegistry
 {
     private static final Pattern LANGUAGE_ID = Pattern.compile("[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*");
@@ -51,7 +49,7 @@ public final class LanguageRegistry
         languagesById = Collections.unmodifiableMap(new LinkedHashMap<>(indexed));
     }
 
-    /** Returns languages in their configured display order. */
+    /// Returns languages in their configured display order.
     public List<Language> languages()
     {
         return List.copyOf(languagesById.values());

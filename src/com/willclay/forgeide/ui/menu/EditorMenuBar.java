@@ -4,9 +4,7 @@ import com.willclay.forgeide.actions.ActionManager;
 
 import javax.swing.*;
 
-/**
- * The menu bar, assembled from one class per menu.
- */
+/// The menu bar, assembled from one class per menu.
 public final class EditorMenuBar extends JMenuBar
 {
     public EditorMenuBar(ActionManager actions)

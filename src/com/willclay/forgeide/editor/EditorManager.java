@@ -13,11 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Coordinates file I/O with the editor's open documents. Document state lives
- * on {@link EditorTab}; consequently every query here always reflects the tab
- * the user can currently see.
- */
+/// Coordinates file I/O with the editor's open documents. Document state lives
+/// on [EditorTab]; consequently every query here always reflects the tab
+/// the user can currently see.
 public final class EditorManager
 {
     private final CodeEditorPanel editor;
@@ -79,7 +77,7 @@ public final class EditorManager
         editor.selectTab(tab);
     }
 
-    /** Reads a file into a new tab, or selects its existing tab without reloading it. */
+    /// Reads a file into a new tab, or selects its existing tab without reloading it.
     public void openFile(Path file) throws IOException
     {
         Objects.requireNonNull(file);
@@ -95,25 +93,25 @@ public final class EditorManager
         editor.openFile(file, document.text(), document.lineEnding());
     }
 
-    /** Opens a fresh unsaved tab. */
+    /// Opens a fresh unsaved tab.
     public void newFile(String template)
     {
         editor.newFile(template, lineSeparatorPolicy.resolve(LineEnding.LF));
     }
 
-    /** Applies to subsequent saves; open documents retain their detected format for PRESERVE. */
+    /// Applies to subsequent saves; open documents retain their detected format for PRESERVE.
     public void setLineSeparatorPolicy(LineSeparatorPolicy lineSeparatorPolicy)
     {
         this.lineSeparatorPolicy = Objects.requireNonNull(lineSeparatorPolicy, "lineSeparatorPolicy");
     }
 
-    /** Applies the project encoding to subsequent file reads and writes. */
+    /// Applies the project encoding to subsequent file reads and writes.
     public void setEncoding(Encoding encoding)
     {
         this.encoding = Objects.requireNonNull(encoding, "encoding");
     }
 
-    /** Rebases open files after a file or directory is moved on disk. */
+    /// Rebases open files after a file or directory is moved on disk.
     public void fileMoved(Path oldPath, Path newPath)
     {
         Path oldRoot = normalize(oldPath);
@@ -131,7 +129,7 @@ public final class EditorManager
         }
     }
 
-    /** Closes open files removed by an already-confirmed explorer deletion. */
+    /// Closes open files removed by an already-confirmed explorer deletion.
     public void fileDeleted(Path path)
     {
         Path deletedRoot = normalize(path);
@@ -143,13 +141,13 @@ public final class EditorManager
         }
     }
 
-    /** Closes every document when its project is closed or replaced. */
+    /// Closes every document when its project is closed or replaced.
     public void closeFile()
     {
         editor.closeAllTabs();
     }
 
-    /** Writes the selected tab back to its existing path. */
+    /// Writes the selected tab back to its existing path.
     public void save() throws IOException
     {
         EditorTab tab = requireCurrentTab();
@@ -161,7 +159,7 @@ public final class EditorManager
         writeAndAdopt(tab, tab.getFile());
     }
 
-    /** Saves one file-backed tab without changing the user's active tab. */
+    /// Saves one file-backed tab without changing the user's active tab.
     public void save(EditorTab tab) throws IOException
     {
         Objects.requireNonNull(tab, "tab");
@@ -171,7 +169,7 @@ public final class EditorManager
         writeAndAdopt(tab, tab.getFile());
     }
 
-    /** Writes the selected tab to a new path and adopts that path. */
+    /// Writes the selected tab to a new path and adopts that path.
     public void saveTo(Path file) throws IOException
     {
         writeAndAdopt(requireCurrentTab(), file);

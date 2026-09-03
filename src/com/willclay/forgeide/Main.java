@@ -66,19 +66,17 @@ import java.io.IOException;
  * the VM Options when running the code.
  */
 
-/**
- * The entry point: sizes the frame, sets the look and feel, and hands over to
- * {@link Window}.
- * <p>
- * Everything happens inside {@code invokeLater} because Swing components may
- * only be touched on the Event Dispatch Thread — including while they are being
- * constructed. Building the frame on the main thread appears to work and then
- * fails intermittently under a different look and feel or a slower machine,
- * which is the worst way for a bug to behave.
- * <p>
- * The look and feel is installed before the first component exists, since it is
- * only consulted when a component is created.
- */
+/// The entry point: sizes the frame, sets the look and feel, and hands over to
+/// [Window].
+///
+/// Everything happens inside `invokeLater` because Swing components may
+/// only be touched on the Event Dispatch Thread — including while they are being
+/// constructed. Building the frame on the main thread appears to work and then
+/// fails intermittently under a different look and feel or a slower machine,
+/// which is the worst way for a bug to behave.
+///
+/// The look and feel is installed before the first component exists, since it is
+/// only consulted when a component is created.
 public final class Main
 {
     private static final int INITIAL_WIDTH = 1920;

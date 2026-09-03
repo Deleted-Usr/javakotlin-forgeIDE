@@ -8,35 +8,31 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Turns Java source into a list of coloured spans.
- * <p>
- * <b>One pattern, not one per token type.</b> Running a separate regex for
- * keywords, then another for strings, then another for comments is the obvious
- * approach and it is the unstable one: each pass sees the raw text, so the
- * keyword pass happily colours the {@code for} inside {@code "for loop"}, and
- * the {@code //} inside a string starts a comment. Alternatives inside a single
- * pattern are tried in order at each position and the winner consumes its
- * characters, so a comment or a string swallows whatever is inside it before any
- * later alternative gets to look. That ordering <em>is</em> the precedence rule,
- * which is why the alternatives below are not in alphabetical order.
- * <p>
- * <b>No line splitting.</b> The pattern is matched against the whole document,
- * so a block comment or a text block is simply one long match. That removes the
- * usual source of bugs in an editor of this size: a per-line highlighter has to
- * remember whether each line began inside a comment, and keeping that memory
- * aligned with the document as lines are inserted and deleted is where these
- * things break.
- * <p>
- * Nothing here touches Swing.
- */
+/// Turns Java source into a list of coloured spans.
+///
+/// **One pattern, not one per token type.** Running a separate regex for
+/// keywords, then another for strings, then another for comments is the obvious
+/// approach and it is the unstable one: each pass sees the raw text, so the
+/// keyword pass happily colours the `for` inside `"for loop"`, and
+/// the `//` inside a string starts a comment. Alternatives inside a single
+/// pattern are tried in order at each position and the winner consumes its
+/// characters, so a comment or a string swallows whatever is inside it before any
+/// later alternative gets to look. That ordering *is* the precedence rule,
+/// which is why the alternatives below are not in alphabetical order.
+///
+/// **No line splitting.** The pattern is matched against the whole document,
+/// so a block comment or a text block is simply one long match. That removes the
+/// usual source of bugs in an editor of this size: a per-line highlighter has to
+/// remember whether each line began inside a comment, and keeping that memory
+/// aligned with the document as lines are inserted and deleted is where these
+/// things break.
+///
+/// Nothing here touches Swing.
 public final class JavaLexer implements Lexer
 {
-    /**
-     * Looked up rather than spelled out as regex alternatives. Fifty
-     * alternatives would be retried at every position in the file, and adding a
-     * keyword would mean editing a pattern instead of a list.
-     */
+    /// Looked up rather than spelled out as regex alternatives. Fifty
+    /// alternatives would be retried at every position in the file, and adding a
+    /// keyword would mean editing a pattern instead of a list.
     private static final Set<String> KEYWORDS = Set.of(
             "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char",
             "class", "const", "continue", "default", "do", "double", "else", "enum",
@@ -58,7 +54,7 @@ public final class JavaLexer implements Lexer
     private static final Set<String> TYPE_CONTEXT_KEYWORDS = Set.of("extends", "implements", "instanceof", "new", "permits", "throws");
     private static final Set<String> PRIMITIVE_OR_VOID = Set.of("boolean", "byte", "char", "double", "float", "int", "long", "short");
 
-    /** Longest operators first. Separators such as :: and ... are handled separately. */
+    /// Longest operators first. Separators such as :: and ... are handled separately.
     private static final String[] OPERATORS = {
             ">>>=", "<<=", ">>=", ">>>", "==", ">=", "<=", "!=", "&&", "||",
             "++", "--", "<<", ">>", "+=", "-=", "*=", "/=", "&=", "|=", "^=",
@@ -66,13 +62,11 @@ public final class JavaLexer implements Lexer
             "/", "&", "|", "^", "%"
     };
 
-    /**
-     * Unterminated constructs end at {@code \z} (block comment, text block) or
-     * stop at the newline they cannot cross (string, character literal). That
-     * matters more than it sounds: half-typed code is the normal state of a file
-     * being edited, and an alternative that simply fails to match a half-typed
-     * string would hand the rest of the line to the alternatives after it.
-     */
+    /// Unterminated constructs end at `\z` (block comment, text block) or
+    /// stop at the newline they cannot cross (string, character literal). That
+    /// matters more than it sounds: half-typed code is the normal state of a file
+    /// being edited, and an alternative that simply fails to match a half-typed
+    /// string would hand the rest of the line to the alternatives after it.
     private static final Pattern TOKENS = Pattern.compile(
                     // Comments outrank everything, including quotes.
                     "(?<COMMENT>/\\*[\\s\\S]*?(?:\\*/|\\z)|//[^\\n]*)"
@@ -91,9 +85,7 @@ public final class JavaLexer implements Lexer
 
     public JavaLexer() { }
 
-    /**
-     * @return every coloured span, in ascending order and never overlapping
-     */
+    /// @return every coloured span, in ascending order and never overlapping
     @Override
     public List<Token> tokenize(String text)
     {
@@ -135,8 +127,9 @@ public final class JavaLexer implements Lexer
             }
             else if (text.startsWith("//", index))
             {
+                boolean documentation = text.startsWith("///", index);
                 index = lineCommentEnd(text, index + 2);
-                kind = Kind.LINE_COMMENT;
+                kind = documentation ? Kind.DOC_COMMENT : Kind.LINE_COMMENT;
             }
             else if (text.startsWith("/*", index))
             {
@@ -590,11 +583,9 @@ public final class JavaLexer implements Lexer
                 && text.charAt(index + 1) >= '0' && text.charAt(index + 1) <= '9';
     }
 
-    /**
-     * Consumes decimal, hexadecimal, binary, octal, floating-point, exponent,
-     * underscore, and suffix forms. Incomplete forms are kept together because
-     * half-typed literals are normal editor input even when javac would reject them.
-     */
+    /// Consumes decimal, hexadecimal, binary, octal, floating-point, exponent,
+    /// underscore, and suffix forms. Incomplete forms are kept together because
+    /// half-typed literals are normal editor input even when javac would reject them.
     private static int numberEnd(String text, int start)
     {
         int index = start;

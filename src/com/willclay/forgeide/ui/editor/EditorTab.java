@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/** One open editor document and all state that must follow it between selections. */
+/// One open editor document and all state that must follow it between selections.
 public final class EditorTab extends JPanel
 {
     public static final String UNTITLED = "Untitled";
@@ -31,7 +31,7 @@ public final class EditorTab extends JPanel
     private LineEnding lineEnding;
     private boolean modified;
 
-    /** Enough to undo a session's worth of typing without holding the file's whole history. */
+    /// Enough to undo a session's worth of typing without holding the file's whole history.
     private static final int UNDO_LIMIT = 500;
 
     private final JTextPane textPane = new NoWrapTextPane();
@@ -95,7 +95,7 @@ public final class EditorTab extends JPanel
         return textPane.getText();
     }
 
-    /** Replaces the contents and re-highlights the whole document. */
+    /// Replaces the contents and re-highlights the whole document.
     public void setText(String text)
     {
         loadingContents = true;
@@ -134,7 +134,7 @@ public final class EditorTab extends JPanel
         this.file = file;
     }
 
-    /** The filename shown anywhere this document is identified to the user. */
+    /// The filename shown anywhere this document is identified to the user.
     public String getDisplayName()
     {
         if (file == null) return UNTITLED;
@@ -143,7 +143,7 @@ public final class EditorTab extends JPanel
         return fileName == null ? file.toString() : fileName.toString();
     }
 
-    /** The display name decorated with the editor's unsaved-change marker. */
+    /// The display name decorated with the editor's unsaved-change marker.
     public String getDisplayTitle()
     {
         return getDisplayName() + (modified ? " *" : "");
@@ -236,29 +236,27 @@ public final class EditorTab extends JPanel
 
     // --- Listeners --- //
 
-    /** Fired for every insertion and removal, so keep the work small. */
+    /// Fired for every insertion and removal, so keep the work small.
     public void addTextChangeListener(Runnable listener)
     {
         textChangeListeners.add(Objects.requireNonNull(listener, "listener"));
     }
 
-    /** Fired for every user edit, including edits made after the tab became dirty. */
+    /// Fired for every user edit, including edits made after the tab became dirty.
     public void addEditListener(Runnable listener)
     {
         editListeners.add(Objects.requireNonNull(listener, "listener"));
     }
 
-    /** Fired when undo or redo becomes possible or impossible. */
+    /// Fired when undo or redo becomes possible or impossible.
     public void addUndoStateListener(Runnable listener)
     {
         undoStateListeners.add(listener);
     }
 
-    /**
-     * changedUpdate is deliberately left empty: it fires when <em>attributes</em>
-     * change, which is exactly what the highlighter itself does — reacting to it
-     * would recurse forever.
-     */
+    /// changedUpdate is deliberately left empty: it fires when *attributes*
+    /// change, which is exactly what the highlighter itself does — reacting to it
+    /// would recurse forever.
     private void installHighlighting()
     {
         textPane.getDocument().addDocumentListener(new DocumentListener()
@@ -288,16 +286,14 @@ public final class EditorTab extends JPanel
         textPane.getDocument().addUndoableEditListener(this::recordEdit);
     }
 
-    /**
-     * The catch that makes undo in a styled editor worth writing carefully: a
-     * StyledDocument reports a change of character attributes as an undoable
-     * edit, and the highlighter changes character attributes constantly. Record
-     * those and Ctrl+Z spends its first dozen presses undoing colours instead
-     * of the typing that caused them.
-     * <p>
-     * Attribute changes arrive as a DefaultDocumentEvent of type CHANGE, which
-     * is the one thing that distinguishes them from real edits.
-     */
+    /// The catch that makes undo in a styled editor worth writing carefully: a
+    /// StyledDocument reports a change of character attributes as an undoable
+    /// edit, and the highlighter changes character attributes constantly. Record
+    /// those and Ctrl+Z spends its first dozen presses undoing colours instead
+    /// of the typing that caused them.
+    ///
+    /// Attribute changes arrive as a DefaultDocumentEvent of type CHANGE, which
+    /// is the one thing that distinguishes them from real edits.
     private void recordEdit(UndoableEditEvent event)
     {
         UndoableEdit edit = event.getEdit();
@@ -328,14 +324,12 @@ public final class EditorTab extends JPanel
         for (Runnable listener : List.copyOf(undoStateListeners)) listener.run();
     }
 
-    /**
-     * Records the dirty lines and makes sure exactly one refresh is queued.
-     * <p>
-     * Posting an invokeLater per document event meant a paste, a block comment
-     * or an auto-indent produced several passes over overlapping lines, each one
-     * mutating the document and invalidating the view layout. Merging them into
-     * a single range collapses that into one pass per burst of edits.
-     */
+    /// Records the dirty lines and makes sure exactly one refresh is queued.
+    ///
+    /// Posting an invokeLater per document event meant a paste, a block comment
+    /// or an auto-indent produced several passes over overlapping lines, each one
+    /// mutating the document and invalidating the view layout. Merging them into
+    /// a single range collapses that into one pass per burst of edits.
     private void queueRefresh(DocumentEvent e)
     {
         Element root = e.getDocument().getDefaultRootElement();

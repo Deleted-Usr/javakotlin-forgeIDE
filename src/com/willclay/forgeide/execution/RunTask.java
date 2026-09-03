@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
-/** Runs build-tool operations away from Swing's Event Dispatch Thread. */
+/// Runs build-tool operations away from Swing's Event Dispatch Thread.
 public final class RunTask extends SwingWorker<Integer, Void>
 {
     private enum Operation { RUN, BUILD, CLEAN }
@@ -44,7 +44,7 @@ public final class RunTask extends SwingWorker<Integer, Void>
         return new RunTask(project, toolchain, console, null, Operation.CLEAN);
     }
 
-    /** Stops this task and whichever child process it is currently waiting for. */
+    /// Stops this task and whichever child process it is currently waiting for.
     public void stop()
     {
         if (isDone()) return;

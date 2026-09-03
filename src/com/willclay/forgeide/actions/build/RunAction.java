@@ -16,7 +16,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-/** Prepares and runs the current source file with its project's toolchain. */
+/// Prepares and runs the current source file with its project's toolchain.
 public final class RunAction extends ForgeAction
 {
     private final ActionContext context;

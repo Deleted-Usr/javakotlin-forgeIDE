@@ -5,7 +5,7 @@ import com.willclay.forgeide.json.VersionedJsonDocument;
 import java.nio.file.Path;
 import java.util.List;
 
-/** The small amount of workspace state that can be restored on the next launch. */
+/// The small amount of workspace state that can be restored on the next launch.
 public record IDESessionConfiguration(
         int schemaVersion,
         Path projectRoot,

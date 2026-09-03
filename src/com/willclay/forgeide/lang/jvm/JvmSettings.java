@@ -10,7 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-/** Paths and JDK selection shared by Forge's JVM language settings records. */
+/// Paths and JDK selection shared by Forge's JVM language settings records.
 public record JvmSettings(
         Path sourcePath,
         Path outputPath,

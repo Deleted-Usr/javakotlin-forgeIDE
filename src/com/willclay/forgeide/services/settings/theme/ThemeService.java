@@ -12,7 +12,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 import java.io.IOException;
 import java.util.Objects;
 
-/** Applies the selected IDE theme and keeps it in the IDE settings store. */
+/// Applies the selected IDE theme and keeps it in the IDE settings store.
 public final class ThemeService
 {
     private final JFrame frame;
@@ -28,7 +28,7 @@ public final class ThemeService
         this.settings = Objects.requireNonNull(settings, "settings");
     }
 
-    /** Applies the persisted theme while the application window is starting. */
+    /// Applies the persisted theme while the application window is starting.
     public void applySavedTheme()
     {
         AppTheme saved = settings.getTheme();

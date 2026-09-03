@@ -6,20 +6,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Which project is open.
- * <p>
- * This class used to hold the current file and its modified flag; that job
- * moved to {@link com.willclay.forgeide.editor.EditorManager}, which is where
- * the transcript's own naming put it. Workspace is now what the name suggests:
- * the thing a project lives in.
- * <p>
- * No Swing, and no file system either — opening a project is a decision, not an
- * operation. {@link WorkspaceService} does the reading.
- * <p>
- * Forge deliberately keeps one project open at a time so every editor and
- * build operation has one unambiguous project language.
- */
+/// Which project is open.
+///
+/// This class used to hold the current file and its modified flag; that job
+/// moved to [com.willclay.forgeide.editor.EditorManager], which is where
+/// the transcript's own naming put it. Workspace is now what the name suggests:
+/// the thing a project lives in.
+///
+/// No Swing, and no file system either — opening a project is a decision, not an
+/// operation. [WorkspaceService] does the reading.
+///
+/// Forge deliberately keeps one project open at a time so every editor and
+/// build operation has one unambiguous project language.
 public final class Workspace
 {
     private final List<Runnable> listeners = new ArrayList<>();
@@ -42,7 +40,7 @@ public final class Workspace
         fireChanged();
     }
 
-    /** Replaces the immutable runtime view after its configuration changes. */
+    /// Replaces the immutable runtime view after its configuration changes.
     public void updateProject(Project project)
     {
         if (this.project == null) throw new IllegalStateException("No project is open.");

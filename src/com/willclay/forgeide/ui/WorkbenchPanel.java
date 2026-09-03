@@ -5,22 +5,20 @@ import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import java.awt.BorderLayout;
 
-/**
- * The arrangement of the main window: toolbar on top, project tree beside the
- * editor, console underneath both.
- * <p>
- * Split panes rather than BorderLayout.SOUTH so the console can be dragged to
- * whatever height the user wants. This used to be a private method on Window;
- * it is a class now because the View menu needs to talk to it, and the actions
- * behind that menu should not have to reach into the frame to do it.
- * <p>
- * Hiding a split pane child is the only fiddly part. {@code setVisible(false)}
- * leaves the divider sitting there with nothing on one side of it, so the child
- * is removed from the split instead and the divider taken down to zero.
- */
+/// The arrangement of the main window: toolbar on top, project tree beside the
+/// editor, console underneath both.
+///
+/// Split panes rather than BorderLayout.SOUTH so the console can be dragged to
+/// whatever height the user wants. This used to be a private method on Window;
+/// it is a class now because the View menu needs to talk to it, and the actions
+/// behind that menu should not have to reach into the frame to do it.
+///
+/// Hiding a split pane child is the only fiddly part. `setVisible(false)`
+/// leaves the divider sitting there with nothing on one side of it, so the child
+/// is removed from the split instead and the divider taken down to zero.
 public final class WorkbenchPanel extends JPanel
 {
-    /** Fraction of the extra height the editor takes when the window grows. */
+    /// Fraction of the extra height the editor takes when the window grows.
     private static final double EDITOR_RESIZE_WEIGHT = 0.75;
 
     private static final int PROJECT_TREE_WIDTH = 220;
@@ -32,7 +30,7 @@ public final class WorkbenchPanel extends JPanel
     private final JSplitPane treeAndEditor;
     private final JSplitPane editorAndConsole;
 
-    /** Whatever the look and feel picked, remembered so hiding can restore it. */
+    /// Whatever the look and feel picked, remembered so hiding can restore it.
     private final int dividerSize;
 
     private JComponent toolBar;
@@ -56,13 +54,11 @@ public final class WorkbenchPanel extends JPanel
         add(editorAndConsole, BorderLayout.CENTER);
     }
 
-    /**
-     * Set after construction rather than passed to the constructor, and the
-     * reason is worth knowing: the toolbar is built out of actions, the actions
-     * need a UIContext, and the UIContext needs this panel. Something has to be
-     * wired up second, and a toolbar that arrives late is the cheapest of the
-     * three to arrange.
-     */
+    /// Set after construction rather than passed to the constructor, and the
+    /// reason is worth knowing: the toolbar is built out of actions, the actions
+    /// need a UIContext, and the UIContext needs this panel. Something has to be
+    /// wired up second, and a toolbar that arrives late is the cheapest of the
+    /// three to arrange.
     public void setToolBar(JComponent toolBar)
     {
         if (this.toolBar != null) remove(this.toolBar);
@@ -73,10 +69,8 @@ public final class WorkbenchPanel extends JPanel
         revalidate();
     }
 
-    /**
-     * This is set after construction much for the same reason that the toolbar is,
-     * because the status bar needs the UI context.
-     */
+    /// This is set after construction much for the same reason that the toolbar is,
+    /// because the status bar needs the UI context.
     public void setStatusBar(JComponent statusBar)
     {
         if (this.statusBar != null) remove(this.statusBar);
@@ -131,7 +125,7 @@ public final class WorkbenchPanel extends JPanel
         repaint();
     }
 
-    /** Everything back on screen, dividers back where they started. */
+    /// Everything back on screen, dividers back where they started.
     public void resetLayout()
     {
         setToolBarVisible(true);

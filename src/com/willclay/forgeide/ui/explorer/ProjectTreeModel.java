@@ -8,25 +8,23 @@ import javax.swing.tree.DefaultTreeModel;
 import java.nio.file.Path;
 import java.util.List;
 
-/**
- * The bridge between {@link WorkspaceService} and the JTree.
- * <p>
- * Two rules hold this together.
- * <p>
- * <b>Load a directory the first time it is expanded, never before.</b> Opening
- * a folder with a quarter of a million files under it should cost one
- * directory read, not a full walk. {@code ProjectTreeNode.isLeaf} already
- * reports directories as expandable while they are empty, so nothing has to be
- * read to draw the handle.
- * <p>
- * <b>Never rebuild.</b> When a directory changes, its children are re-read and
- * compared against the nodes already there, and only the difference is applied.
- * Rebuilding is easier to write and it throws away everything the user has
- * done: the expanded folders collapse, the selection is lost, and the scroll
- * position jumps — every time a build writes a class file. Diffing also makes
- * the update idempotent, which is what lets the service and the file watcher
- * both report the same change without the tree flickering.
- */
+/// The bridge between [WorkspaceService] and the JTree.
+///
+/// Two rules hold this together.
+///
+/// **Load a directory the first time it is expanded, never before.** Opening
+/// a folder with a quarter of a million files under it should cost one
+/// directory read, not a full walk. `ProjectTreeNode.isLeaf` already
+/// reports directories as expandable while they are empty, so nothing has to be
+/// read to draw the handle.
+///
+/// **Never rebuild.** When a directory changes, its children are re-read and
+/// compared against the nodes already there, and only the difference is applied.
+/// Rebuilding is easier to write and it throws away everything the user has
+/// done: the expanded folders collapse, the selection is lost, and the scroll
+/// position jumps — every time a build writes a class file. Diffing also makes
+/// the update idempotent, which is what lets the service and the file watcher
+/// both report the same change without the tree flickering.
 public final class ProjectTreeModel extends DefaultTreeModel
 {
     private final WorkspaceService service;
@@ -42,7 +40,7 @@ public final class ProjectTreeModel extends DefaultTreeModel
         service.addListener(directory -> SwingUtilities.invokeLater(() -> refresh(directory)));
     }
 
-    /** Shows a single item as the root, or clears the tree when given null. */
+    /// Shows a single item as the root, or clears the tree when given null.
     public void showRoot(ProjectItem item)
     {
         if (item == null)
@@ -57,7 +55,7 @@ public final class ProjectTreeModel extends DefaultTreeModel
         load(root);
     }
 
-    /** Reads a node's children the first time, and does nothing on every later call. */
+    /// Reads a node's children the first time, and does nothing on every later call.
     public void load(ProjectTreeNode node)
     {
         if (node.isLoaded() || !node.getItem().isDirectory()) return;
@@ -72,7 +70,7 @@ public final class ProjectTreeModel extends DefaultTreeModel
         syncChildren(node);
     }
 
-    /** Re-reads a directory if it is on screen, and does nothing if it is not. */
+    /// Re-reads a directory if it is on screen, and does nothing if it is not.
     public void refresh(Path directory)
     {
         ProjectTreeNode node = findLoadedNode(directory);
@@ -80,14 +78,12 @@ public final class ProjectTreeModel extends DefaultTreeModel
         if (node != null) syncChildren(node);
     }
 
-    /**
-     * Applies the difference between what is on disk and what is on screen.
-     * <p>
-     * Removals run backwards so the indices ahead of the one being removed stay
-     * valid. Insertions then run forwards: both lists are in
-     * {@code EXPLORER_ORDER}, so the first position where they disagree is
-     * exactly where the missing item belongs.
-     */
+    /// Applies the difference between what is on disk and what is on screen.
+    ///
+    /// Removals run backwards so the indices ahead of the one being removed stay
+    /// valid. Insertions then run forwards: both lists are in
+    /// `EXPLORER_ORDER`, so the first position where they disagree is
+    /// exactly where the missing item belongs.
     private void syncChildren(ProjectTreeNode node)
     {
         List<ProjectItem> onDisk = service.getChildren(node.getItem());
@@ -107,7 +103,7 @@ public final class ProjectTreeModel extends DefaultTreeModel
         }
     }
 
-    /** @return the node for this path, or null if it is not on screen or not yet loaded */
+    /// @return the node for this path, or null if it is not on screen or not yet loaded
     public ProjectTreeNode findLoadedNode(Path path)
     {
         if (!(getRoot() instanceof ProjectTreeNode root)) return null;

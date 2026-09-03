@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-/** Fixed-step game loop, keyboard input, collision events, and Java2D rendering. */
+/// Fixed-step game loop, keyboard input, collision events, and Java2D rendering.
 @SuppressWarnings("serial")
 final class GamePanel extends JPanel
 {

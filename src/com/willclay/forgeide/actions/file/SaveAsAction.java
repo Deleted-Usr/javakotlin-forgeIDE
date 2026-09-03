@@ -10,7 +10,7 @@ import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.nio.file.Path;
 
-/** Always asks where to write. {@link SaveAction} falls back to this one. */
+/// Always asks where to write. [SaveAction] falls back to this one.
 public final class SaveAsAction extends ForgeAction
 {
     private final ActionContext context;
@@ -27,11 +27,9 @@ public final class SaveAsAction extends ForgeAction
         saveAs(context.getEditorManager().getCurrentFile());
     }
 
-    /**
-     * Saves under a user-selected name.
-     *
-     * @return true only when the document was written successfully
-     */
+    /// Saves under a user-selected name.
+    ///
+    /// @return true only when the document was written successfully
     public boolean saveAs(Path suggested)
     {
         Project project = context.getWorkspace().getProject();

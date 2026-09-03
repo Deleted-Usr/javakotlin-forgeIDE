@@ -10,13 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Owns the one orderly path out of ForgeIDE.
- *
- * <p>State writers such as the future {@code SessionStore} can register a task
- * without teaching the Exit action about persistence. Tasks run after active
- * execution is stopped and before runtime services and the window are closed.</p>
- */
+/// Owns the one orderly path out of ForgeIDE.
+///
+/// State writers such as the future `SessionStore` can register a task
+/// without teaching the Exit action about persistence. Tasks run after active
+/// execution is stopped and before runtime services and the window are closed.
 public final class ApplicationShutdown
 {
     private final JFrame frame;
@@ -42,10 +40,8 @@ public final class ApplicationShutdown
         this.settingsService = Objects.requireNonNull(settingsService, "settingsService");
     }
 
-    /**
-     * Registers work that must complete during a clean exit, such as atomically
-     * writing {@code session.json} or closing a plugin class loader.
-     */
+    /// Registers work that must complete during a clean exit, such as atomically
+    /// writing `session.json` or closing a plugin class loader.
     public void addTask(String description, ShutdownTask task)
     {
         if (shuttingDown) throw new IllegalStateException("Shutdown has already started.");
@@ -56,7 +52,7 @@ public final class ApplicationShutdown
         ));
     }
 
-    /** Requests shutdown and returns false when the user chooses to keep editing. */
+    /// Requests shutdown and returns false when the user chooses to keep editing.
     public boolean requestExit()
     {
         if (shuttingDown) return true;

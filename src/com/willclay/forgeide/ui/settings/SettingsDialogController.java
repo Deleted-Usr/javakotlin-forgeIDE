@@ -8,7 +8,7 @@ import javax.swing.SwingUtilities;
 import java.awt.Window;
 import java.util.Objects;
 
-/** Owns the one modeless settings dialog belonging to the main window. */
+/// Owns the one modeless settings dialog belonging to the main window.
 public final class SettingsDialogController
 {
     private final Window owner;

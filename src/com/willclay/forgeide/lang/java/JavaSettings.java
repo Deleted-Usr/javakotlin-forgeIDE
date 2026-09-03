@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-/** The complete set of Java settings owned by the built-in Java language. */
+/// The complete set of Java settings owned by the built-in Java language.
 public record JavaSettings(
         JvmSettings jvm,
         int release,
