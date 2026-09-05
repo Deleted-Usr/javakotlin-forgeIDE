@@ -6,7 +6,9 @@ import com.willclay.forgeide.execution.ExecutionManager;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.lang.LanguageRegistry;
 import com.willclay.forgeide.lang.java.JavaLanguage;
+import com.willclay.forgeide.lang.java.JavaLanguageProvider;
 import com.willclay.forgeide.lang.kotlin.KotlinLanguage;
+import com.willclay.forgeide.lang.kotlin.KotlinLanguageProvider;
 import com.willclay.forgeide.services.ApplicationShutdown;
 import com.willclay.forgeide.services.SessionService;
 import com.willclay.forgeide.services.settings.SettingsService;
@@ -96,8 +98,8 @@ public final class Window extends JFrame
         console = new ConsolePanel(editorFont.deriveFont(CONSOLE_FONT_SIZE));
 
         languages = new LanguageRegistry(List.of(
-                        new JavaLanguage(),
-                        new KotlinLanguage()
+                        new JavaLanguageProvider().createLanguage(),
+                        new KotlinLanguageProvider().createLanguage()
                 ));
 
         workspaceService = createWorkspaceService();

@@ -68,8 +68,8 @@ class KotlinLanguage : Language {
     """.trimIndent()
 
     private companion object {
-        /// A top-level `fun main`, with or without arguments. Kotlin needs no
-        /// modifiers on it, so there is far less to match than in Java.
-        private val MAIN_FUNCTION: Pattern = Pattern.compile("""(?m)^\s*fun\s+main\s*\(""")
+        /// The same rule [KotlinClassNames.mainClass] resolves against, so a file
+        /// is never offered as an entry point the launcher cannot then name.
+        private val MAIN_FUNCTION: Pattern = KotlinClassNames.MAIN_FUNCTION.toPattern()
     }
 }
