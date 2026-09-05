@@ -12,6 +12,7 @@ import com.willclay.forgeide.ui.explorer.ProjectTree;
 import com.willclay.forgeide.ui.settings.SettingsDialogController;
 import com.willclay.forgeide.ui.toolbar.RunConfigDialogController;
 import com.willclay.forgeide.workspace.Workspace;
+import com.willclay.forgeide.workspace.runconfig.RunConfigurationManager;
 
 import javax.swing.JFrame;
 
@@ -42,6 +43,7 @@ public final class ActionContext
     private final SettingsService settingsService;
     private final SettingsDialogController settingsDialogController;
     private final RunConfigDialogController runConfigDialogController;
+    private final RunConfigurationManager runConfigurationManager;
 
     public ActionContext(JFrame frame,
                          CodeEditorPanel editorPanel,
@@ -55,7 +57,8 @@ public final class ActionContext
                          FileDialogs dialogs,
                          SettingsService settingsService,
                          SettingsDialogController settingsDialogController,
-                         RunConfigDialogController runConfigDialogController
+                         RunConfigDialogController runConfigDialogController,
+                         RunConfigurationManager runConfigurationManager
     )
     {
         this.frame = frame;
@@ -71,6 +74,7 @@ public final class ActionContext
         this.settingsService = settingsService;
         this.settingsDialogController = settingsDialogController;
         this.runConfigDialogController = runConfigDialogController;
+        this.runConfigurationManager = runConfigurationManager;
     }
 
     /// Only for parenting dialogs and for closing the application. An action
@@ -112,4 +116,7 @@ public final class ActionContext
     public SettingsDialogController getSettingsDialogController() { return settingsDialogController; }
 
     public RunConfigDialogController getRunConfigDialogController() { return runConfigDialogController; }
+
+    /// Which configuration Run should use, and the list the toolbar shows.
+    public RunConfigurationManager getRunConfigurationManager() { return runConfigurationManager; }
 }

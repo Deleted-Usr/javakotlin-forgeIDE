@@ -35,5 +35,9 @@ public interface Toolchain
         return true;
     }
 
-    int run(Project project, Path sourceFile, Consumer<String> output, Consumer<Writer> onInputReady) throws IOException, InterruptedException;
+    /// Starts the file as a process.
+    ///
+    /// @param options what the chosen run configuration adds — see [LaunchOptions],
+    ///                and [LaunchOptions#defaults()] when there is no configuration
+    int run(Project project, Path sourceFile, LaunchOptions options, Consumer<String> output, Consumer<Writer> onInputReady) throws IOException, InterruptedException;
 }

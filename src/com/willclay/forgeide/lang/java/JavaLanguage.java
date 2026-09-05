@@ -1,5 +1,6 @@
 package com.willclay.forgeide.lang.java;
 
+import com.willclay.forgeide.lang.api.EntryPoints;
 import com.willclay.forgeide.lang.api.Toolchain;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.lang.api.Language;
@@ -13,10 +14,16 @@ import java.util.Optional;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /// Java language support and its project conventions.
 public final class JavaLanguage implements Language
 {
+    /// Written either way round, and the parameter's spelling varies too much to
+    /// be worth matching — `String[] args`, `String... args`, `final String[]`.
+    private static final Pattern MAIN_METHOD = Pattern.compile(
+            "\\b(?:public\\s+static|static\\s+public)\\s+void\\s+main\\s*\\(");
+
     private final Lexer lexer = new JavaLexer();
     private final Toolchain toolchain = new JavacToolchain();
 
@@ -81,6 +88,12 @@ public final class JavaLanguage implements Language
     public Optional<Toolchain> toolchain()
     {
         return Optional.of(toolchain);
+    }
+
+    @Override
+    public List<Path> entryPoints(Project project) throws IOException
+    {
+        return EntryPoints.scan(project, this, MAIN_METHOD);
     }
 
     @Override

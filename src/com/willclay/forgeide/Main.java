@@ -14,26 +14,17 @@ import java.io.IOException;
 
 /*
  * TODO (For school project)
- *  - Run Configurations (Like IntelliJ)
- *  - Add fonts section to the Themes tab in settings
  *  - Launch Forge through a bootstrap sequence
  *  - Discover registered languages from providers on each launch
- *  - Drag, shift/ctrl select, reordering files and folders MUST be added to the explorer!!!
  *  - Add an interactive introduction tutorial, like IntelliJ's or Unity's
- *  - Have active processes attached to run configurations
  *  - A BlueJ style class diagram mode/setting
- *  - File dependent icons (Custom Icons for Java, Kotlin, C++, Python, etc.)
- */
-
-/*
- * TODO - Get the project to a point where self-hosting is possible, that requires:
- *          - Run Configurations: Pressing run only runs the currently open file, not ForgeIDE's
- *            main method. See the run config point above.
  */
 
 /*
  * TODO (After school project, or if I have time)
  *       - Custom Swing Components (extends JComponent):
+ *          - Editor Panel (Syntax Highlighting, Custom Caret, Bracket Matching, Selection Painting, Configurable Fonts)
+ *          - Custom Gutter (Line Numbers, Breakpoints, Folding Arrows, Modified Line Indicators)
  *          - Editor Tabs (Close Buttons, Dirty Indicator, Hover Effect, Drag Reorder)
  *          - Project Explorer (Icons, Better Spacing, Coloured Text, Inline Rename, Speed Search, Lazy Loading)
  *          - Full AI Agent Implementation (Writing Code, Reading and Writing to Files, Full Project Context, Agent Pet like GPT)

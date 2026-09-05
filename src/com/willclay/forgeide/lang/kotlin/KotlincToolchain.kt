@@ -3,6 +3,7 @@ package com.willclay.forgeide.lang.kotlin
 import com.willclay.forgeide.annotations.SourceEquivalent
 import com.willclay.forgeide.annotations.SourceLanguage
 import com.willclay.forgeide.execution.ProcessRunner
+import com.willclay.forgeide.lang.api.LaunchOptions
 import com.willclay.forgeide.lang.api.Toolchain
 import com.willclay.forgeide.workspace.Project
 import java.io.IOException
@@ -102,6 +103,7 @@ class KotlincToolchain : Toolchain {
     override fun run(
         project: Project,
         sourceFile: Path,
+        options: LaunchOptions,
         output: Consumer<String>,
         onInputReady: Consumer<Writer>
     ): Int {
@@ -112,9 +114,12 @@ class KotlincToolchain : Toolchain {
         )
         val encoding = project.configuration.fileHandling.encoding.charset()
 
+        // Order is the runtime's: everything before the main class is for the JVM,
+        // everything after it is for the program.
         val command = buildList {
             add(KotlinClassNames.RUNNER_COMMAND)
             add(KotlinClassNames.batchSafeArgument("-Dfile.encoding=${encoding.name()}"))
+            options.runtimeOptions().forEach { add(KotlinClassNames.batchSafeArgument(it)) }
             add("-classpath")
             add(classPath)
             add(
@@ -124,10 +129,14 @@ class KotlincToolchain : Toolchain {
                     KotlinClassNames.mainClass(sourceFile, encoding)
                 }
             )
+            addAll(options.programArguments())
         }
 
-        val builder = ProcessBuilder(command).directory(project.workingDirectory().toFile())
+        val builder = ProcessBuilder(command)
         builder.environment()["JAVA_HOME"] = settings.jvm.jdkPath.toString()
+
+        // After JAVA_HOME, so a configuration can deliberately override it.
+        options.applyTo(builder, project.workingDirectory())
 
         return ProcessRunner.execute(builder, output, onInputReady)
     }

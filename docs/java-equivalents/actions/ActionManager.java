@@ -143,6 +143,7 @@ public final class ActionManager
         context.getWorkspace().addChangeListener(this::syncProjectActions);
         context.getEditorManager().addChangeListener(this::syncProjectActions);
         execution.addChangeListener(this::syncProjectActions);
+        context.getRunConfigurationManager().addChangeListener(this::syncProjectActions);
         syncProjectActions();
     }
 
@@ -170,10 +171,14 @@ public final class ActionManager
 
         boolean hasEditor = context.getEditorManager().getCurrentTab() != null;
 
+        // A run configuration names its own entry point, so Run no longer needs
+        // an open editor to have something to run.
+        boolean hasTarget = hasEditor || context.getRunConfigurationManager().active().isPresent();
+
         boolean running = execution.isRunning();
         boolean canExecute = hasToolchain && !running;
 
-        run.setEnabled(canExecute && hasEditor);
+        run.setEnabled(canExecute && hasTarget);
         buildProject.setEnabled(canExecute);
         cleanProject.setEnabled(canExecute);
 

@@ -165,6 +165,7 @@ class ActionManager(private val context: ActionContext) {
         context.workspace.addChangeListener { syncProjectActions() }
         context.editorManager.addChangeListener { syncProjectActions() }
         execution.addChangeListener { syncProjectActions() }
+        context.runConfigurationManager.addChangeListener { syncProjectActions() }
         syncProjectActions()
     }
 
@@ -186,10 +187,14 @@ class ActionManager(private val context: ActionContext) {
             .isPresent
         val hasEditor = context.editorManager.currentTab != null
 
+        // A run configuration names its own entry point, so Run no longer needs
+        // an open editor to have something to run.
+        val hasTarget = hasEditor || context.runConfigurationManager.active().isPresent
+
         val running = execution.isRunning
         val canExecute = hasToolchain && !running
 
-        runAction.isEnabled = canExecute && hasEditor
+        runAction.isEnabled = canExecute && hasTarget
         buildProjectAction.isEnabled = canExecute
         cleanProjectAction.isEnabled = canExecute
 

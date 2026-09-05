@@ -48,6 +48,16 @@ public interface Language
     /// Empty for languages the IDE can highlight but not execute.
     Optional<Toolchain> toolchain();
 
+    /// The project's source files that can start it — what a run configuration
+    /// is allowed to name as its entry point.
+    ///
+    /// Empty for a language that cannot be executed, and for one that has not
+    /// said what a startable file looks like. See [EntryPoints#scan].
+    default List<Path> entryPoints(Project project) throws IOException
+    {
+        return List.of();
+    }
+
     /// Creates the project-settings tabs owned by this language.
     ///
     /// Most languages contribute one tab. A future mixed JVM language can

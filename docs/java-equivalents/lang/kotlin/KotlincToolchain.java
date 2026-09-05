@@ -1,6 +1,7 @@
 package com.willclay.forgeide.lang.kotlin;
 
 import com.willclay.forgeide.compiler.ProcessRunner;
+import com.willclay.forgeide.lang.api.LaunchOptions;
 import com.willclay.forgeide.lang.api.Toolchain;
 import com.willclay.forgeide.workspace.Project;
 
@@ -105,7 +106,7 @@ public final class KotlincToolchain implements Toolchain
     }
 
     @Override
-    public int run(Project project, Path sourceFile, Consumer<String> output, Consumer<Writer> onInputReady) throws IOException, InterruptedException
+    public int run(Project project, Path sourceFile, LaunchOptions options, Consumer<String> output, Consumer<Writer> onInputReady) throws IOException, InterruptedException
     {
         var encoding = project.configuration().fileHandling().encoding().charset();
         KotlinSettings settings = KotlinSettings.from(project);
@@ -113,17 +114,25 @@ public final class KotlincToolchain implements Toolchain
                 KotlinClassNames.outputRoot(project),
                 KotlinClassNames.libraryRoots(project));
 
-        List<String> command = List.of(
-                KotlinClassNames.RUNNER_COMMAND,
-                KotlinClassNames.batchSafeArgument("-Dfile.encoding=" + encoding.name()),
-                "-classpath",
-                classPath,
-                KotlinClassNames.hasExtension(sourceFile, KotlinClassNames.SCRIPT_EXTENSION)
-                        ? sourceFile.toString()
-                        : KotlinClassNames.mainClass(sourceFile, encoding));
+        // Order is the runtime's: everything before the main class is for the JVM,
+        // everything after it is for the program.
+        List<String> command = new ArrayList<>();
+        command.add(KotlinClassNames.RUNNER_COMMAND);
+        command.add(KotlinClassNames.batchSafeArgument("-Dfile.encoding=" + encoding.name()));
+        for (String option : options.runtimeOptions()) command.add(KotlinClassNames.batchSafeArgument(option));
+        command.add("-classpath");
+        command.add(classPath);
+        command.add(KotlinClassNames.hasExtension(sourceFile, KotlinClassNames.SCRIPT_EXTENSION)
+                ? sourceFile.toString()
+                : KotlinClassNames.mainClass(sourceFile, encoding));
+        command.addAll(options.programArguments());
 
-        ProcessBuilder builder = new ProcessBuilder(command).directory(project.workingDirectory().toFile());
+        ProcessBuilder builder = new ProcessBuilder(command);
         builder.environment().put("JAVA_HOME", settings.jvm().jdkPath().toString());
+
+        // After JAVA_HOME, so a configuration can deliberately override it.
+        options.applyTo(builder, project.workingDirectory());
+
         return ProcessRunner.execute(builder, output, onInputReady);
     }
 }

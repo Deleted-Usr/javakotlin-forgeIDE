@@ -1,6 +1,7 @@
 package com.willclay.forgeide.lang.java;
 
 import com.willclay.forgeide.execution.ProcessRunner;
+import com.willclay.forgeide.lang.api.LaunchOptions;
 import com.willclay.forgeide.lang.api.Toolchain;
 import com.willclay.forgeide.workspace.Project;
 
@@ -144,21 +145,25 @@ public final class JavacToolchain implements Toolchain
     }
 
     @Override
-    public int run(Project project, Path sourceFile, Consumer<String> output, Consumer<Writer> onInputReady) throws IOException, InterruptedException
+    public int run(Project project, Path sourceFile, LaunchOptions options, Consumer<String> output, Consumer<Writer> onInputReady) throws IOException, InterruptedException
     {
         JavaSettings settings = JavaSettings.from(project);
         List<Path> libraries = JavaProjectPaths.libraryRoots(project);
         Path out  = JavaProjectPaths.outputRoot(project);
 
+        // Order is the JVM's, not ours: everything before the main class is for
+        // java, everything after it is for the program.
         List<String> command = new ArrayList<>();
         command.add(settings.jvm().jdkExecutable("java").toString());
         if (settings.previewFeatures()) command.add("--enable-preview");
+        command.addAll(options.runtimeOptions());
         command.add("-cp");
         command.add(JavaClassNames.classPath(out, libraries));
         command.add(JavaClassNames.of(project, sourceFile));
+        command.addAll(options.programArguments());
 
         ProcessBuilder builder = new ProcessBuilder(command);
-        builder.directory(project.workingDirectory().toFile());
+        options.applyTo(builder, project.workingDirectory());
 
         return ProcessRunner.execute(builder, output, onInputReady);
     }

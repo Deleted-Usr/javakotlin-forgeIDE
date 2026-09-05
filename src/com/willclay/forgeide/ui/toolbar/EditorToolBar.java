@@ -3,6 +3,7 @@ package com.willclay.forgeide.ui.toolbar;
 import com.willclay.forgeide.actions.ActionManager;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.Window;
+import com.willclay.forgeide.workspace.runconfig.RunConfigurationManager;
 
 import javax.swing.Box;
 import javax.swing.JToolBar;
@@ -16,11 +17,11 @@ import javax.swing.JToolBar;
 /// greys out.
 public final class EditorToolBar extends JToolBar
 {
-    public EditorToolBar(ActionManager actions)
+    public EditorToolBar(ActionManager actions, RunConfigurationManager manager)
     {
         setFloatable(false);
 
-        add(new RunConfigurationDropdown(actions.getOpenRunConfigAction()));
+        add(new RunConfigurationDropdown(actions.getOpenRunConfigAction(), manager));
 
         addSeparator();
 

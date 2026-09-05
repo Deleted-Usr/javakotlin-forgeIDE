@@ -123,8 +123,9 @@ public final class Window extends JFrame
         SettingsDialogController settingsDialogController =
                 new SettingsDialogController(this, settingsService, projectService, themeService);
 
+        RunConfigurationManager runConfigurationManager = new RunConfigurationManager(workspaceService);
         RunConfigDialogController configDialogController =
-                new RunConfigDialogController(this, new RunConfigurationManager());
+                new RunConfigDialogController(this, runConfigurationManager);
 
         context = new ActionContext(
                 this,
@@ -139,7 +140,8 @@ public final class Window extends JFrame
                 new FileDialogs(this, languages),
                 settingsService,
                 settingsDialogController,
-                configDialogController
+                configDialogController,
+                runConfigurationManager
         );
         actions = new ActionManager(context);
         editorPanel.setEmptyStateActions(
@@ -162,7 +164,7 @@ public final class Window extends JFrame
         });
 
         setJMenuBar(new EditorMenuBar(actions));
-        workbench.setToolBar(new EditorToolBar(actions));
+        workbench.setToolBar(new EditorToolBar(actions, runConfigurationManager));
         workbench.setStatusBar(new StatusBar(executionManager, workspace, editorManager, settingsService));
         projectTree.setContextMenu(new ProjectContextMenu(actions));
 

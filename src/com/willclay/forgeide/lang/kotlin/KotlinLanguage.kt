@@ -2,6 +2,7 @@ package com.willclay.forgeide.lang.kotlin
 
 import com.willclay.forgeide.annotations.SourceEquivalent
 import com.willclay.forgeide.annotations.SourceLanguage
+import com.willclay.forgeide.lang.api.EntryPoints
 import com.willclay.forgeide.lang.api.Language
 import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage
 import com.willclay.forgeide.lang.api.Lexer
@@ -14,6 +15,7 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Optional
+import java.util.regex.Pattern
 
 /**
  * Kotlin language support and its project conventions.
@@ -43,6 +45,9 @@ class KotlinLanguage : Language {
     override fun lexer(): Lexer = lexer
     override fun toolchain(): Optional<Toolchain> = Optional.of(toolchain)
 
+    @Throws(IOException::class)
+    override fun entryPoints(project: Project): List<Path> = EntryPoints.scan(project, this, MAIN_FUNCTION)
+
     override fun sourceRoot(project: Project): Path = KotlinSettings.from(project).jvm.sourceRoot(project)
 
     override fun settingsPages(project: Project): List<LanguageSettingsPage> =
@@ -61,4 +66,10 @@ class KotlinLanguage : Language {
         class $typeName {
         }
     """.trimIndent()
+
+    private companion object {
+        /// A top-level `fun main`, with or without arguments. Kotlin needs no
+        /// modifiers on it, so there is far less to match than in Java.
+        private val MAIN_FUNCTION: Pattern = Pattern.compile("""(?m)^\s*fun\s+main\s*\(""")
+    }
 }
