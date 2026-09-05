@@ -35,13 +35,15 @@ import java.util.Optional;
 /// General settings shared by every Forge project language.
 public final class ProjectSettings extends JPanel
 {
-    private final JTextField name = new JTextField(24);
+    private final JTextField name     = new JTextField(24);
     private final JTextField location = Utils.readOnlyField("");
-    private final JTextField workDir = new JTextField(24);
+    private final JTextField workDir  = new JTextField(24);
     private final JTextField language = Utils.readOnlyField("");
-    private final JComboBox<Encoding> encoding = new JComboBox<>(Encoding.values());
+
+    private final JComboBox<Encoding> encoding                  = new JComboBox<>(Encoding.values());
     private final JComboBox<LineSeparatorPolicy> lineSeparators = new JComboBox<>(LineSeparatorPolicy.values());
-    private final DefaultListModel<String> excludedPaths = new DefaultListModel<>();
+
+    private final DefaultListModel<String> excludedPaths   = new DefaultListModel<>();
     private final List<LanguageSettingsPage> languagePages = new ArrayList<>();
 
     private Path projectRoot;

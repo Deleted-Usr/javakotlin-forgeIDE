@@ -35,6 +35,7 @@ import com.willclay.forgeide.workspace.Project;
 import com.willclay.forgeide.workspace.Workspace;
 import com.willclay.forgeide.application.IDESessionConfiguration;
 import com.willclay.forgeide.application.IDESettingsConfiguration;
+import com.willclay.forgeide.workspace.runconfig.RunConfigurationManager;
 
 import javax.swing.JFrame;
 import java.awt.Font;
@@ -123,7 +124,7 @@ public final class Window extends JFrame
                 new SettingsDialogController(this, settingsService, projectService, themeService);
 
         RunConfigDialogController configDialogController =
-                new RunConfigDialogController(this);
+                new RunConfigDialogController(this, new RunConfigurationManager());
 
         context = new ActionContext(
                 this,

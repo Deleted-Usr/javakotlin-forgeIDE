@@ -1,6 +1,7 @@
 package com.willclay.forgeide.ui.toolbar;
 
 import com.willclay.forgeide.ui.Window;
+import com.willclay.forgeide.workspace.runconfig.RunConfigurationManager;
 
 import javax.swing.*;
 
@@ -10,9 +11,12 @@ public class RunConfigDialogController
     private final Window parent;
     private RunConfigurationDialog runConfigDialog;
 
-    public RunConfigDialogController(Window window)
+    private final RunConfigurationManager manager;
+
+    public RunConfigDialogController(Window window, RunConfigurationManager manager)
     {
         this.parent = window;
+        this.manager = manager;
     }
 
     public void showDialog()
@@ -25,7 +29,7 @@ public class RunConfigDialogController
 
         if (runConfigDialog == null || !runConfigDialog.isDisplayable())
         {
-            runConfigDialog = new RunConfigurationDialog(parent);
+            runConfigDialog = new RunConfigurationDialog(parent, manager);
         }
 
         runConfigDialog.setVisible(true);
