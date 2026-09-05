@@ -8,7 +8,7 @@ import com.willclay.forgeide.lang.api.LanguageProvider;
 ///
 /// Keeping the built-in language behind a [LanguageProvider] gives it the
 /// same construction boundary as externally loaded language plugins.
-public class JavaLanguageProvider implements LanguageProvider
+public final class JavaLanguageProvider implements LanguageProvider
 {
     /// {@inheritDoc}
     @Override

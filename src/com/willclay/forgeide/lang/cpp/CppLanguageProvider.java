@@ -3,7 +3,7 @@ package com.willclay.forgeide.lang.cpp;
 import com.willclay.forgeide.lang.api.Language;
 import com.willclay.forgeide.lang.api.LanguageProvider;
 
-public class CppLanguageProvider implements LanguageProvider
+public final class CppLanguageProvider implements LanguageProvider
 {
     @Override
     public String pluginId()

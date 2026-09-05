@@ -17,7 +17,7 @@ import java.util.*;
 /// SettingsService makes for IDE settings.
 ///
 /// Confined to the Event Dispatch Thread; every caller is already on it.
-public class RunConfigurationManager
+public final class RunConfigurationManager
 {
     private final WorkspaceService workspaceService;
     private final List<Runnable> listeners = new ArrayList<>();

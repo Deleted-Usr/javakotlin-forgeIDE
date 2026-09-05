@@ -8,7 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /// Reads and writes the run configurations kept beside a project's metadata.
-public class RunConfigurationsStore
+public final class RunConfigurationsStore
 {
     private static final String DIRECTORY = ".forge";
     private static final String FILE = "runConfigurations.json";

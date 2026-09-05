@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 
-public class CppLanguage implements Language
+public final class CppLanguage implements Language
 {
     @Override
     public String id()
