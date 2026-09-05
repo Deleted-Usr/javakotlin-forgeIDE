@@ -68,8 +68,10 @@ class KotlinLanguage : Language {
     """.trimIndent()
 
     private companion object {
-        /// The same rule [KotlinClassNames.mainClass] resolves against, so a file
-        /// is never offered as an entry point the launcher cannot then name.
+        /**
+         * The same rule [KotlinClassNames.mainClass] resolves against, so a file
+         * is never offered as an entry point the launcher cannot then name.
+         */
         private val MAIN_FUNCTION: Pattern = KotlinClassNames.MAIN_FUNCTION.toPattern()
     }
 }
