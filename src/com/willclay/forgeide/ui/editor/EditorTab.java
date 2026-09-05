@@ -74,6 +74,7 @@ public final class EditorTab extends JPanel
         TabGutter gutter = new TabGutter(textPane);
 
         scrollPane.setRowHeaderView(gutter);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
         add(scrollPane, BorderLayout.CENTER);
     }

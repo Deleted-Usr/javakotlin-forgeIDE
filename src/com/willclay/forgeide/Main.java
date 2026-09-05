@@ -14,8 +14,8 @@ import java.io.IOException;
 
 /*
  * TODO (For school project)
- *  - Custom Gutter (School Project Ver - Line Numbers, breakpoints, javadocs rendering)
  *  - Run Configurations (Like IntelliJ)
+ *  - Add fonts section to the Themes tab in settings
  *  - Launch Forge through a bootstrap sequence
  *  - Discover registered languages from providers on each launch
  *  - Drag, shift/ctrl select, reordering files and folders MUST be added to the explorer!!!
@@ -32,20 +32,10 @@ import java.io.IOException;
  */
 
 /*
- * TODO - Language Plugins
- *  - Python
- *  - C++
- *  - Lua
- */
-
-/*
  * TODO (After school project, or if I have time)
  *       - Custom Swing Components (extends JComponent):
- *          - Editor Panel (Syntax Highlighting, Custom Caret, Bracket Matching, Selection Painting, Configurable Fonts)
- *          - Custom Gutter (Line Numbers, Breakpoints, Folding Arrows, Modified Line Indicators)
  *          - Editor Tabs (Close Buttons, Dirty Indicator, Hover Effect, Drag Reorder)
  *          - Project Explorer (Icons, Better Spacing, Coloured Text, Inline Rename, Speed Search, Lazy Loading)
- *          - Status Bar (Compiler Status, Caret Position, Encoding, Line Endings, Project Name)
  *          - Full AI Agent Implementation (Writing Code, Reading and Writing to Files, Full Project Context, Agent Pet like GPT)
  *          - Custom theme documents for user-authored Swing/token theme combinations
  */

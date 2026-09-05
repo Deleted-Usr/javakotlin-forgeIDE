@@ -1,11 +1,10 @@
 package com.willclay.forgeide.ui.explorer;
 
-import javax.swing.BorderFactory;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
+import com.formdev.flatlaf.FlatClientProperties;
+
+import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import java.awt.*;
 
 /// The project explorer: a header and the tree in a scroll pane.
 ///
@@ -28,8 +27,11 @@ public final class ProjectTreePanel extends JPanel
         JLabel header = new JLabel(" Project");
         header.setBorder(BorderFactory.createEmptyBorder(4, 2, 4, 2));
 
+        JScrollPane scroll = new JScrollPane(tree);
+        scroll.setBorder(BorderFactory.createTitledBorder(""));
+
         add(header, BorderLayout.NORTH);
-        add(new JScrollPane(tree), BorderLayout.CENTER);
+        add(scroll, BorderLayout.CENTER);
 
         setPreferredSize(new Dimension(PREFERRED_WIDTH, PREFERRED_HEIGHT));
     }
