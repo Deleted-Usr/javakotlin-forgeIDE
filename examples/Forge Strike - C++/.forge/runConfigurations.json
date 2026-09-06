@@ -1,0 +1,14 @@
+{
+  "schemaVersion" : 1,
+  "configs" : [ {
+    "id" : "ba8ec579-1a2a-4fb1-a1b2-106aae356db3",
+    "name" : "Main",
+    "entryPoint" : "src/main.cpp",
+    "runtimeOptions" : [ ],
+    "programArguments" : [ ],
+    "workingDirectory" : "",
+    "environment" : { },
+    "beforeLaunch" : "BUILD_TARGET"
+  } ],
+  "activeId" : null
+}

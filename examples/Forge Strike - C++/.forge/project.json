@@ -1,4 +1,36 @@
 {
-  "schemaVersion": 1,
-  "language": "cpp"
+  "schemaVersion" : 1,
+  "name" : "Forge Strike - C++",
+  "language" : "cpp",
+  "workingDirectory" : ".",
+  "fileHandling" : {
+    "encoding" : "UTF-8",
+    "lineSeparators" : "preserve"
+  },
+  "excludedPaths" : [ ".git" ],
+  "languageSettings" : {
+    "cpp" : {
+      "sourcePath" : "src",
+      "includePaths" : [ "include", "C:/SFML-3.1.0" ],
+      "outputPath" : "build",
+      "buildSystem" : "gpp",
+      "gpp" : {
+        "command" : "g++",
+        "standard" : "c++20",
+        "optimisation" : "O0",
+        "debugSymbols" : true,
+        "warnings" : true,
+        "warningsAsErrors" : false,
+        "compilerArguments" : [ ],
+        "linkerArguments" : [ "-lsfml-graphics", "-lsfml-window", "-lsfml-system" ]
+      },
+      "cmake" : {
+        "command" : "cmake",
+        "generator" : "",
+        "buildType" : "Debug",
+        "target" : "",
+        "configureArguments" : [ ]
+      }
+    }
+  }
 }

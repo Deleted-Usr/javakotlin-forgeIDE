@@ -15,6 +15,12 @@
 # loader as parent, so the host already supplies all three.
 #
 # The PowerShell sibling, build-plugin.ps1, is the one to use on Windows.
+#
+# The defaults build the Kotlin module. Another module is named on the command
+# line, for example:
+#
+#   ./packaging/build-plugin.sh --name forge-lang-cpp --plugin-id forge.cpp \
+#       --language-id cpp --install
 
 set -eu
 

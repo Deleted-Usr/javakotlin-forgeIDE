@@ -1,7 +1,7 @@
 # Forge Strike
 
-Forge Strike is a small, asset-free top-down arena shooter for C++17 and SFML
-3. It deliberately shares Forge Runner's dusk-purple landscape, ember-orange
+Forge Strike is a small, asset-free top-down arena shooter for C++17 and SFML. 
+It deliberately shares Forge Runner's dusk-purple landscape, ember-orange
 highlights, mint enemies, particles, dash trails, and clean geometric shapes.
 
 ## Controls
@@ -30,12 +30,10 @@ cmake --build build
 If SFML is installed outside the default search path, set `SFML_DIR` to the
 directory containing `SFMLConfig.cmake` when configuring.
 
-## Future ForgeIDE support
-
-The included `.forge/project.json` uses the planned language ID `cpp`.
-ForgeIDE will be able to open it once a C++ language with that ID is registered.
-The intended source root is `src`, while headers live in `include` and the
-build output belongs in `build`.
+If CMake is not installed, you can set to compile and run directly with g++
+in the project settings, just make sure to include `-lsfml-graphics -lsfml-window -lsfml-system`
+in the linker flags field, and make sure the SFML include directory is set
+inside the Include Directories list in the project settings.
 
 ## Project structure
 

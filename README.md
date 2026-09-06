@@ -18,5 +18,7 @@ platformer packaged as a Forge project. Open that directory in ForgeIDE, select
 `src/forgerunner/ForgeRunner.java`, and press Run.
 
 [`examples/Forge Strike - C++`](examples/Forge%20Strike%20-%20C%2B%2B) is a
-top-down SFML arena shooter prepared for ForgeIDE's planned C++ language
-support. It includes a CMake build and procedural graphics with no game assets.
+top-down SFML arena shooter built with CMake, using procedural graphics and no
+game assets. It is run by the C++ language plugin in `modules/forge-lang-cpp`,
+which detects the `CMakeLists.txt` and builds through CMake; a project without
+one is compiled by invoking `g++` directly.

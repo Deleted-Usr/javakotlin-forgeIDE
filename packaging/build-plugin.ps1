@@ -45,6 +45,10 @@
 
 .EXAMPLE
     .\packaging\build-plugin.ps1 -Install
+
+.EXAMPLE
+    .\packaging\build-plugin.ps1 -Name forge-lang-cpp -PluginId forge.cpp `
+        -LanguageId cpp -Install
 #>
 
 [CmdletBinding()]
