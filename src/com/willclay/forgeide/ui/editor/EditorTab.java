@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Objects;
 
 /// One open editor document and all state that must follow it between selections.
-public final class EditorTab extends JPanel
+public class EditorTab extends JPanel
 {
     public static final String UNTITLED = "Untitled";
 
@@ -33,6 +33,8 @@ public final class EditorTab extends JPanel
 
     /// Enough to undo a session's worth of typing without holding the file's whole history.
     private static final int UNDO_LIMIT = 500;
+
+    private final JScrollPane scrollPane;
 
     private final JTextPane textPane = new NoWrapTextPane();
     private final SyntaxHighlighter highlighter = new SyntaxHighlighter();
@@ -70,7 +72,7 @@ public final class EditorTab extends JPanel
 
         installUndoSupport();
 
-        JScrollPane scrollPane = new JScrollPane(textPane);
+        scrollPane = new JScrollPane(textPane);
         TabGutter gutter = new TabGutter(textPane);
 
         scrollPane.setRowHeaderView(gutter);
@@ -178,6 +180,11 @@ public final class EditorTab extends JPanel
     public JTextPane getTextPane()
     {
         return textPane;
+    }
+
+    protected JScrollPane getEditorScrollPane()
+    {
+        return scrollPane;
     }
 
     // --- Undo history --- //

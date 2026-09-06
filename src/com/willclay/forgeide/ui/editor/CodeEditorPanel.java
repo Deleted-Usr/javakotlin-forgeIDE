@@ -2,6 +2,7 @@ package com.willclay.forgeide.ui.editor;
 
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.highlighting.TokenTheme;
+import com.willclay.forgeide.ui.editor.markdown.MarkdownTab;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 
 import javax.swing.BorderFactory;
@@ -32,6 +33,7 @@ import java.awt.event.KeyEvent;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -306,7 +308,9 @@ public final class CodeEditorPanel extends JPanel
 
     private EditorTab createTab(Path file, LineEnding lineEnding)
     {
-        EditorTab tab = new EditorTab(file, lineEnding);
+        EditorTab tab = isMarkdown(file)
+                ? new MarkdownTab(file, lineEnding)
+                : new EditorTab(file, lineEnding);
 
         applyEditorSettings(tab.getTextPane());
         installTabAction(tab.getTextPane());
@@ -322,6 +326,14 @@ public final class CodeEditorPanel extends JPanel
         });
 
         return tab;
+    }
+
+    private static boolean isMarkdown(Path file)
+    {
+        if (file == null || file.getFileName() == null) return false;
+
+        String name = file.getFileName().toString().toLowerCase(Locale.ROOT);
+        return name.endsWith(".md") || name.endsWith(".markdown");
     }
 
     private void addTab(EditorTab tab)
