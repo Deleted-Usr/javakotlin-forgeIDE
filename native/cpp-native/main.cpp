@@ -38,7 +38,7 @@ fs::path getExecutablePath()
 
 std::string buildClassPath(const fs::path& rootDir)
 {
-    fs::path appJar = rootDir / "app" / "Java_ForgeIDE.jar";
+    fs::path appJar = rootDir / "app" / "ForgeIDE.jar";
     fs::path libsDir = rootDir / "libs";
 
     if (!fs::is_regular_file(appJar))

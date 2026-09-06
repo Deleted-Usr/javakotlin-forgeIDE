@@ -67,7 +67,7 @@ fn executable_dir() -> Result<PathBuf, String>
 
 fn build_class_path(root_dir: &Path) -> Result<String, String>
 {
-    let app_jar = root_dir.join("app").join("Java_ForgeIDE.jar");
+    let app_jar = root_dir.join("app").join("ForgeIDE.jar");
     let libs_dir = root_dir.join("libs");
 
     if !app_jar.is_file()
