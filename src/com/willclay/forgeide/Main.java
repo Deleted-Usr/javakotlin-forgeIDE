@@ -11,12 +11,6 @@ import com.willclay.forgeide.ui.Window;
 
 import javax.swing.*;
 
-
-/*
- * TODO (For school project)
- *  - Add an interactive introduction tutorial, like IntelliJ's or Unity's (Maybe)
- */
-
 /*
  * TODO (After school project, or if I have time)
  *       - Custom Swing Components (extends JComponent):
