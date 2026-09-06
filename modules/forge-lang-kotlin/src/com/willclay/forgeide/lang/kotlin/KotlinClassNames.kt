@@ -2,8 +2,8 @@ package com.willclay.forgeide.lang.kotlin
 
 import com.willclay.forgeide.annotations.SourceEquivalent
 import com.willclay.forgeide.annotations.SourceLanguage
-import com.willclay.forgeide.lang.java.JavaClassNames
 import com.willclay.forgeide.lang.jvm.JvmClassPath
+import com.willclay.forgeide.lang.kotlin.KotlinSettings
 import com.willclay.forgeide.workspace.Project
 import java.io.IOException
 import java.nio.charset.Charset

@@ -5,6 +5,7 @@ import com.willclay.forgeide.annotations.SourceLanguage
 import com.willclay.forgeide.execution.ProcessRunner
 import com.willclay.forgeide.lang.api.LaunchOptions
 import com.willclay.forgeide.lang.api.Toolchain
+import com.willclay.forgeide.lang.kotlin.KotlinSettings
 import com.willclay.forgeide.workspace.Project
 import java.io.IOException
 import java.io.Writer

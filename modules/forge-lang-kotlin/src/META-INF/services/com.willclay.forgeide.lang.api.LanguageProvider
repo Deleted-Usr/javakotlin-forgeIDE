@@ -1,0 +1,6 @@
+# The Kotlin language plugin's entry point.
+#
+# packaging/build-plugin.ps1 copies this file into the JAR, where
+# LanguagePluginLoader finds it during bootstrap pass 2.
+
+com.willclay.forgeide.lang.kotlin.KotlinLanguageProvider

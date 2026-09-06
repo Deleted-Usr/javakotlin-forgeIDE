@@ -9,8 +9,6 @@ import com.willclay.forgeide.lang.api.Lexer
 import com.willclay.forgeide.lang.api.Toolchain
 import com.willclay.forgeide.workspace.Project
 
-import com.willclay.forgeide.lang.java.JavaLanguage
-
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path

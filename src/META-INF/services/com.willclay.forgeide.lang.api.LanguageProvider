@@ -1,0 +1,11 @@
+# Language providers built into ForgeIDE itself.
+#
+# LanguagePluginLoader reads this file on the application class loader during
+# bootstrap pass 1. Providers listed here win over anything discovered in
+# ~/.forge/plugins, so a third-party JAR cannot replace a built-in language.
+#
+# Kotlin is deliberately absent: it now ships as modules/forge-lang-kotlin and
+# is discovered from its own JAR. The C++, Lua, Python and Rust providers are
+# not listed until their Language implementations are finished.
+
+com.willclay.forgeide.lang.java.JavaLanguageProvider
