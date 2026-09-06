@@ -1,14 +1,12 @@
 package com.willclay.forgeide.ui;
 
 import com.willclay.forgeide.actions.ActionManager;
+import com.willclay.forgeide.application.bootstrap.BootstrapResult;
+import com.willclay.forgeide.application.bootstrap.BootstrapWarning;
 import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.execution.ExecutionManager;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.lang.LanguageRegistry;
-import com.willclay.forgeide.lang.java.JavaLanguage;
-import com.willclay.forgeide.lang.java.JavaLanguageProvider;
-import com.willclay.forgeide.lang.kotlin.KotlinLanguage;
-import com.willclay.forgeide.lang.kotlin.KotlinLanguageProvider;
 import com.willclay.forgeide.services.ApplicationShutdown;
 import com.willclay.forgeide.services.SessionService;
 import com.willclay.forgeide.services.settings.SettingsService;
@@ -84,10 +82,13 @@ public final class Window extends JFrame
     private final ActionContext context;
     private final ActionManager actions;
 
-    public Window(String title, SettingsService settingsService, SessionService sessionService)
+    public Window(String title, BootstrapResult bootstrap)
     {
         super(title);
         this.baseTitle = title;
+
+        SettingsService settingsService = bootstrap.settings();
+        SessionService sessionService = bootstrap.session();
 
         this.settingsService = Objects.requireNonNull(settingsService, "settingsService");
         Objects.requireNonNull(sessionService, "sessionService");
@@ -97,10 +98,7 @@ public final class Window extends JFrame
         editorManager = new EditorManager(editorPanel);
         console = new ConsolePanel(editorFont.deriveFont(CONSOLE_FONT_SIZE));
 
-        languages = new LanguageRegistry(List.of(
-                        new JavaLanguageProvider().createLanguage(),
-                        new KotlinLanguageProvider().createLanguage()
-                ));
+        languages = bootstrap.languages();
 
         workspaceService = createWorkspaceService();
         projectTree = new ProjectTree(new ProjectTreeModel(workspaceService));
@@ -173,6 +171,16 @@ public final class Window extends JFrame
         // The tree reports that a file was activated; what that means is the
         // action's business, not the tree's.
         projectTree.setOnFileActivated(item -> actions.getOpenSelectedFileAction().trigger());
+
+        if (bootstrap.pluginClassLoader() != null)
+        {
+            applicationShutdown.addTask("close plugin class loader", bootstrap.pluginClassLoader()::close);
+        }
+
+        for (BootstrapWarning warning : bootstrap.warnings())
+        {
+            console.appendLine("Startup: " + warning);
+        }
 
         add(workbench);
 

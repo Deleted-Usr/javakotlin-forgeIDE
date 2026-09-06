@@ -2,22 +2,19 @@ package com.willclay.forgeide;
 
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMTMaterialDarkerIJTheme;
-import com.willclay.forgeide.application.ForgeApplication;
-import com.willclay.forgeide.services.settings.SettingsService;
-import com.willclay.forgeide.services.SessionService;
+
+import com.willclay.forgeide.application.bootstrap.BootstrapException;
+import com.willclay.forgeide.application.bootstrap.BootstrapResult;
+import com.willclay.forgeide.application.bootstrap.ForgeBootstrap;
 import com.willclay.forgeide.services.settings.theme.AppTheme;
 import com.willclay.forgeide.ui.Window;
 
 import javax.swing.*;
-import java.io.IOException;
 
 
 /*
  * TODO (For school project)
- *  - Launch Forge through a bootstrap sequence
- *  - Discover registered languages from providers on each launch
- *  - Add an interactive introduction tutorial, like IntelliJ's or Unity's
- *  - A BlueJ style class diagram mode/setting
+ *  - Add an interactive introduction tutorial, like IntelliJ's or Unity's (Maybe)
  */
 
 /*
@@ -29,6 +26,7 @@ import java.io.IOException;
  *          - Project Explorer (Icons, Better Spacing, Coloured Text, Inline Rename, Speed Search, Lazy Loading)
  *          - Full AI Agent Implementation (Writing Code, Reading and Writing to Files, Full Project Context, Agent Pet like GPT)
  *          - Custom theme documents for user-authored Swing/token theme combinations
+ *          - A BlueJ style class diagram mode/setting
  */
 
 /*
@@ -65,30 +63,24 @@ public final class Main
 
     public static void main(String[] args) // The Entry Point for the Program
     {
-        SettingsService settingsService;
-        SessionService sessionService;
+        BootstrapResult bootstrap;
         try
         {
-            ForgeApplication application = new ForgeApplication();
-            settingsService = application.getSettingsService();
-            sessionService = application.getSessionService();
+            bootstrap = new ForgeBootstrap().bootstrap();
         }
-        catch (IOException exception)
+        catch (BootstrapException ex)
         {
-            System.err.println("Could not initialise Forge IDE: " + exception.getMessage());
+            System.err.println("Could not initialise Forge IDE: " + ex.getMessage());
             return;
         }
 
         SwingUtilities.invokeLater(() ->
         {
-            setLookAndFeel(settingsService.getTheme());
+            setLookAndFeel(bootstrap.settings().getTheme());
             FlatAnimatedLafChange.duration = 300;
 
-            Window w = new Window("Forge IDE", settingsService, sessionService);
-
-            // No setDefaultCloseOperation here because it would override the save changes dialog
+            Window w = new Window("Forge IDE", bootstrap);
             w.setSize(INITIAL_WIDTH, INITIAL_HEIGHT);
-
             w.setLocationRelativeTo(null);
             w.setVisible(true);
         });
