@@ -4,6 +4,8 @@ import com.willclay.forgeide.editor.SyntaxUndoManager;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.highlighting.SyntaxHighlighter;
 import com.willclay.forgeide.highlighting.TokenTheme;
+import com.willclay.forgeide.ui.gutter.BreakpointModel;
+import com.willclay.forgeide.ui.gutter.LineChangeTracker;
 import com.willclay.forgeide.ui.gutter.TabGutter;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 
@@ -36,9 +38,12 @@ public class EditorTab extends JPanel
 
     private final JScrollPane scrollPane;
 
-    private final JTextPane textPane = new NoWrapTextPane();
+    private final EditorTextPane textPane = new EditorTextPane();
     private final SyntaxHighlighter highlighter = new SyntaxHighlighter();
     private final SyntaxUndoManager undoManager = new SyntaxUndoManager();
+
+    private final BreakpointModel breakpoints = new BreakpointModel();
+    private final LineChangeTracker lineChanges = new LineChangeTracker(textPane.getDocument());
 
     private final List<Runnable> textChangeListeners = new ArrayList<>();
     private final List<Runnable> editListeners = new ArrayList<>();
@@ -73,24 +78,27 @@ public class EditorTab extends JPanel
         installUndoSupport();
 
         scrollPane = new JScrollPane(textPane);
-        TabGutter gutter = new TabGutter(textPane);
 
-        scrollPane.setRowHeaderView(gutter);
+        scrollPane.setRowHeaderView(new TabGutter(textPane, breakpoints, lineChanges));
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
         add(scrollPane, BorderLayout.CENTER);
     }
 
+    /// Changing the lexer recolours the document, and folding is derived from
+    /// those colours — so the regions have to be found again afterwards.
     public void setLexer(Lexer lexer)
     {
         highlighter.setLexer(lexer);
         highlighter.refreshAll(textPane);
+        textPane.refreshFolding();
     }
 
     public void setTheme(TokenTheme theme)
     {
         highlighter.setTheme(theme);
         highlighter.refreshAll(textPane);
+        textPane.refreshFolding();
     }
 
     public String getText()
@@ -102,6 +110,11 @@ public class EditorTab extends JPanel
     public void setText(String text)
     {
         loadingContents = true;
+
+        // Folds, breakpoints and change marks all point at the old contents, and
+        // the offsets they hold mean nothing once those contents are gone.
+        textPane.resetFolding();
+        breakpoints.clear();
 
         try
         {
@@ -124,6 +137,9 @@ public class EditorTab extends JPanel
         // Leave its invocation harmless and make the next real edit schedule anew.
         clearPending();
         refreshScheduled = false;
+
+        lineChanges.reset();
+        textPane.refreshFolding();
         fireUndoStateChanged();
     }
 
@@ -170,6 +186,7 @@ public class EditorTab extends JPanel
     public void markSaved()
     {
         modified = false;
+        lineChanges.reset();
     }
 
     public void markModified()
@@ -180,6 +197,13 @@ public class EditorTab extends JPanel
     public JTextPane getTextPane()
     {
         return textPane;
+    }
+
+    /// The breakpoints set on this document, for the gutter that draws them and
+    /// for whatever eventually acts on them.
+    public BreakpointModel getBreakpoints()
+    {
+        return breakpoints;
     }
 
     protected JScrollPane getEditorScrollPane()

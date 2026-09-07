@@ -20,11 +20,32 @@ import java.util.Map;
 /// every token.
 public final class TokenTheme
 {
+    /// The key under which every style records the token type it came from.
+    ///
+    /// The colours alone cannot be read backwards: two token types are allowed
+    /// to share a colour — a type name and a string literal do in the light
+    /// theme — so a character's attributes would not say which of the two it
+    /// is. Stamping the type itself makes the answer exact, and it is what lets
+    /// [#isLiteralOrComment(AttributeSet)] work at all.
+    public static final Object TOKEN_TYPE = new TokenTypeKey();
+
     private final Map<TokenType, AttributeSet> styles;
 
+    /// Stamps [#TOKEN_TYPE] onto each style as it is stored, so the three
+    /// theme factories below stay free of the bookkeeping.
     private TokenTheme(Map<TokenType, AttributeSet> styles)
     {
-        this.styles = styles;
+        Map<TokenType, AttributeSet> stamped = new EnumMap<>(TokenType.class);
+
+        styles.forEach((type, attributes) ->
+        {
+            SimpleAttributeSet stampedAttributes = new SimpleAttributeSet(attributes);
+            stampedAttributes.addAttribute(TOKEN_TYPE, type);
+
+            stamped.put(type, stampedAttributes);
+        });
+
+        this.styles = stamped;
     }
 
     /// Falls back to PLAIN so a newly added token type cannot turn text invisible.
@@ -37,6 +58,39 @@ public final class TokenTheme
     public AttributeSet plain()
     {
         return styles.get(TokenType.PLAIN);
+    }
+
+    /// Whether a character carrying these attributes is inside a literal or a
+    /// comment — text that happens to be in the file rather than code.
+    ///
+    /// This is how bracket matching and code folding stay out of trouble
+    /// without a parser of their own. A brace in `"}"`, or in
+    /// `// close with }`, must not be counted, and working that out from the
+    /// raw characters means re-implementing every language's string and comment
+    /// rules a second time. The lexer has already made that decision, and the
+    /// document is still holding the answer, so both features ask the document
+    /// instead of guessing.
+    ///
+    /// @param attributes a character's attributes, as returned by
+    ///                   [javax.swing.text.StyledDocument#getCharacterElement(int)]
+    public static boolean isLiteralOrComment(AttributeSet attributes)
+    {
+        return attributes != null && switch (attributes.getAttribute(TOKEN_TYPE))
+        {
+            case TokenType.STRING, TokenType.CHARACTER, TokenType.COMMENT, TokenType.DOC_COMMENT -> true;
+            case null, default -> false;
+        };
+    }
+
+    /// A key with a readable name, so a document dump shows
+    /// `forge.token-type` rather than an object address.
+    private static final class TokenTypeKey
+    {
+        @Override
+        public String toString()
+        {
+            return "forge.token-type";
+        }
     }
 
     /// For the default light editor background.

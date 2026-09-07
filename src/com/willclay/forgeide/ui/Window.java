@@ -92,7 +92,9 @@ public final class Window extends JFrame
 
         this.settingsService = Objects.requireNonNull(settingsService, "settingsService");
         Objects.requireNonNull(sessionService, "sessionService");
-        Font editorFont = EditorFonts.load(settingsService.get().editor().fontSize());
+        Font editorFont = EditorFonts.load(
+                settingsService.get().editor().fontFamily(),
+                settingsService.get().editor().fontSize());
 
         editorPanel = new CodeEditorPanel(editorFont);
         editorManager = new EditorManager(editorPanel);

@@ -2,12 +2,16 @@ package com.willclay.forgeide.ui.settings.general;
 
 import com.willclay.forgeide.application.IDESettingsConfiguration;
 import com.willclay.forgeide.ui.Utils;
+import com.willclay.forgeide.ui.fonts.EditorFonts;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import java.awt.BorderLayout;
+import java.util.ArrayList;
+import java.util.List;
 
 /// Settings specific to the IDE. These are stored in the user's Forge
 /// configuration directory rather than in an individual project's metadata.
@@ -23,6 +27,9 @@ public final class GeneralSettings extends JPanel
     private JCheckBox restoreOpenFiles;
     private JCheckBox confirmDiscard;
 
+    private static final String BUNDLED_FONT_LABEL = "Bundled editor font";
+
+    private final JComboBox<String> fontFamily = new JComboBox<>(fontFamilyModel());
     private final JSpinner fontSize = Utils.integerSpinner(14, 8, 48, 1);
     private final JSpinner tabWidth = Utils.integerSpinner(4, 1, 16, 1);
     private JCheckBox insertSpaces;
@@ -62,9 +69,10 @@ public final class GeneralSettings extends JPanel
     {
         JPanel panel = Utils.createSettingsSection("Editor defaults");
 
-        Utils.addCompactSettingsFormRow(panel, 0, "Font size:", fontSize);
-        Utils.addCompactSettingsFormRow(panel, 1, "Tab width:", tabWidth);
-        insertSpaces = Utils.addSettingsCheckBoxRow(panel, 2, "Insert spaces instead of tab characters", true);
+        Utils.addSettingsFormRow(panel, 0, "Font:", fontFamily);
+        Utils.addCompactSettingsFormRow(panel, 1, "Font size:", fontSize);
+        Utils.addCompactSettingsFormRow(panel, 2, "Tab width:", tabWidth);
+        insertSpaces = Utils.addSettingsCheckBoxRow(panel, 3, "Insert spaces instead of tab characters", true);
 
         return panel;
     }
@@ -93,6 +101,28 @@ public final class GeneralSettings extends JPanel
         return panel;
     }
 
+    /// The bundled face first, then every monospaced family on this machine.
+    private static DefaultComboBoxModel<String> fontFamilyModel()
+    {
+        List<String> families = new ArrayList<>();
+        families.add(BUNDLED_FONT_LABEL);
+        families.addAll(EditorFonts.monospacedFamilies());
+
+        return new DefaultComboBoxModel<>(families.toArray(new String[0]));
+    }
+
+    /// A family the machine no longer has is kept as the selected value rather
+    /// than being quietly replaced, so moving settings between machines does not
+    /// lose the choice; [EditorFonts] falls back when it cannot load it.
+    private String selectedFontFamily()
+    {
+        Object selected = fontFamily.getSelectedItem();
+
+        return selected == null || BUNDLED_FONT_LABEL.equals(selected)
+                ? EditorFonts.BUNDLED
+                : selected.toString();
+    }
+
     public void load(IDESettingsConfiguration settings)
     {
         IDESettingsConfiguration.Startup startup = settings.startup();
@@ -106,6 +136,9 @@ public final class GeneralSettings extends JPanel
         restoreOpenFiles.setSelected(startup.restoreOpenFiles());
         confirmDiscard.setSelected(startup.confirmDiscard());
 
+        fontFamily.setSelectedItem(EditorFonts.BUNDLED.equals(editor.fontFamily())
+                ? BUNDLED_FONT_LABEL
+                : editor.fontFamily());
         fontSize.setValue(editor.fontSize());
         tabWidth.setValue(editor.tabWidth());
         insertSpaces.setSelected(editor.insertSpaces());
@@ -132,6 +165,7 @@ public final class GeneralSettings extends JPanel
                 new IDESettingsConfiguration.Startup(
                         startup, restoreOpenFiles.isSelected(), confirmDiscard.isSelected()),
                 new IDESettingsConfiguration.Editor(
+                        selectedFontFamily(),
                         ((Number) fontSize.getValue()).intValue(),
                         ((Number) tabWidth.getValue()).intValue(),
                         insertSpaces.isSelected()),

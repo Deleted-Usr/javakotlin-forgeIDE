@@ -5,8 +5,11 @@ import com.willclay.forgeide.services.WorkspaceService;
 
 import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.BiConsumer;
 
 /// The bridge between [WorkspaceService] and the JTree.
 ///
@@ -29,6 +32,8 @@ public final class ProjectTreeModel extends DefaultTreeModel
 {
     private final WorkspaceService service;
 
+    private BiConsumer<ProjectItem, String> renameHandler = (item, name) -> { };
+
     public ProjectTreeModel(WorkspaceService service)
     {
         super(null);
@@ -38,6 +43,30 @@ public final class ProjectTreeModel extends DefaultTreeModel
         // Notifications arrive on the watcher's thread. Everything below this
         // point is Swing, so this is where the hop to the EDT happens.
         service.addListener(directory -> SwingUtilities.invokeLater(() -> refresh(directory)));
+    }
+
+    /// Installs what happens when an inline rename is committed.
+    public void setRenameHandler(BiConsumer<ProjectItem, String> renameHandler)
+    {
+        this.renameHandler = Objects.requireNonNull(renameHandler, "renameHandler");
+    }
+
+    /// Called by Swing when an inline rename is committed.
+    ///
+    /// Note what this does *not* do: it does not call `super`, which would
+    /// change the node's label and leave the tree claiming a name the file on
+    /// disk does not have. The rename is reported outwards instead, and the tree
+    /// changes when the file does — through the watcher, by the same path as a
+    /// rename made in any other program.
+    @Override
+    public void valueForPathChanged(TreePath path, Object newValue)
+    {
+        if (!(path.getLastPathComponent() instanceof ProjectTreeNode node)) return;
+
+        String name = newValue == null ? "" : newValue.toString().trim();
+        if (name.isEmpty() || name.equals(node.getItem().name())) return;
+
+        renameHandler.accept(node.getItem(), name);
     }
 
     /// Shows a single item as the root, or clears the tree when given null.

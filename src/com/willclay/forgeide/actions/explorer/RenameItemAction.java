@@ -1,9 +1,10 @@
 package com.willclay.forgeide.actions.explorer;
 
+import com.willclay.forgeide.actions.Shortcuts;
 import com.willclay.forgeide.services.ActionContext;
-import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.workspace.ProjectItem;
 
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 
 /// Renames the selected file or folder.
@@ -12,11 +13,17 @@ import java.io.IOException;
 /// would leave the workspace holding a path that no longer exists. Closing and
 /// reopening the project is the honest way to do that, and [#appliesTo]
 /// says so in one line.
+///
+/// The name is asked for on the row itself rather than in a dialog. That is the
+/// only part that moved: the tree opens a field and reports what was typed, and
+/// the rename below is still the only code that touches the filesystem.
 public final class RenameItemAction extends ExplorerAction
 {
     public RenameItemAction(ActionContext context)
     {
-        super(context, "Rename...", null, "Rename the selected item");
+        super(context, "Rename...", Shortcuts.plain(KeyEvent.VK_F2), "Rename the selected item");
+
+        context.getProjectTree().setRenameHandler(this::rename);
     }
 
     @Override
@@ -31,9 +38,12 @@ public final class RenameItemAction extends ExplorerAction
         ProjectItem item = getSelection();
         if (!appliesTo(item)) return;
 
-        String name = Utils.prompt(context.getFrame(), "Rename", "New name:", item.name());
-        if (name == null || name.isEmpty() || name.equals(item.name())) return;
+        context.getProjectTree().startInlineRename(item);
+    }
 
+    /// Called back by the tree once the user has committed a new name.
+    private void rename(ProjectItem item, String name)
+    {
         try
         {
             ProjectItem renamed = context.getWorkspaceService().rename(item, name);

@@ -58,7 +58,7 @@ public final class IDESettingsRuntime implements AutoCloseable
         IDESettingsConfiguration.Editor editor = updated.editor();
         IDESettingsConfiguration.Saving saving = updated.saving();
         editorPanel.applyEditorSettings(
-                EditorFonts.load(editor.fontSize()),
+                EditorFonts.load(editor.fontFamily(), editor.fontSize()),
                 editor.tabWidth(),
                 editor.insertSpaces()
         );

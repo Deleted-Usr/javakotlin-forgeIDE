@@ -122,7 +122,7 @@ public final class SettingsService
                 new IDESettingsConfiguration.Startup(
                         legacy.startupAction(), legacy.restoreOpenFiles(), legacy.confirmDiscard()),
                 new IDESettingsConfiguration.Editor(
-                        legacy.editorFontSize(), legacy.tabWidth(), legacy.insertSpaces()),
+                        null, legacy.editorFontSize(), legacy.tabWidth(), legacy.insertSpaces()),
                 new IDESettingsConfiguration.Saving(
                         legacy.autoSave(), legacy.autoSaveDelaySeconds(), legacy.saveBeforeBuild()),
                 new IDESettingsConfiguration.BuildAndRun(

@@ -3,6 +3,7 @@ package com.willclay.forgeide.ui.explorer;
 import com.willclay.forgeide.workspace.ProjectItem;
 import com.willclay.forgeide.workspace.ProjectItemType;
 
+import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellRenderer;
@@ -22,15 +23,38 @@ import java.awt.geom.Path2D;
 /// One renderer instance is reused for every row — that is how
 /// DefaultTreeCellRenderer is meant to work. It is a rubber stamp, configured
 /// and drawn once per row, so it must not hold per-row state.
+///
+/// The text is coloured to match the icon beside it, which is what makes the
+/// tree readable at a glance rather than merely decorated: source files stand
+/// out from the resources next to them, and a dotted file recedes without being
+/// hidden. Selected rows keep the look and feel's own selection colour — a row
+/// that has been picked out already has all the emphasis it needs, and
+/// overriding it there is how tree text ends up unreadable on a coloured
+/// selection.
 public final class ProjectTreeRenderer extends DefaultTreeCellRenderer
 {
     private static final Color FOLDER = new Color(0xD8A25A);
     private static final Color SOURCE_FILE = new Color(0x4EC9B0);
     private static final Color OTHER_FILE = new Color(0x9AA7B2);
 
+    /// Dot-files and dot-folders: present, but not what anybody is looking for.
+    private static final Color HIDDEN = new Color(0x7A7A7A);
+
     private static final Icon FOLDER_ICON = new FolderIcon();
     private static final Icon SOURCE_ICON = new FileIcon(SOURCE_FILE);
     private static final Icon FILE_ICON = new FileIcon(OTHER_FILE);
+
+    /// Room to breathe. A tree of filenames set solid is hard to scan, and the
+    /// gap after the icon is the difference between a row and a label with a
+    /// picture stuck to it.
+    private static final int VERTICAL_PADDING = 2;
+    private static final int ICON_TEXT_GAP = 6;
+
+    public ProjectTreeRenderer()
+    {
+        setIconTextGap(ICON_TEXT_GAP);
+        setBorder(BorderFactory.createEmptyBorder(VERTICAL_PADDING, 2, VERTICAL_PADDING, 6));
+    }
 
     @Override
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected,
@@ -45,6 +69,8 @@ public final class ProjectTreeRenderer extends DefaultTreeCellRenderer
             setText(item.name());
             setIcon(iconFor(item));
             setToolTipText(item.path().toString());
+
+            if (!selected) setForeground(colourFor(item));
         }
 
         return this;
@@ -55,6 +81,14 @@ public final class ProjectTreeRenderer extends DefaultTreeCellRenderer
         if (item.isDirectory()) return FOLDER_ICON;
 
         return item.isSourceFile() ? SOURCE_ICON : FILE_ICON;
+    }
+
+    private static Color colourFor(ProjectItem item)
+    {
+        if (item.isHidden()) return HIDDEN;
+        if (item.isDirectory()) return FOLDER;
+
+        return item.isSourceFile() ? SOURCE_FILE : OTHER_FILE;
     }
 
     /// A folder with a tab, filled and outlined in the same hue.

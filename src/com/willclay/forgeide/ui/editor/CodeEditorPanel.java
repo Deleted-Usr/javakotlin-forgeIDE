@@ -5,17 +5,11 @@ import com.willclay.forgeide.highlighting.TokenTheme;
 import com.willclay.forgeide.ui.editor.markdown.MarkdownTab;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 
-import javax.swing.BorderFactory;
-import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextPane;
-import javax.swing.SwingConstants;
-import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
@@ -25,11 +19,10 @@ import javax.swing.text.TabStop;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Component;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
+import java.awt.Point;
+import java.awt.event.MouseEvent;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -313,7 +306,6 @@ public final class CodeEditorPanel extends JPanel
                 : new EditorTab(file, lineEnding);
 
         applyEditorSettings(tab.getTextPane());
-        installTabAction(tab.getTextPane());
 
         tab.setTheme(theme);
         tab.setLexer(resolveLexer(file));
@@ -338,16 +330,56 @@ public final class CodeEditorPanel extends JPanel
 
     private void addTab(EditorTab tab)
     {
-        tabs.addTab(tab.getDisplayTitle(), tab);
+        tabs.addTab(tab.getDisplayName(), tab);
         updateVisibleContent();
 
         int index = tabs.indexOfComponent(tab);
 
-        tabs.setTabComponentAt(index, new TabHeader(tab));
-        tabs.setToolTipTextAt(index, tab.getFile() == null ? "Unsaved file" : tab.getFile().toString());
+        tabs.setTabComponentAt(index, new EditorTabHeader(tab, tabHeaderListener));
         tabs.setSelectedComponent(tab);
 
         fireStateChanged();
+    }
+
+    /// Moves a dragged tab to wherever the pointer is now.
+    ///
+    /// `JTabbedPane` has no way to move a tab, so the tab is removed and
+    /// re-inserted — and everything the tabbed pane holds *about* it has to be
+    /// carried across by hand, the tab component above all. Forgetting that is
+    /// how a dragged tab loses its title and its close button.
+    private void reorderTab(EditorTab tab, MouseEvent event)
+    {
+        int from = tabs.indexOfComponent(tab);
+        if (from < 0) return;
+
+        Point point = SwingUtilities.convertPoint(event.getComponent(), event.getPoint(), tabs);
+        int to = tabs.indexAtLocation(point.x, point.y);
+        if (to < 0 || to == from) return;
+
+        Component header = tabs.getTabComponentAt(from);
+        String title = tabs.getTitleAt(from);
+        boolean wasSelected = tabs.getSelectedIndex() == from;
+
+        tabs.removeTabAt(from);
+        tabs.insertTab(title, null, tab, null, to);
+        tabs.setTabComponentAt(to, header);
+
+        if (wasSelected) tabs.setSelectedIndex(to);
+
+        updateVisibleContent();
+        fireStateChanged();
+    }
+
+    /// Keeps every header's selected state in step with the tabbed pane's.
+    private void updateHeaderSelection()
+    {
+        for (int i = 0; i < tabs.getTabCount(); i++)
+        {
+            if (tabs.getTabComponentAt(i) instanceof EditorTabHeader header)
+            {
+                header.setSelected(i == tabs.getSelectedIndex());
+            }
+        }
     }
 
     private void updateVisibleContent()
@@ -364,6 +396,8 @@ public final class CodeEditorPanel extends JPanel
 
     private void activeTabChanged()
     {
+        updateHeaderSelection();
+
         EditorTab tab = getSelectedTab();
         if (tab != null) tab.getTextPane().requestFocusInWindow();
 
@@ -382,12 +416,9 @@ public final class CodeEditorPanel extends JPanel
         int index = tabs.indexOfComponent(tab);
         if (index < 0) return;
 
-        String title = tab.getDisplayTitle();
-        tabs.setTitleAt(index, title);
-        tabs.setToolTipTextAt(index, tab.getFile() == null ? "Unsaved file" : tab.getFile().toString());
+        tabs.setTitleAt(index, tab.getDisplayName());
 
-        Component header = tabs.getTabComponentAt(index);
-        if (header instanceof TabHeader tabHeader) tabHeader.setTitle(title);
+        if (tabs.getTabComponentAt(index) instanceof EditorTabHeader header) header.update();
     }
 
     private void fireStateChanged()
@@ -438,51 +469,36 @@ public final class CodeEditorPanel extends JPanel
     {
         textPane.setFont(editorFont);
         applyTabSize(textPane, tabSize);
+
+        // Tab stops position a tab character; the indent is what Tab and Return
+        // type. Both follow the same setting and neither can be derived from the
+        // other, so both are set here.
+        if (textPane instanceof EditorTextPane editor) editor.setIndent(tabSize, insertSpaces);
     }
 
-    private void installTabAction(JTextPane textPane)
+    /// The tab strip's answer to everything a header reports.
+    ///
+    /// Selection has to be handled here rather than left to Swing: a tab
+    /// component receives the click that would otherwise have reached the
+    /// tabbed pane — see [EditorTabHeader].
+    private final EditorTabHeader.Listener tabHeaderListener = new EditorTabHeader.Listener()
     {
-        String actionName = "forge.insert-tab";
-
-        textPane.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0), actionName);
-        textPane.getActionMap().put(actionName, new AbstractAction()
+        @Override
+        public void selected(EditorTab tab)
         {
-            @Override
-            public void actionPerformed(ActionEvent event)
-            {
-                textPane.replaceSelection(insertSpaces ? " ".repeat(tabSize) : "\t");
-            }
-        });
-    }
-
-    /// A small nested class that defines the header of each panel.
-    private final class TabHeader extends JPanel
-    {
-        private final JLabel title = new JLabel();
-
-        private TabHeader(EditorTab tab)
-        {
-            super(new FlowLayout(FlowLayout.LEADING, 0, 0));
-            setOpaque(false);
-
-            title.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 6));
-            add(title);
-
-            JButton close = new JButton("×");
-            close.setHorizontalAlignment(SwingConstants.CENTER);
-            close.setToolTipText("Close");
-            close.setFocusable(false);
-            close.setContentAreaFilled(false);
-            close.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
-            close.addActionListener(event -> requestClose(tab));
-            add(close);
-
-            setTitle(tab.getDisplayTitle());
+            selectTab(tab);
         }
 
-        private void setTitle(String value)
+        @Override
+        public void closeRequested(EditorTab tab)
         {
-            title.setText(value);
+            requestClose(tab);
         }
-    }
+
+        @Override
+        public void dragged(EditorTab tab, MouseEvent event)
+        {
+            reorderTab(tab, event);
+        }
+    };
 }

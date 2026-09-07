@@ -13,14 +13,15 @@ import javax.swing.*;
 
 /*
  * TODO (After school project, or if I have time)
- *       - Custom Swing Components (extends JComponent):
- *          - Editor Panel (Syntax Highlighting, Custom Caret, Bracket Matching, Selection Painting, Configurable Fonts)
- *          - Custom Gutter (Line Numbers, Breakpoints, Folding Arrows, Modified Line Indicators)
- *          - Editor Tabs (Close Buttons, Dirty Indicator, Hover Effect, Drag Reorder)
- *          - Project Explorer (Icons, Better Spacing, Coloured Text, Inline Rename, Speed Search, Lazy Loading)
- *          - Full AI Agent Implementation (Writing Code, Reading and Writing to Files, Full Project Context, Agent Pet like GPT)
- *          - Custom theme documents for user-authored Swing/token theme combinations
- *          - A BlueJ style class diagram mode/setting
+ *       - Full AI Agent Implementation (Writing Code, Reading and Writing to Files, Full Project Context, Agent Pet like GPT)
+ *       - Custom theme documents for user-authored Swing/token theme combinations
+ *       - A BlueJ style class diagram mode/setting
+ *
+ * DONE - the custom Swing components:
+ *       - Editor Panel: EditorTextPane, ForgeCaret, SelectionPainter, BracketMatcher, SmartTyping, EditorPalette
+ *       - Custom Gutter: TabGutter, BreakpointModel, LineChangeTracker, FoldingModel, FoldingViewFactory
+ *       - Editor Tabs: EditorTabHeader
+ *       - Project Explorer: ProjectTreeRenderer, ProjectTreeCellEditor, TreeSpeedSearch
  */
 
 /*

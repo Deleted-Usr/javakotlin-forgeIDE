@@ -1,6 +1,7 @@
 package com.willclay.forgeide.application;
 
 import com.willclay.forgeide.json.VersionedJsonDocument;
+import com.willclay.forgeide.ui.fonts.EditorFonts;
 import com.willclay.forgeide.ui.settings.general.GeneralSettings;
 
 import java.util.Objects;
@@ -95,7 +96,11 @@ public record IDESettingsConfiguration(
         }
     }
 
+    /// A settings file written before the editor font could be chosen has no
+    /// `fontFamily`, which arrives here as null and becomes the bundled
+    /// face — the font those files were already being shown in.
     public record Editor(
+            String fontFamily,
             int fontSize,
             int tabWidth,
             boolean insertSpaces
@@ -103,13 +108,14 @@ public record IDESettingsConfiguration(
     {
         public Editor
         {
+            if (fontFamily == null || fontFamily.isBlank()) fontFamily = EditorFonts.BUNDLED;
             if (fontSize < 8 || fontSize > 48) fontSize = 14;
             if (tabWidth < 1 || tabWidth > 16) tabWidth = 4;
         }
 
         public static Editor defaults()
         {
-            return new Editor(14, 4, true);
+            return new Editor(EditorFonts.BUNDLED, 14, 4, true);
         }
     }
 
