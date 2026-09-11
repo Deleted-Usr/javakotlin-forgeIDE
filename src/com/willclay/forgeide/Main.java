@@ -13,6 +13,7 @@ import javax.swing.*;
 
 /*
  * TODO (After school project, or if I have time)
+ *       - System Terminal Integration (Keep Current Console and implement a toggle in settings).
  *       - Full AI Agent Implementation (Writing Code, Reading and Writing to Files, Full Project Context, Agent Pet like GPT)
  *       - Custom theme documents for user-authored Swing/token theme combinations
  *       - A BlueJ style class diagram mode/setting

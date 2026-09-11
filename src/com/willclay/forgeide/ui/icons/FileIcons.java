@@ -3,13 +3,15 @@ package com.willclay.forgeide.ui.icons;
 import com.formdev.flatlaf.icons.FlatAbstractIcon;
 import javax.swing.Icon;
 import javax.swing.UIManager;
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Shape;
+import java.awt.font.GlyphVector;
+import java.awt.geom.Area;
 import java.awt.geom.Path2D;
+import java.awt.geom.Rectangle2D;
 import java.nio.file.Path;
 import java.util.Locale;
 
@@ -17,7 +19,7 @@ import java.util.Locale;
 /// Classification uses the path's name only; it never reads the filesystem.
 public final class FileIcons
 {
-    private static final Icon JAVA = new FileIcon("J", "Objects.Yellow");
+    private static final Icon JAVA = new FileIcon("J", "Objects.YellowDark");
     private static final Icon KOTLIN = new FileIcon("K", "Objects.Purple");
     private static final Icon CPP = new FileIcon("C", "Objects.Blue");
     private static final Icon MARKDOWN = new FileIcon("M", "Objects.Blue");
@@ -67,26 +69,31 @@ public final class FileIcons
             Color colour = UIManager.getColor(colourKey);
             if (colour == null) colour = UIManager.getColor("Label.foreground");
             graphics.setColor(colour == null ? Color.GRAY : colour);
-            graphics.setStroke(new BasicStroke(1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
             Path2D outline = new Path2D.Float();
             if (letter == null)
             {
-                outline.moveTo(1.5, 4); outline.lineTo(6, 4); outline.lineTo(8, 6);
-                outline.lineTo(14.5, 6); outline.lineTo(14.5, 13); outline.lineTo(1.5, 13);
+                outline.moveTo(1, 3.5); outline.lineTo(6, 3.5); outline.lineTo(8, 5.5);
+                outline.lineTo(15, 5.5); outline.lineTo(15, 13.5); outline.lineTo(1, 13.5);
             }
             else
             {
-                outline.moveTo(3, 1.5); outline.lineTo(10, 1.5); outline.lineTo(13, 4.5);
-                outline.lineTo(13, 14.5); outline.lineTo(3, 14.5);
+                outline.moveTo(2.5, 1); outline.lineTo(10, 1); outline.lineTo(13.5, 4.5);
+                outline.lineTo(13.5, 15); outline.lineTo(2.5, 15);
             }
             outline.closePath();
-            graphics.draw(outline);
+            Area shape = new Area(outline);
             if (letter != null && !letter.isEmpty())
             {
-                graphics.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 9));
-                FontMetrics metrics = graphics.getFontMetrics();
-                graphics.drawString(letter, (16 - metrics.stringWidth(letter)) / 2f, 11.5f);
+                // Cut the glyph out of the filled page so the letter is transparent.
+                Font font = new Font(Font.SANS_SERIF, Font.BOLD, 9);
+                GlyphVector glyphs = font.createGlyphVector(graphics.getFontRenderContext(), letter);
+                Rectangle2D bounds = glyphs.getVisualBounds();
+                float x = (float) (8 - bounds.getCenterX());
+                float y = (float) (10.5 - bounds.getCenterY());
+                Shape glyph = glyphs.getOutline(x, y);
+                shape.subtract(new Area(glyph));
             }
+            graphics.fill(shape);
         }
     }
 }
