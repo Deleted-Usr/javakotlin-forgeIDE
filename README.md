@@ -84,7 +84,7 @@ also requires an external `kotlinc` installation.
 4. Build the host module. Ensure `src/META-INF/services/` is copied to
    `META-INF/services/` in its compiled output; bootstrap needs this descriptor to
    discover the built-in Java language.
-5. Run [`com.willclay.forgeide.Main`](src/com/willclay/forgeide/Main.java) using the
+5. Run [`com.willclay.forgeide.Main`](src/main/java/com/willclay/forgeide/Main.java) using the
    host module's classpath. The language modules can be built and installed separately
    using the scripts below.
 
@@ -256,9 +256,9 @@ com.willclay.forgeide.lang.cpp        Optional plugin (modules/forge-lang-cpp/sr
 | Language API       | `LanguageRegistry`, `LanguageProvider`, `Language`, `Toolchain`                                    | Discover languages and expose templates, lexers, and build/run behaviour.       |
 | Persistence        | `SettingsService`, `SessionService`, `ProjectMetadata`, `RunConfigurationsStore`, `JsonFileStore`  | Read and write IDE and project configuration.                                   |
 
-[`Window`](src/com/willclay/forgeide/ui/Window.java) is the main assembly point: it creates
+[`Window`](src/main/java/com/willclay/forgeide/ui/Window.java) is the main assembly point: it creates
 the workbench and services, builds an `ActionContext`, and passes that context to
-[`ActionManager`](src/com/willclay/forgeide/actions/ActionManager.kt). Menus and toolbars
+[`ActionManager`](src/main/java/com/willclay/forgeide/actions/ActionManager.kt). Menus and toolbars
 receive the same Action instances, which keeps their enabled state synchronised.
 
 For example, Run follows this path:

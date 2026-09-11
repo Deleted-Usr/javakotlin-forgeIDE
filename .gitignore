@@ -11,7 +11,7 @@ out/
 bin/
 classes/
 
-!src/com/willclay/**/build/
+!src/main/java/com/willclay/**/build/
 
 # ---------- Packaged artifacts ----------
 *.jar

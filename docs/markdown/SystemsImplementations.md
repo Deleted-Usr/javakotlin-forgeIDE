@@ -26,11 +26,11 @@ The best order to implement these features is:
 5. Package the application and evaluate whether a custom launcher is necessary.
 
 Project metadata currently lives in
-[`ProjectMetadata.java`](../../src/com/willclay/forgeide/workspace/ProjectMetadata.java), IDE
+[`ProjectMetadata.java`](../../src/main/java/com/willclay/forgeide/workspace/ProjectMetadata.java), IDE
 theme settings use Java `Preferences` in
-[`SettingsService.java`](../../src/com/willclay/forgeide/services/SettingsService.java), and
+[`SettingsService.java`](../../src/main/java/com/willclay/forgeide/services/SettingsService.java), and
 most application construction happens in
-[`Window.java`](../../src/com/willclay/forgeide/ui/Window.java). Those existing seams make this
+[`Window.java`](../../src/main/java/com/willclay/forgeide/ui/Window.java). Those existing seams make this
 order a natural fit for the current codebase.
 
 ### Persistence
@@ -164,7 +164,7 @@ Notify interested services
 ```
 
 Apply, OK, and Cancel semantics should be added before more editable fields are introduced.
-[`SettingsWindow.java`](../../src/com/willclay/forgeide/ui/settings/SettingsWindow.java) currently
+[`SettingsWindow.java`](../../src/main/java/com/willclay/forgeide/ui/settings/SettingsWindow.java) currently
 has no clear commit boundary.
 
 - **Apply** validates and saves the draft without closing the window.
@@ -172,7 +172,7 @@ has no clear commit boundary.
 - **Cancel** closes the window without applying uncommitted changes.
 
 The placeholder
-[`ProjectSettingsService.java`](../../src/com/willclay/forgeide/settings/project/ProjectSettingsService.java)
+[`ProjectSettingsService.java`](../../src/main/java/com/willclay/forgeide/settings/project/ProjectSettingsService.java)
 should own project-configuration operations rather than references to both the UI and backend. A
 settings controller or page can bridge Swing controls and that service.
 
@@ -213,7 +213,7 @@ For example:
 The existing theme should be migrated from Java `Preferences` only when `settings.json` does not
 already exist. Once migration succeeds, JSON becomes the single source of truth.
 
-[`GeneralSettings.java`](../../src/com/willclay/forgeide/ui/settings/GeneralSettings.java) should
+[`GeneralSettings.java`](../../src/main/java/com/willclay/forgeide/ui/settings/GeneralSettings.java) should
 accept an application-settings draft or service and populate its controls from the model. Its
 controls must be fields rather than local variables so the page can load, validate, and collect
 their values. It should use the same Apply, OK, and Cancel commit behaviour as Project Settings.

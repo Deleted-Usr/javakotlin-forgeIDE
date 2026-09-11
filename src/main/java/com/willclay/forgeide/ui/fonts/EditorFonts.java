@@ -13,7 +13,7 @@ import java.util.List;
 /// family installed on the machine.
 public final class EditorFonts
 {
-    private static final Path FONT_FILE = Path.of("res", "CascadiaCode-MediumItalic.ttf");
+    private static final Path FONT_FILE = Path.of("src/main/resources", "CascadiaCode-Medium.ttf");
 
     /// The value stored in settings for "whatever ships with ForgeIDE".
     ///
