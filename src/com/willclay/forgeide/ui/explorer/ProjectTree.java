@@ -39,8 +39,6 @@ import java.util.function.Consumer;
 /// search only ever changes which row is selected.
 public final class ProjectTree extends JTree
 {
-    private static final int ROW_HEIGHT = 22;
-
     private final ProjectTreeModel model;
     private final List<Runnable> selectionListeners = new ArrayList<>();
     private final TreeSpeedSearch speedSearch;
@@ -58,7 +56,7 @@ public final class ProjectTree extends JTree
 
         setRootVisible(true);
         setShowsRootHandles(true);
-        setRowHeight(ROW_HEIGHT);
+        putClientProperty("FlatLaf.style", "background: $Panel.background; rowHeight: 26; selectionArc: 6; selectionInsets: 0,4,0,4; wideSelection: true");
         setCellRenderer(renderer);
         getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 

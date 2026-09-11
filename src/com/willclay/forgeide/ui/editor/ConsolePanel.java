@@ -1,8 +1,10 @@
 package com.willclay.forgeide.ui.editor;
 
-import com.formdev.flatlaf.FlatClientProperties;
+import com.willclay.forgeide.ui.ToolWindowHeader;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
@@ -15,6 +17,8 @@ import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 
 /// The output pane at the bottom of the window, and the running program's input.
 ///
@@ -34,6 +38,10 @@ public final class ConsolePanel extends JPanel
     private static final int VISIBLE_COLUMNS = 80;
 
     private final JTextArea output = new JTextArea(VISIBLE_ROWS, VISIBLE_COLUMNS);
+    private final CardLayout contentLayout = new CardLayout();
+    private final JPanel content = new JPanel(contentLayout);
+    private final List<Runnable> contentListeners = new ArrayList<>();
+    private boolean hadOutput;
 
     /// Offset where the editable region starts. Everything before it is output.
     private int inputStart = 0;
@@ -52,9 +60,6 @@ public final class ConsolePanel extends JPanel
         super(new BorderLayout());
 
         output.setFont(font);
-        output.setBackground(Color.BLACK);
-        output.setForeground(Color.GREEN);
-        output.setCaretColor(Color.GREEN);
 
         // Editable at the Swing level; the filter is what actually decides.
         output.setEditable(true);
@@ -70,21 +75,78 @@ public final class ConsolePanel extends JPanel
         install(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.CTRL_DOWN_MASK),
                 "console.eof", this::endInput);
 
-        JPanel header = new JPanel(new BorderLayout());
-        header.add(new JLabel(" Console Output:"), BorderLayout.CENTER);
-
-        JButton minimise = new JButton("−");
-        minimise.setToolTipText("Minimise Console");
-        minimise.setFocusable(false);
-        minimise.putClientProperty(
-                FlatClientProperties.BUTTON_TYPE,
-                FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
-        minimise.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
-        minimise.addActionListener(event -> onMinimise.run());
-        header.add(minimise, BorderLayout.LINE_END);
+        ToolWindowHeader header = new ToolWindowHeader("Console");
+        Action clear = new AbstractAction("Clear")
+        {
+            @Override
+            public void actionPerformed(ActionEvent event) { clear(); }
+        };
+        clear.putValue(Action.SHORT_DESCRIPTION, "Clear console output");
+        header.addAction(clear);
+        Action minimise = new AbstractAction("Hide")
+        {
+            @Override
+            public void actionPerformed(ActionEvent event) { onMinimise.run(); }
+        };
+        minimise.putValue(Action.SHORT_DESCRIPTION, "Hide Console");
+        header.addAction(minimise);
+        installContextMenu(clear);
 
         add(header, BorderLayout.NORTH);
-        add(new JScrollPane(output), BorderLayout.CENTER);
+        JScrollPane scroll = new JScrollPane(output);
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        JLabel empty = new JLabel("<html><center>No console output yet<br><br>"
+                + "Build or run a project to see its output here.<br>"
+                + "When a program requests input, type in this panel.</center></html>", SwingConstants.CENTER);
+        empty.putClientProperty("FlatLaf.style", "foreground: $Label.disabledForeground; border: 12,12,12,12");
+        content.add(empty, "empty");
+        content.add(scroll, "output");
+        add(content, BorderLayout.CENTER);
+        output.getDocument().addDocumentListener(new DocumentListener()
+        {
+            @Override public void insertUpdate(DocumentEvent event) { updateContent(); }
+            @Override public void removeUpdate(DocumentEvent event) { updateContent(); }
+            @Override public void changedUpdate(DocumentEvent event) { updateContent(); }
+        });
+        updateContent();
+    }
+
+    public boolean hasOutput() { return output.getDocument().getLength() > 0; }
+
+    public void addContentListener(Runnable listener) { contentListeners.add(Objects.requireNonNull(listener)); }
+
+    private void updateContent()
+    {
+        boolean hasOutput = hasOutput();
+        contentLayout.show(content, hasOutput || processInput != null ? "output" : "empty");
+        if (hadOutput != hasOutput)
+        {
+            hadOutput = hasOutput;
+            for (Runnable listener : List.copyOf(contentListeners)) listener.run();
+        }
+    }
+
+    /// Console actions target its own text area, independent of editor focus.
+    private void installContextMenu(Action clear)
+    {
+        Action copy = new AbstractAction("Copy")
+        {
+            @Override
+            public void actionPerformed(ActionEvent event) { output.copy(); }
+        };
+        Action selectAll = new AbstractAction("Select All")
+        {
+            @Override
+            public void actionPerformed(ActionEvent event) { output.selectAll(); }
+        };
+        copy.setEnabled(false);
+        output.addCaretListener(event -> copy.setEnabled(output.getSelectionStart() != output.getSelectionEnd()));
+        JPopupMenu menu = new JPopupMenu();
+        menu.add(copy);
+        menu.add(selectAll);
+        menu.addSeparator();
+        menu.add(clear);
+        output.setComponentPopupMenu(menu);
     }
 
     public void setOnMinimise(Runnable onMinimise)
@@ -159,6 +221,7 @@ public final class ConsolePanel extends JPanel
         {
             this.processInput = processInput;
             this.inputStart = output.getDocument().getLength();
+            updateContent();
 
             output.setCaretPosition(inputStart);
         });
@@ -171,6 +234,7 @@ public final class ConsolePanel extends JPanel
         {
             Writer writer = processInput;
             processInput = null;
+            updateContent();
 
             if (writer == null) return;
 
