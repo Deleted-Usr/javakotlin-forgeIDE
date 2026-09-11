@@ -38,7 +38,7 @@ import java.awt.geom.Rectangle2D;
 /// layered ones on purpose: a plain painter is handed the whole component's
 /// bounds, which is what lets the current-line band run the full width of the
 /// editor instead of stopping at the last character on the line.
-public final class EditorTextPane extends NoWrapTextPane
+public final class ForgeEditorPane extends NoWrapTextPane
 {
     /// How long after the last edit the foldable regions are recomputed.
     ///
@@ -73,7 +73,7 @@ public final class EditorTextPane extends NoWrapTextPane
     /// The line the band was last drawn on, so the old one can be repainted.
     private int highlightedLine = -1;
 
-    public EditorTextPane()
+    public ForgeEditorPane()
     {
         setCaret(caret);
         applyPalette();

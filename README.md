@@ -242,19 +242,19 @@ com.willclay.forgeide.lang.cpp        Optional plugin (modules/forge-lang-cpp/sr
 └── CppJson.java                     JSON settings helpers
 ```
 
-| Area               | Main classes                                                                                      | Responsibility                                                                  |
-|--------------------|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
-| Startup            | `Main`, `ForgeBootstrap`, `BootstrapResult`, `LanguagePluginLoader`                               | Load settings and languages, then start the Swing interface.                    |
-| UI assembly        | `Window`, `WorkbenchPanel`, `ActionContext`                                                       | Construct the components and connect them to the services and actions they use. |
-| Commands           | `ActionManager`, `ForgeAction`, classes under `actions/`                                          | Share commands between menus, toolbars, shortcuts, and context menus.           |
-| Editor             | `EditorManager`, `CodeEditorPanel`, `EditorTab`, `EditorTextPane`, `SyntaxUndoManager`            | Coordinate open documents, tabs, modified state, saving, and undo history.      |
-| Editor surface     | `EditorTextPane`, `ForgeCaret`, `SelectionPainter`, `BracketMatcher`, `FoldingModel`, `TabGutter` | Draw the caret, selection, current line, brackets, folds, and the gutter.       |
-| Typing             | `SmartTyping`                                                                                     | Close brackets and quotes, step over them, and indent on Return and Tab.        |
-| Projects and files | `Workspace`, `Project`, `WorkspaceService`, `FileOperations`, `FileWatcher`, `SourceFileIO`       | Represent projects and coordinate filesystem operations and file contents.      |
-| Highlighting       | `SyntaxHighlighter`, `Token`, `TokenType`, `TokenTheme`, `Lexer`                                  | Turn language tokens into styled editor text.                                   |
-| Execution          | `ExecutionManager`, `RunTask`, `ProcessRunner`                                                    | Track active work, run external processes, and support stopping them.           |
-| Language API       | `LanguageRegistry`, `LanguageProvider`, `Language`, `Toolchain`                                   | Discover languages and expose templates, lexers, and build/run behaviour.       |
-| Persistence        | `SettingsService`, `SessionService`, `ProjectMetadata`, `RunConfigurationsStore`, `JsonFileStore` | Read and write IDE and project configuration.                                   |
+| Area               | Main classes                                                                                       | Responsibility                                                                  |
+|--------------------|----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| Startup            | `Main`, `ForgeBootstrap`, `BootstrapResult`, `LanguagePluginLoader`                                | Load settings and languages, then start the Swing interface.                    |
+| UI assembly        | `Window`, `WorkbenchPanel`, `ActionContext`                                                        | Construct the components and connect them to the services and actions they use. |
+| Commands           | `ActionManager`, `ForgeAction`, classes under `actions/`                                           | Share commands between menus, toolbars, shortcuts, and context menus.           |
+| Editor             | `EditorManager`, `CodeEditorPanel`, `EditorTab`, `ForgeEditorPane`, `SyntaxUndoManager`            | Coordinate open documents, tabs, modified state, saving, and undo history.      |
+| Editor surface     | `ForgeEditorPane`, `ForgeCaret`, `SelectionPainter`, `BracketMatcher`, `FoldingModel`, `TabGutter` | Draw the caret, selection, current line, brackets, folds, and the gutter.       |
+| Typing             | `SmartTyping`                                                                                      | Close brackets and quotes, step over them, and indent on Return and Tab.        |
+| Projects and files | `Workspace`, `Project`, `WorkspaceService`, `FileOperations`, `FileWatcher`, `SourceFileIO`        | Represent projects and coordinate filesystem operations and file contents.      |
+| Highlighting       | `SyntaxHighlighter`, `Token`, `TokenType`, `TokenTheme`, `Lexer`                                   | Turn language tokens into styled editor text.                                   |
+| Execution          | `ExecutionManager`, `RunTask`, `ProcessRunner`                                                     | Track active work, run external processes, and support stopping them.           |
+| Language API       | `LanguageRegistry`, `LanguageProvider`, `Language`, `Toolchain`                                    | Discover languages and expose templates, lexers, and build/run behaviour.       |
+| Persistence        | `SettingsService`, `SessionService`, `ProjectMetadata`, `RunConfigurationsStore`, `JsonFileStore`  | Read and write IDE and project configuration.                                   |
 
 [`Window`](src/com/willclay/forgeide/ui/Window.java) is the main assembly point: it creates
 the workbench and services, builds an `ActionContext`, and passes that context to

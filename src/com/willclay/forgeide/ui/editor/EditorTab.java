@@ -38,7 +38,7 @@ public class EditorTab extends JPanel
 
     private final JScrollPane scrollPane;
 
-    private final EditorTextPane textPane = new EditorTextPane();
+    private final ForgeEditorPane textPane = new ForgeEditorPane();
     private final SyntaxHighlighter highlighter = new SyntaxHighlighter();
     private final SyntaxUndoManager undoManager = new SyntaxUndoManager();
 

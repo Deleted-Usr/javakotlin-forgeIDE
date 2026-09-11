@@ -110,7 +110,7 @@ public final class FoldingViewFactory implements ViewFactory
         /// A caret that ends up inside a folded region has nowhere to be drawn.
         /// Answering with an empty rectangle at the top of the line keeps
         /// callers — the caret, the gutter, scroll-to-visible — from throwing;
-        /// [EditorTextPane] separately makes sure the caret does not stay there.
+        /// [ForgeEditorPane] separately makes sure the caret does not stay there.
         @Override
         public Shape modelToView(int position, Shape allocation, Position.Bias bias)
                 throws BadLocationException

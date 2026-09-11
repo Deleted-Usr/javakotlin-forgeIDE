@@ -473,7 +473,7 @@ public final class CodeEditorPanel extends JPanel
         // Tab stops position a tab character; the indent is what Tab and Return
         // type. Both follow the same setting and neither can be derived from the
         // other, so both are set here.
-        if (textPane instanceof EditorTextPane editor) editor.setIndent(tabSize, insertSpaces);
+        if (textPane instanceof ForgeEditorPane editor) editor.setIndent(tabSize, insertSpaces);
     }
 
     /// The tab strip's answer to everything a header reports.

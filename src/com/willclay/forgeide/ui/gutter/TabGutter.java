@@ -1,7 +1,7 @@
 package com.willclay.forgeide.ui.gutter;
 
 import com.willclay.forgeide.ui.editor.EditorPalette;
-import com.willclay.forgeide.ui.editor.EditorTextPane;
+import com.willclay.forgeide.ui.editor.ForgeEditorPane;
 import com.willclay.forgeide.ui.editor.FoldingModel;
 
 import javax.swing.JComponent;
@@ -71,7 +71,7 @@ public final class TabGutter extends JComponent implements Scrollable
     /// on every repaint.
     private static final int HIDDEN_LINE_LIMIT = 100_000;
 
-    private final EditorTextPane textPane;
+    private final ForgeEditorPane textPane;
     private final BreakpointModel breakpoints;
     private final LineChangeTracker changes;
 
@@ -102,7 +102,7 @@ public final class TabGutter extends JComponent implements Scrollable
     /// boolean because only one arrow lights up at a time.
     private int hoveredFoldLine = -1;
 
-    public TabGutter(EditorTextPane textPane, BreakpointModel breakpoints, LineChangeTracker changes)
+    public TabGutter(ForgeEditorPane textPane, BreakpointModel breakpoints, LineChangeTracker changes)
     {
         this.textPane = Objects.requireNonNull(textPane, "textPane");
         this.breakpoints = Objects.requireNonNull(breakpoints, "breakpoints");
