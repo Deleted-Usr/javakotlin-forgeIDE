@@ -27,8 +27,9 @@ import com.willclay.forgeide.ui.fonts.EditorFonts;
 import com.willclay.forgeide.ui.menu.EditorMenuBar;
 import com.willclay.forgeide.ui.settings.SettingsDialogController;
 import com.willclay.forgeide.ui.statusbar.StatusBar;
+import com.willclay.forgeide.ui.toolbar.EditorSideBar;
 import com.willclay.forgeide.ui.toolbar.EditorToolBar;
-import com.willclay.forgeide.ui.toolbar.RunConfigDialogController;
+import com.willclay.forgeide.ui.toolbar.runconfigurations.RunConfigDialogController;
 import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 import com.willclay.forgeide.workspace.Project;
@@ -154,7 +155,6 @@ public final class Window extends JFrame
                 actions.getOpenProjectAction()
         );
         console.setOnMinimise(() -> actions.getToggleConsoleAction().setSelected(false));
-        workbench.setConsoleToggleAction(actions.getToggleConsoleAction());
         workbench.setOnReturnToEditor(editorPanel::focusEditor);
         Runnable updateConsoleSummary = () -> workbench.setConsoleSummary(
                 executionManager.getStatus() == ExecutionManager.Status.READY
@@ -180,6 +180,7 @@ public final class Window extends JFrame
         });
 
         setJMenuBar(new EditorMenuBar(actions));
+        workbench.setSideBar(new EditorSideBar(actions));
         workbench.setToolBar(new EditorToolBar(actions, runConfigurationManager));
         workbench.setStatusBar(new StatusBar(executionManager, workspace, editorManager, settingsService));
         projectTree.setContextMenu(new ProjectContextMenu(actions));

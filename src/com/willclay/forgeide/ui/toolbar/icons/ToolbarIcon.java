@@ -1,4 +1,4 @@
-package com.willclay.forgeide.ui.toolbar;
+package com.willclay.forgeide.ui.toolbar.icons;
 
 import com.formdev.flatlaf.icons.FlatAbstractIcon;
 
@@ -13,15 +13,18 @@ import java.awt.geom.RoundRectangle2D;
 /// The toolbar's small vector icon set, drawn on one 16-unit grid.
 /// FlatLaf supplies display scaling and antialiasing; colours are read at paint
 /// time so existing buttons follow theme changes, including their disabled state.
-final class ToolbarIcon extends FlatAbstractIcon
+public final class ToolbarIcon extends FlatAbstractIcon
 {
-    private enum Symbol { RUN, STOP, BUILD, SAVE, OPEN }
+    private enum Symbol { RUN, STOP, BUILD, SAVE, OPEN, PROJECT, CONSOLE }
 
-    static final ToolbarIcon RUN = new ToolbarIcon(Symbol.RUN);
-    static final ToolbarIcon STOP = new ToolbarIcon(Symbol.STOP);
-    static final ToolbarIcon BUILD = new ToolbarIcon(Symbol.BUILD);
-    static final ToolbarIcon SAVE = new ToolbarIcon(Symbol.SAVE);
-    static final ToolbarIcon OPEN = new ToolbarIcon(Symbol.OPEN);
+    public static final ToolbarIcon RUN = new ToolbarIcon(Symbol.RUN);
+    public static final ToolbarIcon STOP = new ToolbarIcon(Symbol.STOP);
+    public static final ToolbarIcon BUILD = new ToolbarIcon(Symbol.BUILD);
+    public static final ToolbarIcon SAVE = new ToolbarIcon(Symbol.SAVE);
+    public static final ToolbarIcon OPEN = new ToolbarIcon(Symbol.OPEN);
+
+    public static final ToolbarIcon PROJECT = new ToolbarIcon(Symbol.PROJECT);
+    public static final ToolbarIcon CONSOLE = new ToolbarIcon(Symbol.CONSOLE);
 
     private final Symbol symbol;
 
@@ -66,6 +69,19 @@ final class ToolbarIcon extends FlatAbstractIcon
             {
                 graphics.draw(path(false, 2, 12.5f, 2, 3, 6, 3, 8, 5, 13, 5, 13, 7));
                 graphics.draw(path(true, 2, 13, 4.5f, 7.5f, 14.5f, 7.5f, 12, 13));
+            }
+            case PROJECT ->
+            {
+                // A closed folder: the tab on the left, then the body.
+                graphics.draw(path(true, 2, 3, 6, 3, 8, 5, 14, 5, 14, 13, 2, 13));
+                graphics.draw(path(false, 2, 7, 14, 7));
+            }
+            case CONSOLE ->
+            {
+                // A terminal window with a prompt chevron and cursor.
+                graphics.draw(new RoundRectangle2D.Float(2, 2.5f, 12, 11, 2, 2));
+                graphics.draw(path(false, 5, 6, 7.5f, 8, 5, 10));
+                graphics.draw(path(false, 9, 10.5f, 11.5f, 10.5f));
             }
         }
     }

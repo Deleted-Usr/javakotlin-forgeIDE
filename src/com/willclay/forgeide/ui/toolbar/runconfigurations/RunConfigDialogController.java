@@ -1,4 +1,4 @@
-package com.willclay.forgeide.ui.toolbar;
+package com.willclay.forgeide.ui.toolbar.runconfigurations;
 
 import com.willclay.forgeide.ui.Window;
 import com.willclay.forgeide.workspace.runconfig.RunConfigurationManager;

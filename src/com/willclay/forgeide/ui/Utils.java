@@ -1,5 +1,8 @@
 package com.willclay.forgeide.ui;
 
+import com.formdev.flatlaf.util.UIScale;
+import com.willclay.forgeide.ui.toolbar.icons.ToolbarIcon;
+
 import javax.swing.*;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -7,12 +10,15 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 
 /// A central factory for every repetitively used UI component used in Forge.
 public final class Utils
 {
     private static final Insets SETTINGS_ROW_INSETS = new Insets(4, 4, 4, 4);
     private static final int SETTINGS_SECTION_GAP = 12;
+
+    private static final int SIDEBAR_STRIPE_WIDTH = 40; // In pixels
 
     private Utils() { }
 
@@ -125,6 +131,40 @@ public final class Utils
 
     // --- Toolbar Factories --- //
 
+    /// Only presentation belongs here: the original action still owns execution
+    /// and enabled state. Explicit accessible names also describe icon-only buttons.
+    public static JButton addIconToolbarButton(JToolBar toolBar, Action action, ToolbarIcon icon, String label)
+    {
+        JButton button = new JButton(action);
+        button.setHideActionText(label == null);
+
+        button.setText(label);
+        button.setIcon(icon);
+        button.setDisabledIcon(icon); // the icon reads the current theme's disabled colour
+        button.setFocusable(false); // clicking a command keeps focus in the editor
+
+        button.putClientProperty("JButton.buttonType", "toolBarButton");
+        button.putClientProperty("FlatLaf.style", "toolbar.margin: 6,8,6,8; toolbar.spacingInsets: 0,2,0,2; arc: 8; iconTextGap: 6");
+
+        String name = String.valueOf(action.getValue(Action.NAME));
+        button.getAccessibleContext().setAccessibleName(name);
+        String tooltip = name;
+        if (action.getValue(Action.ACCELERATOR_KEY) instanceof KeyStroke shortcut)
+        {
+            String modifiers = KeyEvent.getModifiersExText(shortcut.getModifiers());
+            String key = KeyEvent.getKeyText(shortcut.getKeyCode());
+            tooltip += " (" + (modifiers.isEmpty() ? key : modifiers + "+" + key) + ")";
+        }
+        if (action.getValue(Action.SHORT_DESCRIPTION) instanceof String description && !description.equals(name))
+        {
+            tooltip += " — " + description;
+        }
+        button.setToolTipText(tooltip);
+
+        toolBar.add(button);
+        return button;
+    }
+
     /// A toolbar button whose behaviour comes from the action but whose label
     /// does not: "▶ Run" belongs on a button, not in a menu, and the action has
     /// to read well in both. Everything else — enabled state, tooltip — still
@@ -142,9 +182,84 @@ public final class Utils
         return button;
     }
 
-    public static JComboBox<String> addToolBarDropdown()
+    /// A pressed-or-not button whose state lives in the action's SELECTED_KEY,
+    /// so it stays in step with the matching View menu tick without a listener.
+    public static JToggleButton addToolBarToggleButton(JToolBar toolBar, Action action, String label)
     {
-        return new JComboBox<>();
+        JToggleButton button = new JToggleButton(action);
+
+        button.setText(label);
+        button.setFocusable(false); // the editor should keep the caret
+        button.setBorder(BorderFactory.createEmptyBorder(4, 10, 4, 10));
+
+        toolBar.add(button);
+
+        return button;
+    }
+
+    public static JToggleButton addIconStripeButton(JToolBar toolBar, Action action, ToolbarIcon icon, String label)
+    {
+        JToggleButton button = new JToggleButton(action);
+        button.setHideActionText(label == null);
+
+        button.setText(label);
+        button.setIcon(icon);
+        button.setDisabledIcon(icon); // the icon reads the current theme's disabled colour
+        button.setFocusable(false); // clicking a command keeps focus in the editor
+
+        button.putClientProperty("JButton.buttonType", "toolBarButton");
+        button.putClientProperty("FlatLaf.style", "toolbar.margin: 6,8,6,8; toolbar.spacingInsets: 0,2,0,2; arc: 8; iconTextGap: 6");
+
+        button.setHorizontalAlignment(SwingConstants.CENTER);
+
+        String name = String.valueOf(action.getValue(Action.NAME));
+        button.getAccessibleContext().setAccessibleName(name);
+        String tooltip = name;
+        if (action.getValue(Action.ACCELERATOR_KEY) instanceof KeyStroke shortcut)
+        {
+            String modifiers = KeyEvent.getModifiersExText(shortcut.getModifiers());
+            String key = KeyEvent.getKeyText(shortcut.getKeyCode());
+            tooltip += " (" + (modifiers.isEmpty() ? key : modifiers + "+" + key) + ")";
+        }
+        if (action.getValue(Action.SHORT_DESCRIPTION) instanceof String description && !description.equals(name))
+        {
+            tooltip += " — " + description;
+        }
+        button.setToolTipText(tooltip);
+
+        // Square buttons of one width keep the column tidy however long the labels are.
+        int side = UIScale.scale(SIDEBAR_STRIPE_WIDTH - 8);
+        Dimension square = new Dimension(side, side);
+        button.setPreferredSize(square);
+        button.setMinimumSize(square);
+        button.setMaximumSize(square);
+        button.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+
+        toolBar.add(button);
+        return button;
+    }
+
+    /// A toggle button specifically for vertical toolbars.
+    ///
+    /// Much like the toolbar factories above, the behaviour comes from the action, while the
+    /// label does not. The state lives in actions SELECTED_KEY, so it stays with the matching
+    /// view menu tick without a listener.
+    public static JToggleButton addStripeButton(JToolBar toolBar, Action action, String label)
+    {
+        JToggleButton button = Utils.addToolBarToggleButton(toolBar, action, label);
+
+        button.putClientProperty("JButton.buttonType", "toolBarButton");
+        button.setHorizontalAlignment(SwingConstants.CENTER);
+
+        // Square buttons of one width keep the column tidy however long the labels are.
+        int side = UIScale.scale(SIDEBAR_STRIPE_WIDTH - 8);
+        Dimension square = new Dimension(side, side);
+        button.setPreferredSize(square);
+        button.setMinimumSize(square);
+        button.setMaximumSize(square);
+        button.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+
+        return button;
     }
 
     // --- Status Bar Factories --- //

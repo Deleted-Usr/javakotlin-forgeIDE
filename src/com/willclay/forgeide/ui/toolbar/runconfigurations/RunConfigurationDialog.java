@@ -1,4 +1,4 @@
-package com.willclay.forgeide.ui.toolbar;
+package com.willclay.forgeide.ui.toolbar.runconfigurations;
 
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.dialogs.EntryPointChooser;

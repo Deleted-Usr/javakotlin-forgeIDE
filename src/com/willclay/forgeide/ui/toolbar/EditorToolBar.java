@@ -2,6 +2,9 @@ package com.willclay.forgeide.ui.toolbar;
 
 import com.formdev.flatlaf.util.UIScale;
 import com.willclay.forgeide.actions.ActionManager;
+import com.willclay.forgeide.ui.Utils;
+import com.willclay.forgeide.ui.toolbar.icons.ToolbarIcon;
+import com.willclay.forgeide.ui.toolbar.runconfigurations.RunConfigurationDropdown;
 import com.willclay.forgeide.workspace.runconfig.RunConfigurationManager;
 
 import javax.swing.Action;
@@ -29,46 +32,16 @@ public final class EditorToolBar extends JToolBar
         add(new RunConfigurationDropdown(actions.getOpenRunConfigAction(), manager));
         add(Box.createHorizontalStrut(UIScale.scale(6)));
 
-        addButton(actions.getRunAction(), ToolbarIcon.RUN, "Run");
-        addButton(actions.getStopAction(), ToolbarIcon.STOP, null);
+        Utils.addIconToolbarButton(this, actions.getRunAction(), ToolbarIcon.RUN, "Run");
+        Utils.addIconToolbarButton(this, actions.getStopAction(), ToolbarIcon.STOP, null);
 
         addSeparator();
 
-        addButton(actions.getBuildProjectAction(), ToolbarIcon.BUILD, null);
+        Utils.addIconToolbarButton(this, actions.getBuildProjectAction(), ToolbarIcon.BUILD, null);
 
         add(Box.createHorizontalGlue()); // pushes the file buttons to the right
 
-        addButton(actions.getSaveAction(), ToolbarIcon.SAVE, null);
-        addButton(actions.getOpenFileAction(), ToolbarIcon.OPEN, null);
-    }
-
-    /// Only presentation belongs here: the original action still owns execution
-    /// and enabled state. Explicit accessible names also describe icon-only buttons.
-    private void addButton(Action action, ToolbarIcon icon, String label)
-    {
-        JButton button = new JButton(action);
-        button.setHideActionText(label == null);
-        button.setText(label);
-        button.setIcon(icon);
-        button.setDisabledIcon(icon); // the icon reads the current theme's disabled colour
-        button.setFocusable(false); // clicking a command keeps focus in the editor
-        button.putClientProperty("JButton.buttonType", "toolBarButton");
-        button.putClientProperty("FlatLaf.style", "toolbar.margin: 6,8,6,8; toolbar.spacingInsets: 0,2,0,2; arc: 8; iconTextGap: 6");
-
-        String name = String.valueOf(action.getValue(Action.NAME));
-        button.getAccessibleContext().setAccessibleName(name);
-        String tooltip = name;
-        if (action.getValue(Action.ACCELERATOR_KEY) instanceof KeyStroke shortcut)
-        {
-            String modifiers = KeyEvent.getModifiersExText(shortcut.getModifiers());
-            String key = KeyEvent.getKeyText(shortcut.getKeyCode());
-            tooltip += " (" + (modifiers.isEmpty() ? key : modifiers + "+" + key) + ")";
-        }
-        if (action.getValue(Action.SHORT_DESCRIPTION) instanceof String description && !description.equals(name))
-        {
-            tooltip += " — " + description;
-        }
-        button.setToolTipText(tooltip);
-        add(button);
+        Utils.addIconToolbarButton(this, actions.getSaveAction(), ToolbarIcon.SAVE, null);
+        Utils.addIconToolbarButton(this, actions.getOpenFileAction(), ToolbarIcon.OPEN, null);
     }
 }
