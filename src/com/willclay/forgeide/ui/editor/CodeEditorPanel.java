@@ -45,6 +45,8 @@ public final class CodeEditorPanel extends JPanel
 
     private final EditorEmptyState emptyState = new EditorEmptyState();
     private final JPanel content = new JPanel(contentLayout);
+    private final EditorBreadcrumb breadcrumb = new EditorBreadcrumb();
+    private Path projectRoot;
 
     private Font editorFont;
     private int tabSize = 4;
@@ -63,11 +65,14 @@ public final class CodeEditorPanel extends JPanel
         super(new BorderLayout());
 
         this.editorFont = Objects.requireNonNull(editorFont);
+        tabs.putClientProperty("FlatLaf.style", "tabHeight: 34; tabSelectionHeight: 2; contentSeparatorHeight: 1");
         tabs.addChangeListener(event -> activeTabChanged());
 
         content.add(emptyState, EMPTY_CARD);
         content.add(tabs, TABS_CARD);
         add(content, BorderLayout.CENTER);
+        add(breadcrumb, BorderLayout.SOUTH);
+        breadcrumb.showFile(null, null);
         updateVisibleContent();
     }
 
@@ -81,6 +86,13 @@ public final class CodeEditorPanel extends JPanel
     public void setProjectOpen(boolean projectOpen)
     {
         emptyState.setProjectOpen(projectOpen);
+    }
+
+    /// Supplies the project boundary used to display relative breadcrumb paths.
+    public void setProjectRoot(Path projectRoot)
+    {
+        this.projectRoot = projectRoot == null ? null : normalize(projectRoot);
+        breadcrumb.showFile(this.projectRoot, getSelectedTab());
     }
 
     public EditorTab getSelectedTab()
@@ -142,7 +154,18 @@ public final class CodeEditorPanel extends JPanel
 
     public void selectTab(EditorTab tab)
     {
-        if (tabs.indexOfComponent(tab) >= 0) tabs.setSelectedComponent(tab);
+        if (tabs.indexOfComponent(tab) >= 0)
+        {
+            tabs.setSelectedComponent(tab);
+            focusEditor();
+        }
+    }
+
+    /// Returns focus after an explicit user command; background saves do not call this.
+    public void focusEditor()
+    {
+        EditorTab tab = getSelectedTab();
+        if (tab != null) tab.getTextPane().requestFocusInWindow();
     }
 
     /// Removes every document, used when a project is closed or replaced.
@@ -423,6 +446,7 @@ public final class CodeEditorPanel extends JPanel
 
     private void fireStateChanged()
     {
+        breadcrumb.showFile(projectRoot, getSelectedTab());
         for (Runnable listener : List.copyOf(stateChangeListeners)) listener.run();
     }
 

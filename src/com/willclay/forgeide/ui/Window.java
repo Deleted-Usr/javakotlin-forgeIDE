@@ -35,6 +35,7 @@ import com.willclay.forgeide.workspace.Project;
 import com.willclay.forgeide.workspace.Workspace;
 import com.willclay.forgeide.application.IDESessionConfiguration;
 import com.willclay.forgeide.application.IDESettingsConfiguration;
+import com.willclay.forgeide.application.WorkbenchLayout;
 import com.willclay.forgeide.workspace.runconfig.RunConfigurationManager;
 
 import javax.swing.JFrame;
@@ -153,6 +154,19 @@ public final class Window extends JFrame
                 actions.getOpenProjectAction()
         );
         console.setOnMinimise(() -> actions.getToggleConsoleAction().setSelected(false));
+        workbench.setConsoleToggleAction(actions.getToggleConsoleAction());
+        workbench.setOnReturnToEditor(editorPanel::focusEditor);
+        Runnable updateConsoleSummary = () -> workbench.setConsoleSummary(
+                executionManager.getStatus() == ExecutionManager.Status.READY
+                        ? (console.hasOutput() ? "Output available" : "No output yet")
+                        : executionManager.getStatusText());
+        console.addContentListener(updateConsoleSummary);
+        executionManager.addChangeListener(() ->
+        {
+            updateConsoleSummary.run();
+            if (executionManager.getStatus() == ExecutionManager.Status.FAILED)
+                actions.getToggleConsoleAction().setSelected(true);
+        });
 
         editorPanel.setCloseRequestHandler(this::confirmCloseTab);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -190,7 +204,9 @@ public final class Window extends JFrame
         // restores the user's choice and applies its matching syntax colours.
         wireState();
         themeService.applySavedTheme();
+        restoreLayout(sessionService.get().layout());
         restoreSession(sessionService);
+        if (!bootstrap.warnings().isEmpty()) actions.getToggleConsoleAction().setSelected(true);
         updateTitle();
     }
 
@@ -214,6 +230,7 @@ public final class Window extends JFrame
     {
         Project project = workspace.getProject();
         editorPanel.setProjectOpen(project != null);
+        editorPanel.setProjectRoot(project == null ? null : project.root());
 
         editorManager.setEncoding(project == null
                 ? Encoding.UTF8
@@ -258,7 +275,17 @@ public final class Window extends JFrame
         Path selectedFile = selected == null ? null : selected.getFile();
 
         return new IDESessionConfiguration(
-                IDESessionConfiguration.CURRENT_SCHEMA_VERSION, projectRoot, openFiles, selectedFile);
+                IDESessionConfiguration.CURRENT_SCHEMA_VERSION, projectRoot, openFiles, selectedFile,
+                workbench.captureLayout());
+    }
+
+    private void restoreLayout(WorkbenchLayout layout)
+    {
+        workbench.restoreLayout(layout);
+        actions.getToggleProjectTreeAction().setSelected(layout.projectVisible());
+        actions.getToggleConsoleAction().setSelected(layout.consoleVisible());
+        actions.getToggleToolBarAction().setSelected(layout.toolbarVisible());
+        actions.getToggleStatusBarAction().setSelected(layout.statusbarVisible());
     }
 
     private void restoreSession(SessionService sessionService)

@@ -1,5 +1,8 @@
 package com.willclay.forgeide.ui.editor;
 
+import com.formdev.flatlaf.util.UIScale;
+import com.willclay.forgeide.ui.icons.FileIcons;
+import javax.swing.Icon;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -106,8 +109,9 @@ public final class EditorTabHeader extends JComponent
         FontMetrics metrics = getFontMetrics(getFont());
 
         return new Dimension(
-                (PADDING * 2) + metrics.stringWidth(title) + GAP + BUTTON_SIZE,
-                (PADDING * 2) + Math.max(metrics.getHeight(), BUTTON_SIZE));
+                UIScale.scale(PADDING * 2 + GAP * 2 + BUTTON_SIZE)
+                        + FileIcons.forPath(tab.getFile()).getIconWidth() + metrics.stringWidth(title),
+                UIScale.scale(PADDING * 2) + Math.max(metrics.getHeight(), FileIcons.forPath(tab.getFile()).getIconHeight()));
     }
 
     @Override
@@ -124,7 +128,7 @@ public final class EditorTabHeader extends JComponent
             if (hovered && !selected)
             {
                 copy.setColor(colour("TabbedPane.hoverColor", "Button.hoverBackground"));
-                copy.fillRoundRect(0, 0, getWidth(), getHeight(), CORNER, CORNER);
+                copy.fillRoundRect(0, 0, getWidth(), getHeight(), UIScale.scale(CORNER), UIScale.scale(CORNER));
             }
 
             paintTitle(copy);
@@ -141,10 +145,12 @@ public final class EditorTabHeader extends JComponent
         FontMetrics metrics = graphics.getFontMetrics(getFont());
 
         graphics.setFont(getFont());
+        Icon icon = FileIcons.forPath(tab.getFile());
+        icon.paintIcon(this, graphics, UIScale.scale(PADDING), (getHeight() - icon.getIconHeight()) / 2);
         graphics.setColor(selected
                 ? colour("TabbedPane.selectedForeground", "TabbedPane.foreground")
-                : colour("TabbedPane.disabledForeground", "Label.disabledForeground"));
-        graphics.drawString(title, PADDING,
+                : colour("TabbedPane.foreground", "Label.foreground"));
+        graphics.drawString(title, UIScale.scale(PADDING + GAP) + icon.getIconWidth(),
                 ((getHeight() - metrics.getHeight()) / 2) + metrics.getAscent());
     }
 
@@ -155,10 +161,10 @@ public final class EditorTabHeader extends JComponent
 
         if (modified && !buttonHovered)
         {
-            int inset = (BUTTON_SIZE - DOT_SIZE) / 2;
+            int inset = UIScale.scale((BUTTON_SIZE - DOT_SIZE) / 2);
 
             graphics.setColor(colour("Component.accentColor", "TabbedPane.foreground"));
-            graphics.fillOval(bounds.x + inset, bounds.y + inset, DOT_SIZE, DOT_SIZE);
+            graphics.fillOval(bounds.x + inset, bounds.y + inset, UIScale.scale(DOT_SIZE), UIScale.scale(DOT_SIZE));
             return;
         }
 
@@ -176,10 +182,10 @@ public final class EditorTabHeader extends JComponent
                 ? colour("TabbedPane.selectedForeground", "TabbedPane.foreground")
                 : colour("TabbedPane.disabledForeground", "Label.disabledForeground"));
 
-        int left = bounds.x + CROSS_INSET;
-        int top = bounds.y + CROSS_INSET;
-        int right = bounds.x + bounds.width - CROSS_INSET - 1;
-        int foot = bounds.y + bounds.height - CROSS_INSET - 1;
+        int left = bounds.x + UIScale.scale(CROSS_INSET);
+        int top = bounds.y + UIScale.scale(CROSS_INSET);
+        int right = bounds.x + bounds.width - UIScale.scale(CROSS_INSET) - 1;
+        int foot = bounds.y + bounds.height - UIScale.scale(CROSS_INSET) - 1;
 
         graphics.drawLine(left, top, right, foot);
         graphics.drawLine(right, top, left, foot);
@@ -188,10 +194,10 @@ public final class EditorTabHeader extends JComponent
     private Rectangle buttonBounds()
     {
         return new Rectangle(
-                getWidth() - PADDING - BUTTON_SIZE,
-                (getHeight() - BUTTON_SIZE) / 2,
-                BUTTON_SIZE,
-                BUTTON_SIZE);
+                getWidth() - UIScale.scale(PADDING + BUTTON_SIZE),
+                (getHeight() - UIScale.scale(BUTTON_SIZE)) / 2,
+                UIScale.scale(BUTTON_SIZE),
+                UIScale.scale(BUTTON_SIZE));
     }
 
     private void installMouseHandling()

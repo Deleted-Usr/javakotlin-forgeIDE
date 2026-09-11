@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /// Coordinates file I/O with the editor's open documents. Document state lives
 /// on [EditorTab]; consequently every query here always reflects the tab
@@ -20,6 +21,7 @@ public final class EditorManager
 {
     private final CodeEditorPanel editor;
     private final List<Runnable> listeners = new ArrayList<>();
+    private final List<Consumer<Path>> saveListeners = new ArrayList<>();
     private Encoding encoding = Encoding.UTF8;
     private LineSeparatorPolicy lineSeparatorPolicy = LineSeparatorPolicy.PRESERVE;
 
@@ -185,6 +187,13 @@ public final class EditorManager
         editor.addEditListener(listener);
     }
 
+    /// Reports successful writes, including Save As and autosave; failures never
+    /// emit a success notification. UI listeners decide how to present it.
+    public void addSaveListener(Consumer<Path> listener)
+    {
+        saveListeners.add(Objects.requireNonNull(listener));
+    }
+
     private void writeAndAdopt(EditorTab tab, Path target) throws IOException
     {
         Objects.requireNonNull(target);
@@ -199,6 +208,7 @@ public final class EditorManager
         SourceFileIO.write(target, tab.getText(), lineEnding, encoding.charset());
         tab.setLineEnding(lineEnding);
         editor.markSaved(tab, target);
+        for (Consumer<Path> listener : List.copyOf(saveListeners)) listener.accept(target);
     }
 
     private EditorTab requireCurrentTab()

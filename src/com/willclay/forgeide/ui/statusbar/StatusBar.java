@@ -16,6 +16,7 @@ import javax.swing.JLabel;
 import javax.swing.JTextPane;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.text.Element;
@@ -34,6 +35,9 @@ public final class StatusBar extends JToolBar
     private final SettingsService settingsService;
 
     private final JLabel compilerStatus = Utils.addStatusBarField("Ready", "Build and run status");
+    private final JLabel saveStatus = Utils.addStatusBarField("", "Most recent save");
+    private final Timer saveFeedbackTimer = new Timer(4_000, event -> saveStatus.setText(""));
+    private final Timer taskFeedbackTimer = new Timer(6_000, event -> compilerStatus.setText("Ready"));
     private final JLabel lineEnding     = Utils.addStatusBarField("LF", "Line endings in the current file");
     private final JLabel encoding       = Utils.addStatusBarField("UTF-8", "Project file encoding");
     private final JLabel project        = Utils.addStatusBarField("No Project", "Current project");
@@ -61,6 +65,7 @@ public final class StatusBar extends JToolBar
         add(project);
         addSeparator();
         add(compilerStatus);
+        add(saveStatus);
         add(Box.createHorizontalGlue());
         add(lineEnding);
         addSeparator();
@@ -74,6 +79,14 @@ public final class StatusBar extends JToolBar
 
         executionManager.addChangeListener(
                 () -> onEventDispatchThread(this::updateCompilerStatus));
+        saveFeedbackTimer.setRepeats(false);
+        taskFeedbackTimer.setRepeats(false);
+        editorManager.addSaveListener(file -> onEventDispatchThread(() ->
+        {
+            saveStatus.setText("Saved " + file.getFileName());
+            saveStatus.setToolTipText(file.toString());
+            saveFeedbackTimer.restart();
+        }));
         workspace.addChangeListener(
                 () -> onEventDispatchThread(this::updateProjectInformation));
         editorManager.addChangeListener(
@@ -89,7 +102,11 @@ public final class StatusBar extends JToolBar
 
     private void updateCompilerStatus()
     {
-        compilerStatus.setText(executionManager.isRunning() ? "Running" : "Ready");
+        taskFeedbackTimer.stop();
+        compilerStatus.setText(executionManager.getStatusText());
+        if (executionManager.getStatus() == ExecutionManager.Status.SUCCEEDED
+                || executionManager.getStatus() == ExecutionManager.Status.CANCELLED)
+            taskFeedbackTimer.restart();
     }
 
     private void updateProjectInformation()

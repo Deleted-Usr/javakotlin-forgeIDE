@@ -2,7 +2,6 @@ package com.willclay.forgeide.services.settings.theme;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
-import com.formdev.flatlaf.intellijthemes.FlatArcDarkIJTheme;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMTMaterialDarkerIJTheme;
 import com.willclay.forgeide.highlighting.TokenTheme;
 
@@ -21,7 +20,7 @@ public enum AppTheme
     DARK(
             "forge-dark",
             "Forge Dark",
-            new FlatArcDarkIJTheme(),
+            new ForgeDarkLaf(),
             TokenTheme.dark()
     ),
 
