@@ -24,7 +24,7 @@ public final class SaveAsAction extends ForgeAction
     @Override
     protected void perform()
     {
-        saveAs(context.getEditorManager().getCurrentFile());
+        if (saveAs(context.getEditorManager().getCurrentFile())) context.getEditorPanel().focusEditor();
     }
 
     /// Saves under a user-selected name.
@@ -41,7 +41,6 @@ public final class SaveAsAction extends ForgeAction
         try
         {
             context.getEditorManager().saveTo(file);
-            Utils.showInfoMessage(context.getFrame(), "File saved successfully!");
             return true;
         }
         catch (IOException e)

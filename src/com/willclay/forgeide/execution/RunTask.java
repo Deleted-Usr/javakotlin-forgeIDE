@@ -55,6 +55,26 @@ public final class RunTask extends SwingWorker<Integer, Void>
         return new RunTask(project, toolchain, console, null, Operation.CLEAN, LaunchOptions.defaults(), BeforeLaunch.NONE);
     }
 
+    public String operationName()
+    {
+        return switch (operation)
+        {
+            case RUN -> "Run";
+            case BUILD -> "Build";
+            case CLEAN -> "Clean";
+        };
+    }
+
+    public String progressDescription()
+    {
+        return switch (operation)
+        {
+            case RUN -> "Building / running";
+            case BUILD -> "Building";
+            case CLEAN -> "Cleaning";
+        };
+    }
+
     /// Stops this task and whichever child process it is currently waiting for.
     public void stop()
     {

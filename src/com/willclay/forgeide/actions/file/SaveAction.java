@@ -31,7 +31,7 @@ public final class SaveAction extends ForgeAction
     @Override
     protected void perform()
     {
-        saveCurrent();
+        if (saveCurrent()) context.getEditorPanel().focusEditor();
     }
 
     /// Saves the current document, asking for a name when necessary.

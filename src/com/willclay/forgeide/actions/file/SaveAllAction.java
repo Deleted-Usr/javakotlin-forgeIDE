@@ -5,8 +5,10 @@ import com.willclay.forgeide.actions.Shortcuts;
 import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.editor.EditorTab;
+import com.willclay.forgeide.ui.Utils;
 
 import java.awt.event.KeyEvent;
+import java.io.IOException;
 
 /// Saves each modified editor tab, asking for a path for untitled documents.
 public final class SaveAllAction extends ForgeAction
@@ -35,7 +37,7 @@ public final class SaveAllAction extends ForgeAction
     @Override
     protected void perform()
     {
-        saveAll();
+        if (saveAll()) context.getEditorPanel().focusEditor();
     }
 
     /// @return true only when every modified tab was saved successfully
@@ -50,15 +52,24 @@ public final class SaveAllAction extends ForgeAction
             {
                 if (!tab.isModified()) continue;
 
-                manager.selectTab(tab);
-                if (!save.saveCurrent()) return false;
+                if (tab.getFile() != null) manager.save(tab);
+                else
+                {
+                    manager.selectTab(tab);
+                    if (!save.saveCurrent()) return false;
+                }
             }
 
             return true;
         }
+        catch (IOException exception)
+        {
+            Utils.showErrorMessage(context.getFrame(), "Could not save all files: " + exception.getMessage());
+            return false;
+        }
         finally
         {
-            if (original != null) manager.selectTab(original);
+            if (original != null && original != manager.getCurrentTab()) manager.selectTab(original);
         }
     }
 }
