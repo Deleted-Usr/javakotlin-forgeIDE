@@ -130,6 +130,13 @@ unlink that standalone entry and use the root build instead.
 platformer packaged as a Forge project. Open that directory in ForgeIDE, select
 `src/forgerunner/ForgeRunner.java`, and press Run.
 
+[`examples/Forge Blocks - Kotlin`](examples/Forge%20Blocks%20-%20Kotlin) is a falling-block
+puzzle game drawn with Java2D and compiled by the Kotlin language plugin in
+`modules/forge-lang-kotlin` through `kotlinc`. Its five files each lean on a different
+Kotlin feature — sealed states, data classes, sequences, and a small key-binding DSL — so
+it doubles as a tour of what the plugin supports. Open the directory, select
+`src/forgeblocks/Main.kt`, and press Run.
+
 [`examples/Forge Strike - C++`](examples/Forge%20Strike%20-%20C%2B%2B) is a
 top-down SFML arena shooter built with CMake, using procedural graphics and no
 game assets. It is run by the C++ language plugin in `modules/forge-lang-cpp`,

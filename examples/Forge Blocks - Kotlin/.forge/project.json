@@ -1,0 +1,23 @@
+{
+  "schemaVersion" : 1,
+  "name" : "Forge Blocks - Kotlin",
+  "language" : "kotlin",
+  "workingDirectory" : ".",
+  "fileHandling" : {
+    "encoding" : "UTF-8",
+    "lineSeparators" : "preserve"
+  },
+  "excludedPaths" : [ ".git" ],
+  "languageSettings" : {
+    "kotlin" : {
+      "sourcePath" : "src",
+      "outputPath" : "out",
+      "libraryPaths" : [ "libs" ],
+      "jdkPath" : "C:/Users/willc/.jdks/openjdk-26.0.2.1",
+      "compilerCommand" : "kotlinc.bat",
+      "jvmTarget" : "26",
+      "languageVersion" : "2.4",
+      "progressiveMode" : false
+    }
+  }
+}

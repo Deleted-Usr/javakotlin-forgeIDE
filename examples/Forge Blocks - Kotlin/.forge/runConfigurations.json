@@ -1,0 +1,14 @@
+{
+  "schemaVersion" : 1,
+  "configs" : [ {
+    "id" : "f0c008ba-8c72-45cd-b580-5a89ca30241b",
+    "name" : "ForgeBlocks.Main",
+    "entryPoint" : "src/forgeblocks/Main.kt",
+    "runtimeOptions" : [ ],
+    "programArguments" : [ ],
+    "workingDirectory" : "",
+    "environment" : { },
+    "beforeLaunch" : "COMPILE_TARGET"
+  } ],
+  "activeId" : "f0c008ba-8c72-45cd-b580-5a89ca30241b"
+}
