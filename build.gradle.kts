@@ -31,6 +31,12 @@ tasks.named<ProcessResources>("processResources") {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
+tasks.jar {
+    manifest {
+        attributes["Main-Class"] = application.mainClass.get()
+    }
+}
+
 application {
     mainClass = "com.willclay.forgeide.Main"
     applicationName = "ForgeIDE"

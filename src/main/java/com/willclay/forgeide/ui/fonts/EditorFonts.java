@@ -5,7 +5,7 @@ import java.awt.FontFormatException;
 import java.awt.GraphicsEnvironment;
 import java.awt.font.FontRenderContext;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,7 +13,7 @@ import java.util.List;
 /// family installed on the machine.
 public final class EditorFonts
 {
-    private static final Path FONT_FILE = Path.of("src/main/resources", "CascadiaCode-Medium.ttf");
+    private static final String FONT_RESOURCE = "/CascadiaCode-Medium.ttf";
 
     /// The value stored in settings for "whatever ships with ForgeIDE".
     ///
@@ -97,9 +97,11 @@ public final class EditorFonts
 
     private static Font loadBundled(float size)
     {
-        try
+        // Each load needs a fresh stream: createFont consumes its input.
+        try (InputStream input = EditorFonts.class.getResourceAsStream(FONT_RESOURCE))
         {
-            Font font = Font.createFont(Font.TRUETYPE_FONT, FONT_FILE.toFile());
+            if (input == null) throw new IOException("Bundled font resource not found");
+            Font font = Font.createFont(Font.TRUETYPE_FONT, input);
 
             // Registering makes the face available to anything that later asks
             // for it by name, e.g. a preferences' dialog.
@@ -108,7 +110,7 @@ public final class EditorFonts
         }
         catch (IOException | FontFormatException e)
         {
-            System.err.println("Could not load " + FONT_FILE + " (" + e.getMessage() + ")" +
+            System.err.println("Could not load " + FONT_RESOURCE + " (" + e.getMessage() + ")" +
                     ", falling back to " + Font.MONOSPACED + ".");
 
             return new Font(Font.MONOSPACED, Font.PLAIN, Math.round(size));

@@ -84,6 +84,16 @@ public final class ProcessRunner
     public static void stopCurrentProcess()
     {
         Process process = currentProcess.get();
-        if (process != null && process.isAlive()) process.destroy();
+        if (process != null && process.isAlive())
+        {
+            process.descendants().forEach(ProcessHandle::destroy);
+            process.destroy();
+
+            if (process.isAlive() || process.destroyForcibly().isAlive())
+            {
+                process.descendants().forEach(ProcessHandle::destroyForcibly);
+                process.destroyForcibly();
+            }
+        }
     }
 }

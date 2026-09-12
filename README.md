@@ -50,7 +50,7 @@ for Java, and JetBrains' KDocs for Kotlin.
 
 Language plugins are discovered at startup through Java's `ServiceLoader`. The built-in
 Java provider is registered in
-[`src/META-INF/services`](src/META-INF/services/com.willclay.forgeide.lang.api.LanguageProvider),
+[`src/main/resources/META-INF`](src/main/resources/META-INF/services/com.willclay.forgeide.lang.api.LanguageProvider),
 and external plugin JARs are loaded from `~/.forge/plugins`. Restart ForgeIDE after
 installing a plugin. Compilers and third-party libraries used by a project must be
 installed or configured separately.
@@ -81,7 +81,7 @@ also requires an external `kotlinc` installation.
 2. Set the project SDK and Java language level to JDK 26, and enable Kotlin support.
 3. Mark `src/` as the source root and `res/` as a resources root. Add the JARs under
    `libs/` and the Kotlin Standard Library to the host module's classpath.
-4. Build the host module. Ensure `src/META-INF/services/` is copied to
+4. Build the host module. Ensure `src/main/resources/META-INF` is copied to
    `META-INF/services/` in its compiled output; bootstrap needs this descriptor to
    discover the built-in Java language.
 5. Run [`com.willclay.forgeide.Main`](src/main/java/com/willclay/forgeide/Main.java) using the
@@ -91,7 +91,7 @@ also requires an external `kotlinc` installation.
 Direct `kotlinc`/`javac` compilation is also supported by the source layout. For a manual
 build, first give `kotlinc` both the Kotlin and Java sources under `src/` so it can resolve
 Java symbols, then compile the Java sources with `javac`, including the Kotlin output
-and dependencies on the classpath. Copy `res/` contents and `src/META-INF/` into the output
+and dependencies on the classpath. Copy `res/` contents and `src/main/resources/META-INF` into the output
 directory before launching `Main`. Files under `docs/java-equivalents/` are reference
 material and must not be included in the build.
 

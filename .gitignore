@@ -85,7 +85,7 @@ jdtls/
 *.iml
 *.ipr
 *.iws
-**/META-INF/MANIFEST.MF
+src/main/resources/META-INF/MANIFEST.MF
 
 # Eclipse / VS Code
 .settings/

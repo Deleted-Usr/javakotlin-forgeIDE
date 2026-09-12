@@ -26,7 +26,7 @@
       },
       "cmake" : {
         "command" : "cmake",
-        "generator" : "",
+        "generator" : "MinGW Makefiles",
         "buildType" : "Debug",
         "target" : "",
         "configureArguments" : [ ]
