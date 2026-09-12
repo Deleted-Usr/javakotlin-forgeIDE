@@ -97,23 +97,32 @@ material and must not be included in the build.
 
 ### Build optional language plugins
 
-Build the host application first. From the repository root on Windows, use:
+Both plugins are Gradle subprojects. From the repository root on Windows, use:
 
 ```powershell
-.\packaging\build-plugin.ps1 -Name forge-lang-kotlin -Install
-.\packaging\build-plugin.ps1 -Name forge-lang-cpp -PluginId forge.cpp -LanguageId cpp -Install
+.\gradlew.bat :modules:forge-lang-kotlin:build :modules:forge-lang-cpp:build
 ```
 
-Set `JAVA_HOME` to the JDK installation, or make `javac` and `jar` available on `PATH`.
-For the Kotlin plugin, also set `KOTLIN_HOME` or make `kotlinc.bat` available on `PATH`.
-The scripts look for host classes in `build/classes/forge-ide`, falling back to
-`out/production/ForgeIDE`. Use `-HostClasses` with a repository-relative output directory
-if your module builds elsewhere.
+The modules use Gradle's standard layout: Java sources in `src/main/java`, Kotlin
+sources in `src/main/kotlin`, and service registrations in
+`src/main/resources/META-INF/services`.
 
-The resulting JARs are written to `dist/plugins/`; `-Install` also copies them into
-the user's `.forge/plugins/` directory. A
-[`shell equivalent`](packaging/build-plugin.sh) is provided for Unix-like environments,
-with options such as `--install` and `--host-classes`.
+Use `./gradlew` on Unix-like systems. Gradle compiles the host automatically as a
+dependency and downloads the Kotlin compiler; a separate `KOTLIN_HOME` is not needed
+to build these plugins. Use the same JDK as the host application.
+
+The resulting JARs are written to:
+
+- `modules/forge-lang-kotlin/build/libs/forge-lang-kotlin-1.0.0.jar`
+- `modules/forge-lang-cpp/build/libs/forge-lang-cpp-1.0.0.jar`
+
+Copy the desired JARs into `~/.forge/plugins` and restart ForgeIDE. Each JAR includes
+its `LanguageProvider` service registration. ForgeIDE supplies the host classes and
+shared libraries at runtime, so they are not bundled into the plugin JARs.
+
+Import the root `settings.gradle.kts` in IntelliJ IDEA and reload Gradle to see both
+modules. If the Kotlin plugin was previously linked as a separate Gradle project,
+unlink that standalone entry and use the root build instead.
 
 ## Example Projects
 

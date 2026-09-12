@@ -37,6 +37,17 @@ tasks.jar {
     }
 }
 
+tasks.register("buildAllJars") {
+    group = "build"
+    description = "Compiles and packahes ForgeIDE and both language plugins"
+
+    dependsOn(
+        ":jar",
+        ":modules:forge-lang-kotlin:jar",
+        ":modules:forge-lang-cpp:jar"
+    )
+}
+
 application {
     mainClass = "com.willclay.forgeide.Main"
     applicationName = "ForgeIDE"

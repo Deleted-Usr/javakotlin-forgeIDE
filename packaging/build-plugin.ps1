@@ -132,7 +132,7 @@ if ($kotlinHome)
 
 # ------------------------------------------------------------------- layout
 
-$src     = Join-Root "modules/$Name/src"
+$src     = Join-Root "modules/$Name/src/main"
 $out     = Join-Root "build/modules/$Name/classes"
 $argsDir = Join-Root "build/modules/$Name"
 $jarPath = Join-Root "dist/plugins/$Name-$Version.jar"
@@ -248,7 +248,7 @@ if ($javaFiles.Count -gt 0)
         "-encoding", "UTF-8",
         # Pass 1's output comes first so the Java sources see the Kotlin classes.
         "-classpath", "$out;$classpath",
-        "-sourcepath", $src,
+        "-sourcepath", (Join-Path $src "java"),
         # Without this javac silently compiles whatever it finds through
         # -sourcepath and scatters extra classes into the module output.
         "-implicit:none",
@@ -269,7 +269,7 @@ if ($javaFiles.Count -gt 0)
 # Copies META-INF/services, which is the whole of plugin discovery. The
 # manifest is generated below rather than copied, because .gitignore excludes
 # committed MANIFEST.MF files.
-$moduleMeta = (Join-Path $src "META-INF")
+$moduleMeta = (Join-Path $src "resources/META-INF")
 if (Test-Path $moduleMeta)
 {
     $targetMeta = (Join-Path $out "META-INF")

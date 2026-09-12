@@ -94,7 +94,7 @@ fi
 
 # -------------------------------------------------------------------- layout
 
-SRC="$ROOT/modules/$NAME/src"
+SRC="$ROOT/modules/$NAME/src/main"
 OUT="$ROOT/build/modules/$NAME/classes"
 ARGS_DIR="$ROOT/build/modules/$NAME"
 JAR_PATH="$ROOT/dist/plugins/$NAME-$VERSION.jar"
@@ -203,7 +203,7 @@ if [ -n "$JAVA_FILES" ]; then
     printf '"%s"\n"%s"\n' "-encoding" "UTF-8" >> "$JAVAC_ARGS"
     # Pass 1's output comes first so the Java sources see the Kotlin classes.
     printf '"%s"\n"%s"\n' "-classpath" "$OUT:$CLASSPATH" >> "$JAVAC_ARGS"
-    printf '"%s"\n"%s"\n' "-sourcepath" "$SRC" >> "$JAVAC_ARGS"
+    printf '"%s"\n"%s"\n' "-sourcepath" "$SRC/java" >> "$JAVAC_ARGS"
     # Without this javac silently compiles whatever it finds through
     # -sourcepath and scatters extra classes into the module output.
     printf '"%s"\n' "-implicit:none" >> "$JAVAC_ARGS"
@@ -222,9 +222,9 @@ fi
 # Copies META-INF/services, which is the whole of plugin discovery. The
 # manifest is generated below rather than copied, because .gitignore excludes
 # committed MANIFEST.MF files.
-if [ -d "$SRC/META-INF" ]; then
+if [ -d "$SRC/resources/META-INF" ]; then
     mkdir -p "$OUT/META-INF"
-    (cd "$SRC/META-INF" && find . -type f ! -name 'MANIFEST.MF' -exec sh -c '
+    (cd "$SRC/resources/META-INF" && find . -type f ! -name 'MANIFEST.MF' -exec sh -c '
         for file do
             mkdir -p "$1/$(dirname "$file")"
             cp "$file" "$1/$file"
