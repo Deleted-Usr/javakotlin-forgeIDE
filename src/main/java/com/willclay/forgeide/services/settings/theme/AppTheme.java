@@ -4,8 +4,7 @@ import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMTMaterialDarkerIJTheme;
 import com.willclay.forgeide.highlighting.TokenTheme;
 
-import javax.swing.LookAndFeel;
-import javax.swing.UIManager;
+import javax.swing.*;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 import java.util.Arrays;
 import java.util.Optional;
@@ -77,12 +76,14 @@ public enum AppTheme
     {
         try
         {
-            return (LookAndFeel) Class.forName(UIManager.getSystemLookAndFeelClassName())
-                    .getDeclaredConstructor()
-                    .newInstance();
+            String systemLookAndFeelClassName = UIManager.getSystemLookAndFeelClassName();
+
+            UIManager.setLookAndFeel(systemLookAndFeelClassName);
+            return UIManager.getLookAndFeel();
         }
-        catch (ReflectiveOperationException | ClassCastException _)
+        catch (ReflectiveOperationException | ClassCastException | UnsupportedLookAndFeelException err)
         {
+            System.err.println("Could not instantiate system look and feel: " + err);
             return new MetalLookAndFeel();
         }
     }
