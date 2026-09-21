@@ -185,6 +185,10 @@ public final class Window extends JFrame
         workbench.setStatusBar(new StatusBar(executionManager, workspace, editorManager, settingsService));
         projectTree.setContextMenu(new ProjectContextMenu(actions));
 
+        // Move lives only in the context menu, so its F6 has to be bound on the
+        // tree by hand — see ProjectTree.installShortcut.
+        projectTree.installShortcut(actions.getMoveItemsAction());
+
         // The tree reports that a file was activated; what that means is the
         // action's business, not the tree's.
         projectTree.setOnFileActivated(item -> actions.getOpenSelectedFileAction().trigger());

@@ -11,6 +11,7 @@ import com.willclay.forgeide.actions.explorer.CopyPathAction;
 import com.willclay.forgeide.actions.explorer.CreateFileAction;
 import com.willclay.forgeide.actions.explorer.CreateFolderAction;
 import com.willclay.forgeide.actions.explorer.DeleteItemAction;
+import com.willclay.forgeide.actions.explorer.MoveItemsAction;
 import com.willclay.forgeide.actions.explorer.OpenSelectedFileAction;
 import com.willclay.forgeide.actions.explorer.RefreshTreeAction;
 import com.willclay.forgeide.actions.explorer.RenameItemAction;
@@ -79,6 +80,7 @@ public final class ActionManager
     private final CreateFileAction createFile;
     private final CreateFolderAction createFolder;
     private final RenameItemAction renameItem;
+    private final MoveItemsAction moveItems;
     private final DeleteItemAction deleteItem;
     private final CopyPathAction copyPath;
     private final RevealInFilesAction revealInFiles;
@@ -132,6 +134,7 @@ public final class ActionManager
         createFile = new CreateFileAction(context);
         createFolder = new CreateFolderAction(context);
         renameItem = new RenameItemAction(context);
+        moveItems = new MoveItemsAction(context);
         deleteItem = new DeleteItemAction(context);
         copyPath = new CopyPathAction(context);
         revealInFiles = new RevealInFilesAction(context);
@@ -246,6 +249,7 @@ public final class ActionManager
     public CreateFolderAction getCreateFolderAction() { return createFolder; }
 
     public RenameItemAction getRenameItemAction() { return renameItem; }
+    public MoveItemsAction getMoveItemsAction() { return moveItems; }
 
     public DeleteItemAction getDeleteItemAction() { return deleteItem; }
 

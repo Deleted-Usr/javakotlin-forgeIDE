@@ -6,6 +6,7 @@ import com.willclay.forgeide.workspace.ProjectItem;
 
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.util.List;
 
 /// Renames the selected file or folder.
 ///
@@ -13,6 +14,10 @@ import java.io.IOException;
 /// would leave the workspace holding a path that no longer exists. Closing and
 /// reopening the project is the honest way to do that, and [#appliesTo]
 /// says so in one line.
+///
+/// Not offered on several items either. A rename field can only hold one name,
+/// and Rename greying out is clearer than renaming whichever one was clicked
+/// last.
 ///
 /// The name is asked for on the row itself rather than in a dialog. That is the
 /// only part that moved: the tree opens a field and reports what was typed, and
@@ -33,10 +38,17 @@ public final class RenameItemAction extends ExplorerAction
     }
 
     @Override
+    protected boolean appliesTo(List<ProjectItem> selection)
+    {
+        return selection.size() == 1 && appliesTo(selection.getFirst());
+    }
+
+    @Override
     protected void perform()
     {
+        if (!appliesTo(getSelectedItems())) return;
+
         ProjectItem item = getSelection();
-        if (!appliesTo(item)) return;
 
         context.getProjectTree().startInlineRename(item);
     }

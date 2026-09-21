@@ -21,6 +21,7 @@ public final class ProjectContextMenu extends JPopupMenu
         addSeparator();
 
         add(actions.getRenameItemAction());
+        add(actions.getMoveItemsAction());
         add(actions.getDeleteItemAction());
         addSeparator();
 

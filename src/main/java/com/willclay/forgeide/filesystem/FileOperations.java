@@ -60,6 +60,33 @@ public final class FileOperations
         return Files.move(source, target);
     }
 
+    /// Moves a file or folder into another directory, keeping its name.
+    ///
+    /// Two refusals worth spelling out. A folder cannot be moved into itself or
+    /// into one of its own subfolders — there would be nowhere for it to go, and
+    /// the OS would report something far less readable. And an existing entry
+    /// with the same name is never overwritten: the user dragged something, they
+    /// did not ask to replace anything.
+    ///
+    /// @return the path it now lives at
+    public static Path move(Path source, Path targetDirectory) throws IOException
+    {
+        Path name = source.getFileName();
+        if (name == null) throw new IOException("Cannot move a filesystem root.");
+        if (!Files.isDirectory(targetDirectory)) throw new IOException(targetDirectory + " is not a folder.");
+
+        Path from = source.toAbsolutePath().normalize();
+        Path into = targetDirectory.toAbsolutePath().normalize();
+
+        if (into.startsWith(from)) throw new IOException("Cannot move " + name + " into itself.");
+
+        Path target = into.resolve(name);
+
+        if (Files.exists(target)) throw new IOException(name + " already exists in " + into.getFileName() + ".");
+
+        return Files.move(from, target);
+    }
+
     /// Directories are deleted with everything inside them.
     public static void delete(Path path) throws IOException
     {

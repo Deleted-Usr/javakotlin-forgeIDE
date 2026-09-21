@@ -43,7 +43,17 @@ public final class FileDialogs
     /// @return the chosen directory, or `null` if cancelled
     public Path chooseDirectory(String title)
     {
+        return chooseDirectory(title, null);
+    }
+
+    /// @param start the directory the chooser opens in, or `null` to open
+    ///              wherever it was last
+    /// @return the chosen directory, or `null` if cancelled
+    public Path chooseDirectory(String title, Path start)
+    {
         directoryChooser.setDialogTitle(title);
+        if (start != null) directoryChooser.setCurrentDirectory(start.toFile());
+
         if (directoryChooser.showOpenDialog(parent) != SystemFileChooser.APPROVE_OPTION) return null;
 
         return directoryChooser.getSelectedFile().toPath();

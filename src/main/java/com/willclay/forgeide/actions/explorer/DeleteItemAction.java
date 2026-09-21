@@ -5,13 +5,20 @@ import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.workspace.ProjectItem;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-/// Deletes the selected file, or the selected folder and everything in it.
+/// Deletes the selected files, and the selected folders with everything in them.
+///
+/// One confirmation for the whole selection, then one attempt per item. An item
+/// that cannot be deleted does not stop the others: the user asked for all of
+/// them to go, and the ones that could go, went. What did not is reported at
+/// the end, together.
 public final class DeleteItemAction extends ExplorerAction
 {
     public DeleteItemAction(ActionContext context)
     {
-        super(context, "Delete", null, "Delete the selected item");
+        super(context, "Delete", null, "Delete the selected items");
     }
 
     @Override
@@ -23,26 +30,47 @@ public final class DeleteItemAction extends ExplorerAction
     @Override
     protected void perform()
     {
-        ProjectItem item = getSelection();
-        if (!appliesTo(item)) return;
+        List<ProjectItem> items = withoutNested(getSelectedItems());
+        if (!appliesTo(items)) return;
 
-        // Spelled out rather than a bare "Are you sure?": a folder delete takes
-        // everything underneath it, and this is the last point at which the
-        // user can find that out.
-        String message = item.isDirectory()
-                ? "Delete " + item.name() + " and everything inside it?\nThis cannot be undone."
-                : "Delete " + item.name() + "?\nThis cannot be undone.";
+        if (!Utils.confirm(context.getFrame(), "Delete", describe(items))) return;
 
-        if (!Utils.confirm(context.getFrame(), "Delete", message)) return;
+        List<String> failures = new ArrayList<>();
 
-        try
+        for (ProjectItem item : items)
         {
-            context.getWorkspaceService().delete(item);
-            context.getEditorManager().fileDeleted(item.path());
+            try
+            {
+                context.getWorkspaceService().delete(item);
+                context.getEditorManager().fileDeleted(item.path());
+            }
+            catch (IOException e)
+            {
+                failures.add("Could not delete " + item.name() + ": " + e.getMessage());
+            }
         }
-        catch (IOException e)
+
+        if (!failures.isEmpty()) reportError(String.join("\n", failures));
+    }
+
+    /// Spelled out rather than a bare "Are you sure?": a folder delete takes
+    /// everything underneath it, and this is the last point at which the user
+    /// can find that out.
+    private static String describe(List<ProjectItem> items)
+    {
+        if (items.size() == 1)
         {
-            reportError("Could not delete " + item.name() + ": " + e.getMessage());
+            ProjectItem item = items.getFirst();
+
+            return item.isDirectory()
+                    ? "Delete " + item.name() + " and everything inside it?\nThis cannot be undone."
+                    : "Delete " + item.name() + "?\nThis cannot be undone.";
         }
+
+        boolean anyFolder = items.stream().anyMatch(ProjectItem::isDirectory);
+
+        return "Delete these " + items.size() + " items?"
+                + (anyFolder ? "\nFolders are deleted with everything inside them." : "")
+                + "\nThis cannot be undone.";
     }
 }

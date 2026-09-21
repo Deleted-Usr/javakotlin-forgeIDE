@@ -1,10 +1,12 @@
 package com.willclay.forgeide.services.settings.theme;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
-import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMTMaterialDarkerIJTheme;
 import com.willclay.forgeide.highlighting.TokenTheme;
 
+import javax.swing.LookAndFeel;
+import javax.swing.UIManager;
+import javax.swing.plaf.metal.MetalLookAndFeel;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -31,16 +33,34 @@ public enum AppTheme
             TokenTheme.light()
     ),
 
+    /// Swing's built-in cross-platform look and feel, with none of Forge's
+    /// FlatLaf styling applied. Useful for seeing what depends on FlatLaf.
+    METAL(
+            "swing-metal",
+            "Swing Metal",
+            new MetalLookAndFeel(),
+            TokenTheme.light()
+    ),
+
+    /// The platform's native look and feel (Windows, Aqua, GTK), falling
+    /// back to Metal when the platform does not provide one.
+    SYSTEM(
+            "swing-system",
+            "Swing System",
+            systemLookAndFeel(),
+            TokenTheme.light()
+    ),
+
     ;
 
     public static final AppTheme DEFAULT = MATERIAL_DARKER;
 
     private final String id;
     private final String displayName;
-    private final FlatLaf swingTheme;
+    private final LookAndFeel swingTheme;
     private final TokenTheme tokenTheme;
 
-    AppTheme(String id, String displayName, FlatLaf swingTheme, TokenTheme tokenTheme)
+    AppTheme(String id, String displayName, LookAndFeel swingTheme, TokenTheme tokenTheme)
     {
         this.id = id;
         this.displayName = displayName;
@@ -50,8 +70,22 @@ public enum AppTheme
 
     public String id()                 { return id; }
     public String getDisplayName()    { return displayName; }
-    public FlatLaf getSwingTheme()    { return swingTheme; }
+    public LookAndFeel getSwingTheme() { return swingTheme; }
     public TokenTheme getTokenTheme() { return tokenTheme; }
+
+    private static LookAndFeel systemLookAndFeel()
+    {
+        try
+        {
+            return (LookAndFeel) Class.forName(UIManager.getSystemLookAndFeelClassName())
+                    .getDeclaredConstructor()
+                    .newInstance();
+        }
+        catch (ReflectiveOperationException | ClassCastException _)
+        {
+            return new MetalLookAndFeel();
+        }
+    }
 
     public static Optional<AppTheme> find(String id)
     {

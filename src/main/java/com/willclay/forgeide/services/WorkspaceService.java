@@ -179,6 +179,21 @@ public final class WorkspaceService implements AutoCloseable
         return ProjectItem.of(renamed, item.language());
     }
 
+    /// Moves an item into another folder, keeping its name.
+    ///
+    /// Two directories change here rather than one — the item leaves one and
+    /// arrives in another — so both are reported. If the target folder has never
+    /// been expanded the tree ignores the second notification, and the item is
+    /// simply there when the folder is opened.
+    public ProjectItem move(ProjectItem item, ProjectItem targetFolder) throws IOException
+    {
+        Path moved = FileOperations.move(item.path(), targetFolder.path());
+        fireDirectoryChanged(parentOf(item));
+        fireDirectoryChanged(targetFolder.path());
+
+        return ProjectItem.of(moved, item.language());
+    }
+
     public void delete(ProjectItem item) throws IOException
     {
         FileOperations.delete(item.path());

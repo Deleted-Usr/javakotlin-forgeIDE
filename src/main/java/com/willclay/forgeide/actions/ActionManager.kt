@@ -11,6 +11,7 @@ import com.willclay.forgeide.actions.explorer.CopyPathAction
 import com.willclay.forgeide.actions.explorer.CreateFileAction
 import com.willclay.forgeide.actions.explorer.CreateFolderAction
 import com.willclay.forgeide.actions.explorer.DeleteItemAction
+import com.willclay.forgeide.actions.explorer.MoveItemsAction
 import com.willclay.forgeide.actions.explorer.OpenSelectedFileAction
 import com.willclay.forgeide.actions.explorer.RefreshTreeAction
 import com.willclay.forgeide.actions.explorer.RenameItemAction
@@ -149,6 +150,7 @@ class ActionManager(private val context: ActionContext) {
     val createFileAction = CreateFileAction(context)
     val createFolderAction = CreateFolderAction(context)
     val renameItemAction = RenameItemAction(context)
+    val moveItemsAction = MoveItemsAction(context)
     val deleteItemAction = DeleteItemAction(context)
     val copyPathAction = CopyPathAction(context)
     val revealInFilesAction = RevealInFilesAction(context)

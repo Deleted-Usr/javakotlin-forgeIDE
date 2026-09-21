@@ -4,6 +4,8 @@ import com.willclay.forgeide.workspace.ProjectItem;
 import com.willclay.forgeide.workspace.ProjectItemType;
 
 import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.DropMode;
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.JTree;
@@ -18,6 +20,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -26,7 +30,7 @@ import java.util.function.Consumer;
 /// The tree itself — a view, and nothing more.
 ///
 /// It does not read directories, does not create or delete anything, and does
-/// not open files. It reports two things outwards: which item is selected, and
+/// not open files. It reports two things outwards: which items are selected, and
 /// that a file was activated. Everything that follows from those is somebody
 /// else's job, which is what keeps this class the same size as the IDE grows.
 ///
@@ -34,9 +38,17 @@ import java.util.function.Consumer;
 /// will-expand listener because that is the last moment before the children have
 /// to be on screen.
 ///
-/// The same rule holds for the two things added since: an inline rename reports
-/// the new name outwards and lets somebody else move the file, and the speed
-/// search only ever changes which row is selected.
+/// The same rule holds for the things added since: an inline rename reports
+/// the new name outwards and lets somebody else move the file, a drop reports
+/// which items landed on which folder and lets somebody else move them, and the
+/// speed search only ever changes which row is selected.
+///
+/// **Selection works the way IntelliJ's does.** Click selects one row,
+/// Ctrl+click adds or removes a row, Shift+click selects a range, and Ctrl+A
+/// selects everything on screen. Swing does all of that once the selection mode
+/// allows it; what this class adds is the two accessors below, so that every
+/// action can ask for the whole selection or just the row the user acted on
+/// last.
 public final class ProjectTree extends JTree
 {
     private final ProjectTreeModel model;
@@ -44,6 +56,7 @@ public final class ProjectTree extends JTree
     private final TreeSpeedSearch speedSearch;
 
     private Consumer<ProjectItem> onFileActivated = item -> { };
+    private BiConsumer<List<ProjectItem>, ProjectItem> moveHandler = (items, folder) -> { };
     private JPopupMenu contextMenu;
 
     public ProjectTree(ProjectTreeModel model)
@@ -58,7 +71,13 @@ public final class ProjectTree extends JTree
         setShowsRootHandles(true);
         putClientProperty("FlatLaf.style", "background: $Panel.background; rowHeight: 26; selectionArc: 6; selectionInsets: 0,4,0,4; wideSelection: true");
         setCellRenderer(renderer);
-        getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
+
+        // Rows can be dragged onto folders. ON rather than INSERT: the tree is
+        // sorted, so there is no meaningful "between two rows" to drop into.
+        setDragEnabled(true);
+        setDropMode(DropMode.ON);
+        setTransferHandler(new ProjectTreeTransferHandler(this, (items, folder) -> moveHandler.accept(items, folder)));
 
         // Editing is started by the Rename command, never by a click; see
         // ProjectTreeCellEditor. Committing an edit that is still open when the
@@ -81,13 +100,78 @@ public final class ProjectTree extends JTree
         addTreeSelectionListener(e -> fireSelectionChanged());
     }
 
-    /// @return the selected item, or null if nothing is selected
+    /// @return the item the user acted on last — the lead of the selection —
+    ///         or null if nothing is selected
     public ProjectItem getSelectedItem()
     {
-        return getSelectionPath() != null
-                && getSelectionPath().getLastPathComponent() instanceof ProjectTreeNode node
+        TreePath lead = getLeadSelectionPath();
+
+        // After a Ctrl+click that *removed* a row, the lead still points at that
+        // row. Fall back to the first selected one rather than report something
+        // the user just deselected.
+        TreePath path = lead != null && isPathSelected(lead) ? lead : getSelectionPath();
+
+        return path != null && path.getLastPathComponent() instanceof ProjectTreeNode node
                 ? node.getItem()
                 : null;
+    }
+
+    /// @return every selected item in the order it appears on screen, or an
+    ///         empty list if nothing is selected
+    public List<ProjectItem> getSelectedItems()
+    {
+        int[] rows = getSelectionRows();
+        if (rows == null || rows.length == 0) return List.of();
+
+        // Rows rather than paths: the selection model remembers the order rows
+        // were clicked in, and top-to-bottom is what a Delete dialog should list.
+        int[] ordered = rows.clone();
+        Arrays.sort(ordered);
+
+        List<ProjectItem> items = new ArrayList<>(ordered.length);
+
+        for (int row : ordered)
+        {
+            TreePath path = getPathForRow(row);
+
+            if (path != null && path.getLastPathComponent() instanceof ProjectTreeNode node) items.add(node.getItem());
+        }
+
+        return items;
+    }
+
+    /// Selects these items and scrolls to the first, expanding the folder each
+    /// one is in. Items that are not on screen — inside a folder nobody has
+    /// expanded, say — are skipped rather than searched for, which would mean
+    /// reading directories the user has not asked to see.
+    public void selectItems(Collection<Path> paths)
+    {
+        List<TreePath> found = new ArrayList<>();
+
+        for (Path path : paths)
+        {
+            ProjectTreeNode node = model.findLoadedNode(path);
+
+            // The folder may be on screen but collapsed and never loaded, in
+            // which case expanding it is what reads the item in.
+            if (node == null && path.getParent() != null)
+            {
+                ProjectTreeNode parent = model.findLoadedNode(path.getParent());
+
+                if (parent != null)
+                {
+                    expandPath(new TreePath(parent.getPath()));
+                    node = model.findLoadedNode(path);
+                }
+            }
+
+            if (node != null) found.add(new TreePath(node.getPath()));
+        }
+
+        if (found.isEmpty()) return;
+
+        setSelectionPaths(found.toArray(TreePath[]::new));
+        scrollPathToVisible(found.getFirst());
     }
 
     /// Double-clicking a file. Wired to an action rather than handled here.
@@ -102,6 +186,29 @@ public final class ProjectTree extends JTree
     public void setRenameHandler(BiConsumer<ProjectItem, String> handler)
     {
         model.setRenameHandler(handler);
+    }
+
+    /// Called when rows are dropped onto a folder, with the items and the folder
+    /// they landed on. Moving them is a filesystem operation and belongs to an
+    /// action, not to a tree — the same rule as the rename handler.
+    public void setMoveHandler(BiConsumer<List<ProjectItem>, ProjectItem> handler)
+    {
+        this.moveHandler = handler;
+    }
+
+    /// Makes an action's accelerator work while the tree has focus.
+    ///
+    /// Needed for anything that lives only in the context menu: a menu that is
+    /// not on the menu bar never has its accelerators installed, so without this
+    /// the shortcut shown beside "Move to..." would do nothing.
+    public void installShortcut(Action action)
+    {
+        if (!(action.getValue(Action.ACCELERATOR_KEY) instanceof KeyStroke shortcut)) return;
+
+        String key = "forge." + action.getValue(Action.NAME);
+
+        getInputMap(JComponent.WHEN_FOCUSED).put(shortcut, key);
+        getActionMap().put(key, action);
     }
 
     /// Starts editing this item's row, if it is on screen and may be renamed.
@@ -257,8 +364,10 @@ public final class ProjectTree extends JTree
 
         // Right-clicking selects first. Without this the menu would act on
         // whatever was selected before, which is not the row under the cursor.
+        // A row already inside the selection keeps the selection as it is, so
+        // that Ctrl+click, Ctrl+click, right-click, Delete removes both.
         TreePath path = getPathForLocation(e.getX(), e.getY());
-        if (path != null) setSelectionPath(path);
+        if (path != null && !isPathSelected(path)) setSelectionPath(path);
 
         contextMenu.show(this, e.getX(), e.getY());
     }
