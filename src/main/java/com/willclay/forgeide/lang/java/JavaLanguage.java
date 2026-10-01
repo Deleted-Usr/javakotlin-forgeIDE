@@ -1,10 +1,12 @@
 package com.willclay.forgeide.lang.java;
 
 import com.willclay.forgeide.lang.api.EntryPoints;
+import com.willclay.forgeide.lang.api.FileIconStyle;
 import com.willclay.forgeide.lang.api.Toolchain;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.lang.api.Language;
 import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage;
+import com.willclay.forgeide.lang.api.templates.FileTemplates;
 import com.willclay.forgeide.workspace.Project;
 
 import java.io.IOException;
@@ -65,6 +67,18 @@ public final class JavaLanguage implements Language
                {
                }
                """.formatted(typeName);
+    }
+
+    @Override
+    public Optional<FileTemplates> fileTemplates()
+    {
+        return Optional.of(JavaTemplates.ALL);
+    }
+
+    @Override
+    public FileIconStyle fileIcon()
+    {
+        return new FileIconStyle("J", "Objects.YellowDark");
     }
 
     @Override

@@ -9,6 +9,7 @@ import com.willclay.forgeide.actions.edit.TextEditAction;
 import com.willclay.forgeide.actions.edit.UndoAction;
 import com.willclay.forgeide.actions.explorer.CopyPathAction;
 import com.willclay.forgeide.actions.explorer.CreateFileAction;
+import com.willclay.forgeide.actions.explorer.CreateFromTemplateAction;
 import com.willclay.forgeide.actions.explorer.CreateFolderAction;
 import com.willclay.forgeide.actions.explorer.DeleteItemAction;
 import com.willclay.forgeide.actions.explorer.MoveItemsAction;
@@ -77,6 +78,7 @@ public final class ActionManager
 
     // --- Explorer (the tree's context menu) --- //
     private final OpenSelectedFileAction openSelectedFile;
+    private final CreateFromTemplateAction createFromTemplate;
     private final CreateFileAction createFile;
     private final CreateFolderAction createFolder;
     private final RenameItemAction renameItem;
@@ -131,6 +133,7 @@ public final class ActionManager
         cleanProject = new CleanProjectAction(context, this::startExecution);
 
         openSelectedFile = new OpenSelectedFileAction(context);
+        createFromTemplate = new CreateFromTemplateAction(context);
         createFile = new CreateFileAction(context);
         createFolder = new CreateFolderAction(context);
         renameItem = new RenameItemAction(context);
@@ -243,6 +246,8 @@ public final class ActionManager
     public ResetLayoutAction getResetLayoutAction() { return resetLayout; }
 
     public OpenSelectedFileAction getOpenSelectedFileAction() { return openSelectedFile; }
+
+    public CreateFromTemplateAction getCreateFromTemplateAction() { return createFromTemplate; }
 
     public CreateFileAction getCreateFileAction() { return createFile; }
 

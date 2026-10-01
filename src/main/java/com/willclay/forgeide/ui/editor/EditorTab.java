@@ -37,6 +37,11 @@ public class EditorTab extends JPanel
     private static final int UNDO_LIMIT = 500;
 
     private final JScrollPane scrollPane;
+    private final Minimap minimap;
+
+    /// The scroll pane and the minimap together — the part a subclass moves
+    /// as one piece when it rearranges the tab, as [MarkdownTab] does.
+    private final JPanel editorArea = new JPanel(new BorderLayout());
 
     private final ForgeEditorPane textPane = new ForgeEditorPane();
     private final SyntaxHighlighter highlighter = new SyntaxHighlighter();
@@ -82,7 +87,19 @@ public class EditorTab extends JPanel
         scrollPane.setRowHeaderView(new TabGutter(textPane, breakpoints, lineChanges));
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
-        add(scrollPane, BorderLayout.CENTER);
+        minimap = new Minimap(textPane, scrollPane.getViewport());
+
+        editorArea.add(scrollPane, BorderLayout.CENTER);
+        editorArea.add(minimap, BorderLayout.EAST);
+        add(editorArea, BorderLayout.CENTER);
+    }
+
+    public void setMinimapVisible(boolean visible)
+    {
+        if (minimap.isVisible() == visible) return;
+
+        minimap.setVisible(visible);
+        editorArea.revalidate();
     }
 
     /// Changing the lexer recolours the document, and folding is derived from
@@ -209,6 +226,12 @@ public class EditorTab extends JPanel
     protected JScrollPane getEditorScrollPane()
     {
         return scrollPane;
+    }
+
+    /// The editor's scroll pane together with its minimap.
+    protected JComponent getEditorArea()
+    {
+        return editorArea;
     }
 
     // --- Undo history --- //

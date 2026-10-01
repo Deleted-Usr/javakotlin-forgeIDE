@@ -1,0 +1,14 @@
+{
+  "schemaVersion" : 1,
+  "configs" : [ {
+    "id" : "9854b2b4-c4b9-4f61-bbc1-295f41490ad1",
+    "name" : "ForgeRunner.Main",
+    "entryPoint" : "src/forgerunner/ForgeRunner.java",
+    "runtimeOptions" : [ ],
+    "programArguments" : [ ],
+    "workingDirectory" : "",
+    "environment" : { },
+    "beforeLaunch" : "COMPILE_TARGET"
+  } ],
+  "activeId" : "9854b2b4-c4b9-4f61-bbc1-295f41490ad1"
+}

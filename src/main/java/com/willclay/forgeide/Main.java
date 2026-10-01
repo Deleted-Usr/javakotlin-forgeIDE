@@ -12,12 +12,11 @@ import com.willclay.forgeide.ui.Window;
 import javax.swing.*;
 
 /*
- * TODO (After school project, or if I have time)
- *       - Attach FileIcons to language API
- *       - System Terminal Integration (Keep Current Console and implement a toggle in settings).
- *       - Full AI Agent Implementation (Writing Code, Reading and Writing to Files, Full Project Context, Agent Pet like GPT)
- *       - Custom theme documents for user-authored Swing/token theme combinations
- *       - A BlueJ style class diagram mode/setting
+ * TODO:
+ *  - System Terminal Integration (Keep Current Console and implement a toggle in settings).
+ *  - Full AI Agent Implementation (Writing Code, Reading and Writing to Files, Full Project Context, Agent Pet like GPT)
+ *  - Custom theme documents for user-authored Swing/token theme combinations
+ *  - A BlueJ style class diagram mode/setting
  *
  * DONE - the custom Swing components:
  *       - Editor Panel: EditorTextPane, ForgeCaret, SelectionPainter, BracketMatcher, SmartTyping, EditorPalette

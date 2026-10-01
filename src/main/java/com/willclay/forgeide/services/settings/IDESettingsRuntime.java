@@ -62,6 +62,7 @@ public final class IDESettingsRuntime implements AutoCloseable
                 editor.tabWidth(),
                 editor.insertSpaces()
         );
+        editorPanel.setMinimapVisible(editor.showMinimap());
 
         autoSaveTimer.setInitialDelay(saving.autoSaveDelaySeconds() * 1_000);
         autoSaveTimer.setDelay(saving.autoSaveDelaySeconds() * 1_000);

@@ -33,6 +33,7 @@ public final class GeneralSettings extends JPanel
     private final JSpinner fontSize = Utils.integerSpinner(14, 8, 48, 1);
     private final JSpinner tabWidth = Utils.integerSpinner(4, 1, 16, 1);
     private JCheckBox insertSpaces;
+    private JCheckBox showMinimap;
 
     private JCheckBox autoSave;
     private final JSpinner autoSaveDelay = Utils.integerSpinner(5, 1, 60, 1);
@@ -73,6 +74,7 @@ public final class GeneralSettings extends JPanel
         Utils.addCompactSettingsFormRow(panel, 1, "Font size:", fontSize);
         Utils.addCompactSettingsFormRow(panel, 2, "Tab width:", tabWidth);
         insertSpaces = Utils.addSettingsCheckBoxRow(panel, 3, "Insert spaces instead of tab characters", true);
+        showMinimap = Utils.addSettingsCheckBoxRow(panel, 4, "Show the minimap beside the editor", true);
 
         return panel;
     }
@@ -142,6 +144,7 @@ public final class GeneralSettings extends JPanel
         fontSize.setValue(editor.fontSize());
         tabWidth.setValue(editor.tabWidth());
         insertSpaces.setSelected(editor.insertSpaces());
+        showMinimap.setSelected(editor.showMinimap());
 
         autoSave.setSelected(saving.autoSave());
         autoSaveDelay.setValue(saving.autoSaveDelaySeconds());
@@ -168,7 +171,8 @@ public final class GeneralSettings extends JPanel
                         selectedFontFamily(),
                         ((Number) fontSize.getValue()).intValue(),
                         ((Number) tabWidth.getValue()).intValue(),
-                        insertSpaces.isSelected()),
+                        insertSpaces.isSelected(),
+                        showMinimap.isSelected()),
                 new IDESettingsConfiguration.Saving(
                         autoSave.isSelected(),
                         ((Number) autoSaveDelay.getValue()).intValue(),

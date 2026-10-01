@@ -9,6 +9,7 @@ import com.willclay.forgeide.actions.edit.TextEditAction
 import com.willclay.forgeide.actions.edit.UndoAction
 import com.willclay.forgeide.actions.explorer.CopyPathAction
 import com.willclay.forgeide.actions.explorer.CreateFileAction
+import com.willclay.forgeide.actions.explorer.CreateFromTemplateAction
 import com.willclay.forgeide.actions.explorer.CreateFolderAction
 import com.willclay.forgeide.actions.explorer.DeleteItemAction
 import com.willclay.forgeide.actions.explorer.MoveItemsAction
@@ -147,6 +148,7 @@ class ActionManager(private val context: ActionContext) {
 
     // Explorer (the tree's context menu)
     val openSelectedFileAction = OpenSelectedFileAction(context)
+    val createFromTemplateAction = CreateFromTemplateAction(context)
     val createFileAction = CreateFileAction(context)
     val createFolderAction = CreateFolderAction(context)
     val renameItemAction = RenameItemAction(context)

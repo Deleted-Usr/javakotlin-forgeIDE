@@ -24,6 +24,7 @@ import com.willclay.forgeide.ui.explorer.ProjectTree;
 import com.willclay.forgeide.ui.explorer.ProjectTreeModel;
 import com.willclay.forgeide.ui.explorer.ProjectTreePanel;
 import com.willclay.forgeide.ui.fonts.EditorFonts;
+import com.willclay.forgeide.ui.icons.FileIcons;
 import com.willclay.forgeide.ui.menu.EditorMenuBar;
 import com.willclay.forgeide.ui.settings.SettingsDialogController;
 import com.willclay.forgeide.ui.statusbar.StatusBar;
@@ -103,6 +104,7 @@ public final class Window extends JFrame
         console = new ConsolePanel(editorFont.deriveFont(CONSOLE_FONT_SIZE));
 
         languages = bootstrap.languages();
+        FileIcons.registerLanguages(languages.languages());
 
         workspaceService = createWorkspaceService();
         projectTree = new ProjectTree(new ProjectTreeModel(workspaceService));

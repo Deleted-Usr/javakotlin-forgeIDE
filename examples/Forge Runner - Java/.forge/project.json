@@ -1,4 +1,22 @@
 {
-  "schemaVersion": 1,
-  "language": "java"
+  "schemaVersion" : 1,
+  "name" : "Forge Runner - Java",
+  "language" : "java",
+  "workingDirectory" : ".",
+  "fileHandling" : {
+    "encoding" : "UTF-8",
+    "lineSeparators" : "preserve"
+  },
+  "excludedPaths" : [ ".git", ".forge" ],
+  "languageSettings" : {
+    "java" : {
+      "sourcePath" : "src",
+      "outputPath" : "out",
+      "libraryPaths" : [ "libs" ],
+      "jdkPath" : "C:/Users/willc/.jdks/openjdk-26.0.2.1",
+      "release" : 26,
+      "previewFeatures" : false,
+      "compilerBackend" : "externalJavac"
+    }
+  }
 }

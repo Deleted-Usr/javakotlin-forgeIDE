@@ -1,10 +1,12 @@
 package com.willclay.forgeide.lang.kotlin;
 
 import com.willclay.forgeide.lang.api.EntryPoints;
+import com.willclay.forgeide.lang.api.FileIconStyle;
 import com.willclay.forgeide.lang.api.Language;
 import com.willclay.forgeide.lang.api.LanguageSettingsPage;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.lang.api.Toolchain;
+import com.willclay.forgeide.lang.api.templates.FileTemplates;
 import com.willclay.forgeide.workspace.Project;
 
 import java.io.IOException;
@@ -31,6 +33,8 @@ public final class KotlinLanguage implements Language
     @Override public String defaultExtension() { return KotlinClassNames.EXTENSION; }
 
     @Override public Lexer lexer() { return lexer; }
+    @Override public FileIconStyle fileIcon() { return new FileIconStyle("K", "Objects.Purple"); }
+    @Override public Optional<FileTemplates> fileTemplates() { return Optional.of(KotlinTemplates.ALL); }
     @Override public Optional<Toolchain> toolchain() { return Optional.of(toolchain); }
 
     @Override

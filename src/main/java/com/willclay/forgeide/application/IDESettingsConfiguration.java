@@ -99,11 +99,17 @@ public record IDESettingsConfiguration(
     /// A settings file written before the editor font could be chosen has no
     /// `fontFamily`, which arrives here as null and becomes the bundled
     /// face — the font those files were already being shown in.
+    ///
+    /// `showMinimap` is a `Boolean` rather than a `boolean` for the same
+    /// reason: a file written before the minimap existed has no value for it,
+    /// and a missing primitive would quietly read as `false`. Null means
+    /// "never chosen", which becomes the default of showing it.
     public record Editor(
             String fontFamily,
             int fontSize,
             int tabWidth,
-            boolean insertSpaces
+            boolean insertSpaces,
+            Boolean showMinimap
     )
     {
         public Editor
@@ -111,11 +117,12 @@ public record IDESettingsConfiguration(
             if (fontFamily == null || fontFamily.isBlank()) fontFamily = EditorFonts.BUNDLED;
             if (fontSize < 8 || fontSize > 48) fontSize = 14;
             if (tabWidth < 1 || tabWidth > 16) tabWidth = 4;
+            if (showMinimap == null) showMinimap = true;
         }
 
         public static Editor defaults()
         {
-            return new Editor(EditorFonts.BUNDLED, 14, 4, true);
+            return new Editor(EditorFonts.BUNDLED, 14, 4, true, true);
         }
     }
 

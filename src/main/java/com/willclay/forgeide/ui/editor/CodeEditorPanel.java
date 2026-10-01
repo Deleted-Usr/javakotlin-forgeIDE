@@ -51,6 +51,7 @@ public final class CodeEditorPanel extends JPanel
     private Font editorFont;
     private int tabSize = 4;
     private boolean insertSpaces = true;
+    private boolean minimapVisible = true;
 
     private final List<Runnable> stateChangeListeners = new ArrayList<>();
     private final List<Runnable> editListeners = new ArrayList<>();
@@ -284,6 +285,13 @@ public final class CodeEditorPanel extends JPanel
         for (EditorTab tab : getOpenTabs()) applyEditorSettings(tab.getTextPane());
     }
 
+    /// Shows or hides the minimap on every open tab and every future one.
+    public void setMinimapVisible(boolean visible)
+    {
+        minimapVisible = visible;
+        for (EditorTab tab : getOpenTabs()) tab.setMinimapVisible(visible);
+    }
+
     public void addStateChangeListener(Runnable listener)
     {
         stateChangeListeners.add(Objects.requireNonNull(listener));
@@ -329,6 +337,7 @@ public final class CodeEditorPanel extends JPanel
                 : new EditorTab(file, lineEnding);
 
         applyEditorSettings(tab.getTextPane());
+        tab.setMinimapVisible(minimapVisible);
 
         tab.setTheme(theme);
         tab.setLexer(resolveLexer(file));

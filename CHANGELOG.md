@@ -5,6 +5,21 @@ All notable changes to ForgeIDE are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- Editor minimap beside each code editor, with a visible-region band; click or drag to scroll. Toggle it under **Settings → General → Editor defaults**.
+- "New Class" dialog (`Ctrl+N`, and **New Java Class...** in the project tree's context menu) for choosing what kind of file to create. Java offers class, 
+interface, record, enum, annotation, exception and compact source file; Kotlin and C++ have their own sets. Each kind has an IntelliJ-style icon. Files 
+created in the tree get the right `package` line.
+- `installPlugins` Gradle task that builds the Kotlin and C++ plugins and replaces the copies in `~/.forge/plugins`.
+- Language API: `Language.fileTemplates()` lets a language plugin supply its own dialog contents, and `Language.fileIcon()` its own file icon.
+
+### Changed
+- Updated Gradle version from 9.6.0 to 9.7.1
+- File icons for source files now come from the installed language plugins rather than a list built into the IDE, so a new plugin's files are recognised 
+automatically.
+
 ## [1.1.0] - 2026-09-26
 
 This release focuses on a much richer editor, an IntelliJ-style workbench that

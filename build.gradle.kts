@@ -37,15 +37,57 @@ tasks.jar {
     }
 }
 
+tasks.build {
+    dependsOn("buildFatJar")
+}
+
 tasks.register("buildAllJars") {
     group = "build"
-    description = "Compiles and packahes ForgeIDE and both language plugins"
+    description = "Compiles and packages ForgeIDE and both language plugins"
 
     dependsOn(
         ":jar",
         ":modules:forge-lang-kotlin:jar",
         ":modules:forge-lang-cpp:jar"
     )
+}
+
+// ForgeIDE loads Kotlin and C++ from ~/.forge/plugins, not from the build
+// output, so a plugin change does nothing until its JAR is copied there. Old
+// copies are removed first: two JARs for the same language would register it
+// twice, which LanguageRegistry rejects at startup.
+tasks.register("installPlugins") {
+    group = "build"
+    description = "Builds both language plugins and installs them into ~/.forge/plugins"
+
+    val pluginJars = listOf(":modules:forge-lang-kotlin:jar", ":modules:forge-lang-cpp:jar")
+    dependsOn(pluginJars)
+
+    doLast {
+        val pluginDirectory = file("${System.getProperty("user.home")}/.forge/plugins")
+
+        delete(fileTree(pluginDirectory) { include("forge-lang-*.jar") })
+        copy {
+            from(pluginJars.map { tasks.getByPath(it).outputs.files })
+            into(pluginDirectory)
+        }
+    }
+}
+
+tasks.register<Jar>("buildFatJar") {
+    group = "build"
+    description = "Compiles the main application and libraries into a singular fat jar file"
+
+    archiveFileName.set("ForgeIDE-Fat.jar")
+
+    manifest {
+        attributes["Main-Class"] = application.mainClass.get()
+    }
+
+    from(sourceSets.main.get().output)
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 application {

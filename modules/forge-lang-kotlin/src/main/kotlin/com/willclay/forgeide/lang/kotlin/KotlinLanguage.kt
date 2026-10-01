@@ -3,10 +3,12 @@ package com.willclay.forgeide.lang.kotlin
 import com.willclay.forgeide.annotations.SourceEquivalent
 import com.willclay.forgeide.annotations.SourceLanguage
 import com.willclay.forgeide.lang.api.EntryPoints
+import com.willclay.forgeide.lang.api.FileIconStyle
 import com.willclay.forgeide.lang.api.Language
 import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage
 import com.willclay.forgeide.lang.api.Lexer
 import com.willclay.forgeide.lang.api.Toolchain
+import com.willclay.forgeide.lang.api.templates.FileTemplates
 import com.willclay.forgeide.workspace.Project
 
 import java.io.IOException
@@ -41,6 +43,8 @@ class KotlinLanguage : Language {
     override fun defaultExtension() = KotlinClassNames.EXTENSION
 
     override fun lexer(): Lexer = lexer
+    override fun fileIcon() = FileIconStyle("K", "Objects.Purple")
+    override fun fileTemplates(): Optional<FileTemplates> = Optional.of(KotlinTemplates.ALL)
     override fun toolchain(): Optional<Toolchain> = Optional.of(toolchain)
 
     @Throws(IOException::class)

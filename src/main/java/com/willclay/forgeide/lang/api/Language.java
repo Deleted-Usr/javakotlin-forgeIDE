@@ -1,6 +1,7 @@
 package com.willclay.forgeide.lang.api;
 
 import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage;
+import com.willclay.forgeide.lang.api.templates.FileTemplates;
 import com.willclay.forgeide.workspace.Project;
 
 import java.io.IOException;
@@ -35,6 +36,29 @@ public interface Language
     Lexer lexer();
 
     String newFileTemplate(String typeName);
+
+    /// The kinds of file offered by this language's "New ..." dialog — class,
+    /// interface, record and so on.
+    ///
+    /// Optional. A language that returns empty keeps the plain name prompt,
+    /// which fills the file from [#newFileTemplate(String)].
+    default Optional<FileTemplates> fileTemplates()
+    {
+        return Optional.empty();
+    }
+
+    /// How this language's files look in the explorer, tabs and breadcrumb.
+    /// Every extension in [#extensions()] gets this icon.
+    ///
+    /// The default is the first letter of [#displayName()], so a newly installed
+    /// plugin has a recognisable icon before its author thinks about one.
+    default FileIconStyle fileIcon()
+    {
+        String name = displayName();
+        String letter = name == null || name.isEmpty() ? "" : name.substring(0, 1).toUpperCase(Locale.ROOT);
+
+        return new FileIconStyle(letter, FileIconStyle.DEFAULT_COLOUR);
+    }
 
     /// Returns the directory in which this language keeps project sources.
     Path sourceRoot(Project project);

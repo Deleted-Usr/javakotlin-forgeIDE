@@ -101,6 +101,17 @@ public final class EditorManager
         editor.newFile(template, lineSeparatorPolicy.resolve(LineEnding.LF));
     }
 
+    /// Fills a newly created file with its starting text and opens it.
+    ///
+    /// Written through the same encoding and line-separator settings as a
+    /// normal save, so a file made from a template is indistinguishable from
+    /// one the user typed and saved.
+    public void openNewFile(Path file, String contents) throws IOException
+    {
+        SourceFileIO.write(file, contents, lineSeparatorPolicy.resolve(LineEnding.LF), encoding.charset());
+        openFile(file);
+    }
+
     /// Applies to subsequent saves; open documents retain their detected format for PRESERVE.
     public void setLineSeparatorPolicy(LineSeparatorPolicy lineSeparatorPolicy)
     {

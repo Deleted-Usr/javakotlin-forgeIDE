@@ -28,8 +28,10 @@ class MarkdownTab(file: Path?, lineEnding: LineEnding) : EditorTab(file, lineEnd
     private val refreshTimer = Timer(1000) { renderer.setText(text) }
 
     init {
-        remove(editorScrollPane);
-        add(JSplitPane(JSplitPane.HORIZONTAL_SPLIT, editorScrollPane, renderer)
+        // The editor area carries the minimap with it, so it sits beside the
+        // source rather than on the far side of the preview.
+        remove(editorArea)
+        add(JSplitPane(JSplitPane.HORIZONTAL_SPLIT, editorArea, renderer)
             .apply { resizeWeight = 0.5; border = BorderFactory.createEmptyBorder() },
             BorderLayout.CENTER)
 

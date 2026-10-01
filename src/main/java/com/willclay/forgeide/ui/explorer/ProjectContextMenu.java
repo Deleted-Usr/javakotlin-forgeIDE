@@ -16,6 +16,7 @@ public final class ProjectContextMenu extends JPopupMenu
         add(actions.getOpenSelectedFileAction());
         addSeparator();
 
+        add(actions.getCreateFromTemplateAction());
         add(actions.getCreateFileAction());
         add(actions.getCreateFolderAction());
         addSeparator();

@@ -1,10 +1,12 @@
 package com.willclay.forgeide.lang.cpp;
 
 import com.willclay.forgeide.lang.api.EntryPoints;
+import com.willclay.forgeide.lang.api.FileIconStyle;
 import com.willclay.forgeide.lang.api.Language;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.lang.api.Toolchain;
 import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage;
+import com.willclay.forgeide.lang.api.templates.FileTemplates;
 import com.willclay.forgeide.workspace.Project;
 
 import java.io.IOException;
@@ -68,6 +70,18 @@ public final class CppLanguage implements Language
                    %s() = default;
                };
                """.formatted(typeName, typeName);
+    }
+
+    @Override
+    public Optional<FileTemplates> fileTemplates()
+    {
+        return Optional.of(CppTemplates.ALL);
+    }
+
+    @Override
+    public FileIconStyle fileIcon()
+    {
+        return new FileIconStyle("C", "Objects.Blue");
     }
 
     @Override
