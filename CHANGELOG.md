@@ -17,6 +17,8 @@ created in the tree get the right `package` line.
 
 ### Changed
 - Updated Gradle version from 9.6.0 to 9.7.1
+- Updated Jackson Core and Databind from 3.2.2 to 3.2.3
+- Actually changed the `.jar`s in `libs/` to hold the Jackson Core and Databind 3.2.3 jars instead of the 3.1.5 jars
 - File icons for source files now come from the installed language plugins rather than a list built into the IDE, so a new plugin's files are recognised 
 automatically.
 

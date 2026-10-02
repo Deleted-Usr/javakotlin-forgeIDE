@@ -296,7 +296,7 @@ public final class Minimap extends JComponent
         if (scrollable <= 0) return 0;
 
         double fraction = viewport.getViewPosition().y / (double) scrollable;
-        return Math.max(0, Math.min(1, fraction));
+        return Math.clamp(fraction, 0, 1);
     }
 
     private int lineCount()

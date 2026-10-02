@@ -23,8 +23,8 @@ dependencies {
     implementation("com.formdev:flatlaf-extras:3.7.2")
 
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.21")
-    implementation("tools.jackson.core:jackson-core:3.2.2")
-    implementation("tools.jackson.core:jackson-databind:3.2.2")
+    implementation("tools.jackson.core:jackson-core:3.2.3")
+    implementation("tools.jackson.core:jackson-databind:3.2.3")
 }
 
 tasks.named<ProcessResources>("processResources") {

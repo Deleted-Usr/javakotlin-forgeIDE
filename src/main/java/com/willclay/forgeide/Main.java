@@ -13,6 +13,14 @@ import javax.swing.*;
 
 /*
  * TODO:
+ *  - Multi-Language projects
+ *  - Proper markdown rendering
+ *  - Move JSON serialisation to the kotlinx.serialization package
+ *  - Custom Application Icon (For .exe too)
+ *  - IntelliJ-style double shift project search function
+ *  - Add a slash screen
+ *  - Movable / Dockable tabs
+ *  - Fully Custom Code Editor Text Pane (Extends JComponent), this will allow for inline javadocs rendering and much more
  *  - System Terminal Integration (Keep Current Console and implement a toggle in settings).
  *  - Full AI Agent Implementation (Writing Code, Reading and Writing to Files, Full Project Context, Agent Pet like GPT)
  *  - Custom theme documents for user-authored Swing/token theme combinations
