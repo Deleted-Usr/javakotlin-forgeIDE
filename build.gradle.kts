@@ -52,6 +52,19 @@ tasks.register("buildAllJars") {
     )
 }
 
+tasks.register<Copy>("buildLibraries") {
+    group = "build"
+    description = "Gathers all built library JARs into a distribution folder."
+
+    // Explicitly wait for the java/kotlin jar tasks to complete
+    dependsOn("jar")
+
+    from(layout.buildDirectory.dir("libs"))
+    into(layout.projectDirectory.dir("dist/libs"))
+    include("**/*.jar")
+}
+
+
 // ForgeIDE loads Kotlin and C++ from ~/.forge/plugins, not from the build
 // output, so a plugin change does nothing until its JAR is copied there. Old
 // copies are removed first: two JARs for the same language would register it
