@@ -26,7 +26,8 @@ final class InProcessJavaCompiler
             List<Path> sourceFiles,
             List<String> options,
             Charset encoding,
-            Consumer<String> output) throws IOException, InterruptedException
+            Consumer<String> output
+    ) throws IOException, InterruptedException
     {
         if (Thread.currentThread().isInterrupted()) throw new InterruptedException();
 

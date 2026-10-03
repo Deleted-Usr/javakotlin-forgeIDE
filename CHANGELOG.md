@@ -5,6 +5,16 @@ All notable changes to ForgeIDE are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Added
+
+#### Editor
+- Syntax highlighting now highlights TODO comments in the selected theme's colour (this includes TODO's across multiple lines)
+
+#### 
+
+
 ## [1.2.0] - 2026-10-03
 
 This release focuses on small editor improvements, quality of live additions, and minor 

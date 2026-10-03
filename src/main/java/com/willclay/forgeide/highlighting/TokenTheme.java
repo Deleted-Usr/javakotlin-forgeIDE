@@ -77,7 +77,7 @@ public final class TokenTheme
     {
         return attributes != null && switch (attributes.getAttribute(TOKEN_TYPE))
         {
-            case TokenType.STRING, TokenType.CHARACTER, TokenType.COMMENT, TokenType.DOC_COMMENT -> true;
+            case TokenType.STRING, TokenType.CHARACTER, TokenType.COMMENT, TokenType.DOC_COMMENT, TokenType.TODO  -> true;
             case null, default -> false;
         };
     }
@@ -110,6 +110,7 @@ public final class TokenTheme
         styles.put(TokenType.NUMBER,             style(new Color(0x1750EB), false));
         styles.put(TokenType.COMMENT,            style(new Color(0x8C8C8C), false));
         styles.put(TokenType.DOC_COMMENT,        style(new Color(0x66747B), false));
+        styles.put(TokenType.TODO,               style(new Color(0x0073BF), true));
         styles.put(TokenType.ANNOTATION,         style(new Color(0x9E880D), false));
         styles.put(TokenType.PARENTHESES,        style(new Color(0x174AD4), false));
         styles.put(TokenType.BRACKETS,           style(new Color(0x174AD4), false));
@@ -136,6 +137,7 @@ public final class TokenTheme
         styles.put(TokenType.NUMBER,             style(new Color(0x89B5DF), false));
         styles.put(TokenType.COMMENT,            style(new Color(0x9098A5), false));
         styles.put(TokenType.DOC_COMMENT,        style(new Color(0x9CAE9C), false));
+        styles.put(TokenType.TODO,               style(new Color(0x6FC3C9), true));
         styles.put(TokenType.ANNOTATION,         style(new Color(0xBEA2E0), false));
         styles.put(TokenType.PARENTHESES,        style(new Color(0xE2E4E8), false));
         styles.put(TokenType.BRACKETS,           style(new Color(0xE2E4E8), false));
@@ -162,6 +164,7 @@ public final class TokenTheme
         styles.put(TokenType.NUMBER,             style(new Color(0xF78C6C), false));
         styles.put(TokenType.COMMENT,            style(new Color(0x616161), false));
         styles.put(TokenType.DOC_COMMENT,        style(new Color(0x546E7A), false));
+        styles.put(TokenType.TODO,               style(new Color(0x80CBC4), true));
         styles.put(TokenType.ANNOTATION,         style(new Color(0x82AAFF), false));
         styles.put(TokenType.PARENTHESES,        style(new Color(0x89DDFF), false));
         styles.put(TokenType.BRACKETS,           style(new Color(0x89DDFF), false));

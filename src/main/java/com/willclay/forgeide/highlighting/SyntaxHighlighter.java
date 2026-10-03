@@ -7,6 +7,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
 import javax.swing.text.StyledDocument;
 import java.util.List;
+import java.util.regex.Matcher;
 
 /// Applies [Lexer]'s output to a text pane's document.
 ///
@@ -77,13 +78,22 @@ public final class SyntaxHighlighter
         String text = textOf(document);
         if (text == null || text.isEmpty()) return;
 
-        if (allowExtending && containsSpanningCharacter(text, start, end))
+        List<Token> tokens = lexer.tokenize(text);
+
+        if (allowExtending)
         {
-            end = text.length();
+            if (containsSpanningCharacter(text, start, end))
+            {
+                end = text.length();
+            }
+            else
+            {
+                end = Math.max(end, TodoFinder.endOfCommentLines(text, tokens, Math.max(start, end - 1)));
+            }
         }
+
         if (start >= end) return;
 
-        List<Token> tokens = lexer.tokenize(text);
 
         // Clear the range first. Without this a token that has just been deleted
         // or shortened leaves its colour behind on the characters it used to
@@ -100,6 +110,17 @@ public final class SyntaxHighlighter
             int to = Math.min(token.end(), end);
 
             document.setCharacterAttributes(from, to - from, theme.attributesFor(token.type()), true);
+        }
+
+        for (Token todo : TodoFinder.find(text, tokens))
+        {
+            if (todo.end() <= start) continue;
+            if (todo.start() >= end) break;
+
+            int from = Math.max(todo.start(), start);
+            int to = Math.min(todo.end(), end);
+
+            document.setCharacterAttributes(from, to - from, theme.attributesFor(TokenType.TODO), true);
         }
     }
 

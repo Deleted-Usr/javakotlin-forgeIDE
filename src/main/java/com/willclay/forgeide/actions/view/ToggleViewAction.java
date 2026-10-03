@@ -1,6 +1,7 @@
 package com.willclay.forgeide.actions.view;
 
 import com.willclay.forgeide.actions.ForgeAction;
+import com.willclay.forgeide.ui.WorkbenchPanel;
 
 import javax.swing.KeyStroke;
 import java.util.function.Consumer;
@@ -15,7 +16,7 @@ import java.util.function.Consumer;
 ///
 /// What to show or hide arrives as a callback rather than as a component,
 /// because a split pane child cannot simply be made invisible — the divider
-/// stays behind. [com.willclay.forgeide.ui.WorkbenchPanel] owns that
+/// stays behind. [WorkbenchPanel] owns that
 /// detail.
 public final class ToggleViewAction extends ForgeAction
 {

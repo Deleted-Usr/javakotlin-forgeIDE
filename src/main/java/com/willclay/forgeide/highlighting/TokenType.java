@@ -28,6 +28,7 @@ public enum TokenType
     NUMBER,
     COMMENT,
     DOC_COMMENT,
+    TODO,
     ANNOTATION,
 
     PARENTHESES,

@@ -82,12 +82,12 @@ public final class BracketMatcher
 
         int opening = OPENING.indexOf(bracket);
         int closing = CLOSING.indexOf(bracket);
+
         if (opening < 0 && closing < 0) return null;
         if (isText(document, offset)) return null;
 
-        return opening >= 0
-                ? scan(document, window, base, index, bracket, CLOSING.charAt(opening), 1)
-                : scan(document, window, base, index, bracket, OPENING.charAt(closing), -1);
+        return opening >= 0 ? scan(document, window, base, index, bracket, CLOSING.charAt(opening), 1)
+                            : scan(document, window, base, index, bracket, OPENING.charAt(closing), -1);
     }
 
     /// Walks outwards counting depth, so a nested pair of the same kind cannot
@@ -103,20 +103,20 @@ public final class BracketMatcher
         for (int index = from; index != last; index += step)
         {
             char character = window.charAt(index);
+
             if (character != self && character != partner) continue;
             if (isText(document, base + index)) continue;
 
             depth += character == self ? 1 : -1;
+
             if (depth != 0) continue;
 
-            return step > 0
-                    ? new Match(base + from, base + index, true)
-                    : new Match(base + index, base + from, true);
+            return step > 0 ? new Match(base + from, base + index, true)
+                            : new Match(base + index, base + from, true);
         }
 
-        return step > 0
-                ? new Match(base + from, -1, false)
-                : new Match(-1, base + from, false);
+        return step > 0 ? new Match(base + from, -1, false)
+                        : new Match(-1, base + from, false);
     }
 
     private static boolean isText(StyledDocument document, int offset)
