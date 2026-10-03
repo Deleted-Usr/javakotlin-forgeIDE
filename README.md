@@ -120,6 +120,9 @@ Copy the desired JARs into `~/.forge/plugins` and restart ForgeIDE. Each JAR inc
 its `LanguageProvider` service registration. ForgeIDE supplies the host classes and
 shared libraries at runtime, so they are not bundled into the plugin JARs.
 
+Alternatively, run `.\gradlew installPlugins`. This is a build command in `build.gradle.kts`
+that will compile and copy the plugin jars into the user's home root (`~/.forge/plugins`).
+
 Import the root `settings.gradle.kts` in IntelliJ IDEA and reload Gradle to see both
 modules. If the Kotlin plugin was previously linked as a separate Gradle project,
 unlink that standalone entry and use the root build instead.

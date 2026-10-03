@@ -4,9 +4,11 @@ import com.willclay.forgeide.editor.SyntaxUndoManager;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.highlighting.SyntaxHighlighter;
 import com.willclay.forgeide.highlighting.TokenTheme;
+import com.willclay.forgeide.ui.editor.markdown.MarkdownTab;
 import com.willclay.forgeide.ui.gutter.BreakpointModel;
 import com.willclay.forgeide.ui.gutter.LineChangeTracker;
 import com.willclay.forgeide.ui.gutter.TabGutter;
+import com.willclay.forgeide.ui.layouts.MinimapScrollPaneLayout;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 
 import javax.swing.*;
@@ -89,8 +91,10 @@ public class EditorTab extends JPanel
 
         minimap = new Minimap(textPane, scrollPane.getViewport());
 
+        scrollPane.setLayout(new MinimapScrollPaneLayout(minimap));
+        scrollPane.add(minimap);
+
         editorArea.add(scrollPane, BorderLayout.CENTER);
-        editorArea.add(minimap, BorderLayout.EAST);
         add(editorArea, BorderLayout.CENTER);
     }
 

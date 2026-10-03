@@ -13,8 +13,9 @@ import javax.swing.*;
 
 /*
  * TODO:
+ *  - a TO-DO panel with button next to the console button (model after IJPL)
  *  - Multi-Language projects
- *  - Proper markdown rendering
+ *  - Proper markdown rendering (Use custom layouts, and jetbrains markdown renderer)
  *  - Move JSON serialisation to the kotlinx.serialization package
  *  - Custom Application Icon (For .exe too)
  *  - IntelliJ-style double shift project search function

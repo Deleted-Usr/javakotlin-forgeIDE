@@ -12,6 +12,7 @@ sourceSets {
 }
 
 group = "com.willclay"
+version = "1.2.0"
 
 repositories {
     mavenCentral()
@@ -93,8 +94,13 @@ tasks.register<Jar>("buildFatJar") {
 
     archiveFileName.set("ForgeIDE-Fat.jar")
 
+    // FlatLaf and Jackson keep newer-Java versions of some classes under
+    // META-INF/versions (FlatLaf's HiDPI image support among them). Java only
+    // looks there when the manifest says so; the libraries' own manifests said
+    // it, but merging them into one jar replaces their manifests with this one.
     manifest {
         attributes["Main-Class"] = application.mainClass.get()
+        attributes["Multi-Release"] = "true"
     }
 
     from(sourceSets.main.get().output)

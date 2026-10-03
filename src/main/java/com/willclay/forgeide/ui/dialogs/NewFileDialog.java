@@ -96,7 +96,7 @@ public final class NewFileDialog extends JDialog
         this.templates = templates;
         this.languageIcon = languageIcon;
 
-        setContentPane(createContent(title));
+        setContentPane(createContent());
         installKeyboard();
 
         select(templates.templates().get(0));
@@ -133,7 +133,9 @@ public final class NewFileDialog extends JDialog
 
     // --- Layout --- //
 
-    private JPanel createContent(String title)
+    /// No heading inside the dialog: the title bar already names it, and
+    /// repeating it here only pushes the name field further down.
+    private JPanel createContent()
     {
         JPanel content = new JPanel(new GridBagLayout());
         content.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
@@ -142,11 +144,6 @@ public final class NewFileDialog extends JDialog
         c.gridx = 0;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1;
-
-        JLabel heading = new JLabel(title);
-        heading.putClientProperty(FlatClientProperties.STYLE_CLASS, "h3");
-        c.insets = new Insets(0, 0, 12, 0);
-        content.add(heading, c);
 
         nameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Name");
         nameField.getAccessibleContext().setAccessibleName("Name");

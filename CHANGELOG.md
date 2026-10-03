@@ -5,22 +5,40 @@ All notable changes to ForgeIDE are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.2.0] - 2026-10-03
+
+This release focuses on small editor improvements, quality of live additions, and minor 
+bug fixes.
 
 ### Added
-- Editor minimap beside each code editor, with a visible-region band; click or drag to scroll. Toggle it under **Settings → General → Editor defaults**.
+
+#### Editor
+- Minimap beside each code editor, with a visible-region band. Toggles under **Settings → General → Editor defaults**.
+
+#### Project Tree
 - "New Class" dialog (`Ctrl+N`, and **New Java Class...** in the project tree's context menu) for choosing what kind of file to create. Java offers class, 
 interface, record, enum, annotation, exception and compact source file; Kotlin and C++ have their own sets. Each kind has an IntelliJ-style icon. Files 
 created in the tree get the right `package` line.
+
+#### Backend
+- Language API: `Language.fileTemplates()` lets a language plugin supply its own dialog contents, and `Language.fileIcon()` 
+its own file icon.
+
+#### Build
 - `installPlugins` Gradle task that builds the Kotlin and C++ plugins and replaces the copies in `~/.forge/plugins`.
-- Language API: `Language.fileTemplates()` lets a language plugin supply its own dialog contents, and `Language.fileIcon()` its own file icon.
+- `buildLibraries` Gradle task that builds the external libraries (FlatLaf, Jackson) and copies them into a `dist/libs` folder
+- Distributions now ship with an Uber Jar file labeled `ForgeIDE-Fat.jar`
 
 ### Changed
 - Updated Gradle version from 9.6.0 to 9.7.1
 - Updated Jackson Core and Databind from 3.2.2 to 3.2.3
-- Actually changed the `.jar`s in `libs/` to hold the Jackson Core and Databind 3.2.3 jars instead of the 3.1.5 jars
 - File icons for source files now come from the installed language plugins rather than a list built into the IDE, so a new plugin's files are recognised 
 automatically.
+- Updated language plugin versions from 1.0.0 to 1.1.0
+- Added a version number (`1.2.0`) to `build.gradle.kts`
+
+### Fixed
+- Changed the distribution `.jar`s in `libs/` to hold the Jackson Core and Databind 3.2.3 jars instead of the 3.1.5 jars
 
 ## [1.1.0] - 2026-09-26
 
@@ -87,3 +105,4 @@ full move to the Gradle build system.
 - The System look-and-feel is installed correctly, and falls back to Metal if the platform theme cannot be loaded.
 
 [1.1.0]: https://github.com/Deleted-Usr/javakotlin-forgeIDE/compare/v1.0.0...v1.1.0
+[1.2.0]: https://github.com/Deleted-Usr/javakotlin-forgeIDE/compare/v1.1.0...v1.2.0

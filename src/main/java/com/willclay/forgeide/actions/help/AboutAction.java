@@ -9,7 +9,7 @@ public final class AboutAction extends ForgeAction
 {
     private static final String ABOUT_TEXT = """
             Forge IDE
-            A small Java IDE written with Swing.
+            A small Multi-Language IDE written with Swing.
 
             Running on Java %s
             """;
