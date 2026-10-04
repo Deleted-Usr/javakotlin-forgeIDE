@@ -8,7 +8,7 @@ import com.willclay.forgeide.ui.editor.markdown.MarkdownTab;
 import com.willclay.forgeide.ui.gutter.BreakpointModel;
 import com.willclay.forgeide.ui.gutter.LineChangeTracker;
 import com.willclay.forgeide.ui.gutter.TabGutter;
-import com.willclay.forgeide.ui.layouts.MinimapScrollPaneLayout;
+import com.willclay.forgeide.layouts.MinimapScrollPaneLayout;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 
 import javax.swing.*;

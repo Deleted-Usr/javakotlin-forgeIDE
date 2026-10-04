@@ -11,10 +11,12 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 #### Editor
 - Syntax highlighting now highlights TODO comments in the selected theme's colour (this includes TODO's across multiple lines)
+- Added a custom markdown renderer for rendering `.md` files in Markdown Tabs
 
 #### Build
 - Added shell and bash scrips under `packaging/executable` and `packaging/icon` that handle on-the-fly icon generation and executable building
 - `syncDistLibraries` Gradle task that makes the distribution's `libs/` contain exactly the runtime dependencies Gradle resolved
+- Added the `org.jetbrains:markdown:0.7.9` implementation to the `build.gradle.kts` to handle markdown parsing
 
 #### Distributions
 - Forge's `.exe` launcher now embeds and displays a custom `forge.ico` icon file

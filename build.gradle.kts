@@ -28,6 +28,8 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.22")
     implementation("tools.jackson.core:jackson-core:3.2.3")
     implementation("tools.jackson.core:jackson-databind:3.2.3")
+
+    implementation("org.jetbrains:markdown:0.7.9")
 }
 
 tasks.named<ProcessResources>("processResources") {

@@ -1,4 +1,4 @@
-package com.willclay.forgeide.ui.layouts;
+package com.willclay.forgeide.layouts;
 
 import javax.swing.*;
 import java.awt.*;

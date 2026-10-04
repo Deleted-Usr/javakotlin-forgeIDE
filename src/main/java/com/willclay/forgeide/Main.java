@@ -17,7 +17,6 @@ import javax.swing.*;
  *  - File icons based on type (icons for final classes, abstract classes, interfaces, etc.)
  *  - a TO-DO panel with button next to the console button (model after IJPL)
  *  - Multi-Language projects
- *  - Proper markdown rendering (Use custom layouts, and jetbrains markdown renderer)
  *  - Move JSON serialisation to the kotlinx.serialization package
  *  - IntelliJ-style double shift project search function
  *  - lightweight editor
@@ -29,6 +28,7 @@ import javax.swing.*;
  *  - Custom theme documents for user-authored Swing/token theme combinations
  *  - A BlueJ style class diagram mode/setting
  *  - Git Integration (IntelliJ-like)
+ *  - Add a Dev branch and merge on new releases
  *
  * DONE - the custom Swing components:
  *       - Editor Panel: EditorTextPane, ForgeCaret, SelectionPainter, BracketMatcher, SmartTyping, EditorPalette
