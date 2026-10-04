@@ -8,17 +8,19 @@ import com.willclay.forgeide.application.bootstrap.BootstrapResult;
 import com.willclay.forgeide.application.bootstrap.ForgeBootstrap;
 import com.willclay.forgeide.services.settings.theme.AppTheme;
 import com.willclay.forgeide.ui.Window;
+import com.willclay.forgeide.ui.icons.AppIcons;
 
 import javax.swing.*;
 
 /*
  * TODO:
+ *  - File icons based on type (icons for final classes, abstract classes, interfaces, etc.)
  *  - a TO-DO panel with button next to the console button (model after IJPL)
  *  - Multi-Language projects
  *  - Proper markdown rendering (Use custom layouts, and jetbrains markdown renderer)
  *  - Move JSON serialisation to the kotlinx.serialization package
- *  - Custom Application Icon (For .exe too)
  *  - IntelliJ-style double shift project search function
+ *  - lightweight editor
  *  - Add a slash screen
  *  - Movable / Dockable tabs
  *  - Fully Custom Code Editor Text Pane (Extends JComponent), this will allow for inline javadocs rendering and much more
@@ -85,6 +87,7 @@ public final class Main
             FlatAnimatedLafChange.duration = 300;
 
             Window w = new Window("Forge IDE", bootstrap);
+            AppIcons.install(w);
             w.setSize(INITIAL_WIDTH, INITIAL_HEIGHT);
             w.setLocationRelativeTo(null);
             w.setVisible(true);

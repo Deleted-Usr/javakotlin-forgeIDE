@@ -12,7 +12,16 @@ and this project follows [Semantic Versioning](https://semver.org/).
 #### Editor
 - Syntax highlighting now highlights TODO comments in the selected theme's colour (this includes TODO's across multiple lines)
 
-#### 
+#### Build
+- Added shell and bash scrips under `packaging/executable` and `packaging/icon` that handle on-the-fly icon generation and executable building
+
+#### Distributions
+- Forge's `.exe` launcher now embeds and displays a custom `forge.ico` icon file
+
+### Changed
+- The minimap now shows on the left side of the textpane's scrollbar instead of the right
+
+### Fixed
 
 
 ## [1.2.0] - 2026-10-03
@@ -37,7 +46,10 @@ its own file icon.
 #### Build
 - `installPlugins` Gradle task that builds the Kotlin and C++ plugins and replaces the copies in `~/.forge/plugins`.
 - `buildLibraries` Gradle task that builds the external libraries (FlatLaf, Jackson) and copies them into a `dist/libs` folder
-- Distributions now ship with an Uber Jar file labeled `ForgeIDE-Fat.jar`
+
+#### Distributions
+- Releases now ship with an Uber Jar file labeled `ForgeIDE-Fat.jar`
+- Releases now include a separate zip containing language plugins
 
 ### Changed
 - Updated Gradle version from 9.6.0 to 9.7.1

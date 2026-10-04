@@ -80,7 +80,7 @@ std::string buildClassPath(const fs::path& rootDir)
 
     for (const fs::path lib : libs)
     {
-        classPath += ";";
+        classPath += ';';
         classPath += lib.string();
     }
 
