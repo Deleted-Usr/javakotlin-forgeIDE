@@ -14,6 +14,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 #### Build
 - Added shell and bash scrips under `packaging/executable` and `packaging/icon` that handle on-the-fly icon generation and executable building
+- `syncDistLibraries` Gradle task that makes the distribution's `libs/` contain exactly the runtime dependencies Gradle resolved
 
 #### Distributions
 - Forge's `.exe` launcher now embeds and displays a custom `forge.ico` icon file
@@ -22,6 +23,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - The minimap now shows on the left side of the textpane's scrollbar instead of the right
 
 ### Fixed
+- The `.exe` actually closes when using the `[X]` button in the top right corner
 
 
 ## [1.2.0] - 2026-10-03

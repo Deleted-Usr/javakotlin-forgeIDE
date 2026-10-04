@@ -28,6 +28,7 @@ import javax.swing.*;
  *  - Full AI Agent Implementation (Writing Code, Reading and Writing to Files, Full Project Context, Agent Pet like GPT)
  *  - Custom theme documents for user-authored Swing/token theme combinations
  *  - A BlueJ style class diagram mode/setting
+ *  - Git Integration (IntelliJ-like)
  *
  * DONE - the custom Swing components:
  *       - Editor Panel: EditorTextPane, ForgeCaret, SelectionPainter, BracketMatcher, SmartTyping, EditorPalette

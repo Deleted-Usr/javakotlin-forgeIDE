@@ -65,15 +65,24 @@ public final class ApplicationShutdown
         }
 
         shuttingDown = true;
-        executionManager.stop();
 
-        for (RegisteredTask registered : List.copyOf(tasks))
+        // Once the user has chosen to exit, the window must close even if a
+        // task fails. Without the finally, one throwing task would skip
+        // dispose() and leave a frame that ignores its close button.
+        try
         {
-            runTask(registered);
-        }
+            executionManager.stop();
 
-        workspaceService.close();
-        frame.dispose();
+            for (RegisteredTask registered : List.copyOf(tasks))
+            {
+                runTask(registered);
+            }
+        }
+        finally
+        {
+            workspaceService.close();
+            frame.dispose();
+        }
         return true;
     }
 
@@ -83,7 +92,10 @@ public final class ApplicationShutdown
         {
             registered.task().run();
         }
-        catch (Exception e)
+        // LinkageError covers a missing or mismatched library JAR (such as
+        // NoClassDefFoundError). It is an Error, not an Exception, so it needs
+        // naming; otherwise one broken task would stop the ones after it.
+        catch (Exception | LinkageError e)
         {
             String detail = e.getMessage() == null || e.getMessage().isBlank()
                     ? e.getClass().getSimpleName()

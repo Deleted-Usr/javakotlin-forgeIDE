@@ -23,7 +23,9 @@ dependencies {
     implementation("com.formdev:flatlaf-intellij-themes:3.7.2")
     implementation("com.formdev:flatlaf-extras:3.7.2")
 
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.21")
+    // Must match the version jackson-databind asks for; Gradle silently upgrades
+    // to it anyway, so declaring an older one only hides what actually ships.
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.22")
     implementation("tools.jackson.core:jackson-core:3.2.3")
     implementation("tools.jackson.core:jackson-databind:3.2.3")
 }
@@ -63,6 +65,21 @@ tasks.register<Copy>("buildLibraries") {
     from(layout.buildDirectory.dir("libs"))
     into(layout.projectDirectory.dir("dist/libs"))
     include("**/*.jar")
+}
+
+// The exe launchers put every JAR in dist/libs on the class path, so that
+// folder must hold exactly the dependency versions Gradle resolved. Copying
+// them by hand drifts: a stale jackson-annotations once made session saving
+// throw NoClassDefFoundError, which stopped the window from closing.
+//
+// Sync (unlike Copy) also deletes anything in dist/libs that is no longer a
+// dependency, so an old version cannot linger next to its replacement.
+tasks.register<Sync>("syncDistLibraries") {
+    group = "distribution"
+    description = "Makes dist/libs contain exactly the runtime dependencies Gradle resolved"
+
+    from(configurations.runtimeClasspath)
+    into(layout.projectDirectory.dir("dist/libs"))
 }
 
 
