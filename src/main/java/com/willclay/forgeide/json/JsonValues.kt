@@ -24,12 +24,12 @@ import kotlinx.serialization.json.longOrNull
 object JsonValues {
     @JvmStatic
     fun toElement(value: Any?): JsonElement = when (value) {
-        null -> JsonNull
+        null           -> JsonNull
         is JsonElement -> value
-        is String -> JsonPrimitive(value)
-        is Number -> JsonPrimitive(value)
-        is Boolean -> JsonPrimitive(value)
-        is Map<*, *> -> JsonObject(value.entries.associate { (key, item) -> key.toString() to toElement(item) })
+        is String      -> JsonPrimitive(value)
+        is Number      -> JsonPrimitive(value)
+        is Boolean     -> JsonPrimitive(value)
+        is Map<*, *>   -> JsonObject(value.entries.associate { (key, item) -> key.toString() to toElement(item) })
         is Iterable<*> -> JsonArray(value.map(::toElement))
         else -> throw IllegalArgumentException("Not a JSON value: ${value.javaClass.name}")
     }
@@ -37,9 +37,9 @@ object JsonValues {
     /** Numbers come back as Integer, Long or Double, the same types Jackson chose. */
     @JvmStatic
     fun fromElement(element: JsonElement): Any? = when (element) {
-        JsonNull -> null
-        is JsonObject -> element.mapValues { (_, item) -> fromElement(item) }
-        is JsonArray -> element.map(::fromElement)
+        JsonNull         -> null
+        is JsonObject    -> element.mapValues { (_, item) -> fromElement(item) }
+        is JsonArray     -> element.map(::fromElement)
         is JsonPrimitive ->
             if (element.isString) {
                 element.content
