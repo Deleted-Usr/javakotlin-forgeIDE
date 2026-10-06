@@ -10,6 +10,7 @@ dist/
 out/
 bin/
 classes/
+.kotlin/
 
 !src/main/java/com/willclay/**/build/
 
