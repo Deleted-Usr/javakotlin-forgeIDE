@@ -54,8 +54,6 @@ class KotlinxJsonCodec : JsonCodec {
         @Suppress("UNCHECKED_CAST")
         fun <T> serializerFor(type: Class<T>): KSerializer<T> =
             serializerOrNull(type) as KSerializer<T>?
-                ?: throw IllegalStateException(
-                    "${type.name} is not @Serializable, so KotlinxJsonCodec cannot handle it."
-                )
+                ?: throw IllegalStateException("${type.name} is not @Serializable, so KotlinxJsonCodec cannot handle it.")
     }
 }
