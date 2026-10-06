@@ -1,6 +1,6 @@
 package com.willclay.forgeide.workspace.runconfig;
 
-import com.willclay.forgeide.json.JacksonJsonCodec;
+import com.willclay.forgeide.json.KotlinxJsonCodec;
 import com.willclay.forgeide.json.JsonFileStore;
 
 import java.io.IOException;
@@ -13,7 +13,7 @@ public final class RunConfigurationsStore
     private static final String DIRECTORY = ".forge";
     private static final String FILE = "runConfigurations.json";
 
-    private static final JsonFileStore JSON = new JsonFileStore(new JacksonJsonCodec());
+    private static final JsonFileStore JSON = new JsonFileStore(new KotlinxJsonCodec());
 
     private RunConfigurationsStore() { }
 

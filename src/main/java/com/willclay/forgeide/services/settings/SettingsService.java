@@ -191,12 +191,5 @@ public final class SettingsService
             boolean showConsoleOnRun,
             boolean clearConsoleOnRun,
             String theme
-    ) implements VersionedJsonDocument
-    {
-        @Override
-        public int schemaVersion()
-        {
-            return 0;
-        }
-    }
+    ) implements VersionedJsonDocument { }
 }

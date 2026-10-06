@@ -403,7 +403,7 @@ public class RunConfigurationDialog extends JDialog
         String value = field.getText().trim();
         if (value.isEmpty()) throw new IllegalArgumentException(description + " is required.");
 
-        return Path.of(value);
+        return Path.of(value).normalize();
     }
 
     /// Unlike the entry point, a blank working directory has an obvious meaning —
@@ -413,11 +413,11 @@ public class RunConfigurationDialog extends JDialog
     {
         String value = field.getText().trim();
 
-        return Path.of(value.isEmpty() ? fallback : value);
+        return Path.of(value.isEmpty() ? fallback : value).normalize();
     }
 
-    /// [RunConfiguration] normalises `.` to the empty path, which would leave the
-    /// field looking unset when it simply means the project root.
+    /// Normalising turns `.` into the empty path, which would leave the field
+    /// looking unset when it simply means the project root.
     private static String displayPath(Path path)
     {
         String value = path.toString();

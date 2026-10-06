@@ -1,7 +1,5 @@
 package com.willclay.forgeide.workspace.runconfig;
 
-import com.willclay.forgeide.json.JacksonJsonCodec;
-import com.willclay.forgeide.json.JsonFileStore;
 import com.willclay.forgeide.services.WorkspaceService;
 import com.willclay.forgeide.workspace.Project;
 
@@ -82,7 +80,7 @@ public final class RunConfigurationManager
                 entryPoints.getFirst(),
                 List.of(),
                 List.of(),
-                Path.of("."),
+                Path.of(""), // the project root, as "." normalises to
                 Map.of(),
                 BeforeLaunch.COMPILE_TARGET
         );
@@ -144,8 +142,10 @@ public final class RunConfigurationManager
 
     private void commit(List<RunConfiguration> config, String activeId) throws IOException
     {
+        // Copied because a Kotlin List is only read-only to Kotlin: Java could
+        // still change the ArrayList it was given, and all() hands this list out.
         RunConfigurations updated = new RunConfigurations(
-                RunConfigurations.CURRENT_SCHEMA_VERSION, config, activeId
+                RunConfigurations.CURRENT_SCHEMA_VERSION, List.copyOf(config), activeId
         );
 
         RunConfigurationsStore.write(requireProject().root(), updated);

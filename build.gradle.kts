@@ -1,5 +1,8 @@
 plugins {
     kotlin("jvm") version "2.4.20"
+    // Generates a serializer for every @Serializable class at compile time, so
+    // reading JSON needs no reflection. Must match the Kotlin version above.
+    kotlin("plugin.serialization") version "2.4.20"
     application
 }
 
@@ -28,6 +31,9 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.22")
     implementation("tools.jackson.core:jackson-core:3.2.3")
     implementation("tools.jackson.core:jackson-databind:3.2.3")
+
+    // Replacing Jackson one document at a time; see docs/markdown/KotlinxSerializationMigration.md.
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 
     implementation("org.jetbrains:markdown:0.7.9")
 }

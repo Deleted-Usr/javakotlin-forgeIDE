@@ -391,6 +391,12 @@ The equivalent Kotlin data-class property is normally called through `getProject
 classes would also need deliberate Jackson Kotlin-module configuration, constructor/default handling, and migration tests.
 The existing records are already concise and work well as persistence boundaries.
 
+**Update:** the persisted documents are now moving to Kotlin after all, together with the switch from Jackson to
+kotlinx.serialization. Both objections above have answers: `@JvmRecord` compiles a Kotlin data class into a real Java
+record, so Java keeps calling `configuration.projectName()`, and kotlinx.serialization needs no Kotlin module. The
+constructor/default handling and migration tests remain real work; see
+[KotlinxSerializationMigration.md](KotlinxSerializationMigration.md).
+
 ### Mutable and performance-sensitive systems
 
 The following should remain Java while their designs are evolving:

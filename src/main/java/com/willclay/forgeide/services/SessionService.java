@@ -89,12 +89,5 @@ public final class SessionService
             Path projectRoot,
             java.util.List<Path> openFiles,
             Path selectedFile
-    ) implements VersionedJsonDocument
-    {
-        @Override
-        public int schemaVersion()
-        {
-            return 0;
-        }
-    }
+    ) implements VersionedJsonDocument { }
 }
