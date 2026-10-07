@@ -61,7 +61,7 @@ public final class GeneralSettings extends JPanel
 
         Utils.addSettingsFormRow(panel, 0, "On startup:", startupAction);
         restoreOpenFiles = Utils.addSettingsCheckBoxRow(panel, 1, "Restore files that were open in the last session", true);
-        confirmDiscard = Utils.addSettingsCheckBoxRow(panel, 2, "Confirm before discarding unsaved changes", true);
+        confirmDiscard   = Utils.addSettingsCheckBoxRow(panel, 2, "Confirm before discarding unsaved changes", true);
 
         return panel;
     }
@@ -74,7 +74,7 @@ public final class GeneralSettings extends JPanel
         Utils.addCompactSettingsFormRow(panel, 1, "Font size:", fontSize);
         Utils.addCompactSettingsFormRow(panel, 2, "Tab width:", tabWidth);
         insertSpaces = Utils.addSettingsCheckBoxRow(panel, 3, "Insert spaces instead of tab characters", true);
-        showMinimap = Utils.addSettingsCheckBoxRow(panel, 4, "Show the minimap beside the editor", true);
+        showMinimap  = Utils.addSettingsCheckBoxRow(panel, 4, "Show the minimap beside the editor", true);
 
         return panel;
     }
@@ -97,7 +97,7 @@ public final class GeneralSettings extends JPanel
     {
         JPanel panel = Utils.createSettingsSection("Build and run");
 
-        showConsoleOnRun = Utils.addSettingsCheckBoxRow(panel, 0, "Show the console when a process starts", true);
+        showConsoleOnRun  = Utils.addSettingsCheckBoxRow(panel, 0, "Show the console when a process starts", true);
         clearConsoleOnRun = Utils.addSettingsCheckBoxRow(panel, 1, "Clear previous console output before running", true);
 
         return panel;
@@ -127,9 +127,9 @@ public final class GeneralSettings extends JPanel
 
     public void load(IDESettingsConfiguration settings)
     {
-        IDESettingsConfiguration.Startup startup = settings.startup();
-        IDESettingsConfiguration.Editor editor = settings.editor();
-        IDESettingsConfiguration.Saving saving = settings.saving();
+        IDESettingsConfiguration.Startup startup         = settings.startup();
+        IDESettingsConfiguration.Editor editor           = settings.editor();
+        IDESettingsConfiguration.Saving saving           = settings.saving();
         IDESettingsConfiguration.BuildAndRun buildAndRun = settings.buildAndRun();
 
         startupAction.setSelectedItem(IDESettingsConfiguration.OPEN_EMPTY_WINDOW.equals(startup.action())

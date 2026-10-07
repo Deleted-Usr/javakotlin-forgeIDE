@@ -1,8 +1,7 @@
-package com.willclay.forgeide.services;
+package com.willclay.forgeide.services.session;
 
 import com.willclay.forgeide.application.IDESessionConfiguration;
 import com.willclay.forgeide.json.JsonFileStore;
-import com.willclay.forgeide.json.VersionedJsonDocument;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,10 +17,9 @@ public final class SessionService
 
     public SessionService(Path configDirectory, JsonFileStore store)
     {
-        sessionFile = Objects.requireNonNull(configDirectory, "configDirectory")
-                .toAbsolutePath().normalize().resolve("session.json");
-        this.store = Objects.requireNonNull(store, "store");
-        session = load();
+        sessionFile = Objects.requireNonNull(configDirectory, "configDirectory").toAbsolutePath().normalize().resolve("session.json");
+        this.store  = Objects.requireNonNull(store, "store");
+        session     = load();
     }
 
     public IDESessionConfiguration get()
@@ -58,6 +56,7 @@ public final class SessionService
     private IDESessionConfiguration migrateUnversionedSession()
     {
         LegacySession legacy;
+
         try
         {
             legacy = store.read(sessionFile, LegacySession.class);
@@ -69,25 +68,21 @@ public final class SessionService
 
         IDESessionConfiguration migrated = new IDESessionConfiguration(
                 IDESessionConfiguration.CURRENT_SCHEMA_VERSION,
-                legacy.projectRoot(),
-                legacy.openFiles(),
-                legacy.selectedFile()
+
+                legacy.getProjectRoot(),
+                legacy.getOpenFiles(),
+                legacy.getSelectedFile()
         );
+
         try
         {
             store.write(sessionFile, migrated);
         }
         catch (IOException exception)
         {
-            System.err.println("Could not persist migrated IDE session to "
-                    + sessionFile + ": " + exception.getMessage());
+            System.err.println("Could not persist migrated IDE session to " + sessionFile + ": " + exception.getMessage());
         }
+
         return migrated;
     }
-
-    record LegacySession(
-            Path projectRoot,
-            java.util.List<Path> openFiles,
-            Path selectedFile
-    ) implements VersionedJsonDocument { }
 }

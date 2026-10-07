@@ -2,7 +2,7 @@ package com.willclay.forgeide.application.bootstrap;
 
 import com.willclay.forgeide.application.AppDirectories;
 import com.willclay.forgeide.lang.LanguageRegistry;
-import com.willclay.forgeide.services.SessionService;
+import com.willclay.forgeide.services.session.SessionService;
 import com.willclay.forgeide.services.settings.SettingsService;
 
 import com.willclay.forgeide.services.ApplicationShutdown;

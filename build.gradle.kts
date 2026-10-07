@@ -26,16 +26,10 @@ dependencies {
     implementation("com.formdev:flatlaf-intellij-themes:3.7.2")
     implementation("com.formdev:flatlaf-extras:3.7.2")
 
-    // Must match the version jackson-databind asks for; Gradle silently upgrades
-    // to it anyway, so declaring an older one only hides what actually ships.
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.22")
-    implementation("tools.jackson.core:jackson-core:3.2.3")
-    implementation("tools.jackson.core:jackson-databind:3.2.3")
-
-    // Replacing Jackson one document at a time; see docs/markdown/KotlinxSerializationMigration.md.
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
-
     implementation("org.jetbrains:markdown:0.7.9")
+
+    implementation("com.github.weisj:jsvg:2.2.0")
 }
 
 tasks.named<ProcessResources>("processResources") {

@@ -2,7 +2,6 @@ package com.willclay.forgeide.services.settings;
 
 import com.willclay.forgeide.application.IDESettingsConfiguration;
 import com.willclay.forgeide.json.JsonFileStore;
-import com.willclay.forgeide.json.VersionedJsonDocument;
 import com.willclay.forgeide.services.settings.theme.AppTheme;
 
 import java.io.IOException;
@@ -118,15 +117,22 @@ public final class SettingsService
 
         IDESettingsConfiguration migrated = new IDESettingsConfiguration(
                 IDESettingsConfiguration.CURRENT_SCHEMA_VERSION,
-                new IDESettingsConfiguration.Appearance(legacy.theme()),
+
+                new IDESettingsConfiguration.Appearance(
+                        legacy.getTheme()
+                ),
                 new IDESettingsConfiguration.Startup(
-                        legacy.startupAction(), legacy.restoreOpenFiles(), legacy.confirmDiscard()),
+                        legacy.getStartupAction(), legacy.getRestoreOpenFiles(), legacy.getConfirmDiscard()
+                ),
                 new IDESettingsConfiguration.Editor(
-                        null, legacy.editorFontSize(), legacy.tabWidth(), legacy.insertSpaces(), null),
+                        "", legacy.getEditorFontSize(), legacy.getTabWidth(), legacy.getInsertSpaces(), true
+                ),
                 new IDESettingsConfiguration.Saving(
-                        legacy.autoSave(), legacy.autoSaveDelaySeconds(), legacy.saveBeforeBuild()),
+                        legacy.getAutoSave(), legacy.getAutoSaveDelaySeconds(), legacy.getSaveBeforeBuild()
+                ),
                 new IDESettingsConfiguration.BuildAndRun(
-                        legacy.showConsoleOnRun(), legacy.clearConsoleOnRun())
+                        legacy.getShowConsoleOnRun(), legacy.getClearConsoleOnRun()
+                )
         );
 
         try
@@ -144,6 +150,7 @@ public final class SettingsService
     /// Ensures persisted theme identifiers refer to a theme available at runtime.
     private static IDESettingsConfiguration normalise(IDESettingsConfiguration config)
     {
+        config = config.normalised();
         if (AppTheme.find(config.appearance().theme()).isPresent()) return config;
         return config.withTheme(AppTheme.DEFAULT.id());
     }
@@ -177,19 +184,4 @@ public final class SettingsService
     {
         listeners.add(Objects.requireNonNull(listener, "listener"));
     }
-
-    record LegacySettings(
-            String startupAction,
-            boolean restoreOpenFiles,
-            boolean confirmDiscard,
-            int editorFontSize,
-            int tabWidth,
-            boolean insertSpaces,
-            boolean autoSave,
-            int autoSaveDelaySeconds,
-            boolean saveBeforeBuild,
-            boolean showConsoleOnRun,
-            boolean clearConsoleOnRun,
-            String theme
-    ) implements VersionedJsonDocument { }
 }

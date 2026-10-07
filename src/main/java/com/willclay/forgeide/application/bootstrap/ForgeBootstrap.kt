@@ -1,10 +1,10 @@
 package com.willclay.forgeide.application.bootstrap
 
 import com.willclay.forgeide.application.AppDirectories
-import com.willclay.forgeide.json.JacksonJsonCodec
 import com.willclay.forgeide.json.JsonFileStore
+import com.willclay.forgeide.json.KotlinxJsonCodec
 import com.willclay.forgeide.lang.LanguageRegistry
-import com.willclay.forgeide.services.SessionService
+import com.willclay.forgeide.services.session.SessionService
 import com.willclay.forgeide.services.settings.SettingsService
 
 import java.io.IOException
@@ -24,14 +24,15 @@ class ForgeBootstrap {
         // Phase 1 - The only genuinely fatal step.
         val directories = try {
             AppDirectories.resolve()
-        } catch (e: IOException) {
+        }
+        catch (e: IOException) {
             throw BootstrapException("Could not prepare ~/.forge: ${e.message}", e)
         }
 
         // Phase 2 - Both services already degrade to defaults internally.
-        val store = JsonFileStore(JacksonJsonCodec())
+        val store    = JsonFileStore(KotlinxJsonCodec())
         val settings = SettingsService(directories.configDirectory(), store)
-        val session = SessionService(directories.configDirectory(), store)
+        val session  = SessionService(directories.configDirectory(), store)
 
         // Phase 3 - Discovery is allowed to fall plugin-by-plugin
         val loader = LanguagePluginLoader(directories, settings)
@@ -39,7 +40,8 @@ class ForgeBootstrap {
 
         val registry = try {
             LanguageRegistry(discovered.languages)
-        } catch (e: IllegalArgumentException) {
+        }
+        catch (e: IllegalArgumentException) {
             throw BootstrapException("No usable languages were found: ${e.message}", e)
         }
 

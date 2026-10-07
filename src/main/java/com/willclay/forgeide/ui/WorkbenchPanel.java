@@ -2,6 +2,7 @@ package com.willclay.forgeide.ui;
 
 import com.formdev.flatlaf.util.UIScale;
 import com.willclay.forgeide.application.WorkbenchLayout;
+
 import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -25,7 +26,7 @@ public final class WorkbenchPanel extends JPanel
 
     private final JSplitPane treeAndEditor;
     private final JSplitPane editorAndConsole;
-    private final JPanel body = new JPanel(new BorderLayout());
+    private final JPanel body   = new JPanel(new BorderLayout());
     private final JPanel footer = new JPanel(new BorderLayout());
     private final JToolBar consoleStrip = new JToolBar();
     private final JLabel consoleSummary = new JLabel();
@@ -206,15 +207,17 @@ public final class WorkbenchPanel extends JPanel
         {
             super.doLayout();
 
-            treeAndEditor.setDividerSize(projectVisible ? UIScale.scale(5) : 0);
+            treeAndEditor.setDividerSize(projectVisible    ? UIScale.scale(5) : 0);
             editorAndConsole.setDividerSize(consoleVisible ? UIScale.scale(5) : 0);
 
             int height = editorAndConsole.getHeight();
             if (consoleVisible && height > 0)
             {
-                editorAndConsole.setDividerLocation(Math.max(0, height
+                editorAndConsole.setDividerLocation(
+                        Math.max(0, height
                         - Math.clamp(height - UIScale.scale(120), 0, UIScale.scale(consoleHeight))
-                        - editorAndConsole.getDividerSize()));
+                        - editorAndConsole.getDividerSize())
+                );
             }
 
             editorAndConsole.doLayout();
@@ -240,6 +243,8 @@ public final class WorkbenchPanel extends JPanel
 
     public void restoreLayout(WorkbenchLayout layout)
     {
+        layout = layout.normalised();
+
         projectWidth = layout.projectWidth();
         consoleHeight = layout.consoleHeight();
 

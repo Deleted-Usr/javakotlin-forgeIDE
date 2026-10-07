@@ -23,7 +23,7 @@ object ProjectMetadata {
     @Throws(IOException::class)
     @JvmStatic
     fun read(root: Path): ProjectConfiguration {
-        val metadata      = pathFor(root, FILE)
+        val metadata = pathFor(root, FILE)
         val configuration: ProjectConfiguration = json.read(metadata, ProjectConfiguration::class.java)
 
         return if (configuration.projectName.isEmpty()) {

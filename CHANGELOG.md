@@ -12,6 +12,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 #### Editor
 - Syntax highlighting now highlights TODO comments in the selected theme's colour (this includes TODO's across multiple lines)
 - Added a custom markdown renderer for rendering `.md` files in Markdown Tabs
+- A custom icon is shown on the taskbar and in the top left corner of the application
 
 #### Build
 - Added shell and bash scrips under `packaging/executable` and `packaging/icon` that handle on-the-fly icon generation and executable building
@@ -23,6 +24,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - The minimap now shows on the left side of the textpane's scrollbar instead of the right
+- JSON persistence (IDE and project settings, IDE sessions, metadata and run configs) are now fully converted to Kotlin, using the
+`kotlinx.serialization` package and `kotlinx-serialization-json` plugin
 
 ### Fixed
 - The `.exe` actually closes when using the `[X]` button in the top right corner

@@ -1,6 +1,9 @@
 package com.willclay.forgeide.ui;
 
 import com.willclay.forgeide.actions.ActionManager;
+import com.willclay.forgeide.application.IDESessionConfiguration;
+import com.willclay.forgeide.application.IDESettingsConfiguration;
+import com.willclay.forgeide.application.WorkbenchLayout;
 import com.willclay.forgeide.application.bootstrap.BootstrapResult;
 import com.willclay.forgeide.application.bootstrap.BootstrapWarning;
 import com.willclay.forgeide.editor.EditorManager;
@@ -8,7 +11,7 @@ import com.willclay.forgeide.execution.ExecutionManager;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.lang.LanguageRegistry;
 import com.willclay.forgeide.services.ApplicationShutdown;
-import com.willclay.forgeide.services.SessionService;
+import com.willclay.forgeide.services.session.SessionService;
 import com.willclay.forgeide.services.settings.SettingsService;
 import com.willclay.forgeide.services.settings.IDESettingsRuntime;
 import com.willclay.forgeide.services.settings.theme.ThemeService;
@@ -35,9 +38,6 @@ import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 import com.willclay.forgeide.workspace.Project;
 import com.willclay.forgeide.workspace.Workspace;
-import com.willclay.forgeide.application.IDESessionConfiguration;
-import com.willclay.forgeide.application.IDESettingsConfiguration;
-import com.willclay.forgeide.application.WorkbenchLayout;
 import com.willclay.forgeide.workspace.runconfig.RunConfigurationManager;
 
 import javax.swing.JFrame;
@@ -91,7 +91,7 @@ public final class Window extends JFrame
         this.baseTitle = title;
 
         SettingsService settingsService = bootstrap.settings();
-        SessionService sessionService = bootstrap.session();
+        SessionService sessionService   = bootstrap.session();
 
         this.settingsService = Objects.requireNonNull(settingsService, "settingsService");
         Objects.requireNonNull(sessionService, "sessionService");
@@ -99,15 +99,15 @@ public final class Window extends JFrame
                 settingsService.get().editor().fontFamily(),
                 settingsService.get().editor().fontSize());
 
-        editorPanel = new CodeEditorPanel(editorFont);
+        editorPanel   = new CodeEditorPanel(editorFont);
         editorManager = new EditorManager(editorPanel);
-        console = new ConsolePanel(editorFont.deriveFont(CONSOLE_FONT_SIZE));
+        console       = new ConsolePanel(editorFont.deriveFont(CONSOLE_FONT_SIZE));
 
         languages = bootstrap.languages();
         FileIcons.registerLanguages(languages.languages());
 
         workspaceService = createWorkspaceService();
-        projectTree = new ProjectTree(new ProjectTreeModel(workspaceService));
+        projectTree      = new ProjectTree(new ProjectTreeModel(workspaceService));
 
         workbench = new WorkbenchPanel(new ProjectTreePanel(projectTree), editorPanel, console);
 
@@ -115,9 +115,14 @@ public final class Window extends JFrame
         // toolbar and the context menu — and both of those live on components
         // the context already holds. Hence the two setters below rather than
         // constructor arguments.
-        ExecutionManager executionManager = new ExecutionManager();
-        ApplicationShutdown applicationShutdown =
-                new ApplicationShutdown(this, editorManager, executionManager, workspaceService, settingsService);
+        ExecutionManager executionManager       = new ExecutionManager();
+        ApplicationShutdown applicationShutdown = new ApplicationShutdown(
+                this,
+                editorManager,
+                executionManager,
+                workspaceService,
+                settingsService
+        );
 
         settingsRuntime = new IDESettingsRuntime(this, settingsService, editorPanel, editorManager);
         applicationShutdown.addTask("stop automatic saving", settingsRuntime::close);

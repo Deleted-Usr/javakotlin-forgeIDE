@@ -5,7 +5,7 @@ import java.util.Map;
 /// Typed, language-owned project settings that can be persisted in project.json.
 ///
 /// The project configuration deliberately stores the JSON-shaped map rather
-/// than teaching Jackson about every installed language record. External
+/// than teaching the JSON library about every installed language record. External
 /// language plugins therefore remain independent of Forge's JSON codec.
 public interface LanguageSettings
 {
