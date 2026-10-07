@@ -5,9 +5,13 @@ import com.willclay.forgeide.application.WorkbenchLayout;
 
 import javax.swing.*;
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.KeyboardFocusManager;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /// Arranges the workbench and remembers panel sizes while panels are collapsed.
 /// Session persistence belongs to the caller; this view only captures/applies values.
@@ -19,23 +23,41 @@ import java.awt.KeyboardFocusManager;
 /// status bar — is stacked inside `body` in the CENTER. That is what lets the
 /// stripe reach from just under the menu bar to the bottom of the window, as
 /// IntelliJ's tool window stripe does.
+///
+/// **The bottom area holds one tool at a time.** The console, the TODO list
+/// and anything added later share a single slot under the editor, swapped
+/// with a [CardLayout], the way IntelliJ's bottom tool windows replace each
+/// other. Each tool is registered under an id with [#addBottomTool], and
+/// [#getBottomTool()] is the one place that says which is showing — the
+/// View menu ticks and the side bar buttons are synced from it, never the
+/// other way round. Sharing one slot also means sharing one height, so
+/// switching from the console to the TODO list does not make the editor jump.
 public final class WorkbenchPanel extends JPanel
 {
+    /// Ids for the bottom tools Forge ships with.
+    public static final String CONSOLE = "console";
+    public static final String TODO = "todo";
+
     private final JComponent projectTree;
-    private final JComponent console;
 
     private final JSplitPane treeAndEditor;
-    private final JSplitPane editorAndConsole;
+    private final JSplitPane editorAndBottom;
     private final JPanel body   = new JPanel(new BorderLayout());
     private final JPanel footer = new JPanel(new BorderLayout());
     private final JToolBar consoleStrip = new JToolBar();
     private final JLabel consoleSummary = new JLabel();
 
+    private final CardLayout bottomCards = new CardLayout();
+    private final JPanel bottomArea = new JPanel(bottomCards);
+    private final Map<String, JComponent> bottomTools = new LinkedHashMap<>();
+
     private int projectWidth = 240;
-    private int consoleHeight = 200;
+    private int bottomHeight = 200;
 
     private boolean projectVisible = true;
-    private boolean consoleVisible = true;
+
+    /// The id of the bottom tool on screen, or null while the area is collapsed.
+    private String bottomTool = CONSOLE;
     private boolean applyingLayout;
 
     private Runnable returnToEditor = () -> { };
@@ -48,18 +70,19 @@ public final class WorkbenchPanel extends JPanel
     {
         super(new BorderLayout());
         this.projectTree = projectTree;
-        this.console = console;
 
         projectTree.setMinimumSize(new Dimension(0, 0));
-        console.setMinimumSize(new Dimension(0, 0));
+        bottomArea.setMinimumSize(new Dimension(0, 0));
         editor.setMinimumSize(new Dimension(0, 0));
+
+        addBottomTool(CONSOLE, console);
 
         treeAndEditor = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, projectTree, editor);
         treeAndEditor.setResizeWeight(0);
-        editorAndConsole = new JSplitPane(JSplitPane.VERTICAL_SPLIT, treeAndEditor, console);
-        editorAndConsole.setResizeWeight(1); // extra height belongs to the editor
+        editorAndBottom = new JSplitPane(JSplitPane.VERTICAL_SPLIT, treeAndEditor, bottomArea);
+        editorAndBottom.setResizeWeight(1); // extra height belongs to the editor
 
-        for (JSplitPane split : new JSplitPane[]{treeAndEditor, editorAndConsole})
+        for (JSplitPane split : new JSplitPane[]{treeAndEditor, editorAndBottom})
         {
             split.setBorder(BorderFactory.createEmptyBorder());
             split.setContinuousLayout(true);
@@ -77,14 +100,14 @@ public final class WorkbenchPanel extends JPanel
                 }
             }
         });
-        editorAndConsole.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY, event ->
+        editorAndBottom.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY, event ->
         {
-            if (!applyingLayout && consoleVisible && editorAndConsole.getHeight() > 0)
+            if (!applyingLayout && bottomTool != null && editorAndBottom.getHeight() > 0)
             {
-                int height = editorAndConsole.getHeight() - editorAndConsole.getDividerLocation() - editorAndConsole.getDividerSize();
+                int height = editorAndBottom.getHeight() - editorAndBottom.getDividerLocation() - editorAndBottom.getDividerSize();
                 if (height >= UIScale.scale(80))
                 {
-                    consoleHeight = UIScale.unscale(height);
+                    bottomHeight = UIScale.unscale(height);
                 }
             }
         });
@@ -98,13 +121,30 @@ public final class WorkbenchPanel extends JPanel
         setConsoleSummary("No output yet");
 
         footer.add(consoleStrip, BorderLayout.NORTH);
-        body.add(editorAndConsole, BorderLayout.CENTER);
+        body.add(editorAndBottom, BorderLayout.CENTER);
         body.add(footer, BorderLayout.SOUTH);
         add(body, BorderLayout.CENTER);
     }
 
-    /// The strip is a plain caption while the console is collapsed — reopening
-    /// it is the side bar's job. An empty summary leaves just "Console".
+    /// Registers a panel that can be shown in the bottom area.
+    ///
+    /// @param id   how [#setBottomToolVisible] and the session refer to it
+    /// @param tool the panel itself, which keeps its state while another tool is showing
+    public void addBottomTool(String id, JComponent tool)
+    {
+        Objects.requireNonNull(id, "id");
+        Objects.requireNonNull(tool, "tool");
+
+        tool.setMinimumSize(new Dimension(0, 0));
+        bottomTools.put(id, tool);
+        bottomArea.add(tool, id);
+    }
+
+    /// @return the id of the bottom tool on screen, or null while the area is collapsed
+    public String getBottomTool() { return bottomTool; }
+
+    /// The strip is a plain caption while the bottom area is collapsed —
+    /// reopening it is the side bar's job. An empty summary leaves just "Console".
     public void setConsoleSummary(String text)
     {
         consoleSummary.setText(text == null || text.isBlank() ? "Console" : "Console — " + text);
@@ -162,22 +202,47 @@ public final class WorkbenchPanel extends JPanel
         repaint();
     }
 
-    public void setConsoleVisible(boolean visible)
+    /// Shows a bottom tool, replacing whichever was there, or hides it.
+    ///
+    /// Hiding a tool that is not the one on screen does nothing: if the TODO
+    /// list is showing, "hide the console" is already true, and collapsing the
+    /// area would hide the TODO list the user is looking at.
+    public void setBottomToolVisible(String id, boolean visible)
     {
-        if (consoleVisible == visible) return;
-        if (!visible) restoreFocusIfInside(console);
+        if (visible) showBottomTool(id);
+        else if (Objects.equals(id, bottomTool)) showBottomTool(null);
+    }
+
+    /// @param id the tool to show, or null to collapse the area. An id that
+    ///           was never registered — say, from a session file written by a
+    ///           newer Forge — collapses it rather than showing an empty card.
+    private void showBottomTool(String id)
+    {
+        if (id != null && !bottomTools.containsKey(id)) id = null;
+        if (Objects.equals(id, bottomTool)) return;
+
+        if (bottomTool != null) restoreFocusIfInside(bottomTools.get(bottomTool));
 
         applyingLayout = true;
 
         try
         {
-            consoleVisible = visible;
-            if (visible) SwingUtilities.updateComponentTreeUI(console);
+            boolean wasCollapsed = bottomTool == null;
+            bottomTool = id;
 
-            editorAndConsole.setBottomComponent(visible ? console : null);
-            editorAndConsole.setDividerSize(visible ? UIScale.scale(5) : 0);
+            if (id != null)
+            {
+                bottomCards.show(bottomArea, id);
 
-            consoleStrip.setVisible(!visible);
+                // A collapsed area is outside the component tree, so it missed
+                // any theme change made meanwhile. Catch it up on the way back.
+                if (wasCollapsed) SwingUtilities.updateComponentTreeUI(bottomArea);
+            }
+
+            editorAndBottom.setBottomComponent(id != null ? bottomArea : null);
+            editorAndBottom.setDividerSize(id != null ? UIScale.scale(5) : 0);
+
+            consoleStrip.setVisible(id == null);
         }
         finally
         {
@@ -208,19 +273,19 @@ public final class WorkbenchPanel extends JPanel
             super.doLayout();
 
             treeAndEditor.setDividerSize(projectVisible    ? UIScale.scale(5) : 0);
-            editorAndConsole.setDividerSize(consoleVisible ? UIScale.scale(5) : 0);
+            editorAndBottom.setDividerSize(bottomTool != null ? UIScale.scale(5) : 0);
 
-            int height = editorAndConsole.getHeight();
-            if (consoleVisible && height > 0)
+            int height = editorAndBottom.getHeight();
+            if (bottomTool != null && height > 0)
             {
-                editorAndConsole.setDividerLocation(
+                editorAndBottom.setDividerLocation(
                         Math.max(0, height
-                        - Math.clamp(height - UIScale.scale(120), 0, UIScale.scale(consoleHeight))
-                        - editorAndConsole.getDividerSize())
+                        - Math.clamp(height - UIScale.scale(120), 0, UIScale.scale(bottomHeight))
+                        - editorAndBottom.getDividerSize())
                 );
             }
 
-            editorAndConsole.doLayout();
+            editorAndBottom.doLayout();
 
             int width = treeAndEditor.getWidth();
             if (projectVisible && width > 0)
@@ -238,7 +303,7 @@ public final class WorkbenchPanel extends JPanel
 
     public WorkbenchLayout captureLayout()
     {
-        return new WorkbenchLayout(projectWidth, consoleHeight, projectVisible, consoleVisible, toolBar == null || toolBar.isVisible(), statusBar == null || statusBar.isVisible());
+        return new WorkbenchLayout(projectWidth, bottomHeight, projectVisible, bottomTool, toolBar == null || toolBar.isVisible(), statusBar == null || statusBar.isVisible());
     }
 
     public void restoreLayout(WorkbenchLayout layout)
@@ -246,20 +311,21 @@ public final class WorkbenchPanel extends JPanel
         layout = layout.normalised();
 
         projectWidth = layout.projectWidth();
-        consoleHeight = layout.consoleHeight();
+        bottomHeight = layout.bottomHeight();
 
         setProjectTreeVisible(layout.projectVisible());
-        setConsoleVisible(layout.consoleVisible());
+        showBottomTool(layout.bottomTool());
         setToolBarVisible(layout.toolbarVisible());
         setStatusBarVisible(layout.statusbarVisible());
 
         revalidate();
     }
 
-    /// Reset keeps the existing command's promise: all panels visible again.
+    /// Reset keeps the existing command's promise: all panels visible again,
+    /// with the console as the bottom tool.
     public void resetLayout()
     {
-        restoreLayout(new WorkbenchLayout(240, 200, true, true, true, true));
+        restoreLayout(new WorkbenchLayout(240, 200, true, CONSOLE, true, true));
     }
 
     private void restoreFocusIfInside(JComponent panel)

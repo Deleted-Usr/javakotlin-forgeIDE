@@ -45,5 +45,6 @@ public class EditorSideBar extends JToolBar
         add(Box.createVerticalGlue());
 
         Utils.addIconStripeButton(this, actions.getToggleConsoleAction(), ToolbarIcon.CONSOLE, null);
+        Utils.addIconStripeButton(this, actions.getToggleTodoAction(), ToolbarIcon.TODO, null);
     }
 }

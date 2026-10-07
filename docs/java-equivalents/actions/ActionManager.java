@@ -28,21 +28,36 @@ import com.willclay.forgeide.actions.file.SaveAllAction;
 import com.willclay.forgeide.actions.file.SaveAsAction;
 import com.willclay.forgeide.actions.help.AboutAction;
 import com.willclay.forgeide.actions.settings.OpenSettingsAction;
+import com.willclay.forgeide.actions.tools.OpenRunConfigAction;
 import com.willclay.forgeide.actions.view.ResetLayoutAction;
 import com.willclay.forgeide.actions.view.ToggleViewAction;
 import com.willclay.forgeide.execution.ExecutionManager;
-import com.willclay.forgeide.services.UIContext;
-import com.willclay.forgeide.ui.WorkbenchPanel;
 import com.willclay.forgeide.execution.RunTask;
+import com.willclay.forgeide.services.ActionContext;
+import com.willclay.forgeide.ui.WorkbenchPanel;
 
 import javax.swing.JTextPane;
-import javax.swing.SwingWorker;
 import java.awt.event.KeyEvent;
+import java.util.Map;
+import java.util.Objects;
 
+/// Every command in the IDE, created once and handed out on request.
+///
+/// This is the piece that makes the menu bar and the toolbar stop duplicating
+/// each other. Neither of them creates an action; both ask here, both get the
+/// same object back, and so both show the same label and the same enabled state
+/// forever after.
+///
+/// Nothing in here knows what a menu is. It could be handed to a command
+/// palette, a keyboard-shortcut editor or a test just as easily.
+///
+/// Java equivalent of `src/main/java/com/willclay/forgeide/actions/ActionManager.kt`,
+/// kept for comparison. It is not part of the production source set.
 public final class ActionManager
 {
-    private final UIContext context;
+    private final ActionContext context;
     private final ExecutionManager execution;
+    private final WorkbenchPanel workbench;
 
     // --- File --- //
     private final NewProjectAction newProject;
@@ -64,17 +79,20 @@ public final class ActionManager
     private final TextEditAction delete;
     private final TextEditAction selectAll;
 
+    // --- View --- //
+    private final ToggleViewAction toggleProjectTree;
+    private final ToggleViewAction toggleConsole;
+    private final ToggleViewAction toggleTodo;
+    private final Map<String, ToggleViewAction> bottomToolToggles;
+    private final ToggleViewAction toggleToolBar;
+    private final ToggleViewAction toggleStatusBar;
+    private final ResetLayoutAction resetLayout;
+
     // --- Build --- //
     private final RunAction run;
     private final StopAction stop;
     private final BuildProjectAction buildProject;
     private final CleanProjectAction cleanProject;
-
-    // --- View --- //
-    private final ToggleViewAction toggleProjectTree;
-    private final ToggleViewAction toggleConsole;
-    private final ToggleViewAction toggleToolBar;
-    private final ResetLayoutAction resetLayout;
 
     // --- Explorer (the tree's context menu) --- //
     private final OpenSelectedFileAction openSelectedFile;
@@ -93,58 +111,78 @@ public final class ActionManager
 
     // --- Settings --- //
     private final OpenSettingsAction openSettings;
+    private final OpenRunConfigAction openRunConfig;
 
-    public ActionManager(UIContext context)
+    public ActionManager(ActionContext context)
     {
         this.context = context;
-        execution = context.getExecutionManager();
+        execution    = context.getExecutionManager();
+        workbench    = context.getWorkbench();
 
-        WorkbenchPanel workbench = context.getWorkbench();
-
-        newProject = new NewProjectAction(context);
-        openProject = new OpenProjectAction(context);
+        // File
+        newProject   = new NewProjectAction(context);
+        openProject  = new OpenProjectAction(context);
         closeProject = new CloseProjectAction(context);
-        newFile = new NewFileAction(context);
-        openFile = new OpenFileAction(context);
+        newFile      = new NewFileAction(context);
+        openFile     = new OpenFileAction(context);
 
-        saveAs = new SaveAsAction(context);
-        save = new SaveAction(context, saveAs);
+        // Save needs Save As to fall back to, so Save As is built first.
+        saveAs  = new SaveAsAction(context);
+        save    = new SaveAction(context, saveAs);
         saveAll = new SaveAllAction(context, save);
-        exit = new ExitAction(context);
+        exit    = new ExitAction(context);
 
-        undo = new UndoAction(context);
-        redo = new RedoAction(context);
-
-        cut = new TextEditAction("Cut", Shortcuts.menu(KeyEvent.VK_X), context.getEditorPanel(), JTextPane::cut);
-        copy = new TextEditAction("Copy", Shortcuts.menu(KeyEvent.VK_C), context.getEditorPanel(), JTextPane::copy);
+        // Edit
+        undo  = new UndoAction(context);
+        redo  = new RedoAction(context);
+        cut   = new TextEditAction("Cut", Shortcuts.menu(KeyEvent.VK_X), context.getEditorPanel(), JTextPane::cut);
+        copy  = new TextEditAction("Copy", Shortcuts.menu(KeyEvent.VK_C), context.getEditorPanel(), JTextPane::copy);
         paste = new TextEditAction("Paste", Shortcuts.menu(KeyEvent.VK_V), context.getEditorPanel(), JTextPane::paste);
 
-        delete = new TextEditAction("Delete", null, context.getEditorPanel(), pane -> pane.replaceSelection(""));
+        // No accelerator on Delete on purpose. A menu accelerator is caught
+        // before the focused component sees the key, so binding the Delete key
+        // here would stop it deleting the character in front of the caret -- the
+        // menu would have quietly broken the editor.
+        delete    = new TextEditAction("Delete", null, context.getEditorPanel(), pane -> pane.replaceSelection(""));
         selectAll = new TextEditAction("Select All", Shortcuts.menu(KeyEvent.VK_A), context.getEditorPanel(), JTextPane::selectAll);
 
+        // View
         toggleProjectTree = new ToggleViewAction("Project Explorer", null, true, workbench::setProjectTreeVisible);
-        toggleConsole = new ToggleViewAction("Console", null, true, workbench::setConsoleVisible);
-        toggleToolBar = new ToggleViewAction("Toolbar", null, true, workbench::setToolBarVisible);
-        resetLayout = new ResetLayoutAction(context, toggleProjectTree, toggleConsole, toggleToolBar);
+        toggleConsole     = bottomToolToggle("Console", WorkbenchPanel.CONSOLE);
+        toggleTodo        = bottomToolToggle("TODO", WorkbenchPanel.TODO);
+        bottomToolToggles = Map.of(
+                WorkbenchPanel.CONSOLE, toggleConsole,
+                WorkbenchPanel.TODO, toggleTodo
+        );
+        toggleToolBar   = new ToggleViewAction("Toolbar", null, true, workbench::setToolBarVisible);
+        toggleStatusBar = new ToggleViewAction("Status Bar", null, true, workbench::setStatusBarVisible);
+        resetLayout     = new ResetLayoutAction(context, toggleProjectTree, toggleConsole, toggleToolBar, toggleStatusBar);
 
-        run = new RunAction(context, save, saveAll, this::startExecution);
+        // Every process passes through one presentation gateway so console
+        // settings cannot diverge between Run, Build and Clean.
+        run  = new RunAction(context, save, saveAll, this::startExecution);
         stop = new StopAction(execution::stop);
         buildProject = new BuildProjectAction(context, saveAll, this::startExecution);
         cleanProject = new CleanProjectAction(context, this::startExecution);
 
-        openSelectedFile = new OpenSelectedFileAction(context);
+        // Explorer (the tree's context menu)
+        openSelectedFile   = new OpenSelectedFileAction(context);
         createFromTemplate = new CreateFromTemplateAction(context);
-        createFile = new CreateFileAction(context);
-        createFolder = new CreateFolderAction(context);
-        renameItem = new RenameItemAction(context);
-        moveItems = new MoveItemsAction(context);
-        deleteItem = new DeleteItemAction(context);
-        copyPath = new CopyPathAction(context);
-        revealInFiles = new RevealInFilesAction(context);
-        refreshTree = new RefreshTreeAction(context);
+        createFile         = new CreateFileAction(context);
+        createFolder       = new CreateFolderAction(context);
+        renameItem         = new RenameItemAction(context);
+        moveItems          = new MoveItemsAction(context);
+        deleteItem         = new DeleteItemAction(context);
+        copyPath           = new CopyPathAction(context);
+        revealInFiles      = new RevealInFilesAction(context);
+        refreshTree        = new RefreshTreeAction(context);
 
+        // Help
         about = new AboutAction(context);
-        openSettings = new OpenSettingsAction(context);
+
+        // Settings
+        openSettings  = new OpenSettingsAction(context);
+        openRunConfig = new OpenRunConfigAction(context);
 
         context.getWorkspace().addChangeListener(this::syncProjectActions);
         context.getEditorManager().addChangeListener(this::syncProjectActions);
@@ -153,35 +191,55 @@ public final class ActionManager
         syncProjectActions();
     }
 
+    /// A toggle for one of the tools that share the area under the editor.
+    ///
+    /// Only one can be open at a time, so after the workbench has switched,
+    /// every bottom-tool tick is re-read from it. The workbench decides what
+    /// is showing; the ticks just follow.
+    ///
+    /// The lambda reads `bottomToolToggles` when it runs, not when it is
+    /// created, so it is fine that the map is assigned after both toggles exist.
+    private ToggleViewAction bottomToolToggle(String name, String id)
+    {
+        return new ToggleViewAction(name, null, Objects.equals(workbench.getBottomTool(), id), visible ->
+        {
+            workbench.setBottomToolVisible(id, visible);
+            syncBottomToolTicks();
+        });
+    }
+
+    /// Ticks exactly the bottom tool the workbench is showing, if any.
+    public void syncBottomToolTicks()
+    {
+        String showing = workbench.getBottomTool();
+        bottomToolToggles.forEach((id, toggle) -> toggle.syncSelected(id.equals(showing)));
+    }
+
     private void startExecution(RunTask task)
     {
         var settings = context.getSettingsService().get();
 
         if (settings.buildAndRun().clearConsoleOnRun()) context.getConsole().clear();
-        if (settings.buildAndRun().showConsoleOnRun()) toggleConsole.setSelected(true);
+        if (settings.buildAndRun().showConsoleOnRun())  toggleConsole.setSelected(true);
 
         execution.start(task);
     }
 
+    /// Makes sure all project actions are enabled and disabled when necessary.
     private void syncProjectActions()
     {
-        boolean hasProject = context.getWorkspace().hasProject();
-
-        boolean hasToolchain =
-                hasProject &&
-                        context.getWorkspace()
-                                .getProject()
-                                .language()
-                                .toolchain()
-                                .isPresent();
-
+        boolean hasProject   = context.getWorkspace().hasProject();
+        boolean hasToolchain = hasProject && context.getWorkspace().getProject()
+                .language()
+                .toolchain()
+                .isPresent();
         boolean hasEditor = context.getEditorManager().getCurrentTab() != null;
 
         // A run configuration names its own entry point, so Run no longer needs
         // an open editor to have something to run.
         boolean hasTarget = hasEditor || context.getRunConfigurationManager().active().isPresent();
 
-        boolean running = execution.isRunning();
+        boolean running    = execution.isRunning();
         boolean canExecute = hasToolchain && !running;
 
         run.setEnabled(canExecute && hasTarget);
@@ -197,74 +255,51 @@ public final class ActionManager
         saveAs.setEnabled(hasProject && hasEditor);
     }
 
-    public NewProjectAction getNewProjectAction() { return newProject; }
+    // --- Getters, matching the ones Kotlin generates for each `val` --- //
 
-    public OpenProjectAction getOpenProjectAction() { return openProject; }
-
+    public NewProjectAction getNewProjectAction()     { return newProject; }
+    public OpenProjectAction getOpenProjectAction()   { return openProject; }
     public CloseProjectAction getCloseProjectAction() { return closeProject; }
+    public NewFileAction getNewFileAction()           { return newFile; }
+    public OpenFileAction getOpenFileAction()         { return openFile; }
+    public SaveAction getSaveAction()                 { return save; }
+    public SaveAsAction getSaveAsAction()             { return saveAs; }
+    public SaveAllAction getSaveAllAction()           { return saveAll; }
+    public ExitAction getExitAction()                 { return exit; }
 
-    public NewFileAction getNewFileAction() { return newFile; }
-
-    public OpenFileAction getOpenFileAction() { return openFile; }
-
-    public SaveAction getSaveAction() { return save; }
-
-    public SaveAsAction getSaveAsAction() { return saveAs; }
-
-    public SaveAllAction getSaveAllAction() { return saveAll; }
-
-    public ExitAction getExitAction() { return exit; }
-
-    public UndoAction getUndoAction() { return undo; }
-
-    public RedoAction getRedoAction() { return redo; }
-
-    public TextEditAction getCutAction() { return cut; }
-
-    public TextEditAction getCopyAction() { return copy; }
-
-    public TextEditAction getPasteAction() { return paste; }
-
-    public TextEditAction getDeleteAction() { return delete; }
-
+    public UndoAction getUndoAction()          { return undo; }
+    public RedoAction getRedoAction()          { return redo; }
+    public TextEditAction getCutAction()       { return cut; }
+    public TextEditAction getCopyAction()      { return copy; }
+    public TextEditAction getPasteAction()     { return paste; }
+    public TextEditAction getDeleteAction()    { return delete; }
     public TextEditAction getSelectAllAction() { return selectAll; }
 
-    public RunAction getRunAction() { return run; }
+    public ToggleViewAction getToggleProjectTreeAction() { return toggleProjectTree; }
+    public ToggleViewAction getToggleConsoleAction()     { return toggleConsole; }
+    public ToggleViewAction getToggleTodoAction()        { return toggleTodo; }
+    public ToggleViewAction getToggleToolBarAction()     { return toggleToolBar; }
+    public ToggleViewAction getToggleStatusBarAction()   { return toggleStatusBar; }
+    public ResetLayoutAction getResetLayoutAction()      { return resetLayout; }
 
+    public RunAction getRunAction()   { return run; }
     public StopAction getStopAction() { return stop; }
-
     public BuildProjectAction getBuildProjectAction() { return buildProject; }
-
     public CleanProjectAction getCleanProjectAction() { return cleanProject; }
 
-    public ToggleViewAction getToggleProjectTreeAction() { return toggleProjectTree; }
-
-    public ToggleViewAction getToggleConsoleAction() { return toggleConsole; }
-
-    public ToggleViewAction getToggleToolBarAction() { return toggleToolBar; }
-
-    public ResetLayoutAction getResetLayoutAction() { return resetLayout; }
-
-    public OpenSelectedFileAction getOpenSelectedFileAction() { return openSelectedFile; }
-
+    public OpenSelectedFileAction getOpenSelectedFileAction()     { return openSelectedFile; }
     public CreateFromTemplateAction getCreateFromTemplateAction() { return createFromTemplate; }
-
-    public CreateFileAction getCreateFileAction() { return createFile; }
-
-    public CreateFolderAction getCreateFolderAction() { return createFolder; }
-
-    public RenameItemAction getRenameItemAction() { return renameItem; }
-    public MoveItemsAction getMoveItemsAction() { return moveItems; }
-
-    public DeleteItemAction getDeleteItemAction() { return deleteItem; }
-
-    public CopyPathAction getCopyPathAction() { return copyPath; }
-
-    public RevealInFilesAction getRevealInFilesAction() { return revealInFiles; }
-
-    public RefreshTreeAction getRefreshTreeAction() { return refreshTree; }
+    public CreateFileAction getCreateFileAction()                 { return createFile; }
+    public CreateFolderAction getCreateFolderAction()             { return createFolder; }
+    public RenameItemAction getRenameItemAction()                 { return renameItem; }
+    public MoveItemsAction getMoveItemsAction()                   { return moveItems; }
+    public DeleteItemAction getDeleteItemAction()                 { return deleteItem; }
+    public CopyPathAction getCopyPathAction()                     { return copyPath; }
+    public RevealInFilesAction getRevealInFilesAction()           { return revealInFiles; }
+    public RefreshTreeAction getRefreshTreeAction()               { return refreshTree; }
 
     public AboutAction getAboutAction() { return about; }
 
-    public OpenSettingsAction getOpenSettingsAction() { return openSettings; }
+    public OpenSettingsAction getOpenSettingsAction()   { return openSettings; }
+    public OpenRunConfigAction getOpenRunConfigAction() { return openRunConfig; }
 }

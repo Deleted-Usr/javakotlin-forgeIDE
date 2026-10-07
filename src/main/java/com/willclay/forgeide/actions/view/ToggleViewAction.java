@@ -42,6 +42,17 @@ public final class ToggleViewAction extends ForgeAction
         apply.accept(selected);
     }
 
+    /// Moves the tick to match what is already on screen, without showing or
+    /// hiding anything.
+    ///
+    /// For panels that change because of *another* action: opening the TO-DO
+    /// list replaces the console, so the console's tick has to clear, but
+    /// calling [#setSelected(boolean)] would try to hide the console a second time.
+    public void syncSelected(boolean selected)
+    {
+        putValue(SELECTED_KEY, selected);
+    }
+
     @Override
     protected void perform()
     {

@@ -30,6 +30,7 @@ public final class ViewMenu extends JMenu
         // showing?", and it comes from the action rather than from a field here.
         Utils.addCheckMenuItem(this, actions.getToggleProjectTreeAction());
         Utils.addCheckMenuItem(this, actions.getToggleConsoleAction());
+        Utils.addCheckMenuItem(this, actions.getToggleTodoAction());
         Utils.addCheckMenuItem(this, actions.getToggleToolBarAction());
         Utils.addCheckMenuItem(this, actions.getToggleStatusBarAction());
     }

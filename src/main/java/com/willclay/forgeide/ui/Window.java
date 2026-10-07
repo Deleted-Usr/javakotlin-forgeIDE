@@ -31,6 +31,7 @@ import com.willclay.forgeide.ui.icons.FileIcons;
 import com.willclay.forgeide.ui.menu.EditorMenuBar;
 import com.willclay.forgeide.ui.settings.SettingsDialogController;
 import com.willclay.forgeide.ui.statusbar.StatusBar;
+import com.willclay.forgeide.ui.todo.TodoPanel;
 import com.willclay.forgeide.ui.toolbar.EditorSideBar;
 import com.willclay.forgeide.ui.toolbar.EditorToolBar;
 import com.willclay.forgeide.ui.toolbar.runconfigurations.RunConfigDialogController;
@@ -109,7 +110,9 @@ public final class Window extends JFrame
         workspaceService = createWorkspaceService();
         projectTree      = new ProjectTree(new ProjectTreeModel(workspaceService));
 
+        TodoPanel todoPanel = new TodoPanel();
         workbench = new WorkbenchPanel(new ProjectTreePanel(projectTree), editorPanel, console);
+        workbench.addBottomTool(WorkbenchPanel.TODO, todoPanel);
 
         // The context has to exist before the actions, the actions before the
         // toolbar and the context menu — and both of those live on components
@@ -162,6 +165,7 @@ public final class Window extends JFrame
                 actions.getOpenProjectAction()
         );
         console.setOnMinimise(() -> actions.getToggleConsoleAction().setSelected(false));
+        todoPanel.setOnMinimise(() -> actions.getToggleTodoAction().setSelected(false));
         workbench.setOnReturnToEditor(editorPanel::focusEditor);
         Runnable updateConsoleSummary = () -> workbench.setConsoleSummary(
                 executionManager.getStatus() == ExecutionManager.Status.READY
@@ -295,7 +299,7 @@ public final class Window extends JFrame
     {
         workbench.restoreLayout(layout);
         actions.getToggleProjectTreeAction().setSelected(layout.projectVisible());
-        actions.getToggleConsoleAction().setSelected(layout.consoleVisible());
+        actions.syncBottomToolTicks(); // the workbench has already opened the right one
         actions.getToggleToolBarAction().setSelected(layout.toolbarVisible());
         actions.getToggleStatusBarAction().setSelected(layout.statusbarVisible());
     }

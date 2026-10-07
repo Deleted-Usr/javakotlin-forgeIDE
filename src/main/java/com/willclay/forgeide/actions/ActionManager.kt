@@ -35,6 +35,7 @@ import com.willclay.forgeide.annotations.SourceEquivalent
 import com.willclay.forgeide.annotations.SourceLanguage
 import com.willclay.forgeide.execution.RunTask
 import com.willclay.forgeide.services.ActionContext
+import com.willclay.forgeide.ui.WorkbenchPanel
 import java.awt.event.KeyEvent
 
 /**
@@ -57,22 +58,22 @@ class ActionManager(private val context: ActionContext) {
     private val workbench = context.workbench
 
     // File
-    val newProjectAction = NewProjectAction(context)
-    val openProjectAction = OpenProjectAction(context)
+    val newProjectAction   = NewProjectAction(context)
+    val openProjectAction  = OpenProjectAction(context)
     val closeProjectAction = CloseProjectAction(context)
-    val newFileAction = NewFileAction(context)
-    val openFileAction = OpenFileAction(context)
+    val newFileAction      = NewFileAction(context)
+    val openFileAction     = OpenFileAction(context)
 
     // Save needs Save As to fall back to, so Save As is built first.
-    val saveAsAction = SaveAsAction(context)
-    val saveAction = SaveAction(context, saveAsAction)
+    val saveAsAction  = SaveAsAction(context)
+    val saveAction    = SaveAction(context, saveAsAction)
     val saveAllAction = SaveAllAction(context, saveAction)
-    val exitAction = ExitAction(context)
+    val exitAction    = ExitAction(context)
 
     // Edit
     val undoAction = UndoAction(context)
     val redoAction = RedoAction(context)
-    val cutAction = TextEditAction(
+    val cutAction  = TextEditAction(
         "Cut",
         Shortcuts.menu(KeyEvent.VK_X),
         context.editorPanel
@@ -109,11 +110,12 @@ class ActionManager(private val context: ActionContext) {
         null,
         true
     ) { visible -> workbench.setProjectTreeVisible(visible) }
-    val toggleConsoleAction = ToggleViewAction(
-        "Console",
-        null,
-        true
-    ) { visible -> workbench.setConsoleVisible(visible) }
+    val toggleConsoleAction = bottomToolToggle("Console", WorkbenchPanel.CONSOLE)
+    val toggleTodoAction    = bottomToolToggle("TODO", WorkbenchPanel.TODO)
+    private val bottomToolToggles = mapOf(
+        WorkbenchPanel.CONSOLE to toggleConsoleAction,
+        WorkbenchPanel.TODO    to toggleTodoAction
+    )
     val toggleToolBarAction = ToggleViewAction(
         "Toolbar",
         null,
@@ -147,30 +149,53 @@ class ActionManager(private val context: ActionContext) {
     val cleanProjectAction = CleanProjectAction(context) { task -> startExecution(task) }
 
     // Explorer (the tree's context menu)
-    val openSelectedFileAction = OpenSelectedFileAction(context)
+    val openSelectedFileAction   = OpenSelectedFileAction(context)
     val createFromTemplateAction = CreateFromTemplateAction(context)
-    val createFileAction = CreateFileAction(context)
-    val createFolderAction = CreateFolderAction(context)
-    val renameItemAction = RenameItemAction(context)
-    val moveItemsAction = MoveItemsAction(context)
-    val deleteItemAction = DeleteItemAction(context)
-    val copyPathAction = CopyPathAction(context)
-    val revealInFilesAction = RevealInFilesAction(context)
-    val refreshTreeAction = RefreshTreeAction(context)
+    val createFileAction         = CreateFileAction(context)
+    val createFolderAction       = CreateFolderAction(context)
+    val renameItemAction         = RenameItemAction(context)
+    val moveItemsAction          = MoveItemsAction(context)
+    val deleteItemAction         = DeleteItemAction(context)
+    val copyPathAction           = CopyPathAction(context)
+    val revealInFilesAction      = RevealInFilesAction(context)
+    val refreshTreeAction        = RefreshTreeAction(context)
 
     // Help
     val aboutAction = AboutAction(context)
 
     // Settings
-    val openSettingsAction = OpenSettingsAction(context)
+    val openSettingsAction  = OpenSettingsAction(context)
     val openRunConfigAction = OpenRunConfigAction(context)
 
     init {
-        context.workspace.addChangeListener { syncProjectActions() }
+        context.workspace.addChangeListener     { syncProjectActions() }
         context.editorManager.addChangeListener { syncProjectActions() }
-        execution.addChangeListener { syncProjectActions() }
+        execution.addChangeListener             { syncProjectActions() }
         context.runConfigurationManager.addChangeListener { syncProjectActions() }
+
         syncProjectActions()
+    }
+
+    /**
+     * A toggle for one of the tools that share the area under the editor.
+     *
+     * Only one can be open at a time, so after the workbench has switched,
+     * every bottom-tool tick is re-read from it. The workbench decides what
+     * is showing; the ticks just follow.
+     */
+    private fun bottomToolToggle(name: String, id: String) = ToggleViewAction(
+        name,
+        null,
+        workbench.bottomTool == id
+    ) { visible ->
+        workbench.setBottomToolVisible(id, visible)
+        syncBottomToolTicks()
+    }
+
+    /** Ticks exactly the bottom tool the workbench is showing, if any. */
+    fun syncBottomToolTicks() {
+        val showing = workbench.bottomTool
+        for ((id, toggle) in bottomToolToggles) toggle.syncSelected(id == showing)
     }
 
     private fun startExecution(task: RunTask) {
@@ -184,7 +209,7 @@ class ActionManager(private val context: ActionContext) {
 
     /** Makes sure all project actions are enabled and disabled when necessary. */
     private fun syncProjectActions() {
-        val hasProject = context.workspace.hasProject()
+        val hasProject   = context.workspace.hasProject()
         val hasToolchain = hasProject && context.workspace.project
             .language()
             .toolchain()
@@ -195,7 +220,7 @@ class ActionManager(private val context: ActionContext) {
         // an open editor to have something to run.
         val hasTarget = hasEditor || context.runConfigurationManager.active().isPresent
 
-        val running = execution.isRunning
+        val running    = execution.isRunning
         val canExecute = hasToolchain && !running
 
         runAction.isEnabled = canExecute && hasTarget
@@ -204,10 +229,10 @@ class ActionManager(private val context: ActionContext) {
 
         stopAction.isEnabled = running
 
-        newFileAction.isEnabled = hasProject
+        newFileAction.isEnabled  = hasProject
         openFileAction.isEnabled = hasProject
 
-        saveAction.isEnabled = hasProject && hasEditor
+        saveAction.isEnabled   = hasProject && hasEditor
         saveAsAction.isEnabled = hasProject && hasEditor
     }
 }

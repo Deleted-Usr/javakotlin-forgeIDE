@@ -15,7 +15,7 @@ import java.awt.geom.RoundRectangle2D;
 /// time so existing buttons follow theme changes, including their disabled state.
 public final class ToolbarIcon extends FlatAbstractIcon
 {
-    private enum Symbol { RUN, STOP, BUILD, SAVE, OPEN, PROJECT, CONSOLE }
+    private enum Symbol { RUN, STOP, BUILD, SAVE, OPEN, PROJECT, CONSOLE, TODO }
 
     public static final ToolbarIcon RUN = new ToolbarIcon(Symbol.RUN);
     public static final ToolbarIcon STOP = new ToolbarIcon(Symbol.STOP);
@@ -25,6 +25,7 @@ public final class ToolbarIcon extends FlatAbstractIcon
 
     public static final ToolbarIcon PROJECT = new ToolbarIcon(Symbol.PROJECT);
     public static final ToolbarIcon CONSOLE = new ToolbarIcon(Symbol.CONSOLE);
+    public static final ToolbarIcon TODO = new ToolbarIcon(Symbol.TODO);
 
     private final Symbol symbol;
 
@@ -82,6 +83,14 @@ public final class ToolbarIcon extends FlatAbstractIcon
                 graphics.draw(new RoundRectangle2D.Float(2, 2.5f, 12, 11, 2, 2));
                 graphics.draw(path(false, 5, 6, 7.5f, 8, 5, 10));
                 graphics.draw(path(false, 9, 10.5f, 11.5f, 10.5f));
+            }
+            case TODO ->
+            {
+                // A checklist: a ticked item above an open box, each with its line of text.
+                graphics.draw(path(false, 2, 4.5f, 3.5f, 6, 6.5f, 2.5f));
+                graphics.draw(path(false, 9, 4.5f, 14, 4.5f));
+                graphics.draw(new RoundRectangle2D.Float(2, 9.5f, 4, 4, 1, 1));
+                graphics.draw(path(false, 9, 11.5f, 14, 11.5f));
             }
         }
     }
