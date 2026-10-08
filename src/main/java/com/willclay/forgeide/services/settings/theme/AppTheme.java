@@ -32,6 +32,20 @@ public enum AppTheme
             TokenTheme.light()
     ),
 
+    TOKYO_NIGHT(
+            "tokyo-night",
+            "Tokyo Night",
+            new TokyoNightLaf(),
+            TokenTheme.tokyoNight()
+    ),
+
+    CATPPUCCIN_MOCHA(
+            "catppuccin-mocha",
+            "Catppuccin Mocha",
+            new CatppuccinMochaLaf(),
+            TokenTheme.catppuccinMocha()
+    ),
+
     /// Swing's built-in cross-platform look and feel, with none of Forge's
     /// FlatLaf styling applied. Useful for seeing what depends on FlatLaf.
     METAL(

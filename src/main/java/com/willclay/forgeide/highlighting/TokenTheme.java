@@ -1,6 +1,7 @@
 package com.willclay.forgeide.highlighting;
 
 import javax.swing.text.AttributeSet;
+import javax.swing.text.StyledDocument;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import java.awt.Color;
@@ -31,7 +32,7 @@ public final class TokenTheme
 
     private final Map<TokenType, AttributeSet> styles;
 
-    /// Stamps [#TOKEN_TYPE] onto each style as it is stored, so the three
+    /// Stamps [#TOKEN_TYPE] onto each style as it is stored, so the
     /// theme factories below stay free of the bookkeeping.
     private TokenTheme(Map<TokenType, AttributeSet> styles)
     {
@@ -72,7 +73,7 @@ public final class TokenTheme
     /// instead of guessing.
     ///
     /// @param attributes a character's attributes, as returned by
-    ///                   [javax.swing.text.StyledDocument#getCharacterElement(int)]
+    ///                   [StyledDocument#getCharacterElement(int)]
     public static boolean isLiteralOrComment(AttributeSet attributes)
     {
         return attributes != null && switch (attributes.getAttribute(TOKEN_TYPE))
@@ -171,6 +172,63 @@ public final class TokenTheme
         styles.put(TokenType.BRACES,             style(new Color(0x89DDFF), false));
         styles.put(TokenType.OPERATOR,           style(new Color(0x89DDFF), false));
         styles.put(TokenType.PUNCTUATION,        style(new Color(0x89DDFF), false));
+
+        return new TokenTheme(styles);
+    }
+
+    /// Tokyo Night's "Night" variant: [...](https://github.com/folke/tokyonight.nvim)
+    public static TokenTheme tokyoNight()
+    {
+        Map<TokenType, AttributeSet> styles = new EnumMap<>(TokenType.class);
+
+        styles.put(TokenType.PLAIN,              style(new Color(0xC0CAF5), false));
+        styles.put(TokenType.KEYWORD,            style(new Color(0xBB9AF7), false));
+        styles.put(TokenType.LITERAL,            style(new Color(0xFF9E64), false));
+        styles.put(TokenType.TYPE,               style(new Color(0x2AC3DE), false));
+        styles.put(TokenType.TYPE_DECLARATION,   style(new Color(0x2AC3DE), true));
+        styles.put(TokenType.METHOD_DECLARATION, style(new Color(0x7AA2F7), true));
+        styles.put(TokenType.METHOD_CALL,        style(new Color(0x7AA2F7), false));
+        styles.put(TokenType.STRING,             style(new Color(0x9ECE6A), false));
+        styles.put(TokenType.CHARACTER,          style(new Color(0x9ECE6A), false));
+        styles.put(TokenType.NUMBER,             style(new Color(0xFF9E64), false));
+        styles.put(TokenType.COMMENT,            style(new Color(0x565F89), false));
+        styles.put(TokenType.DOC_COMMENT,        style(new Color(0x5A638C), false));
+        styles.put(TokenType.TODO,               style(new Color(0xE0AF68), true));
+        styles.put(TokenType.ANNOTATION,         style(new Color(0x7DCFFF), false));
+        styles.put(TokenType.PARENTHESES,        style(new Color(0xA9B1D6), false));
+        styles.put(TokenType.BRACKETS,           style(new Color(0xA9B1D6), false));
+        styles.put(TokenType.BRACES,             style(new Color(0xA9B1D6), false));
+        styles.put(TokenType.OPERATOR,           style(new Color(0x89DDFF), false));
+        styles.put(TokenType.PUNCTUATION,        style(new Color(0x89DDFF), false));
+
+        return new TokenTheme(styles);
+    }
+
+    /// Catppuccin's dark "Mocha" flavour, following its style guide:
+    /// [...](https://github.com/catppuccin/catppuccin/blob/main/docs/style-guide.md)
+    public static TokenTheme catppuccinMocha()
+    {
+        Map<TokenType, AttributeSet> styles = new EnumMap<>(TokenType.class);
+
+        styles.put(TokenType.PLAIN,              style(new Color(0xCDD6F4), false));
+        styles.put(TokenType.KEYWORD,            style(new Color(0xCBA6F7), false));
+        styles.put(TokenType.LITERAL,            style(new Color(0xFAB387), false));
+        styles.put(TokenType.TYPE,               style(new Color(0xF9E2AF), false));
+        styles.put(TokenType.TYPE_DECLARATION,   style(new Color(0xF9E2AF), true));
+        styles.put(TokenType.METHOD_DECLARATION, style(new Color(0x89B4FA), true));
+        styles.put(TokenType.METHOD_CALL,        style(new Color(0x89B4FA), false));
+        styles.put(TokenType.STRING,             style(new Color(0xA6E3A1), false));
+        styles.put(TokenType.CHARACTER,          style(new Color(0xA6E3A1), false));
+        styles.put(TokenType.NUMBER,             style(new Color(0xFAB387), false));
+        styles.put(TokenType.COMMENT,            style(new Color(0x9399B2), false));
+        styles.put(TokenType.DOC_COMMENT,        style(new Color(0xA6ADC8), false));
+        styles.put(TokenType.TODO,               style(new Color(0x94E2D5), true));
+        styles.put(TokenType.ANNOTATION,         style(new Color(0xF5C2E7), false));
+        styles.put(TokenType.PARENTHESES,        style(new Color(0x9399B2), false));
+        styles.put(TokenType.BRACKETS,           style(new Color(0x9399B2), false));
+        styles.put(TokenType.BRACES,             style(new Color(0x9399B2), false));
+        styles.put(TokenType.OPERATOR,           style(new Color(0x89DCEB), false));
+        styles.put(TokenType.PUNCTUATION,        style(new Color(0x9399B2), false));
 
         return new TokenTheme(styles);
     }
