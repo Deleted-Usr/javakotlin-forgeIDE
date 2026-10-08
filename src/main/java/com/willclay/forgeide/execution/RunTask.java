@@ -24,23 +24,29 @@ public final class RunTask extends SwingWorker<Integer, Void>
     private final LaunchOptions options;
     private final BeforeLaunch beforeLaunch;
 
-    private RunTask(Project project, Toolchain toolchain, ConsolePanel console, Path sourceFile,
-                    Operation operation, LaunchOptions options, BeforeLaunch beforeLaunch)
+    private RunTask(
+            Project project,
+            Toolchain toolchain,
+            ConsolePanel console,
+            Path sourceFile,
+            Operation operation,
+            LaunchOptions options,
+            BeforeLaunch beforeLaunch
+    )
     {
-        this.project = project;
-        this.toolchain = toolchain;
-        this.console = console;
-        this.sourceFile = sourceFile;
-        this.operation = operation;
-        this.options = options;
+        this.project      = project;
+        this.toolchain    = toolchain;
+        this.console      = console;
+        this.sourceFile   = sourceFile;
+        this.operation    = operation;
+        this.options      = options;
         this.beforeLaunch = beforeLaunch;
     }
 
     /// @param options      what the chosen run configuration adds, or
     ///                     [LaunchOptions#defaults()] when there is none
     /// @param beforeLaunch the preparation the configuration asked for
-    public static RunTask run(Project project, Toolchain toolchain, ConsolePanel console, Path sourceFile,
-                              LaunchOptions options, BeforeLaunch beforeLaunch)
+    public static RunTask run(Project project, Toolchain toolchain, ConsolePanel console, Path sourceFile, LaunchOptions options, BeforeLaunch beforeLaunch)
     {
         return new RunTask(project, toolchain, console, sourceFile, Operation.RUN, options, beforeLaunch);
     }

@@ -14,16 +14,15 @@ import java.nio.file.Path
  * Keeps paths as portable JSON strings (`src/Main.java`) instead of file URIs.
  *
  * kotlinx.serialization only knows Kotlin's own types, so a [Path] property
- * needs to be told about this serializer. Put this line at the very top of a
- * file whose classes hold paths, above `package`:
+ * needs to be told about this serializer. This line should be put at the very
+ * top of a file whose classes hold paths, above `package`:
  *
  * ```
  * @file:UseSerializers(PathSerializer::class)
  * ```
  */
 object PathSerializer : KSerializer<Path> {
-    override val descriptor: SerialDescriptor =
-        PrimitiveSerialDescriptor("java.nio.file.Path", PrimitiveKind.STRING)
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("java.nio.file.Path", PrimitiveKind.STRING)
 
     override fun serialize(encoder: Encoder, value: Path) {
         encoder.encodeString(value.toString().replace('\\', '/'))
@@ -36,7 +35,8 @@ object PathSerializer : KSerializer<Path> {
             // Read the file-URI representation emitted before Forge installed
             // its explicit portable-path codec.
             if (value.startsWith("file:")) Path.of(URI.create(value)) else Path.of(value)
-        } catch (e: IllegalArgumentException) {
+        }
+        catch (e: IllegalArgumentException) {
             throw SerializationException("Invalid filesystem path: $value", e)
         }
     }

@@ -95,6 +95,9 @@ public final class EditorManager
         editor.openFile(file, document.text(), document.lineEnding());
     }
 
+    // TODO - Add openFile() overload
+    //  public void openFile(Path file, int line) sets the carets position to that line
+
     /// Opens a fresh unsaved tab.
     public void newFile(String template)
     {

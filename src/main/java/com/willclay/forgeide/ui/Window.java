@@ -18,6 +18,8 @@ import com.willclay.forgeide.services.settings.theme.ThemeService;
 import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.services.WorkspaceService;
 import com.willclay.forgeide.services.settings.project.ProjectSettingsService;
+import com.willclay.forgeide.services.todo.TodoScanner;
+import com.willclay.forgeide.services.todo.TodoService;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 import com.willclay.forgeide.ui.editor.ConsolePanel;
@@ -110,7 +112,9 @@ public final class Window extends JFrame
         workspaceService = createWorkspaceService();
         projectTree      = new ProjectTree(new ProjectTreeModel(workspaceService));
 
-        TodoPanel todoPanel = new TodoPanel();
+        TodoService todoService = new TodoService(new TodoScanner(languages));
+        TodoPanel todoPanel     = new TodoPanel();
+
         workbench = new WorkbenchPanel(new ProjectTreePanel(projectTree), editorPanel, console);
         workbench.addBottomTool(WorkbenchPanel.TODO, todoPanel);
 
@@ -131,15 +135,13 @@ public final class Window extends JFrame
         applicationShutdown.addTask("stop automatic saving", settingsRuntime::close);
         applicationShutdown.addTask("save the IDE session", () -> sessionService.save(captureSession()));
 
-        ThemeService themeService = new ThemeService(this, editorPanel, settingsService);
+        ThemeService themeService             = new ThemeService(this, editorPanel, settingsService);
         ProjectSettingsService projectService = new ProjectSettingsService(workspaceService);
 
-        SettingsDialogController settingsDialogController =
-                new SettingsDialogController(this, settingsService, projectService, themeService);
+        SettingsDialogController settingsDialogController = new SettingsDialogController(this, settingsService, projectService, themeService);
 
-        RunConfigurationManager runConfigurationManager = new RunConfigurationManager(workspaceService);
-        RunConfigDialogController configDialogController =
-                new RunConfigDialogController(this, runConfigurationManager);
+        RunConfigurationManager runConfigurationManager  = new RunConfigurationManager(workspaceService);
+        RunConfigDialogController configDialogController = new RunConfigDialogController(this, runConfigurationManager);
 
         context = new ActionContext(
                 this,
@@ -155,7 +157,8 @@ public final class Window extends JFrame
                 settingsService,
                 settingsDialogController,
                 configDialogController,
-                runConfigurationManager
+                runConfigurationManager,
+                todoService
         );
         actions = new ActionManager(context);
         editorPanel.setEmptyStateActions(
@@ -178,6 +181,9 @@ public final class Window extends JFrame
             if (executionManager.getStatus() == ExecutionManager.Status.FAILED)
                 actions.getToggleConsoleAction().setSelected(true);
         });
+
+        workspace.addChangeListener(() -> todoService.projectChanged(workspace.getProject()));
+        editorManager.addSaveListener(todoService::fileSaved);
 
         editorPanel.setCloseRequestHandler(this::confirmCloseTab);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);

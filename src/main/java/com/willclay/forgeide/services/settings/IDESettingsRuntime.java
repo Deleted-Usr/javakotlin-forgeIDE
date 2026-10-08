@@ -33,9 +33,9 @@ public final class IDESettingsRuntime implements AutoCloseable
             EditorManager editorManager
     )
     {
-        this.dialogParent = Objects.requireNonNull(dialogParent, "dialogParent");
-        this.settings = Objects.requireNonNull(settings, "settings");
-        this.editorPanel = Objects.requireNonNull(editorPanel, "editorPanel");
+        this.dialogParent  = Objects.requireNonNull(dialogParent,  "dialogParent");
+        this.settings      = Objects.requireNonNull(settings,      "settings");
+        this.editorPanel   = Objects.requireNonNull(editorPanel,   "editorPanel");
         this.editorManager = Objects.requireNonNull(editorManager, "editorManager");
 
         autoSaveTimer = new Timer(1_000, event -> saveFileBackedTabs());
