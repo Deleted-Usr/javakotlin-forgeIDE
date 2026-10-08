@@ -14,6 +14,7 @@ import javax.swing.*;
 
 /*
  * TODO:
+ *  - Colour swatch in gutter
  *  - Lines of Code counter
  *  - Markdown editor syntax highlighting, and view options (only editor, split, only preview)
  *  - File icons based on type (icons for final classes, abstract classes, interfaces, etc.)
