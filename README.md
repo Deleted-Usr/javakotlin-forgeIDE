@@ -19,6 +19,8 @@ FlatLaf provides the look and feel, `kotlinx.serialization` handles JSON persist
 JetBrains' Markdown parser powers the Markdown view. Source files are documented with
 Javadoc (Java) and KDoc (Kotlin).
 
+![forge](docs/forge.png)
+
 ## Table of Contents
 
 - [Features](#features)
