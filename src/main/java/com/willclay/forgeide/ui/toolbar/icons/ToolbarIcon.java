@@ -7,6 +7,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics2D;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.RoundRectangle2D;
 
@@ -15,7 +16,7 @@ import java.awt.geom.RoundRectangle2D;
 /// time so existing buttons follow theme changes, including their disabled state.
 public final class ToolbarIcon extends FlatAbstractIcon
 {
-    private enum Symbol { RUN, STOP, BUILD, SAVE, OPEN, PROJECT, CONSOLE, TODO }
+    private enum Symbol { RUN, STOP, BUILD, SAVE, OPEN, PROJECT, CONSOLE, TODO, EDITOR, SPLIT, PREVIEW }
 
     public static final ToolbarIcon RUN = new ToolbarIcon(Symbol.RUN);
     public static final ToolbarIcon STOP = new ToolbarIcon(Symbol.STOP);
@@ -26,6 +27,11 @@ public final class ToolbarIcon extends FlatAbstractIcon
     public static final ToolbarIcon PROJECT = new ToolbarIcon(Symbol.PROJECT);
     public static final ToolbarIcon CONSOLE = new ToolbarIcon(Symbol.CONSOLE);
     public static final ToolbarIcon TODO = new ToolbarIcon(Symbol.TODO);
+
+    // The Markdown tab's view switcher: source only, side by side, preview only.
+    public static final ToolbarIcon EDITOR = new ToolbarIcon(Symbol.EDITOR);
+    public static final ToolbarIcon SPLIT = new ToolbarIcon(Symbol.SPLIT);
+    public static final ToolbarIcon PREVIEW = new ToolbarIcon(Symbol.PREVIEW);
 
     private final Symbol symbol;
 
@@ -91,6 +97,34 @@ public final class ToolbarIcon extends FlatAbstractIcon
                 graphics.draw(path(false, 9, 4.5f, 14, 4.5f));
                 graphics.draw(new RoundRectangle2D.Float(2, 9.5f, 4, 4, 1, 1));
                 graphics.draw(path(false, 9, 11.5f, 14, 11.5f));
+            }
+            case EDITOR ->
+            {
+                // A page of text lines, ragged on the right like real source.
+                graphics.draw(new RoundRectangle2D.Float(2, 2.5f, 12, 11, 2, 2));
+                graphics.draw(path(false, 4.5f, 6, 11.5f, 6));
+                graphics.draw(path(false, 4.5f, 8.5f, 9.5f, 8.5f));
+                graphics.draw(path(false, 4.5f, 11, 10.5f, 11));
+            }
+            case SPLIT ->
+            {
+                // The same page divided down the middle, text on the left half only.
+                graphics.draw(new RoundRectangle2D.Float(2, 2.5f, 12, 11, 2, 2));
+                graphics.draw(path(false, 8, 2.5f, 8, 13.5f));
+                graphics.draw(path(false, 4.5f, 6, 5.5f, 6));
+                graphics.draw(path(false, 4.5f, 8.5f, 5.5f, 8.5f));
+                graphics.draw(path(false, 4.5f, 11, 5.5f, 11));
+            }
+            case PREVIEW ->
+            {
+                // An eye: two curved lids meeting at the corners, and a pupil.
+                Path2D eye = new Path2D.Float();
+                eye.moveTo(1.5f, 8);
+                eye.quadTo(8, 0.5f, 14.5f, 8);
+                eye.quadTo(8, 15.5f, 1.5f, 8);
+                eye.closePath();
+                graphics.draw(eye);
+                graphics.fill(new Ellipse2D.Float(6, 6, 4, 4));
             }
         }
     }
