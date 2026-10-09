@@ -1,5 +1,6 @@
 package com.willclay.forgeide.ui.toolbar.runconfigurations;
 
+import com.willclay.forgeide.ui.SectionBorder;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.dialogs.EntryPointChooser;
 import com.willclay.forgeide.workspace.runconfig.BeforeLaunch;
@@ -97,7 +98,7 @@ public class RunConfigurationDialog extends JDialog
     private JPanel configurationList()
     {
         JPanel panel = new JPanel(new BorderLayout(0, 8));
-        panel.setBorder(BorderFactory.createTitledBorder("Configurations"));
+        panel.setBorder(new SectionBorder("Configurations"));
 
         // Height is the dialog's to decide; only the width is worth pinning.
         panel.setPreferredSize(new Dimension(200, 0));

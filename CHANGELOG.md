@@ -13,6 +13,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - Syntax highlighting now highlights TODO comments in the selected theme's colour (this includes TODO's across multiple lines)
 - Added a custom markdown renderer for rendering `.md` files in Markdown Tabs
 - A custom icon is shown on the taskbar and in the top left corner of the application
+- The settings window now uses a sidebar/card layout instead of tabs, with project language pages grouped under Project 
+and a dedicated footer for Apply/Cancel.
 
 #### Build
 - Added shell and bash scrips under `packaging/executable` and `packaging/icon` that handle on-the-fly icon generation and executable building

@@ -2,19 +2,20 @@ package com.willclay.forgeide.ui.settings.theme;
 
 import com.willclay.forgeide.services.settings.theme.ThemeService;
 import com.willclay.forgeide.services.settings.theme.AppTheme;
+import com.willclay.forgeide.ui.Utils;
 
-import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import java.awt.FlowLayout;
+import java.awt.BorderLayout;
 import java.util.Objects;
 
+/// Chooses the IDE theme. Unlike the other pages, a choice here applies (and
+/// is saved) straight away rather than waiting for Apply.
 public final class ThemeSettings extends JPanel
 {
     public ThemeSettings(ThemeService service)
     {
-        super(new FlowLayout(FlowLayout.LEADING, 8, 8));
+        super(new BorderLayout());
 
         Objects.requireNonNull(service, "themeService");
 
@@ -29,8 +30,12 @@ public final class ThemeSettings extends JPanel
             }
         });
 
-        setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
-        add(new JLabel("Application theme:"));
-        add(themes);
+        JPanel section = Utils.createSettingsSection("Colour theme");
+        Utils.addCompactSettingsFormRow(section, 0, "Theme:", themes);
+
+        JPanel page = Utils.createSettingsPage();
+        Utils.addSettingsSection(page, section);
+
+        add(page, BorderLayout.NORTH);
     }
 }

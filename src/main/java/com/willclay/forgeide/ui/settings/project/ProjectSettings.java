@@ -19,7 +19,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.JTabbedPane;
 import javax.swing.ListSelectionModel;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -33,6 +32,11 @@ import java.util.List;
 import java.util.Optional;
 
 /// General settings shared by every Forge project language.
+///
+/// The open project's language may contribute pages of its own. This panel
+/// does not show them; [#languagePages()] hands them to the settings window,
+/// which lists them under the Project group. Their values are still collected
+/// here in [#getValues()], because they are saved together with the project.
 public final class ProjectSettings extends JPanel
 {
     private final JTextField name     = new JTextField(24);
@@ -70,16 +74,15 @@ public final class ProjectSettings extends JPanel
         Utils.addSettingsSection(sections, createFileHandlingSection());
         Utils.addSettingsSection(sections, createExcludedPathsSection());
 
-        JTabbedPane tabs = new JTabbedPane();
-        tabs.addTab("General", wrapAtTop(sections));
+        add(sections, BorderLayout.NORTH);
 
         languagePages.addAll(projectState.language().settingsPages(projectState.project()));
-        for (LanguageSettingsPage page : languagePages)
-        {
-            tabs.addTab(page.title(), page.component());
-        }
+    }
 
-        add(tabs, BorderLayout.CENTER);
+    /// The pages the project's language contributes; empty when no project is open.
+    public List<LanguageSettingsPage> languagePages()
+    {
+        return List.copyOf(languagePages);
     }
 
     public boolean isAvailable()
@@ -226,13 +229,6 @@ public final class ProjectSettings extends JPanel
                 return component;
             }
         });
-    }
-
-    private static JPanel wrapAtTop(JPanel content)
-    {
-        JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.add(content, BorderLayout.NORTH);
-        return wrapper;
     }
 
     private void chooseExcludedPath(JList<String> paths, int selectionMode)

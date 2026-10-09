@@ -16,7 +16,7 @@ import java.awt.event.KeyEvent;
 public final class Utils
 {
     private static final Insets SETTINGS_ROW_INSETS = new Insets(4, 4, 4, 4);
-    private static final int SETTINGS_SECTION_GAP = 12;
+    private static final int SETTINGS_SECTION_GAP = 18;
 
     private static final int SIDEBAR_STRIPE_WIDTH = 40; // In pixels
 
@@ -293,11 +293,11 @@ public final class Utils
         page.add(section);
     }
 
-    /// Creates a full-width titled section for a settings form.
+    /// Creates a full-width section for a settings form, headed by a [SectionBorder].
     public static JPanel createSettingsSection(String title)
     {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder(title));
+        panel.setBorder(new SectionBorder(title));
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
         panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, panel.getMaximumSize().height));
 
