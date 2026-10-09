@@ -19,11 +19,9 @@ import javax.swing.*;
  *  - Lines of Code counter
  *  - Markdown editor syntax highlighting, and view options (only editor, split, only preview)
  *  - File icons based on type (icons for final classes, abstract classes, interfaces, etc.)
- *  - a TO-DO panel with button next to the console button (model after IJPL)
  *  - Multi-Language projects
- *  - Move JSON serialisation to the kotlinx.serialization package
  *  - IntelliJ-style double shift project search function
- *  - lightweight editor
+ *  - lightweight editor - vs-code type (open a file and run without a project, jshell maybe?)
  *  - Add a slash screen
  *  - Movable / Dockable tabs
  *  - Fully Custom Code Editor Text Pane (Extends JComponent), this will allow for inline javadocs rendering and much more
@@ -32,13 +30,6 @@ import javax.swing.*;
  *  - Custom theme documents for user-authored Swing/token theme combinations
  *  - A BlueJ style class diagram mode/setting
  *  - Git Integration (IntelliJ-like)
- *  - Add a Dev branch and merge on new releases
- *
- * DONE - the custom Swing components:
- *       - Editor Panel: EditorTextPane, ForgeCaret, SelectionPainter, BracketMatcher, SmartTyping, EditorPalette
- *       - Custom Gutter: TabGutter, BreakpointModel, LineChangeTracker, FoldingModel, FoldingViewFactory
- *       - Editor Tabs: EditorTabHeader
- *       - Project Explorer: ProjectTreeRenderer, ProjectTreeCellEditor, TreeSpeedSearch
  */
 
 /*
