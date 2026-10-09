@@ -7,6 +7,8 @@ import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
 
+import javax.swing.*;
+import javax.swing.text.Element;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -95,8 +97,29 @@ public final class EditorManager
         editor.openFile(file, document.text(), document.lineEnding());
     }
 
-    // TODO - Add openFile() overload
-    //  public void openFile(Path file, int line) sets the carets position to that line
+    /// Opens a file and puts the caret at a 1-based line and column.
+    ///
+    /// Both are clamped, because the file may have changed since the position
+    /// was recorded: a TO-DO found on line 40 of a file that now has 30 lines
+    /// should land on the last line, not throw.
+    public void openFile(Path file, int line, int column) throws IOException
+    {
+        openFile(file);
+
+        JTextPane pane = editor.getTextPane();
+        if (pane == null) return;
+
+        Element lines = pane.getDocument().getDefaultRootElement();
+        Element target = lines.getElement(Math.clamp(line - 1, 0, lines.getElementCount() - 1));
+
+        // The last character of a line element is its newline, so the caret
+        // can go at most just before it.
+        int lineEnd = Math.max(target.getStartOffset(), target.getEndOffset() - 1);
+        int offset = Math.clamp(target.getStartOffset() + column - 1L, target.getStartOffset(), lineEnd);
+
+        pane.setCaretPosition(offset);
+        editor.focusEditor();
+    }
 
     /// Opens a fresh unsaved tab.
     public void newFile(String template)

@@ -115,10 +115,22 @@ public final class Window extends JFrame
         projectTree      = new ProjectTree(new ProjectTreeModel(workspaceService));
 
         TodoService todoService = new TodoService(new TodoScanner(languages));
-        TodoPanel todoPanel     = new TodoPanel();
+        TodoPanel todoPanel     = new TodoPanel(todoService);
 
         workbench = new WorkbenchPanel(new ProjectTreePanel(projectTree), editorPanel, console);
+
         workbench.addBottomTool(WorkbenchPanel.TODO, todoPanel);
+        todoPanel.setOnItemActivated(item ->
+        {
+            try
+            {
+                editorManager.openFile(item.file(), item.line(), item.column());
+            }
+            catch (IOException e)
+            {
+                Utils.showErrorMessage(this, "Could not open " + item.file().getFileName() + ": " + e.getMessage());
+            }
+        });
 
         // The context has to exist before the actions, the actions before the
         // toolbar and the context menu — and both of those live on components

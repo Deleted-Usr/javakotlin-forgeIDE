@@ -14,6 +14,8 @@ import java.util.concurrent.ExecutionException;
 /// results are published, and listeners told, on the EDT.
 ///
 /// All public methods are called on the EDT.
+///
+/// **Note**: This may be converted to Kotlin in the future to take advantage of coroutines
 public final class TodoService
 {
     private final TodoScanner scanner;
@@ -148,4 +150,7 @@ public final class TodoService
 
     public void addChangeListener(Runnable listener)    { listeners.add(listener); }
     public void removeChangeListener(Runnable listener) { listeners.remove(listener); }
+
+    /// @return the open project's root, or null when no project is open
+    public Path projectRoot() { return projectRoot; }
 }

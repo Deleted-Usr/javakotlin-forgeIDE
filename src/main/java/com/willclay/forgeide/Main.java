@@ -14,6 +14,7 @@ import javax.swing.*;
 
 /*
  * TODO:
+ *  - Small hover info dialogs for classes, methods, etc.
  *  - Colour swatch in gutter
  *  - Lines of Code counter
  *  - Markdown editor syntax highlighting, and view options (only editor, split, only preview)
