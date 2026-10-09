@@ -98,9 +98,11 @@ public final class Window extends JFrame
 
         this.settingsService = Objects.requireNonNull(settingsService, "settingsService");
         Objects.requireNonNull(sessionService, "sessionService");
+
         Font editorFont = EditorFonts.load(
                 settingsService.get().editor().fontFamily(),
-                settingsService.get().editor().fontSize());
+                settingsService.get().editor().fontSize()
+        );
 
         editorPanel   = new CodeEditorPanel(editorFont);
         editorManager = new EditorManager(editorPanel);
@@ -132,6 +134,7 @@ public final class Window extends JFrame
         );
 
         settingsRuntime = new IDESettingsRuntime(this, settingsService, editorPanel, editorManager);
+
         applicationShutdown.addTask("stop automatic saving", settingsRuntime::close);
         applicationShutdown.addTask("save the IDE session", () -> sessionService.save(captureSession()));
 
@@ -161,20 +164,26 @@ public final class Window extends JFrame
                 todoService
         );
         actions = new ActionManager(context);
+
         editorPanel.setEmptyStateActions(
                 actions.getNewFileAction(),
                 actions.getOpenFileAction(),
                 actions.getNewProjectAction(),
                 actions.getOpenProjectAction()
         );
+
         console.setOnMinimise(() -> actions.getToggleConsoleAction().setSelected(false));
         todoPanel.setOnMinimise(() -> actions.getToggleTodoAction().setSelected(false));
+
         workbench.setOnReturnToEditor(editorPanel::focusEditor);
+
         Runnable updateConsoleSummary = () -> workbench.setConsoleSummary(
                 executionManager.getStatus() == ExecutionManager.Status.READY
                         ? (console.hasOutput() ? "Output available" : "No output yet")
-                        : executionManager.getStatusText());
+                        : executionManager.getStatusText()
+        );
         console.addContentListener(updateConsoleSummary);
+
         executionManager.addChangeListener(() ->
         {
             updateConsoleSummary.run();
@@ -251,6 +260,7 @@ public final class Window extends JFrame
     private void showCurrentProject()
     {
         Project project = workspace.getProject();
+
         editorPanel.setProjectOpen(project != null);
         editorPanel.setProjectRoot(project == null ? null : project.root());
 
@@ -287,18 +297,26 @@ public final class Window extends JFrame
 
     private IDESessionConfiguration captureSession()
     {
-        Project project = workspace.getProject();
+        Project project  = workspace.getProject();
         Path projectRoot = project == null ? null : project.root();
+
         List<Path> openFiles = editorManager.getOpenTabs().stream()
                 .map(EditorTab::getFile)
                 .filter(Objects::nonNull)
                 .toList();
+
         EditorTab selected = editorManager.getCurrentTab();
         Path selectedFile = selected == null ? null : selected.getFile();
 
         return new IDESessionConfiguration(
-                IDESessionConfiguration.CURRENT_SCHEMA_VERSION, projectRoot, openFiles, selectedFile,
-                workbench.captureLayout());
+                IDESessionConfiguration.CURRENT_SCHEMA_VERSION,
+
+                projectRoot,
+                openFiles,
+                selectedFile,
+
+                workbench.captureLayout()
+        );
     }
 
     private void restoreLayout(WorkbenchLayout layout)
