@@ -31,6 +31,8 @@ and a dedicated footer for Apply/Cancel.
 
 ### Fixed
 - The `.exe` actually closes when using the `[X]` button in the top right corner
+- The system theme option now creates an instance of the system laf instead of directly installing it when loading the
+`AppTheme.java` enum.
 
 
 ## [1.2.0] - 2026-10-03

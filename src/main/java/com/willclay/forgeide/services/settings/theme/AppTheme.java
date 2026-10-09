@@ -75,31 +75,44 @@ public enum AppTheme
 
     AppTheme(String id, String displayName, LookAndFeel swingTheme, TokenTheme tokenTheme)
     {
-        this.id = id;
+        this.id          = id;
         this.displayName = displayName;
-        this.swingTheme = swingTheme;
-        this.tokenTheme = tokenTheme;
+        this.swingTheme  = swingTheme;
+        this.tokenTheme  = tokenTheme;
     }
 
     public String id()                 { return id; }
-    public String getDisplayName()    { return displayName; }
+    public String getDisplayName()     { return displayName; }
     public LookAndFeel getSwingTheme() { return swingTheme; }
-    public TokenTheme getTokenTheme() { return tokenTheme; }
+    public TokenTheme getTokenTheme()  { return tokenTheme; }
 
     private static LookAndFeel systemLookAndFeel()
     {
-        try
-        {
-            String systemLookAndFeelClassName = UIManager.getSystemLookAndFeelClassName();
+        // Only create the look and feel here, never install it. This runs when
+        // AppTheme loads, so installing it would replace whatever theme is
+        // already active as a side effect of merely touching this enum.
+        //
+        // The system look and feel classes live inside the java.desktop module,
+        // which we can't instantiate by reflection, so we ask Swing to create it
+        // by its display name (e.g. "Windows") instead.
+        String systemLookAndFeelClassName = UIManager.getSystemLookAndFeelClassName();
 
-            UIManager.setLookAndFeel(systemLookAndFeelClassName);
-            return UIManager.getLookAndFeel();
-        }
-        catch (ReflectiveOperationException | ClassCastException | UnsupportedLookAndFeelException err)
+        for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels())
         {
-            System.err.println("Could not instantiate system look and feel: " + err);
-            return new MetalLookAndFeel();
+            if (info.getName().equals(systemLookAndFeelClassName))
+            {
+                try
+                {
+                    return UIManager.createLookAndFeel(info.getName());
+                }
+                catch (UnsupportedLookAndFeelException err)
+                {
+                    System.err.println("Could not create system look and feel: " + err);
+                }
+            }
         }
+
+        return new MetalLookAndFeel();
     }
 
     public static Optional<AppTheme> find(String id)
