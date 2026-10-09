@@ -22,6 +22,7 @@ public final class TodoPanel extends JPanel
         super(new BorderLayout());
 
         ToolWindowHeader header = new ToolWindowHeader("TODO");
+
         Action minimise = new AbstractAction("Hide")
         {
             @Override
@@ -29,10 +30,21 @@ public final class TodoPanel extends JPanel
         };
         minimise.putValue(Action.SHORT_DESCRIPTION, "Hide TODO");
         header.addAction(minimise);
+
         add(header, BorderLayout.NORTH);
 
-        JLabel empty = new JLabel("<html><center>No TODOs yet<br><br>"
-                + "Comments that start with TODO or FIXME will be listed here.</center></html>", SwingConstants.CENTER);
+        JLabel empty = new JLabel(
+                """
+                 <html>
+                     <center>
+                         No TODOs yet<br><br> Comments that start with TODO or FIXME will be listed here.
+                     </center>
+                 </html>
+                 """,
+
+                SwingConstants.CENTER
+        );
+
         empty.putClientProperty("FlatLaf.style", "foreground: $Label.disabledForeground; border: 12,12,12,12");
         add(empty, BorderLayout.CENTER);
     }

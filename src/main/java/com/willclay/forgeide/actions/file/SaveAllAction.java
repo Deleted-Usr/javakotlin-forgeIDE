@@ -4,7 +4,7 @@ import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
 import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.services.ActionContext;
-import com.willclay.forgeide.ui.editor.EditorTab;
+import com.willclay.forgeide.ui.editor.tabs.EditorTab;
 import com.willclay.forgeide.ui.Utils;
 
 import java.awt.event.KeyEvent;

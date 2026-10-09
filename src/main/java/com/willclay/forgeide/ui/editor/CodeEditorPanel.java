@@ -3,6 +3,9 @@ package com.willclay.forgeide.ui.editor;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.highlighting.TokenTheme;
 import com.willclay.forgeide.ui.editor.markdown.MarkdownTab;
+import com.willclay.forgeide.ui.editor.tabs.EditorTab;
+import com.willclay.forgeide.ui.editor.tabs.EditorTabHeader;
+import com.willclay.forgeide.ui.editor.tabs.ForgeTabbedPaneUI;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 
 import javax.swing.Action;
@@ -40,7 +43,17 @@ public final class CodeEditorPanel extends JPanel
     private static final String EMPTY_CARD = "empty";
     private static final String TABS_CARD = "tabs";
 
-    private final JTabbedPane tabs = new JTabbedPane();
+    /// `updateUI()` runs on construction and again on every theme change, and
+    /// by default asks the look and feel for its delegate. Overriding it keeps
+    /// Forge's tab painting in place when the user switches themes.
+    private final JTabbedPane tabs = new JTabbedPane()
+    {
+        @Override
+        public void updateUI()
+        {
+            setUI(new ForgeTabbedPaneUI());
+        }
+    };
     private final CardLayout contentLayout = new CardLayout();
 
     private final EditorEmptyState emptyState = new EditorEmptyState();

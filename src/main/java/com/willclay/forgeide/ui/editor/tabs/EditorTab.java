@@ -1,9 +1,11 @@
-package com.willclay.forgeide.ui.editor;
+package com.willclay.forgeide.ui.editor.tabs;
 
 import com.willclay.forgeide.editor.SyntaxUndoManager;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.highlighting.SyntaxHighlighter;
 import com.willclay.forgeide.highlighting.TokenTheme;
+import com.willclay.forgeide.ui.editor.ForgeEditorPane;
+import com.willclay.forgeide.ui.editor.Minimap;
 import com.willclay.forgeide.ui.editor.markdown.MarkdownTab;
 import com.willclay.forgeide.ui.gutter.BreakpointModel;
 import com.willclay.forgeide.ui.gutter.LineChangeTracker;

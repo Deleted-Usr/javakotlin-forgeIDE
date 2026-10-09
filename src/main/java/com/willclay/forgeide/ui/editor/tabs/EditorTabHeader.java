@@ -1,4 +1,4 @@
-package com.willclay.forgeide.ui.editor;
+package com.willclay.forgeide.ui.editor.tabs;
 
 import com.formdev.flatlaf.util.UIScale;
 import com.willclay.forgeide.ui.icons.FileIcons;

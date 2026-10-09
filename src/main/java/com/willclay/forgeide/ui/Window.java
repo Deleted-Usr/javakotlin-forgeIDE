@@ -23,7 +23,7 @@ import com.willclay.forgeide.services.todo.TodoService;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 import com.willclay.forgeide.ui.editor.ConsolePanel;
-import com.willclay.forgeide.ui.editor.EditorTab;
+import com.willclay.forgeide.ui.editor.tabs.EditorTab;
 import com.willclay.forgeide.ui.explorer.ProjectContextMenu;
 import com.willclay.forgeide.ui.explorer.ProjectTree;
 import com.willclay.forgeide.ui.explorer.ProjectTreeModel;

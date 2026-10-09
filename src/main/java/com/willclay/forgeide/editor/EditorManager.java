@@ -2,7 +2,7 @@ package com.willclay.forgeide.editor;
 
 import com.willclay.forgeide.files.SourceFileIO;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
-import com.willclay.forgeide.ui.editor.EditorTab;
+import com.willclay.forgeide.ui.editor.tabs.EditorTab;
 import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;

@@ -6,7 +6,7 @@ import com.willclay.forgeide.markdown.CodeColors
 import com.willclay.forgeide.markdown.MarkdownPane
 import com.willclay.forgeide.markdown.MarkdownTheme
 import com.willclay.forgeide.markdown.code.TokenKind
-import com.willclay.forgeide.ui.editor.EditorTab
+import com.willclay.forgeide.ui.editor.tabs.EditorTab
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding
 
 import java.awt.BorderLayout

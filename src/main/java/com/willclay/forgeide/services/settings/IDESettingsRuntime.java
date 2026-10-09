@@ -4,7 +4,7 @@ import com.willclay.forgeide.application.IDESettingsConfiguration;
 import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
-import com.willclay.forgeide.ui.editor.EditorTab;
+import com.willclay.forgeide.ui.editor.tabs.EditorTab;
 import com.willclay.forgeide.ui.fonts.EditorFonts;
 
 import javax.swing.SwingUtilities;

@@ -1,6 +1,7 @@
 package com.willclay.forgeide.ui.editor;
 
 import com.formdev.flatlaf.util.UIScale;
+import com.willclay.forgeide.ui.editor.tabs.EditorTab;
 import com.willclay.forgeide.ui.icons.FileIcons;
 import javax.swing.JLabel;
 import java.awt.Dimension;

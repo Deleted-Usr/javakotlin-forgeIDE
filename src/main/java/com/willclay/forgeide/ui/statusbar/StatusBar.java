@@ -6,7 +6,7 @@ import com.willclay.forgeide.execution.ExecutionManager;
 import com.willclay.forgeide.services.settings.SettingsService;
 import com.willclay.forgeide.services.settings.theme.AppTheme;
 import com.willclay.forgeide.ui.Utils;
-import com.willclay.forgeide.ui.editor.EditorTab;
+import com.willclay.forgeide.ui.editor.tabs.EditorTab;
 import com.willclay.forgeide.workspace.Project;
 import com.willclay.forgeide.workspace.Workspace;
 
