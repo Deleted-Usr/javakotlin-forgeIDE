@@ -91,7 +91,8 @@ Javadoc (Java) and KDoc (Kotlin).
 | Java              | Built into the application          | File templates, syntax highlighting, and build, clean, and run through a JDK (external `javac` or the Compiler API). |
 | Kotlin            | Optional `forge-lang-kotlin` plugin | File templates, syntax highlighting, and Kotlin/JVM build and run through an external Kotlin compiler.              |
 | C++               | Optional `forge-lang-cpp` plugin    | File templates, syntax highlighting, and build and run through CMake or direct `g++` compilation.                   |
-| Python, Lua, Rust | Unfinished source implementations   | Not registered as available languages; their lexers and toolchains are not implemented.                             |
+| Rust              | Optional `forge-lang-rust` plugin   | Editing scaffold: `.rs` files, starter content and a `src` source root. Syntax highlighting and build/run are not implemented yet. |
+| Python, Lua       | Unfinished source implementations   | Not registered as available languages; their lexers and toolchains are not implemented.                             |
 
 Language plugins are discovered at startup through Java's `ServiceLoader`. The built-in
 Java provider is registered in
@@ -135,13 +136,13 @@ language plugins.
 | Gradle task          | Result                                                                                |
 |----------------------|---------------------------------------------------------------------------------------|
 | `build`              | Compiles everything and produces `build/libs/ForgeIDE-Fat.jar`, a runnable uber JAR.  |
-| `buildAllJars`       | Packages the IDE and both language plugin JARs.                                       |
-| `installPlugins`     | Builds both plugins and replaces the copies in `~/.forge/plugins`.                    |
+| `buildAllJars`       | Packages the IDE and all three language plugin JARs.                                  |
+| `installPlugins`     | Builds all three plugins and replaces the copies in `~/.forge/plugins`.               |
 | `syncDistLibraries`  | Makes `dist/libs` contain exactly the runtime dependencies Gradle resolved.           |
 
 ### Language plugins
 
-The Kotlin and C++ plugins are Gradle subprojects under `modules/`. The quickest way to
+The Kotlin, C++ and Rust plugins are Gradle subprojects under `modules/`. The quickest way to
 install them is:
 
 ```powershell
@@ -149,15 +150,20 @@ install them is:
 ```
 
 To build them without installing, run
-`.\gradlew.bat :modules:forge-lang-kotlin:build :modules:forge-lang-cpp:build`. The JARs
+`.\gradlew.bat :modules:forge-lang-kotlin:build :modules:forge-lang-cpp:build :modules:forge-lang-rust:build`. The JARs
 are written to:
 
 - `modules/forge-lang-kotlin/build/libs/forge-lang-kotlin-1.1.0.jar`
 - `modules/forge-lang-cpp/build/libs/forge-lang-cpp-1.1.0.jar`
+- `modules/forge-lang-rust/build/libs/forge-lang-rust-1.0.0.jar`
 
 Copy them into `~/.forge/plugins` and restart ForgeIDE. Each JAR includes its
 `LanguageProvider` service registration; ForgeIDE supplies the host classes and shared
 libraries at runtime, so they are not bundled into the plugins.
+
+Rust currently provides an editing scaffold only: new files receive a `fn main()`
+template under the project's `src` directory. The lexer leaves text uncoloured,
+and build/run actions remain unavailable until a Rust toolchain is implemented.
 
 ### Native launchers (optional)
 
@@ -194,13 +200,14 @@ javakotlin-forgeide/
 │   └── resources/                   Editor font, theme properties, built-in language registration
 ├── modules/
 │   ├── forge-lang-kotlin/           Kotlin language plugin (Gradle subproject)
-│   └── forge-lang-cpp/              C++ language plugin (Gradle subproject)
+│   ├── forge-lang-cpp/              C++ language plugin (Gradle subproject)
+│   └── forge-lang-rust/             Rust editing scaffold (Gradle subproject)
 ├── examples/                        Projects to open and run in ForgeIDE
 ├── docs/                            Direction, design notes, and reference material
 ├── packaging/                       Plugin, runtime-image, executable, and icon scripts
 ├── native/                          C++ and Rust Windows launcher implementations
 ├── build.gradle.kts                 Host application build and helper tasks
-└── settings.gradle.kts              Includes the two plugin modules
+└── settings.gradle.kts              Includes the three plugin modules
 ```
 
 `build/`, `out/`, and `dist/` hold generated output and are ignored by Git.
@@ -236,7 +243,7 @@ com.willclay.forgeide                 Main application (src/main/java/)
 │   │   └── templates/               FileTemplate, FileTemplates, TemplateRequest
 │   ├── java/                        JavaLanguage, JavaLexer, JavacToolchain, InProcessJavaCompiler, JavaTemplates
 │   ├── jvm/                         JvmSettings, JvmClassPath — shared JVM configuration
-│   └── python/, lua/, rust/         Unfinished language stubs (not registered)
+│   └── python/, lua/                Unfinished language stubs (not registered)
 ├── layouts/                         ColumnLayout, MinimapScrollPaneLayout
 ├── markdown/                        Markdown (parser bridge), MarkdownPane, MarkdownView, RichText, code/
 ├── services/                        ActionContext, WorkspaceService, ApplicationShutdown

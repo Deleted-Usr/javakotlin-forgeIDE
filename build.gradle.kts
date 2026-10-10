@@ -50,12 +50,13 @@ tasks.build {
 
 tasks.register("buildAllJars") {
     group = "build"
-    description = "Compiles and packages ForgeIDE and both language plugins"
+    description = "Compiles and packages ForgeIDE and all language plugins"
 
     dependsOn(
         ":jar",
         ":modules:forge-lang-kotlin:jar",
-        ":modules:forge-lang-cpp:jar"
+        ":modules:forge-lang-cpp:jar",
+        ":modules:forge-lang-rust:jar"
     )
 }
 
@@ -86,15 +87,19 @@ tasks.register<Sync>("syncDistLibraries") {
 }
 
 
-// ForgeIDE loads Kotlin and C++ from ~/.forge/plugins, not from the build
+// ForgeIDE loads Kotlin, C++ and Rust from ~/.forge/plugins, not from the build
 // output, so a plugin change does nothing until its JAR is copied there. Old
 // copies are removed first: two JARs for the same language would register it
 // twice, which LanguageRegistry rejects at startup.
 tasks.register("installPlugins") {
     group = "build"
-    description = "Builds both language plugins and installs them into ~/.forge/plugins"
+    description = "Builds all language plugins and installs them into ~/.forge/plugins"
 
-    val pluginJars = listOf(":modules:forge-lang-kotlin:jar", ":modules:forge-lang-cpp:jar")
+    val pluginJars = listOf(
+        ":modules:forge-lang-kotlin:jar",
+        ":modules:forge-lang-cpp:jar",
+        ":modules:forge-lang-rust:jar"
+    )
     dependsOn(pluginJars)
 
     doLast {

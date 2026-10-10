@@ -4,9 +4,9 @@
 # bootstrap pass 1. Providers listed here win over anything discovered in
 # ~/.forge/plugins, so a third-party JAR cannot replace a built-in language.
 #
-# Kotlin and C++ are deliberately absent: they now ship as
-# modules/forge-lang-kotlin and modules/forge-lang-cpp, and are discovered from
-# their own JARs. The Lua, Python and Rust providers are not listed until their
-# Language implementations are finished.
+# Kotlin, C++ and Rust are deliberately absent: they ship as
+# modules/forge-lang-kotlin, modules/forge-lang-cpp and modules/forge-lang-rust,
+# and are discovered from their own JARs. The Lua and Python providers are not
+# listed until their Language implementations are finished.
 
 com.willclay.forgeide.lang.java.JavaLanguageProvider

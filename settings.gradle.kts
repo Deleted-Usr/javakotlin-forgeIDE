@@ -1,3 +1,7 @@
 rootProject.name = "ForgeIDE"
 
-include("modules:forge-lang-kotlin", "modules:forge-lang-cpp")
+include(
+    "modules:forge-lang-kotlin",
+    "modules:forge-lang-cpp",
+    "modules:forge-lang-rust",
+)

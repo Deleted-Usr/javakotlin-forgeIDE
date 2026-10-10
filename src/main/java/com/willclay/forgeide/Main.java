@@ -15,6 +15,7 @@ import javax.swing.*;
 
 /*
  * TODO:
+ *  - Smoother scrolling in the editor pane
  *  - Small hover info dialogs for classes, methods, etc.
  *  - Colour swatch in gutter
  *  - Lines of Code counter
