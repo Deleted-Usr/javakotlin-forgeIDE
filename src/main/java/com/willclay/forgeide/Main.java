@@ -20,7 +20,7 @@ import javax.swing.*;
  *  - Lines of Code counter
  *  - Markdown editor syntax highlighting
  *  - File icons based on type (icons for final classes, abstract classes, interfaces, etc.)
- *  - Multi-Language projects
+ *  - Multi-Language projects (Add language project)
  *  - IntelliJ-style double shift project search function
  *  - lightweight editor - vs-code type (open a file and run without a project, jshell maybe?)
  *  - Movable / Dockable tabs
