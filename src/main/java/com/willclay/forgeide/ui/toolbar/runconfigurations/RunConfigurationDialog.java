@@ -1,6 +1,6 @@
 package com.willclay.forgeide.ui.toolbar.runconfigurations;
 
-import com.willclay.forgeide.ui.SectionBorder;
+import com.formdev.flatlaf.util.UIScale;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.dialogs.EntryPointChooser;
 import com.willclay.forgeide.workspace.runconfig.BeforeLaunch;
@@ -17,13 +17,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 
 /// The dialog [RunConfigDialogController] opens.
 ///
-/// The left half picks a configuration, the right half edits the selected one,
-/// and the bar along the bottom applies or abandons the edit — the same shape
-/// the settings window uses.
+/// A sidebar of configuration cards on the left, the selected configuration
+/// on the right, and Apply/Cancel along the bottom, the same frame the
+/// settings window uses. The right side opens with the configuration's name
+/// as a title and a sentence saying which file it runs, so it reads as "a
+/// thing I can run" rather than as a form.
 ///
 /// The dialog keeps no configurations of its own. The list is whatever
 /// [RunConfigurationManager] currently holds, every change goes back through the
@@ -34,23 +35,42 @@ import java.util.function.Function;
 public class RunConfigurationDialog extends JDialog
 {
     private static final String PROJECT_ROOT = ".";
+    private static final int SIDEBAR_WIDTH = 220;
+
+    private static final String EDITOR_CARD = "editor";
+    private static final String EMPTY_CARD  = "empty";
 
     private final JTextField name        = new JTextField(24);
-    private final JTextField entryPoint  = new JTextField(24);
+    private final JLabel entryPoint      = new JLabel();
     private final JTextField vmOptions   = new JTextField(24);
     private final JTextField programArgs = new JTextField(24);
     private final JTextField workingDir  = new JTextField(24);
     private final JTextField environment = new JTextField(24);
-    private final JComboBox<BeforeLaunch> beforeLaunchOptions = new JComboBox<>(BeforeLaunch.values());
+    private final BeforeLaunchPicker beforeLaunch = new BeforeLaunchPicker();
 
     private final DefaultListModel<RunConfiguration> configs = new DefaultListModel<>();
-    private final JList<RunConfiguration> configList         = new JList<>(configs);
+    private final JList<RunConfiguration> configList         = new JList<>(configs)
+    {
+        /// Always as wide as the sidebar, so a long name is shortened with "..."
+        /// instead of pushing the cards wider than the space they have.
+        @Override
+        public boolean getScrollableTracksViewportWidth()
+        {
+            return true;
+        }
+    };
 
-    private final JButton chooseEntryPoint = new JButton("Choose...");
-    private final JButton addConfig        = new JButton("+ Add");
-    private final JButton remove           = new JButton("- Remove");
+    private final JButton chooseEntryPoint = new JButton("Change...");
+    private final JButton addConfig        = new JButton("+ New configuration");
+    private final JButton remove           = new JButton("Remove");
     private final JButton apply            = new JButton("Apply");
     private final JButton cancel           = new JButton("Cancel");
+
+    /// The right side shows either the editor or a short message when there is
+    /// nothing to edit.
+    private final CardLayout editorLayout = new CardLayout();
+    private final JPanel editorCards      = new JPanel(editorLayout);
+    private final JLabel emptyMessage     = new JLabel("", SwingConstants.CENTER);
 
     private final RunConfigurationManager manager;
     private final Runnable refresh = this::reload;
@@ -61,19 +81,20 @@ public class RunConfigurationDialog extends JDialog
 
     public RunConfigurationDialog(Window parent, RunConfigurationManager manager)
     {
-        super(parent, "Edit Run Configurations", ModalityType.MODELESS);
+        super(parent, "Run Configurations", ModalityType.MODELESS);
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
         this.manager = Objects.requireNonNull(manager, "manager");
 
-        setSize(760, 540);
-        setMinimumSize(new Dimension(620, 440));
+        setSize(820, 580);
+        setMinimumSize(new Dimension(660, 460));
 
-        JSplitPane listAndEditor = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, configurationList(), editor());
-        listAndEditor.setResizeWeight(0); // the editor, not the list, takes new width
-        listAndEditor.setBorder(BorderFactory.createEmptyBorder());
+        emptyMessage.putClientProperty("FlatLaf.style", "foreground: $Label.disabledForeground");
+        editorCards.add(editor(), EDITOR_CARD);
+        editorCards.add(emptyMessage, EMPTY_CARD);
 
-        add(listAndEditor, BorderLayout.CENTER);
+        add(sidebar(), BorderLayout.WEST);
+        add(editorCards, BorderLayout.CENTER);
         add(buttonBar(), BorderLayout.SOUTH);
 
         addButtonActions();
@@ -95,29 +116,36 @@ public class RunConfigurationDialog extends JDialog
         setLocationRelativeTo(parent);
     }
 
-    private JPanel configurationList()
+    /// The configuration cards, with the button that adds another underneath.
+    private JComponent sidebar()
     {
-        JPanel panel = new JPanel(new BorderLayout(0, 8));
-        panel.setBorder(new SectionBorder("Configurations"));
-
-        // Height is the dialog's to decide; only the width is worth pinning.
-        panel.setPreferredSize(new Dimension(200, 0));
-        panel.setMinimumSize(new Dimension(160, 0));
-
         configList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        configList.setCellRenderer(labelledBy(value -> ((RunConfiguration) value).name()));
+        configList.setCellRenderer(new RunConfigurationCell());
+        configList.setOpaque(false);
         configList.addListSelectionListener(event ->
         {
             if (refreshing || event.getValueIsAdjusting()) return;
             selectionChanged();
         });
 
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEADING, 6, 0));
-        buttons.add(addConfig);
-        buttons.add(remove);
+        // The cards paint their own selection, so the list and its scroll pane
+        // are see-through and the sidebar shows behind them.
+        JScrollPane scrollPane = new JScrollPane(configList,
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
 
-        panel.add(new JScrollPane(configList), BorderLayout.CENTER);
-        panel.add(buttons, BorderLayout.SOUTH);
+        JPanel column = new JPanel(new BorderLayout(0, 8));
+        column.setBorder(BorderFactory.createEmptyBorder(10, 8, 10, 8));
+        column.add(scrollPane, BorderLayout.CENTER);
+        column.add(addConfig, BorderLayout.SOUTH);
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setPreferredSize(new Dimension(UIScale.scale(SIDEBAR_WIDTH), 0));
+        panel.add(column, BorderLayout.CENTER);
+        panel.add(new JSeparator(SwingConstants.VERTICAL), BorderLayout.EAST);
 
         return panel;
     }
@@ -125,7 +153,7 @@ public class RunConfigurationDialog extends JDialog
     private JComponent editor()
     {
         JPanel sections = Utils.createSettingsPage();
-        Utils.addSettingsSection(sections, createConfigurationSection());
+        Utils.addSettingsSection(sections, createBeforeLaunchSection());
         Utils.addSettingsSection(sections, createLaunchSection());
 
         // A page of sections has no use for spare height, so hold it at the top.
@@ -137,17 +165,38 @@ public class RunConfigurationDialog extends JDialog
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
-        return scrollPane;
-    }
-
-    private JPanel createConfigurationSection()
-    {
-        JPanel panel = Utils.createSettingsSection("Configuration");
-
-        Utils.addSettingsFormRow(panel, 0, "Name:", name);
-        Utils.addSettingsFormRow(panel, 1, "Entry point:", entryPointRow());
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(header(), BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
         return panel;
+    }
+
+    /// The name as an editable title, and a sentence naming the file it runs.
+    private JPanel header()
+    {
+        // A text field dressed as a heading: no border until it has focus, so it
+        // reads as a title but is still renamed by clicking and typing.
+        name.putClientProperty("FlatLaf.styleClass", "h2");
+        name.putClientProperty("FlatLaf.style",
+                "borderWidth: 0; focusWidth: 0; innerFocusWidth: 0;"
+                + " background: $Panel.background; focusedBackground: $TextField.background");
+        name.putClientProperty("JTextField.placeholderText", "Configuration name");
+        name.setToolTipText("Click to rename");
+
+        remove.putClientProperty("JButton.buttonType", "toolBarButton");
+        remove.setFocusable(false);
+
+        JPanel titleRow = new JPanel(new BorderLayout(8, 0));
+        titleRow.add(name, BorderLayout.CENTER);
+        titleRow.add(remove, BorderLayout.EAST);
+
+        JPanel header = new JPanel(new BorderLayout(0, 2));
+        header.setBorder(BorderFactory.createEmptyBorder(14, 10, 2, 12));
+        header.add(titleRow, BorderLayout.NORTH);
+        header.add(entryPointRow(), BorderLayout.CENTER);
+
+        return header;
     }
 
     /// The entry point is picked, not typed: the project knows which of its files
@@ -155,12 +204,19 @@ public class RunConfigurationDialog extends JDialog
     /// wrong at the moment someone runs it.
     private JPanel entryPointRow()
     {
-        entryPoint.setEditable(false);
+        JLabel runs = new JLabel("Runs");
+        runs.putClientProperty("FlatLaf.style", "foreground: $Label.disabledForeground");
+        entryPoint.putClientProperty("FlatLaf.styleClass", "semibold");
+
+        chooseEntryPoint.putClientProperty("JButton.buttonType", "toolBarButton");
+        chooseEntryPoint.putClientProperty("FlatLaf.style", "foreground: $Component.linkColor");
+        chooseEntryPoint.setFocusable(false);
         chooseEntryPoint.addActionListener(event -> chooseEntryPoint());
 
-        JPanel row = new JPanel(new BorderLayout(6, 0));
-        row.add(entryPoint, BorderLayout.CENTER);
-        row.add(chooseEntryPoint, BorderLayout.EAST);
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEADING, 4, 0));
+        row.add(runs);
+        row.add(entryPoint);
+        row.add(chooseEntryPoint);
 
         return row;
     }
@@ -190,6 +246,17 @@ public class RunConfigurationDialog extends JDialog
         if (chosen != null) entryPoint.setText(chosen.toString());
     }
 
+    private JPanel createBeforeLaunchSection()
+    {
+        JPanel panel = Utils.createSettingsSection("Before it runs");
+
+        GridBagConstraints constraints = Utils.createSettingsRowConstraints(0);
+        constraints.gridwidth = 2;
+        panel.add(beforeLaunch, constraints);
+
+        return panel;
+    }
+
     private JPanel createLaunchSection()
     {
         JPanel panel = Utils.createSettingsSection("Launch");
@@ -199,21 +266,23 @@ public class RunConfigurationDialog extends JDialog
         Utils.addSettingsFormRow(panel, 2, "Working directory:", workingDir);
         Utils.addSettingsFormRow(panel, 3, "Environment variables:", environment);
 
-        beforeLaunchOptions.setRenderer(labelledBy(value -> displayName((BeforeLaunch) value)));
-        Utils.addCompactSettingsFormRow(panel, 4, "Before launch:", beforeLaunchOptions);
-
         return panel;
     }
 
+    /// The same footer as the settings window: a line, then the buttons on the right.
     private JPanel buttonBar()
     {
         apply.setFocusable(false); cancel.setFocusable(false);
         cancel.addActionListener(event -> dispose());
 
-        JPanel panel = new JPanel();
-        panel.add(apply); panel.add(cancel);
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.TRAILING, 8, 10));
+        buttons.add(apply); buttons.add(cancel);
 
-        return panel;
+        JPanel footer = new JPanel(new BorderLayout());
+        footer.add(new JSeparator(), BorderLayout.NORTH);
+        footer.add(buttons, BorderLayout.CENTER);
+
+        return footer;
     }
 
     private void addButtonActions()
@@ -283,8 +352,8 @@ public class RunConfigurationDialog extends JDialog
         configList.clearSelection();
     }
 
-    /// With nothing selected there is nothing to edit, so the form goes quiet
-    /// rather than offering to save an empty configuration.
+    /// With nothing selected there is nothing to edit, so the editor is swapped
+    /// for a short message rather than offering to save an empty configuration.
     private void selectionChanged()
     {
         RunConfiguration selected = configList.getSelectedValue();
@@ -292,7 +361,11 @@ public class RunConfigurationDialog extends JDialog
 
         remove.setEnabled(editable);
         apply.setEnabled(editable);
-        setEditorEnabled(editable);
+
+        emptyMessage.setText(manager.isAvailable()
+                ? "Pick a configuration on the left, or create a new one."
+                : "Open a project to create run configurations.");
+        editorLayout.show(editorCards, editable ? EDITOR_CARD : EMPTY_CARD);
 
         show(selected);
     }
@@ -305,7 +378,7 @@ public class RunConfigurationDialog extends JDialog
         programArgs.setText(config == null ? "" : String.join(" ", config.programArguments()));
         workingDir.setText(config == null ? "" : displayPath(config.workingDirectory()));
         environment.setText(config == null ? "" : formatEnvironment(config.environment()));
-        beforeLaunchOptions.setSelectedItem(config == null ? BeforeLaunch.COMPILE_TARGET : config.beforeLaunch());
+        beforeLaunch.select(config == null ? BeforeLaunch.COMPILE_TARGET : config.beforeLaunch());
     }
 
     /// The edited configuration, keeping the identity of the one selected — an
@@ -318,21 +391,13 @@ public class RunConfigurationDialog extends JDialog
         return new RunConfiguration(
                 selected.id(),
                 name.getText().trim(),
-                requiredPath(entryPoint, "An entry point"),
+                requiredPath(entryPoint.getText(), "An entry point"),
                 splitArguments(vmOptions.getText()),
                 splitArguments(programArgs.getText()),
                 pathOr(workingDir, PROJECT_ROOT),
                 parseEnvironment(environment.getText()),
-                (BeforeLaunch) beforeLaunchOptions.getSelectedItem()
+                beforeLaunch.selected()
         );
-    }
-
-    private void setEditorEnabled(boolean enabled)
-    {
-        for (JComponent field : List.of(name, entryPoint, chooseEntryPoint, vmOptions, programArgs, workingDir, environment, beforeLaunchOptions))
-        {
-            field.setEnabled(enabled);
-        }
     }
 
     /// Runs a change that reaches the disk, reporting failure the way the settings
@@ -399,9 +464,9 @@ public class RunConfigurationDialog extends JDialog
 
     /// [RunConfiguration] takes any path at all, so a blank field has to be caught
     /// before `Path.of("")` quietly becomes the project root.
-    private static Path requiredPath(JTextField field, String description)
+    private static Path requiredPath(String text, String description)
     {
-        String value = field.getText().trim();
+        String value = text.trim();
         if (value.isEmpty()) throw new IllegalArgumentException(description + " is required.");
 
         return Path.of(value).normalize();
@@ -424,32 +489,5 @@ public class RunConfigurationDialog extends JDialog
         String value = path.toString();
 
         return value.isEmpty() ? PROJECT_ROOT : value;
-    }
-
-    /// Enum constants and records should not reach the screen in their code form.
-    private static DefaultListCellRenderer labelledBy(Function<Object, String> text)
-    {
-        return new DefaultListCellRenderer()
-        {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
-            {
-                Component component = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-
-                if (component instanceof JLabel label && value != null) label.setText(text.apply(value));
-
-                return component;
-            }
-        };
-    }
-
-    private static String displayName(BeforeLaunch beforeLaunch)
-    {
-        return switch (beforeLaunch)
-        {
-            case COMPILE_TARGET -> "Compile target";
-            case BUILD_TARGET   -> "Build target";
-            case NONE           -> "Nothing";
-        };
     }
 }
