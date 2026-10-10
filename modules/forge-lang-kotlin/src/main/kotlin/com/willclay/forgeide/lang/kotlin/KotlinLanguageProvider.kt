@@ -21,7 +21,7 @@ class KotlinLanguageProvider : LanguageProvider {
     override fun pluginId() = "forge.kotlin"
 
     /** Returns the version of this Kotlin plugin implementation. */
-    override fun pluginVersion() = "1.0"
+    override fun pluginVersion() = "1.1.0"
 
     /** Creates a fresh [KotlinLanguage] instance for use by the IDE. */
     override fun createLanguage(): Language = KotlinLanguage()

@@ -21,8 +21,8 @@ final class CppTemplates
     private static final String HEADER = ".hpp";
     private static final String SOURCE = CppSources.DEFAULT_EXTENSION;
 
-    private static final TemplateIcon CLASS = TemplateIcon.type("C", "Objects.Blue");
-    private static final TemplateIcon STRUCT = TemplateIcon.type("S", "Objects.Purple");
+    private static final TemplateIcon CLASS       = TemplateIcon.type("C", "Objects.Blue");
+    private static final TemplateIcon STRUCT      = TemplateIcon.type("S", "Objects.Purple");
     private static final TemplateIcon HEADER_FILE = TemplateIcon.file("H", "Objects.Purple");
 
     static final FileTemplates ALL = new FileTemplates(

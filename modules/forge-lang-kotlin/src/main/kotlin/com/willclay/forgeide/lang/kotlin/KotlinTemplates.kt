@@ -13,19 +13,19 @@ import com.willclay.forgeide.lang.api.templates.TemplateRequest
  * a Java functional interface, Kotlin converts the lambda automatically.
  */
 internal object KotlinTemplates {
-    private const val OPEN = "open"
+    private const val OPEN     = "open"
     private const val ABSTRACT = "abstract"
 
     private const val EXTENSION = KotlinClassNames.EXTENSION
-    private const val SCRIPT = KotlinClassNames.SCRIPT_EXTENSION
+    private const val SCRIPT    = KotlinClassNames.SCRIPT_EXTENSION
 
-    private val CLASS = TemplateIcon.type("C", "Objects.Blue")
-    private val INTERFACE = TemplateIcon.type("I", "Objects.Green")
-    private val DATA_CLASS = TemplateIcon.type("D", "Objects.Purple")
-    private val ENUM = TemplateIcon.type("E", "Objects.YellowDark")
-    private val SEALED = TemplateIcon.type("S", "Objects.Green")
-    private val OBJECT = TemplateIcon.type("O", "Objects.Yellow")
-    private val ANNOTATION = TemplateIcon.type("@", "Objects.Green")
+    private val CLASS       = TemplateIcon.type("C", "Objects.Blue")
+    private val INTERFACE   = TemplateIcon.type("I", "Objects.Green")
+    private val DATA_CLASS  = TemplateIcon.type("D", "Objects.Purple")
+    private val ENUM        = TemplateIcon.type("E", "Objects.YellowDark")
+    private val SEALED      = TemplateIcon.type("S", "Objects.Green")
+    private val OBJECT      = TemplateIcon.type("O", "Objects.Yellow")
+    private val ANNOTATION  = TemplateIcon.type("@", "Objects.Green")
     private val SCRIPT_FILE = TemplateIcon.file("S", "Objects.Purple")
 
     val ALL = FileTemplates(
@@ -67,12 +67,11 @@ internal object KotlinTemplates {
         ),
     )
 
-    private fun header(request: TemplateRequest) =
-        if (request.hasPackage()) "package ${request.packageName()}\n\n" else ""
+    private fun header(request: TemplateRequest) = if (request.hasPackage()) "package ${request.packageName()}\n\n" else ""
 
     private fun modifiers(request: TemplateRequest) = when {
         request.has(ABSTRACT) -> "abstract "
-        request.has(OPEN) -> "open "
+        request.has(OPEN)     -> "open "
         else -> ""
     }
 }

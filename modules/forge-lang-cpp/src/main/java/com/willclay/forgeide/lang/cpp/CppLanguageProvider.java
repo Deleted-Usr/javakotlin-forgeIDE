@@ -21,7 +21,7 @@ public final class CppLanguageProvider implements LanguageProvider
     @Override
     public String pluginVersion()
     {
-        return "1.0";
+        return "1.1.0";
     }
 
     /// Creates a fresh [CppLanguage] instance for use by the IDE.
