@@ -5,21 +5,24 @@ All notable changes to ForgeIDE are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## [1.3.0] - 2026-10-10
 
 ### Added
 
 #### Editor
-- Syntax highlighting now highlights TODO comments in the selected theme's colour (this includes TODO's across multiple lines)
+- Syntax highlighting now highlights TODO comments in the selected theme's colour (this includes TODOs across multiple lines)
 - Added a custom markdown renderer for rendering `.md` files in Markdown Tabs
 - A custom icon is shown on the taskbar and in the top left corner of the application
 - A custom Forge splash screen now shows before the IDE opens, displaying bootstrap stages and an animated anvil
+- New **Tokyo Night** and **Cappuccin** editor themes
+- Editor | Split | Preview buttons in a header above markdown tabs, allowing a user to view just code, a split, or just the
+markdown preview in the code editor panel
 
 #### Bottom Tool Window
 - A TODO tool window to complement the TODO highlighting that shows all TODOs within a project (similar to IntelliJ)
 
 #### Build
-- Added shell and bash scrips under `packaging/executable` and `packaging/icon` that handle on-the-fly icon generation and executable building
+- Added shell and bash scripts under `packaging/executable` and `packaging/icon` that handle on-the-fly icon generation and executable building
 - `syncDistLibraries` Gradle task that makes the distribution's `libs/` contain exactly the runtime dependencies Gradle resolved
 - Added the `org.jetbrains:markdown:0.7.9` implementation to the `build.gradle.kts` to handle markdown parsing
 
@@ -32,16 +35,20 @@ and this project follows [Semantic Versioning](https://semver.org/).
 `kotlinx.serialization` package and `kotlinx-serialization-json` plugin
 - The settings window now uses a sidebar/card layout instead of tabs, with project language pages grouped under Project 
 and a dedicated footer for Apply/Cancel.
+- The TODO and console window share the same bottom tool window, a card layout handles switching.
+- Changed the style/look and feel of editor tabs to have a custom FlatLaf-backed tab strip UI with rounded selected cards 
+and accent selection indicators
 
 ### Fixed
 - The `.exe` actually closes when using the `[X]` button in the top right corner
 - The system theme option now creates an instance of the system laf instead of directly installing it when loading the
 `AppTheme.java` enum.
+- `RevealInFilesAction.java` now uses platform-specific commands to open the OS file explorer
 
 
 ## [1.2.0] - 2026-10-03
 
-This release focuses on small editor improvements, quality of live additions, and minor 
+This release focuses on small editor improvements, quality of life additions, and minor 
 bug fixes.
 
 ### Added
@@ -143,3 +150,4 @@ full move to the Gradle build system.
 
 [1.1.0]: https://github.com/Deleted-Usr/javakotlin-forgeIDE/compare/v1.0.0...v1.1.0
 [1.2.0]: https://github.com/Deleted-Usr/javakotlin-forgeIDE/compare/v1.1.0...v1.2.0
+[1.3.0]: https://github.com/Deleted-Usr/javakotlin-forgeIDE/compare/v1.2.0...v1.3.0

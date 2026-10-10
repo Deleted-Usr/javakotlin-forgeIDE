@@ -15,7 +15,7 @@ sourceSets {
 }
 
 group = "com.willclay"
-version = "1.2.0"
+version = "1.3.0"
 
 repositories {
     mavenCentral()
@@ -73,8 +73,7 @@ tasks.register<Copy>("buildLibraries") {
 
 // The exe launchers put every JAR in dist/libs on the class path, so that
 // folder must hold exactly the dependency versions Gradle resolved. Copying
-// them by hand drifts: a stale jackson-annotations once made session saving
-// throw NoClassDefFoundError, which stopped the window from closing.
+// them by hand drifts.
 //
 // Sync (unlike Copy) also deletes anything in dist/libs that is no longer a
 // dependency, so an old version cannot linger next to its replacement.
