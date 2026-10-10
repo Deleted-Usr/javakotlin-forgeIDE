@@ -90,17 +90,22 @@ public final class Main
 
         SwingUtilities.invokeLater(() ->
         {
-            splash.setStatus("Opening the editor");
-            setLookAndFeel(bootstrap.settings().getTheme());
-            FlatAnimatedLafChange.duration = 300;
+            try
+            {
+                splash.setStatus("Opening the editor");
+                setLookAndFeel(bootstrap.settings().getTheme());
+                FlatAnimatedLafChange.duration = 300;
 
-            Window w = new Window("Forge IDE", bootstrap);
-            AppIcons.install(w);
-            w.setSize(INITIAL_WIDTH, INITIAL_HEIGHT);
-            w.setLocationRelativeTo(null);
-            w.setVisible(true);
-
-            splash.close();
+                Window w = new Window("Forge IDE", bootstrap);
+                AppIcons.install(w);
+                w.setSize(INITIAL_WIDTH, INITIAL_HEIGHT);
+                w.setLocationRelativeTo(null);
+                w.setVisible(true);
+            }
+            finally
+            {
+                splash.close();
+            }
         });
     }
 
