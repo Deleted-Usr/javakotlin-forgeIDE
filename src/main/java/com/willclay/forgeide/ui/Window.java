@@ -16,6 +16,7 @@ import com.willclay.forgeide.services.settings.SettingsService;
 import com.willclay.forgeide.services.settings.IDESettingsRuntime;
 import com.willclay.forgeide.services.settings.theme.ThemeService;
 import com.willclay.forgeide.services.ActionContext;
+import com.willclay.forgeide.services.ForgeConsole;
 import com.willclay.forgeide.services.WorkspaceService;
 import com.willclay.forgeide.services.settings.project.ProjectSettingsService;
 import com.willclay.forgeide.services.todo.TodoScanner;
@@ -107,6 +108,7 @@ public final class Window extends JFrame
         editorPanel   = new CodeEditorPanel(editorFont);
         editorManager = new EditorManager(editorPanel);
         console       = new ConsolePanel(editorFont.deriveFont(CONSOLE_FONT_SIZE));
+        ForgeConsole.attach(console::append);
 
         languages = bootstrap.languages();
         FileIcons.registerLanguages(languages.languages());
