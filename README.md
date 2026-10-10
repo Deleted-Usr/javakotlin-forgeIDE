@@ -250,10 +250,11 @@ com.willclay.forgeide                 Main application (src/main/java/)
 ├── workspace/                       Workspace, Project, ProjectItem, WorkspaceListener
 │   ├── metadata/                    ProjectMetadata, ProjectConfiguration, encoding/, lineseparators/
 │   └── runconfig/                   RunConfiguration, RunConfigurationManager, RunConfigurationsStore
-├── ui/                              Window, WorkbenchPanel, ToolWindowHeader, Utils
-│   ├── editor/                      CodeEditorPanel, EditorTab, EditorTabHeader, ForgeEditorPane, ForgeCaret,
-│   │                                SelectionPainter, BracketMatcher, SmartTyping, FoldingModel, Minimap,
+├── ui/                              Window, WorkbenchPanel, ToolWindowHeader, Utils, SectionBorder
+│   ├── editor/                      CodeEditorPanel, ForgeEditorPane, ForgeCaret, SelectionPainter,
+│   │                                BracketMatcher, SmartTyping, FoldingModel, Minimap,
 │   │                                EditorBreadcrumb, ConsolePanel, EditorEmptyState
+│   │   ├── tabs/                    EditorTab, EditorTabHeader, ForgeTabbedPaneUI
 │   │   └── markdown/                MarkdownTab
 │   ├── explorer/                    ProjectTree, ProjectTreeModel, ProjectTreeRenderer, ProjectTreeTransferHandler,
 │   │                                TreeSpeedSearch, ProjectContextMenu
