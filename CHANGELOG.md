@@ -11,9 +11,12 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 #### Editor
 - Syntax highlighting now highlights TODO comments in the selected theme's colour (this includes TODO's across multiple lines)
-- A TODO tool window to complement the TODO highlighting that shows all TODOs within a project (similar to IntelliJ)
 - Added a custom markdown renderer for rendering `.md` files in Markdown Tabs
 - A custom icon is shown on the taskbar and in the top left corner of the application
+- A custom Forge splash screen now shows before the IDE opens, displaying bootstrap stages and an animated anvil
+
+#### Bottom Tool Window
+- A TODO tool window to complement the TODO highlighting that shows all TODOs within a project (similar to IntelliJ)
 
 #### Build
 - Added shell and bash scrips under `packaging/executable` and `packaging/icon` that handle on-the-fly icon generation and executable building

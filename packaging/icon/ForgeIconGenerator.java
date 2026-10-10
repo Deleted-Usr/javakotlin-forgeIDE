@@ -28,7 +28,8 @@ import java.util.List;
 /// few sparks on a dark tile — and writes it out in the two forms the app needs:
 ///
 /// - **PNGs** in `src/main/resources/.../icons/app/`, which `AppIcons` hands to
-///   Swing so the window title bar and taskbar show the icon.
+///   Swing so the window title bar and taskbar show the icon, plus
+///   `forge-splash.png`: just the anvil, with no tile or sparks, for `ForgeSplash`.
 /// - **`forge.ico`** in `native/cpp-native/`, which the C++ launcher embeds as a
 ///   Windows resource so Explorer shows the icon on `ForgeIDE.exe`.
 ///
@@ -46,6 +47,7 @@ public final class ForgeIconGenerator
 {
     private static final int[] PNG_SIZES = {16, 20, 24, 32, 40, 48, 64, 128, 256};
     private static final int[] ICO_SIZES = {16, 20, 24, 32, 40, 48, 64, 256};
+    private static final int SPLASH_SIZE = 512;
 
     private static final Path PNG_DIR = Path.of("src/main/resources/com/willclay/forgeide/icons/app");
     private static final Path ICO_FILE = Path.of("native/cpp-native/forge.ico");
@@ -68,14 +70,26 @@ public final class ForgeIconGenerator
             ImageIO.write(render(size), "png", PNG_DIR.resolve("forge-" + size + ".png").toFile());
         }
 
+        // Drawn at 512 and scaled down by the splash, so it stays crisp on
+        // high-DPI screens where Windows scales the window up.
+        ImageIO.write(render(SPLASH_SIZE, true), "png", PNG_DIR.resolve("forge-splash.png").toFile());
+
         List<byte[]> icoImages = new ArrayList<>();
         for (int size : ICO_SIZES) icoImages.add(toPng(render(size)));
         writeIco(ICO_FILE, ICO_SIZES, icoImages);
 
-        System.out.println("Wrote " + PNG_SIZES.length + " PNGs to " + PNG_DIR + " and " + ICO_FILE);
+        System.out.println("Wrote " + PNG_SIZES.length + " PNGs and forge-splash.png to " + PNG_DIR + " and " + ICO_FILE);
     }
 
     static BufferedImage render(int size)
+    {
+        return render(size, false);
+    }
+
+    /// @param markOnly draw just the anvil and ingot on a transparent
+    ///                 background: no tile and no sparks. The splash screen
+    ///                 uses this and supplies its own background and sparks.
+    static BufferedImage render(int size, boolean markOnly)
     {
         boolean tiny = size <= 24;
 
@@ -86,6 +100,46 @@ public final class ForgeIconGenerator
         g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         g.scale(size / 256.0, size / 256.0);
 
+        if (!markOnly) drawTile(g, tiny);
+
+        Shape anvil = anvil();
+        g.setPaint(new GradientPaint(0, 112, STEEL_LIGHT, 0, 212, STEEL_DARK));
+        g.fill(anvil);
+
+        // The face of the anvil catches the ingot's light.
+        g.setClip(anvil);
+        g.setPaint(new GradientPaint(0, 112, withAlpha(HOT, 150), 0, 128, withAlpha(HOT, 0)));
+        g.fillRect(40, 112, 180, 16);
+        g.setClip(null);
+
+        // The ingot: wider and thicker at tiny sizes so it survives as a stripe.
+        double ingotTop = tiny ? 84 : 94;
+        double ingotX = tiny ? 104 : 116;
+        double ingotW = tiny ? 104 : 80;
+        Shape ingot = new RoundRectangle2D.Double(ingotX, ingotTop, ingotW, 112 - ingotTop, 12, 12);
+
+        if (!tiny) glow(g, ingotX + ingotW / 2, 103, 70);
+
+        g.setPaint(new GradientPaint(0, (float) ingotTop, WHITE_HOT, 0, 112, HOT));
+        g.fill(ingot);
+
+        // The splash screen animates its own sparks, so baked-in ones would clash.
+        if (!markOnly && size >= 32)
+        {
+            spark(g, 206, 70, 8);
+            spark(g, 226, 44, 5);
+            spark(g, 178, 54, 4.5);
+            if (size >= 64) spark(g, 152, 66, 3);
+        }
+
+        g.dispose();
+        return image;
+    }
+
+    /// The dark rounded tile behind the anvil, with the ingot's warm glow
+    /// spilling across it.
+    private static void drawTile(Graphics2D g, boolean tiny)
+    {
         // Tiny icons use the whole canvas; there is no pixel to spare for margin.
         double inset = tiny ? 0 : 8;
         Shape tile = new RoundRectangle2D.Double(inset, inset, 256 - 2 * inset, 256 - 2 * inset, 60, 60);
@@ -112,38 +166,6 @@ public final class ForgeIconGenerator
             g.setColor(new Color(255, 255, 255, 22));
             g.draw(new RoundRectangle2D.Double(inset + 1.5, inset + 1.5, 253 - 2 * inset, 253 - 2 * inset, 58, 58));
         }
-
-        Shape anvil = anvil();
-        g.setPaint(new GradientPaint(0, 112, STEEL_LIGHT, 0, 212, STEEL_DARK));
-        g.fill(anvil);
-
-        // The face of the anvil catches the ingot's light.
-        g.setClip(anvil);
-        g.setPaint(new GradientPaint(0, 112, withAlpha(HOT, 150), 0, 128, withAlpha(HOT, 0)));
-        g.fillRect(40, 112, 180, 16);
-        g.setClip(null);
-
-        // The ingot: wider and thicker at tiny sizes so it survives as a stripe.
-        double ingotTop = tiny ? 84 : 94;
-        double ingotX = tiny ? 104 : 116;
-        double ingotW = tiny ? 104 : 80;
-        Shape ingot = new RoundRectangle2D.Double(ingotX, ingotTop, ingotW, 112 - ingotTop, 12, 12);
-
-        if (!tiny) glow(g, ingotX + ingotW / 2, 103, 70);
-
-        g.setPaint(new GradientPaint(0, (float) ingotTop, WHITE_HOT, 0, 112, HOT));
-        g.fill(ingot);
-
-        if (size >= 32)
-        {
-            spark(g, 206, 70, 8);
-            spark(g, 226, 44, 5);
-            spark(g, 178, 54, 4.5);
-            if (size >= 64) spark(g, 152, 66, 3);
-        }
-
-        g.dispose();
-        return image;
     }
 
     /// A classic London-pattern anvil: flat face, horn tapering to the left,

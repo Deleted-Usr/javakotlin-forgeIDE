@@ -39,6 +39,8 @@ tasks.named<ProcessResources>("processResources") {
 tasks.jar {
     manifest {
         attributes["Main-Class"] = application.mainClass.get()
+        // Read back by ForgeSplash through Package.getImplementationVersion().
+        attributes["Implementation-Version"] = project.version
     }
 }
 
@@ -119,6 +121,8 @@ tasks.register<Jar>("buildFatJar") {
     // it, but merging them into one jar replaces their manifests with this one.
     manifest {
         attributes["Main-Class"] = application.mainClass.get()
+        // Read back by ForgeSplash through Package.getImplementationVersion().
+        attributes["Implementation-Version"] = project.version
         attributes["Multi-Release"] = "true"
     }
 

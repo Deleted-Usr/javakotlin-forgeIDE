@@ -7,6 +7,7 @@ import com.willclay.forgeide.application.bootstrap.BootstrapException;
 import com.willclay.forgeide.application.bootstrap.BootstrapResult;
 import com.willclay.forgeide.application.bootstrap.ForgeBootstrap;
 import com.willclay.forgeide.services.settings.theme.AppTheme;
+import com.willclay.forgeide.splash.ForgeSplash;
 import com.willclay.forgeide.ui.Window;
 import com.willclay.forgeide.ui.icons.AppIcons;
 
@@ -22,7 +23,6 @@ import javax.swing.*;
  *  - Multi-Language projects
  *  - IntelliJ-style double shift project search function
  *  - lightweight editor - vs-code type (open a file and run without a project, jshell maybe?)
- *  - Add a slash screen
  *  - Movable / Dockable tabs
  *  - Fully Custom Code Editor Text Pane (Extends JComponent), this will allow for inline javadocs rendering and much more
  *  - System Terminal Integration (Keep Current Console and implement a toggle in settings).
@@ -66,19 +66,31 @@ public final class Main
 
     public static void main(String[] args) // The Entry Point for the Program
     {
+        // First, so there is something on screen while bootstrap runs. Bootstrap
+        // stays on this thread (off the EDT) and reports each phase to the splash.
+        ForgeSplash splash = new ForgeSplash();
+        splash.show();
+
         BootstrapResult bootstrap;
         try
         {
-            bootstrap = new ForgeBootstrap().bootstrap();
+            bootstrap = new ForgeBootstrap().bootstrap(splash::setStatus);
         }
         catch (BootstrapException ex)
         {
+            splash.close();
             System.err.println("Could not initialise Forge IDE: " + ex.getMessage());
+
+            // A dialog as well: started from ForgeIDE.exe there is no console,
+            // so stderr alone would leave the user with nothing at all.
+            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+                    null, ex.getMessage(), "Forge IDE could not start", JOptionPane.ERROR_MESSAGE));
             return;
         }
 
         SwingUtilities.invokeLater(() ->
         {
+            splash.setStatus("Opening the editor");
             setLookAndFeel(bootstrap.settings().getTheme());
             FlatAnimatedLafChange.duration = 300;
 
@@ -87,6 +99,8 @@ public final class Main
             w.setSize(INITIAL_WIDTH, INITIAL_HEIGHT);
             w.setLocationRelativeTo(null);
             w.setVisible(true);
+
+            splash.close();
         });
     }
 

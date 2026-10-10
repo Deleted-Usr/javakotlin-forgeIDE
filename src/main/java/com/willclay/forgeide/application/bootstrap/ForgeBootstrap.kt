@@ -15,13 +15,21 @@ import java.io.IOException
  * Nothing here may touch Swing. Everything that can fail without stopping the
  * IDE is downgraded to a [BootstrapWarning]; only a missing configuration
  * directory or a language-less installation is fatal.
+ *
+ * Each phase is announced through [BootstrapProgress] before it starts, so a
+ * slow phase is the one left showing on the splash screen.
+ *
+ * `@JvmOverloads` gives Java a `bootstrap()` with no arguments as well as
+ * `bootstrap(progress)`; without it, Java cannot see Kotlin's default value.
  */
 class ForgeBootstrap {
+    @JvmOverloads
     @Throws(BootstrapException::class)
-    fun bootstrap(): BootstrapResult {
+    fun bootstrap(progress: BootstrapProgress = BootstrapProgress.NONE): BootstrapResult {
         val warnings = mutableListOf<BootstrapWarning>()
 
         // Phase 1 - The only genuinely fatal step.
+        progress.phase("Preparing ~/.forge")
         val directories = try {
             AppDirectories.resolve()
         }
@@ -30,14 +38,17 @@ class ForgeBootstrap {
         }
 
         // Phase 2 - Both services already degrade to defaults internally.
+        progress.phase("Loading settings and session")
         val store    = JsonFileStore(KotlinxJsonCodec())
         val settings = SettingsService(directories.configDirectory(), store)
         val session  = SessionService(directories.configDirectory(), store)
 
         // Phase 3 - Discovery is allowed to fall plugin-by-plugin
+        progress.phase("Discovering language plugins")
         val loader = LanguagePluginLoader(directories, settings)
         val discovered = loader.discover(warnings)
 
+        progress.phase("Registering languages")
         val registry = try {
             LanguageRegistry(discovered.languages)
         }
