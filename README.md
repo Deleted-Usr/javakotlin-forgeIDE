@@ -4,9 +4,6 @@ A small integrated development environment (IDE) built from scratch in Java and 
 with Swing. ForgeIDE brings file editing, project navigation, compilation, and program
 execution together in one lightweight window.
 
-ForgeIDE began as a school project loosely inspired by IntelliJ IDEA (version 1.1.0 was
-presented for assessment) and is now a personal project with its own direction:
-
 > **ForgeIDE: An IDE That Knows Your Workflow.**
 > It understands what you're building, adapts the tools around it, and lets you see how
 > those tools actually work.
