@@ -5,6 +5,17 @@ All notable changes to ForgeIDE are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.1] - 2026-10-11
+
+Rust is now officially supported by ForgeIDE! (as well as a small backend utility addition)
+
+### Added
+- The full Rust plugin featuring syntax highlighting for `.rs` files, Rust language settings, and building, compiling, and running
+Rust projects via Cargo.
+
+#### Backend
+- A small utility that allows the IDE backend to print stuff to Forge's own console.
+
 ## [1.3.0] - 2026-10-10
 
 This release focuses on editor completeness, making the application feel like something a developer can actually use for smaller projects
@@ -154,3 +165,4 @@ full move to the Gradle build system.
 [1.1.0]: https://github.com/Deleted-Usr/javakotlin-forgeIDE/compare/v1.0.0...v1.1.0
 [1.2.0]: https://github.com/Deleted-Usr/javakotlin-forgeIDE/compare/v1.1.0...v1.2.0
 [1.3.0]: https://github.com/Deleted-Usr/javakotlin-forgeIDE/compare/v1.2.0...v1.3.0
+[1.3.1]: https://github.com/Deleted-Usr/javakotlin-forgeIDE/compare/v1.3.0...v1.3.1
