@@ -7,6 +7,9 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [1.3.0] - 2026-10-10
 
+This release focuses on editor completeness, making the application feel like something a developer can actually use for smaller projects
+with various small additions and feature refinements.
+
 ### Added
 
 #### Editor
