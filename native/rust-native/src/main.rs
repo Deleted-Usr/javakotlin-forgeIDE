@@ -1,8 +1,8 @@
-// A Rust port of the Forge IDE Windows Launcher
-
-// This attribute is the equivalent of writing WinMain instead of main in C++:
-// it marks the executable as a GUI application, so Windows does not open a
-// console window behind it. Everything else still starts at `fn main()`.
+//! A Rust port of the Forge IDE Windows Launcher
+//!
+//! This attribute is the equivalent of writing WinMain instead of main in C++:
+//! it marks the executable as a GUI application, so Windows does not open a
+//! console window behind it. Everything else still starts at `fn main()`.
 #![windows_subsystem = "windows"]
 
 use std::ffi::{c_char, c_void, CString, OsStr};
