@@ -1,0 +1,23 @@
+{
+    "schemaVersion": 1,
+    "name": "Forge Census - Rust",
+    "language": "rust",
+    "workingDirectory": ".",
+    "fileHandling": {
+        "encoding": "UTF-8",
+        "lineSeparators": "preserve"
+    },
+    "excludedPaths": [
+        ".git"
+    ],
+    "languageSettings": {
+        "rust": {
+            "cargoCommand": "cargo",
+            "manifestPath": "Cargo.toml",
+            "features": [],
+            "noDefaultFeatures": false,
+            "allFeatures": false,
+            "offline": false
+        }
+    }
+}

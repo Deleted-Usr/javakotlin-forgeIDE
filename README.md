@@ -191,6 +191,11 @@ project without one is compiled by invoking `g++` directly. This example require
 and a compatible C++ compiler; see its [README](examples/Forge%20Strike%20-%20C%2B%2B/README.md)
 for build instructions and controls.
 
+[`examples/Forge Census - Rust`](examples/Forge%20Census%20-%20Rust) counts the lines of code
+in a folder by language. One Cargo package builds two programs: a dependency-free console
+tool, and an egui window turned on by a `gui` feature in `Cargo.toml`. Open the directory,
+choose the **Census (window)** or **Census (console)** run configuration, and press Run.
+
 ## Project Structure
 
 ```text

@@ -5,6 +5,14 @@ All notable changes to ForgeIDE are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+#### Examples
+- **Forge Census - Rust**: a line-of-code counter showing off the Rust plugin, with a console program and an
+egui window that is turned on by a Cargo feature.
+
 ## [1.3.1] - 2026-10-11
 
 Rust is now officially supported by ForgeIDE! (as well as a small backend utility addition)

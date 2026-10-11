@@ -1,0 +1,36 @@
+[package]
+name = "forge-census"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"  # the oldest Rust that can build egui 0.36
+description = "Counts the lines of code in a folder, by language, from the console or in a window."
+
+# Features are switches a package offers. Turning `gui` on pulls in the two
+# window crates below; turning it off leaves a command-line tool with no
+# dependencies at all. `default` says which switches are on unless someone
+# asks otherwise (`cargo build --no-default-features`, or the
+# "No default features" box in Forge's Rust settings).
+[features]
+default = ["gui"]
+gui = ["dep:eframe", "dep:rfd"]
+
+# `optional = true` means "only when a feature asks for me". The version
+# "0.36" lets Cargo pick any 0.36.x release; the exact one it chose is
+# recorded in Cargo.lock.
+[dependencies]
+eframe = { version = "0.36", optional = true }  # windows and widgets (egui)
+rfd = { version = "0.17", optional = true }     # the system's "choose a folder" dialog
+
+# Cargo finds src/bin/census-gui.rs by itself. This table is only here to say
+# that the window needs the `gui` feature: without it, Cargo skips this
+# program instead of failing to compile it.
+[[bin]]
+name = "census-gui"
+required-features = ["gui"]
+
+# Debug builds of egui are noticeably sluggish. This optimises every
+# dependency ("*") even in debug builds, while our own code stays quick to
+# compile and easy to debug. Dependencies are compiled once, so it costs
+# little after the first build.
+[profile.dev.package."*"]
+opt-level = 2

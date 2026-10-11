@@ -1,0 +1,26 @@
+{
+    "schemaVersion": 1,
+    "configs": [
+        {
+            "id": "6b1f3c2e-8d4a-4f7e-9c21-5a0e7d9b4c13",
+            "name": "Census (window)",
+            "entryPoint": "src/bin/census-gui.rs",
+            "runtimeOptions": [],
+            "programArguments": [],
+            "workingDirectory": "",
+            "environment": {},
+            "beforeLaunch": "COMPILE_TARGET"
+        },
+        {
+            "id": "c4e8a7d1-2b6f-4a93-8e05-f17d3b2a9e68",
+            "name": "Census (console)",
+            "entryPoint": "src/main.rs",
+            "runtimeOptions": [],
+            "programArguments": [],
+            "workingDirectory": "",
+            "environment": {},
+            "beforeLaunch": "COMPILE_TARGET"
+        }
+    ],
+    "activeId": "6b1f3c2e-8d4a-4f7e-9c21-5a0e7d9b4c13"
+}
