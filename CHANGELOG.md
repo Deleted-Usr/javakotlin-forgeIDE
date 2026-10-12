@@ -13,6 +13,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - **Forge Census - Rust**: a line-of-code counter showing off the Rust plugin, with a console program and an
 egui window that is turned on by a Cargo feature.
 
+### Changed
+- Removed the legacy Markdown API (`MarkdownToHtml.kt`, `MarkdownPreviewPanel.kt`), `MarkdownTab.kt` now lives
+under the `ui.editor.tabs` package.
+
 ## [1.3.1] - 2026-10-11
 
 Rust is now officially supported by ForgeIDE! (as well as a small backend utility addition)
