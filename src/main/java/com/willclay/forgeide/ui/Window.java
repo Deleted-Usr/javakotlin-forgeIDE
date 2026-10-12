@@ -8,7 +8,7 @@ import com.willclay.forgeide.application.bootstrap.BootstrapResult;
 import com.willclay.forgeide.application.bootstrap.BootstrapWarning;
 import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.execution.ExecutionManager;
-import com.willclay.forgeide.lang.api.Lexer;
+import com.willclay.forgeide.highlighting.filetypes.FileTypes;
 import com.willclay.forgeide.lang.LanguageRegistry;
 import com.willclay.forgeide.services.ApplicationShutdown;
 import com.willclay.forgeide.services.session.SessionService;
@@ -288,10 +288,16 @@ public final class Window extends JFrame
         projectTree.showRoot(project == null ? null : project.rootItem());
         editorPanel.setLexerResolver(file ->
         {
-            if (project == null) return Lexer.PLAIN;
-            if (file != null && !project.language().recognises(file)) return Lexer.PLAIN;
+            // The project's language comes first: its own sources, and new
+            // files that have no name yet.
+            if (project != null && (file == null || project.language().recognises(file)))
+            {
+                return project.language().lexer();
+            }
 
-            return project.language().lexer();
+            // Anything else may still be a format core knows, such as
+            // Cargo.toml or package.json, with or without a project open.
+            return FileTypes.lexerFor(file);
         });
         updateTitle();
     }

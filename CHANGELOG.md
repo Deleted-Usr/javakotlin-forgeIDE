@@ -14,9 +14,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
 egui window that is turned on by a Cargo feature.
 
 #### Editor
-- FlatLaf-backed scroll pane UI that smooths ordinary mouse-wheel clicks with an eased glide animation while 
-preserving the existing high-resolution and opt-out behavior. It installs globally for all JScrollPanes and keeps 
-wheel scrolling responsive by updating the target as additional clicks arrive mid-animation.
+- FlatLaf-backed scroll pane UI that smooths ordinary mouse-wheel clicks with an eased glide animation 
+- Full syntax highlighting for Markdown, Json, and Toml file types
 
 ### Changed
 - Removed the legacy Markdown API (`MarkdownToHtml.kt`, `MarkdownPreviewPanel.kt`), `MarkdownTab.kt` now lives

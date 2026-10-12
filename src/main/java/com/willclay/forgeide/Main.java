@@ -27,9 +27,7 @@ import javax.swing.*;
  *  - IntelliJ-style double shift project search function
  *  - lightweight editor - vs-code type (open a file and run without a project, jshell maybe?)
  *  - Movable / Dockable tabs
- *  - Fully Custom Code Editor Text Pane (Extends JComponent), this will allow for inline javadocs rendering and much more
  *  - System Terminal Integration (Keep Current Console and implement a toggle in settings).
- *  - Full AI Agent Implementation (Writing Code, Reading and Writing to Files, Full Project Context, Agent Pet like GPT)
  *  - Custom theme documents for user-authored Swing/token theme combinations
  *  - A BlueJ style class diagram mode/setting
  *  - Git Integration (IntelliJ-like)
