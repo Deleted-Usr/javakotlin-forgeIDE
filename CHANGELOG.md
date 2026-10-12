@@ -13,6 +13,11 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - **Forge Census - Rust**: a line-of-code counter showing off the Rust plugin, with a console program and an
 egui window that is turned on by a Cargo feature.
 
+#### Editor
+- FlatLaf-backed scroll pane UI that smooths ordinary mouse-wheel clicks with an eased glide animation while 
+preserving the existing high-resolution and opt-out behavior. It installs globally for all JScrollPanes and keeps 
+wheel scrolling responsive by updating the target as additional clicks arrive mid-animation.
+
 ### Changed
 - Removed the legacy Markdown API (`MarkdownToHtml.kt`, `MarkdownPreviewPanel.kt`), `MarkdownTab.kt` now lives
 under the `ui.editor.tabs` package.
