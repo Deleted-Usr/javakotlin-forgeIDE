@@ -8,6 +8,7 @@ import com.willclay.forgeide.application.bootstrap.BootstrapResult;
 import com.willclay.forgeide.application.bootstrap.ForgeBootstrap;
 import com.willclay.forgeide.services.settings.theme.AppTheme;
 import com.willclay.forgeide.splash.ForgeSplash;
+import com.willclay.forgeide.ui.SmoothScrollPaneUI;
 import com.willclay.forgeide.ui.Window;
 import com.willclay.forgeide.ui.icons.AppIcons;
 
@@ -15,7 +16,8 @@ import javax.swing.*;
 
 /*
  * TODO:
- *  - Smoother scrolling in the editor pane
+ *  - Image viewer
+ *  - Scrolling settings in the IDE settings page
  *  - Small hover info dialogs for classes, methods, etc.
  *  - Colour swatch in gutter (with JColorPicker)
  *  - Lines of Code counter
@@ -112,6 +114,9 @@ public final class Main
 
     private static void setLookAndFeel(AppTheme theme)
     {
+        // Registered once; it outlives every later theme change.
+        SmoothScrollPaneUI.install();
+
         try
         {
             UIManager.setLookAndFeel(theme.getSwingTheme());
