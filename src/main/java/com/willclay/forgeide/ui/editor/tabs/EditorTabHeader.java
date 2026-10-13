@@ -38,12 +38,12 @@ import java.util.Objects;
 /// why selection is reported outwards explicitly rather than left to Swing.
 public final class EditorTabHeader extends JComponent
 {
-    private static final int PADDING = 6;
-    private static final int GAP = 8;
+    private static final int PADDING     = 6;
+    private static final int GAP         = 8;
     private static final int BUTTON_SIZE = 14;
-    private static final int DOT_SIZE = 8;
+    private static final int DOT_SIZE    = 8;
     private static final int CROSS_INSET = 4;
-    private static final int CORNER = 6;
+    private static final int CORNER      = 6;
 
     /// What the tab strip does about a tab; the header itself does none of it.
     public interface Listener
@@ -72,7 +72,7 @@ public final class EditorTabHeader extends JComponent
 
     public EditorTabHeader(EditorTab tab, Listener listener)
     {
-        this.tab = Objects.requireNonNull(tab, "tab");
+        this.tab      = Objects.requireNonNull(tab, "tab");
         this.listener = Objects.requireNonNull(listener, "listener");
 
         setOpaque(false);
@@ -97,7 +97,10 @@ public final class EditorTabHeader extends JComponent
     /// Selected tabs are drawn at full contrast and unselected ones dimmed.
     public void setSelected(boolean selected)
     {
-        if (this.selected == selected) return;
+        if (this.selected == selected)
+        {
+            return;
+        }
 
         this.selected = selected;
         repaint();
@@ -109,9 +112,9 @@ public final class EditorTabHeader extends JComponent
         FontMetrics metrics = getFontMetrics(getFont());
 
         return new Dimension(
-                UIScale.scale(PADDING * 2 + GAP * 2 + BUTTON_SIZE)
-                        + FileIcons.forPath(tab.getFile()).getIconWidth() + metrics.stringWidth(title),
-                UIScale.scale(PADDING * 2) + Math.max(metrics.getHeight(), FileIcons.forPath(tab.getFile()).getIconHeight()));
+                UIScale.scale(PADDING * 2 + GAP * 2 + BUTTON_SIZE) + FileIcons.forPath(tab.getFile()).getIconWidth() + metrics.stringWidth(title),
+                UIScale.scale(PADDING * 2) + Math.max(metrics.getHeight(), FileIcons.forPath(tab.getFile()).getIconHeight())
+        );
     }
 
     @Override
@@ -122,8 +125,7 @@ public final class EditorTabHeader extends JComponent
         try
         {
             copy.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            copy.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-                    RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            copy.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
             if (hovered && !selected)
             {
@@ -143,15 +145,23 @@ public final class EditorTabHeader extends JComponent
     private void paintTitle(Graphics2D graphics)
     {
         FontMetrics metrics = graphics.getFontMetrics(getFont());
+        Icon icon           = FileIcons.forPath(tab.getFile());
 
         graphics.setFont(getFont());
-        Icon icon = FileIcons.forPath(tab.getFile());
+
         icon.paintIcon(this, graphics, UIScale.scale(PADDING), (getHeight() - icon.getIconHeight()) / 2);
-        graphics.setColor(selected
+
+        graphics.setColor(
+                selected
                 ? colour("TabbedPane.selectedForeground", "TabbedPane.foreground")
-                : colour("TabbedPane.foreground", "Label.foreground"));
-        graphics.drawString(title, UIScale.scale(PADDING + GAP) + icon.getIconWidth(),
-                ((getHeight() - metrics.getHeight()) / 2) + metrics.getAscent());
+                : colour("TabbedPane.foreground", "Label.foreground")
+        );
+
+        graphics.drawString(
+                title,
+                UIScale.scale(PADDING + GAP) + icon.getIconWidth(),
+                ((getHeight() - metrics.getHeight()) / 2) + metrics.getAscent()
+        );
     }
 
     /// A dot while there are unsaved changes, and a cross under the pointer.
@@ -165,6 +175,7 @@ public final class EditorTabHeader extends JComponent
 
             graphics.setColor(colour("Component.accentColor", "TabbedPane.foreground"));
             graphics.fillOval(bounds.x + inset, bounds.y + inset, UIScale.scale(DOT_SIZE), UIScale.scale(DOT_SIZE));
+
             return;
         }
 
@@ -178,14 +189,16 @@ public final class EditorTabHeader extends JComponent
             graphics.fillOval(bounds.x, bounds.y, bounds.width, bounds.height);
         }
 
-        graphics.setColor(buttonHovered
+        graphics.setColor(
+                buttonHovered
                 ? colour("TabbedPane.selectedForeground", "TabbedPane.foreground")
-                : colour("TabbedPane.disabledForeground", "Label.disabledForeground"));
+                : colour("TabbedPane.disabledForeground", "Label.disabledForeground")
+        );
 
-        int left = bounds.x + UIScale.scale(CROSS_INSET);
-        int top = bounds.y + UIScale.scale(CROSS_INSET);
-        int right = bounds.x + bounds.width - UIScale.scale(CROSS_INSET) - 1;
-        int foot = bounds.y + bounds.height - UIScale.scale(CROSS_INSET) - 1;
+        int left  = bounds.x + UIScale.scale(CROSS_INSET);
+        int top   = bounds.y + UIScale.scale(CROSS_INSET);
+        int right = bounds.x + bounds.width  - UIScale.scale(CROSS_INSET) - 1;
+        int foot  = bounds.y + bounds.height - UIScale.scale(CROSS_INSET) - 1;
 
         graphics.drawLine(left, top, right, foot);
         graphics.drawLine(right, top, left, foot);
@@ -197,7 +210,8 @@ public final class EditorTabHeader extends JComponent
                 getWidth() - UIScale.scale(PADDING + BUTTON_SIZE),
                 (getHeight() - UIScale.scale(BUTTON_SIZE)) / 2,
                 UIScale.scale(BUTTON_SIZE),
-                UIScale.scale(BUTTON_SIZE));
+                UIScale.scale(BUTTON_SIZE)
+        );
     }
 
     private void installMouseHandling()
@@ -256,10 +270,14 @@ public final class EditorTabHeader extends JComponent
 
     private void setHovered(boolean hovered, boolean buttonHovered)
     {
-        if (this.hovered == hovered && this.buttonHovered == buttonHovered) return;
+        if (this.hovered == hovered && this.buttonHovered == buttonHovered)
+        {
+            return;
+        }
 
-        this.hovered = hovered;
+        this.hovered       = hovered;
         this.buttonHovered = buttonHovered;
+
         repaint();
     }
 
@@ -268,7 +286,11 @@ public final class EditorTabHeader extends JComponent
     private Color colour(String key, String fallbackKey)
     {
         Color value = UIManager.getColor(key);
-        if (value == null) value = UIManager.getColor(fallbackKey);
+
+        if (value == null)
+        {
+            value = UIManager.getColor(fallbackKey);
+        }
 
         return value == null ? getForeground() : value;
     }
