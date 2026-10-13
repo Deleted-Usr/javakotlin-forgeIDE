@@ -16,6 +16,7 @@ egui window that is turned on by a Cargo feature.
 #### Editor
 - FlatLaf-backed scroll pane UI that smooths ordinary mouse-wheel clicks with an eased glide animation 
 - Full syntax highlighting for Markdown, Json, and Toml file types
+- Language documentation comments (Javadoc, KDoc, Rustdoc, Doxygen) now have in-line rendering using `MarkdownView`
 
 ### Changed
 - Removed the legacy Markdown API (`MarkdownToHtml.kt`, `MarkdownPreviewPanel.kt`), `MarkdownTab.kt` now lives

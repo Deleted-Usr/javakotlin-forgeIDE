@@ -40,7 +40,7 @@ public final class JavaLexer implements Lexer
             "import", "instanceof", "int", "interface", "long", "native", "new",
             "package", "private", "protected", "public", "return", "short", "static",
             "strictfp", "super", "switch", "synchronized", "this", "throw", "throws",
-            "transient", "try", "void", "volatile", "while", "_",
+            "transient", "try", "volatile", "while", "_",
 
             // Contextual keywords are coloured consistently. Parsing decides
             // whether a particular occurrence is a keyword in the Java grammar.
@@ -52,7 +52,7 @@ public final class JavaLexer implements Lexer
     private static final Set<String> LITERALS = Set.of("true", "false", "null");
     private static final Set<String> TYPE_DECLARATION_KEYWORDS = Set.of("class", "interface", "enum", "record");
     private static final Set<String> TYPE_CONTEXT_KEYWORDS = Set.of("extends", "implements", "instanceof", "new", "permits", "throws");
-    private static final Set<String> PRIMITIVE_OR_VOID = Set.of("boolean", "byte", "char", "double", "float", "int", "long", "short");
+    private static final Set<String> PRIMITIVE_OR_VOID = Set.of("void", "boolean", "byte", "char", "double", "float", "int", "long", "short");
 
     /// Longest operators first. Separators such as :: and ... are handled separately.
     private static final String[] OPERATORS = {

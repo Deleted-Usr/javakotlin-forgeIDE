@@ -21,7 +21,8 @@ data class IDESettingsConfiguration(
     val startup: Startup         = Startup(),
     val editor: Editor           = Editor(),
     val saving: Saving           = Saving(),
-    val buildAndRun: BuildAndRun = BuildAndRun()
+    val buildAndRun: BuildAndRun = BuildAndRun(),
+    val docComments: DocComments = DocComments()
 ) : VersionedJsonDocument {
     init {
         VersionedJsonDocument.requireSupportedVersion("IDE Settings", schemaVersion, CURRENT_SCHEMA_VERSION)
@@ -31,7 +32,8 @@ data class IDESettingsConfiguration(
         appearance = appearance.normalised(),
         startup    = startup.normalised(),
         editor     = editor.normalised(),
-        saving     = saving.normalised()
+        saving     = saving.normalised(),
+        docComments = docComments.normalised()
     )
 
     fun withTheme(theme: String) = copy(appearance = Appearance(theme = theme))
@@ -41,6 +43,10 @@ data class IDESettingsConfiguration(
         const val REOPEN_LAST_PROJECT    = "reopen-last-project"
         const val OPEN_EMPTY_WINDOW      = "open-empty-window"
         const val DEFAULT_THEME          = "material-darker"
+
+        const val DEFAULT_DOC_COMMENT_COLUMNS = 100
+        const val MIN_DOC_COMMENT_COLUMNS     = 40
+        const val MAX_DOC_COMMENT_COLUMNS     = 200
 
         @JvmStatic
         fun defaults() = IDESettingsConfiguration(schemaVersion = CURRENT_SCHEMA_VERSION)
@@ -101,6 +107,26 @@ data class IDESettingsConfiguration(
     ) {
         fun normalised() = copy(
             autoSaveDelaySeconds = if (autoSaveDelaySeconds in 1..60) autoSaveDelaySeconds else 5
+        )
+    }
+
+    /**
+     * How doc comments are shown rendered.
+     *
+     * @property renderByDefault whether a file opens with its doc comments rendered
+     * @property maxColumns where rendered text wraps when the window is wider,
+     *   counted in editor columns from the start of the line, so the block lines
+     *   up with code of the same length
+     */
+    @JvmRecord
+    @Serializable
+    data class DocComments(
+        val renderByDefault: Boolean = false,
+        val maxColumns: Int          = DEFAULT_DOC_COMMENT_COLUMNS
+    ) {
+        fun normalised() = copy(
+            maxColumns = if (maxColumns in MIN_DOC_COMMENT_COLUMNS..MAX_DOC_COMMENT_COLUMNS) maxColumns
+                         else DEFAULT_DOC_COMMENT_COLUMNS
         )
     }
 

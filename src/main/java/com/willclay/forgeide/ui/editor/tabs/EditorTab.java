@@ -163,6 +163,10 @@ public class EditorTab extends JPanel
 
         lineChanges.reset();
         textPane.refreshFolding();
+
+        // Only a freshly loaded file follows the "render by default" setting;
+        // a comment typed later starts as source.
+        textPane.applyDocCommentDefault();
         fireUndoStateChanged();
     }
 

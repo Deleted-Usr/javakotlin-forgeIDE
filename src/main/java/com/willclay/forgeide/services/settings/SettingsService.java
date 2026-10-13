@@ -132,6 +132,9 @@ public final class SettingsService
                 ),
                 new IDESettingsConfiguration.BuildAndRun(
                         legacy.getShowConsoleOnRun(), legacy.getClearConsoleOnRun()
+                ),
+                new IDESettingsConfiguration.DocComments(
+                        false, IDESettingsConfiguration.DEFAULT_DOC_COMMENT_COLUMNS
                 )
         );
 

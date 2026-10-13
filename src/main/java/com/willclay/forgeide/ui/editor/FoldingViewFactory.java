@@ -1,5 +1,8 @@
 package com.willclay.forgeide.ui.editor;
 
+import com.willclay.forgeide.ui.editor.docs.DocCommentModel;
+import com.willclay.forgeide.ui.editor.docs.DocCommentModel.DocComment;
+
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.BoxView;
@@ -16,7 +19,6 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 /// Builds the views a styled document is drawn with, replacing the one that
 /// draws a line so that a folded line can take up no room.
@@ -32,19 +34,25 @@ import java.util.function.Supplier;
 /// document, the highlighter or the undo history. The text is still all there;
 /// only its view is missing.
 ///
+/// **Rendered doc comments use the same trick.** A rendered comment's later
+/// lines are hidden just like folded ones, and its first line answers with the
+/// height of the rendered block and paints that instead of its text. Again the
+/// document never changes; see [DocCommentModel].
+///
 /// The rest of this factory reproduces what [javax.swing.text.StyledEditorKit]
 /// would have built, because overriding the factory means replacing all of it
 /// rather than adding to it.
 public final class FoldingViewFactory implements ViewFactory
 {
-    private final Supplier<FoldingModel> folding;
+    private final ForgeEditorPane editor;
 
-    /// @param folding supplies the model, rather than holding it, because the
-    ///                factory is built while the text pane's constructor is
-    ///                still running and its fields are not yet assigned
-    public FoldingViewFactory(Supplier<FoldingModel> folding)
+    /// @param editor the editor whose models decide how each line is drawn. Only
+    ///               its lazily created getters are used, because the factory is
+    ///               built while the editor's constructor is still running and
+    ///               its fields are not yet assigned
+    public FoldingViewFactory(ForgeEditorPane editor)
     {
-        this.folding = Objects.requireNonNull(folding, "folding");
+        this.editor = Objects.requireNonNull(editor, "editor");
     }
 
     @Override
@@ -56,7 +64,7 @@ public final class FoldingViewFactory implements ViewFactory
         return switch (kind)
         {
             case AbstractDocument.ContentElementName -> new LabelView(element);
-            case AbstractDocument.ParagraphElementName -> new FoldableLineView(element, folding);
+            case AbstractDocument.ParagraphElementName -> new FoldableLineView(element, editor);
             case AbstractDocument.SectionElementName -> new BoxView(element, View.Y_AXIS);
             case StyleConstants.ComponentElementName -> new ComponentView(element);
             case StyleConstants.IconElementName -> new IconView(element);
@@ -64,45 +72,70 @@ public final class FoldingViewFactory implements ViewFactory
         };
     }
 
-    /// One line of the document, which can be asked to occupy no height.
+    /// One line of the document, which can be asked to occupy no height, or to
+    /// stand in for a whole rendered doc comment.
     ///
-    /// Every override guards the same condition and every one of them is needed.
+    /// Every override guards the same conditions and every one of them is needed.
     /// Reporting zero height without declining to paint draws the line on top of
     /// its neighbour; declining to paint without reporting zero height leaves a
     /// blank gap where the line used to be.
     private static final class FoldableLineView extends ParagraphView
     {
-        private final Supplier<FoldingModel> folding;
+        private final ForgeEditorPane editor;
 
-        private FoldableLineView(Element element, Supplier<FoldingModel> folding)
+        private FoldableLineView(Element element, ForgeEditorPane editor)
         {
             super(element);
 
-            this.folding = folding;
+            this.editor = editor;
         }
 
+        /// A hidden line takes no width either, so a long line inside a fold or
+        /// a rendered comment does not leave a scrollbar for text you cannot see.
         @Override
         public float getPreferredSpan(int axis)
         {
-            return axis == Y_AXIS && isHidden() ? 0 : super.getPreferredSpan(axis);
+            if (isHidden()) return 0;
+
+            DocComment comment = renderedComment();
+            if (comment != null) return axis == Y_AXIS ? editor.getDocCommentPainter().height(comment) : 0;
+
+            return super.getPreferredSpan(axis);
         }
 
         @Override
         public float getMinimumSpan(int axis)
         {
-            return axis == Y_AXIS && isHidden() ? 0 : super.getMinimumSpan(axis);
+            if (isHidden()) return 0;
+
+            DocComment comment = renderedComment();
+            if (comment != null) return axis == Y_AXIS ? editor.getDocCommentPainter().height(comment) : 0;
+
+            return super.getMinimumSpan(axis);
         }
 
         @Override
         public float getMaximumSpan(int axis)
         {
-            return axis == Y_AXIS && isHidden() ? 0 : super.getMaximumSpan(axis);
+            if (axis == Y_AXIS && isHidden()) return 0;
+
+            DocComment comment = renderedComment();
+            if (comment != null && axis == Y_AXIS) return editor.getDocCommentPainter().height(comment);
+
+            return super.getMaximumSpan(axis);
         }
 
         @Override
         public void paint(Graphics graphics, Shape allocation)
         {
             if (isHidden()) return;
+
+            DocComment comment = renderedComment();
+            if (comment != null)
+            {
+                editor.getDocCommentPainter().paint(graphics, comment, allocation.getBounds(), getStartOffset());
+                return;
+            }
 
             super.paint(graphics, allocation);
         }
@@ -111,25 +144,53 @@ public final class FoldingViewFactory implements ViewFactory
         /// Answering with an empty rectangle at the top of the line keeps
         /// callers — the caret, the gutter, scroll-to-visible — from throwing;
         /// [ForgeEditorPane] separately makes sure the caret does not stay there.
+        ///
+        /// A rendered comment answers with its whole block, which is what lets
+        /// the gutter line its marks up with the block and forward clicks to it.
         @Override
         public Shape modelToView(int position, Shape allocation, Position.Bias bias)
                 throws BadLocationException
         {
-            if (!isHidden()) return super.modelToView(position, allocation, bias);
-
             Rectangle bounds = allocation.getBounds();
-            return new Rectangle(bounds.x, bounds.y, 0, 0);
+
+            if (isHidden()) return new Rectangle(bounds.x, bounds.y, 0, 0);
+            if (renderedComment() != null) return new Rectangle(bounds.x, bounds.y, 0, bounds.height);
+
+            return super.modelToView(position, allocation, bias);
+        }
+
+        /// A click on a rendered comment lands on its first character; the
+        /// editor then moves the caret out, since the source is not on screen.
+        @Override
+        public int viewToModel(float x, float y, Shape allocation, Position.Bias[] biasReturn)
+        {
+            if (renderedComment() == null) return super.viewToModel(x, y, allocation, biasReturn);
+
+            biasReturn[0] = Position.Bias.Forward;
+            return getStartOffset();
         }
 
         private boolean isHidden()
         {
-            FoldingModel model = folding.get();
-            if (model == null) return false;
+            int line = lineIndex();
 
+            return line >= 0 && editor.isLineHidden(line);
+        }
+
+        /// @return the comment drawn in place of this line, or null
+        private DocComment renderedComment()
+        {
+            int line = lineIndex();
+            if (line < 0 || editor.getDocCommentPainter() == null) return null;
+
+            return editor.getDocCommentModel().renderedAt(line);
+        }
+
+        private int lineIndex()
+        {
             Element root = getElement().getParentElement();
-            if (root == null) return false;
 
-            return model.isHidden(root.getElementIndex(getStartOffset()));
+            return root == null ? -1 : root.getElementIndex(getStartOffset());
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.willclay.forgeide.ui.editor;
 
+import com.willclay.forgeide.application.IDESettingsConfiguration;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.highlighting.TokenTheme;
 import com.willclay.forgeide.ui.editor.markdown.MarkdownTab;
@@ -54,24 +55,28 @@ public final class CodeEditorPanel extends JPanel
             setUI(new ForgeTabbedPaneUI());
         }
     };
+
     private final CardLayout contentLayout = new CardLayout();
 
     private final EditorEmptyState emptyState = new EditorEmptyState();
-    private final JPanel content = new JPanel(contentLayout);
+    private final JPanel content              = new JPanel(contentLayout);
     private final EditorBreadcrumb breadcrumb = new EditorBreadcrumb();
     private Path projectRoot;
 
+    // Persistent Settings
     private Font editorFont;
     private int tabSize = 4;
-    private boolean insertSpaces = true;
+    private boolean insertSpaces   = true;
     private boolean minimapVisible = true;
+    private boolean renderDocComments;
+    private int docCommentMaxColumns = IDESettingsConfiguration.DEFAULT_DOC_COMMENT_COLUMNS;
 
     private final List<Runnable> stateChangeListeners = new ArrayList<>();
-    private final List<Runnable> editListeners = new ArrayList<>();
-    private final List<Runnable> undoStateListeners = new ArrayList<>();
+    private final List<Runnable> editListeners        = new ArrayList<>();
+    private final List<Runnable> undoStateListeners   = new ArrayList<>();
 
-    private Function<Path, Lexer> lexerResolver = file -> Lexer.PLAIN;
-    private TokenTheme theme = TokenTheme.materialDarker();
+    private Function<Path, Lexer> lexerResolver      = file -> Lexer.PLAIN;
+    private TokenTheme theme                         = TokenTheme.materialDarker();
     private Predicate<EditorTab> closeRequestHandler = tab -> true;
 
     public CodeEditorPanel(Font editorFont)
@@ -79,14 +84,18 @@ public final class CodeEditorPanel extends JPanel
         super(new BorderLayout());
 
         this.editorFont = Objects.requireNonNull(editorFont);
+
         tabs.putClientProperty("FlatLaf.style", "tabHeight: 34; tabSelectionHeight: 2; contentSeparatorHeight: 1");
         tabs.addChangeListener(event -> activeTabChanged());
 
         content.add(emptyState, EMPTY_CARD);
         content.add(tabs, TABS_CARD);
+
         add(content, BorderLayout.CENTER);
         add(breadcrumb, BorderLayout.SOUTH);
+
         breadcrumb.showFile(null, null);
+
         updateVisibleContent();
     }
 
@@ -122,7 +131,11 @@ public final class CodeEditorPanel extends JPanel
         for (int i = 0; i < tabs.getTabCount(); i++)
         {
             Component component = tabs.getComponentAt(i);
-            if (component instanceof EditorTab tab) result.add(tab);
+
+            if (component instanceof EditorTab tab)
+            {
+                result.add(tab);
+            }
         }
 
         return List.copyOf(result);
@@ -290,19 +303,67 @@ public final class CodeEditorPanel extends JPanel
     {
         this.editorFont = Objects.requireNonNull(font, "font");
 
-        if (tabSize < 1) throw new IllegalArgumentException("tabSize must be positive");
+        if (tabSize < 1)
+        {
+            throw new IllegalArgumentException("tabSize must be positive");
+        }
 
-        this.tabSize = tabSize;
+        this.tabSize      = tabSize;
         this.insertSpaces = insertSpaces;
 
-        for (EditorTab tab : getOpenTabs()) applyEditorSettings(tab.getTextPane());
+        for (EditorTab tab : getOpenTabs())
+        {
+            applyEditorSettings(tab.getTextPane());
+        }
     }
 
     /// Shows or hides the minimap on every open tab and every future one.
     public void setMinimapVisible(boolean visible)
     {
         minimapVisible = visible;
-        for (EditorTab tab : getOpenTabs()) tab.setMinimapVisible(visible);
+
+        for (EditorTab tab : getOpenTabs())
+        {
+            tab.setMinimapVisible(visible);
+        }
+    }
+
+    /// Sets whether files open with their doc comments rendered.
+    ///
+    /// Only an actual change is applied to the open tabs, and it re-renders
+    /// every comment in them. Settings are re-applied whenever any setting is
+    /// saved, and comments the user toggled by hand should not snap back
+    /// because the font size changed.
+    public void setRenderDocCommentsByDefault(boolean render)
+    {
+        if (renderDocComments == render) return;
+
+        renderDocComments = render;
+
+        for (EditorTab tab : getOpenTabs())
+        {
+            if (!(tab.getTextPane() instanceof ForgeEditorPane editor))
+            {
+                continue;
+            }
+
+            editor.setRenderDocCommentsByDefault(render);
+            editor.applyDocCommentDefault();
+        }
+    }
+
+    /// Sets where rendered doc comments wrap, in every open tab and every future one.
+    public void setDocCommentMaxColumns(int columns)
+    {
+        docCommentMaxColumns = columns;
+
+        for (EditorTab tab : getOpenTabs())
+        {
+            if (tab.getTextPane() instanceof ForgeEditorPane editor)
+            {
+                editor.setDocCommentMaxColumns(columns);
+            }
+        }
     }
 
     public void addStateChangeListener(Runnable listener)
@@ -352,11 +413,18 @@ public final class CodeEditorPanel extends JPanel
         applyEditorSettings(tab.getTextPane());
         tab.setMinimapVisible(minimapVisible);
 
+        if (tab.getTextPane() instanceof ForgeEditorPane editor)
+        {
+            editor.setRenderDocCommentsByDefault(renderDocComments);
+            editor.setDocCommentMaxColumns(docCommentMaxColumns);
+        }
+
         tab.setTheme(theme);
         tab.setLexer(resolveLexer(file));
 
         tab.addTextChangeListener(() -> tabTextChanged(tab));
         tab.addEditListener(this::fireEdited);
+
         tab.addUndoStateListener(() ->
         {
             if (tab == getSelectedTab()) fireUndoStateChanged();
@@ -398,11 +466,13 @@ public final class CodeEditorPanel extends JPanel
         if (from < 0) return;
 
         Point point = SwingUtilities.convertPoint(event.getComponent(), event.getPoint(), tabs);
+
         int to = tabs.indexAtLocation(point.x, point.y);
         if (to < 0 || to == from) return;
 
         Component header = tabs.getTabComponentAt(from);
-        String title = tabs.getTitleAt(from);
+        String title     = tabs.getTitleAt(from);
+
         boolean wasSelected = tabs.getSelectedIndex() == from;
 
         tabs.removeTabAt(from);
@@ -504,7 +574,8 @@ public final class CodeEditorPanel extends JPanel
         }
 
         StyledDocument document = textPane.getStyledDocument();
-        Style defaultStyle = document.getStyle(StyleContext.DEFAULT_STYLE);
+        Style defaultStyle      = document.getStyle(StyleContext.DEFAULT_STYLE);
+
         StyleConstants.setTabSet(defaultStyle, new TabSet(tabStops));
 
         textPane.revalidate();

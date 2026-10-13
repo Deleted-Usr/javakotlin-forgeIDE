@@ -214,22 +214,45 @@ public final class FoldingModel
         return found;
     }
 
-    /// Comment and literal runs that cover more than one line: block comments,
+    /// Comment and literal spans that cover more than one line: block comments,
     /// and text blocks in the languages that have them.
+    ///
+    /// A span has to be pieced together from runs. Swing never lets a run of
+    /// characters cross a line break — each line is its own element, with its
+    /// own runs inside — so a five-line block comment arrives as five runs,
+    /// each ending where the next begins. Runs that touch are one span; a TO-DO
+    /// inside a comment, which is coloured differently, touches its neighbours
+    /// too. Consecutive `//` lines do not join, because the line break between
+    /// them is not part of either comment.
     private static void addCommentRegions(StyledDocument document, Map<Integer, Region> found, Element root)
     {
+        int spanStart = -1;
+        int spanEnd = -1;
+
         for (int offset = 0; offset < document.getLength(); )
         {
             Element run = document.getCharacterElement(offset);
             if (run.getEndOffset() <= offset) break;
 
-            if (TokenTheme.isLiteralOrComment(run.getAttributes()))
+            boolean literal = TokenTheme.isLiteralOrComment(run.getAttributes());
+
+            // The span so far ends here unless this run carries it on.
+            if (spanStart >= 0 && !(literal && run.getStartOffset() == spanEnd))
             {
-                addRegion(found, root, run.getStartOffset(), run.getEndOffset() - 1, 0);
+                addRegion(found, root, spanStart, spanEnd - 1, 0);
+                spanStart = -1;
+            }
+
+            if (literal)
+            {
+                if (spanStart < 0) spanStart = run.getStartOffset();
+                spanEnd = run.getEndOffset();
             }
 
             offset = run.getEndOffset();
         }
+
+        if (spanStart >= 0) addRegion(found, root, spanStart, spanEnd - 1, 0);
     }
 
     /// @param trailingLines lines at the end of the span to leave visible — one

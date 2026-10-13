@@ -1,5 +1,6 @@
 package com.willclay.forgeide.ui.gutter;
 
+import com.willclay.forgeide.ui.editor.docs.DocCommentModel;
 import com.willclay.forgeide.ui.editor.EditorPalette;
 import com.willclay.forgeide.ui.editor.ForgeEditorPane;
 import com.willclay.forgeide.ui.editor.FoldingModel;
@@ -40,11 +41,14 @@ import java.util.Objects;
 /// that is what makes it correct when a fold has removed a hundred lines from
 /// between two that are still on screen.
 ///
-/// Four columns, left to right, each one the width of what it holds:
+/// Five columns, left to right, each one the width of what it holds:
 ///
 ///   - **Breakpoints.** Clicking here toggles one. Wide enough to be an easy
 ///     target, because it is a click that has to be deliberate.
 ///   - **Line numbers.** Right-aligned, with the caret's line picked out.
+///   - **Doc comment toggles.** A small page beside each doc comment that
+///     switches it between source and rendered, filled in while rendered.
+///     The column only exists in a file that has doc comments.
 ///   - **Fold arrows.** Drawn only on lines that start a foldable region, and
 ///     only lit while the pointer is over them; a column of arrows down every
 ///     brace would be louder than the code.
@@ -61,6 +65,7 @@ public final class TabGutter extends JComponent implements Scrollable
 
     private static final int BREAKPOINT_WIDTH = 16;
     private static final int FOLD_WIDTH = 14;
+    private static final int DOC_WIDTH = 14;
     private static final int CHANGE_WIDTH = 3;
 
     private static final int BREAKPOINT_INSET = 3;
@@ -102,6 +107,9 @@ public final class TabGutter extends JComponent implements Scrollable
     /// boolean because only one arrow lights up at a time.
     private int hoveredFoldLine = -1;
 
+    /// The doc comment toggle under the pointer, or -1.
+    private int hoveredDocLine = -1;
+
     public TabGutter(ForgeEditorPane textPane, BreakpointModel breakpoints, LineChangeTracker changes)
     {
         this.textPane = Objects.requireNonNull(textPane, "textPane");
@@ -118,6 +126,7 @@ public final class TabGutter extends JComponent implements Scrollable
         textPane.addPropertyChangeListener("document", this::documentChanged);
 
         textPane.getFoldingModel().addChangeListener(this::foldingChanged);
+        textPane.getDocCommentModel().addChangeListener(this::documentChanged);
         breakpoints.addChangeListener(this::repaint);
         changes.addChangeListener(this::repaint);
 
@@ -146,7 +155,12 @@ public final class TabGutter extends JComponent implements Scrollable
                     : "Set a breakpoint on line " + (line + 1);
         }
 
-        if (isInFoldColumn(event.getX()) && folding().isFoldStart(line))
+        if (isInDocColumn(event.getX()) && docs().isCommentStart(line))
+        {
+            return docs().isRendered(line) ? "Show the doc comment's source" : "Show the doc comment rendered";
+        }
+
+        if (isInFoldColumn(event.getX()) && hasFoldArrow(line))
         {
             return folding().isCollapsed(line) ? "Expand" : "Collapse";
         }
@@ -204,7 +218,7 @@ public final class TabGutter extends JComponent implements Scrollable
 
         for (int line = firstVisibleLine(root, clip.y); line >= 0 && line < lineCount; line++)
         {
-            if (folding().isHidden(line)) continue;
+            if (textPane.isLineHidden(line)) continue;
 
             Rectangle2D bounds = boundsOf(root, line);
             if (bounds == null) continue;
@@ -220,11 +234,15 @@ public final class TabGutter extends JComponent implements Scrollable
         int y = (int) Math.round(bounds.getY());
         int height = (int) Math.round(bounds.getHeight());
 
+        // A rendered doc comment is one "line" as tall as the whole comment.
+        // The marks belong beside its first row, not stretched down its height.
+        int rowHeight = Math.min(height, graphics.getFontMetrics(normalFont).getHeight());
+
         if (breakpoints.isSet(textPane.getDocument(), line))
         {
             graphics.setColor(palette.breakpoint());
             graphics.fillOval(BREAKPOINT_INSET, y + BREAKPOINT_INSET,
-                    BREAKPOINT_WIDTH - (BREAKPOINT_INSET * 2), height - (BREAKPOINT_INSET * 2));
+                    BREAKPOINT_WIDTH - (BREAKPOINT_INSET * 2), rowHeight - (BREAKPOINT_INSET * 2));
         }
 
         boolean active = line == activeLine;
@@ -235,10 +253,11 @@ public final class TabGutter extends JComponent implements Scrollable
         graphics.setFont(font);
         graphics.setColor(active ? palette.gutterActiveForeground() : palette.gutterForeground());
         graphics.drawString(label,
-                foldColumnX() - HORIZONTAL_PADDING - metrics.stringWidth(label),
+                docColumnX() - HORIZONTAL_PADDING - metrics.stringWidth(label),
                 y + metrics.getAscent());
 
-        if (folding().isFoldStart(line)) paintFoldArrow(graphics, palette, line, y, height);
+        if (docs().isCommentStart(line)) paintDocToggle(graphics, palette, line, y, rowHeight);
+        if (hasFoldArrow(line)) paintFoldArrow(graphics, palette, line, y, rowHeight);
 
         paintChangeMark(graphics, palette, line, y, height);
     }
@@ -276,6 +295,38 @@ public final class TabGutter extends JComponent implements Scrollable
         graphics.fill(arrow);
     }
 
+    /// A small page with lines of text on it: outlined while the comment shows
+    /// its source, filled while it is rendered.
+    private void paintDocToggle(Graphics2D graphics, EditorPalette palette, int line, int y, int height)
+    {
+        boolean rendered = docs().isRendered(line);
+        int pageWidth = 9;
+        int pageHeight = 11;
+        int x = docColumnX() + ((DOC_WIDTH - pageWidth) / 2);
+        int top = y + ((height - pageHeight) / 2);
+
+        Color colour = rendered ? palette.foldCollapsed() : palette.foldArrow();
+        if (line == hoveredDocLine) colour = palette.foldArrowHover();
+
+        graphics.setColor(colour);
+
+        if (rendered)
+        {
+            graphics.fillRoundRect(x, top, pageWidth, pageHeight, 3, 3);
+            graphics.setColor(palette.gutterBackground());
+        }
+        else
+        {
+            graphics.drawRoundRect(x, top, pageWidth - 1, pageHeight - 1, 3, 3);
+        }
+
+        for (int row = 0; row < 3; row++)
+        {
+            int lineY = top + 3 + (row * 2);
+            graphics.drawLine(x + 2, lineY, x + pageWidth - (row == 2 ? 5 : 3), lineY);
+        }
+    }
+
     private void paintChangeMark(Graphics2D graphics, EditorPalette palette, int line, int y, int height)
     {
         LineChangeTracker.Change change = changes.at(line);
@@ -301,12 +352,35 @@ public final class TabGutter extends JComponent implements Scrollable
         return x >= foldColumnX() && x < foldColumnX() + FOLD_WIDTH;
     }
 
+    /// Zero wide in a file with no doc comments, so it costs nothing there.
+    private int docColumnWidth()
+    {
+        return docs().hasComments() ? DOC_WIDTH : 0;
+    }
+
+    private int docColumnX()
+    {
+        return foldColumnX() - docColumnWidth();
+    }
+
+    private boolean isInDocColumn(int x)
+    {
+        return x >= docColumnX() && x < foldColumnX();
+    }
+
+    /// A rendered doc comment has no lines to fold, so the arrow its source
+    /// would have carried is left off while it is rendered.
+    private boolean hasFoldArrow(int line)
+    {
+        return folding().isFoldStart(line) && !docs().isRendered(line);
+    }
+
     /// @return the first line at or below `y` that is not folded away, or -1
     private int firstVisibleLine(Element root, int y)
     {
         int line = root.getElementIndex(textPane.viewToModel2D(new Point(0, Math.max(0, y))));
 
-        for (int skipped = 0; folding().isHidden(line) && skipped < HIDDEN_LINE_LIMIT; skipped++)
+        for (int skipped = 0; textPane.isLineHidden(line) && skipped < HIDDEN_LINE_LIMIT; skipped++)
         {
             if (++line >= root.getElementCount()) return -1;
         }
@@ -320,7 +394,7 @@ public final class TabGutter extends JComponent implements Scrollable
         Element root = textPane.getDocument().getDefaultRootElement();
         int line = root.getElementIndex(textPane.viewToModel2D(new Point(0, Math.max(0, point.y))));
 
-        return folding().isHidden(line) ? -1 : line;
+        return textPane.isLineHidden(line) ? -1 : line;
     }
 
     /// @return where this line is drawn, or null if the document moved underneath
@@ -354,7 +428,11 @@ public final class TabGutter extends JComponent implements Scrollable
                 {
                     breakpoints.toggle(textPane.getDocument(), line);
                 }
-                else if (isInFoldColumn(event.getX()))
+                else if (isInDocColumn(event.getX()))
+                {
+                    docs().toggle(textPane.getStyledDocument(), line);
+                }
+                else if (isInFoldColumn(event.getX()) && hasFoldArrow(line))
                 {
                     folding().toggle(textPane.getStyledDocument(), line);
                 }
@@ -365,15 +443,14 @@ public final class TabGutter extends JComponent implements Scrollable
             {
                 int line = lineAtPoint(event.getPoint());
 
-                setHoveredFold(isInFoldColumn(event.getX()) && line >= 0 && folding().isFoldStart(line)
-                        ? line
-                        : -1);
+                setHovered(isInFoldColumn(event.getX()) && line >= 0 && hasFoldArrow(line) ? line : -1,
+                        isInDocColumn(event.getX()) && line >= 0 && docs().isCommentStart(line) ? line : -1);
             }
 
             @Override
             public void mouseExited(MouseEvent event)
             {
-                setHoveredFold(-1);
+                setHovered(-1, -1);
             }
         };
 
@@ -381,11 +458,12 @@ public final class TabGutter extends JComponent implements Scrollable
         addMouseMotionListener(handler);
     }
 
-    private void setHoveredFold(int line)
+    private void setHovered(int foldLine, int docLine)
     {
-        if (hoveredFoldLine == line) return;
+        if (hoveredFoldLine == foldLine && hoveredDocLine == docLine) return;
 
-        hoveredFoldLine = line;
+        hoveredFoldLine = foldLine;
+        hoveredDocLine = docLine;
         repaint();
     }
 
@@ -394,6 +472,11 @@ public final class TabGutter extends JComponent implements Scrollable
     private FoldingModel folding()
     {
         return textPane.getFoldingModel();
+    }
+
+    private DocCommentModel docs()
+    {
+        return textPane.getDocCommentModel();
     }
 
     /// A fold changes how tall the document is, so the row header has to be
@@ -439,6 +522,7 @@ public final class TabGutter extends JComponent implements Scrollable
 
         preferredWidth = BREAKPOINT_WIDTH
                 + (metrics.charWidth('0') * digits) + (HORIZONTAL_PADDING * 2)
+                + docColumnWidth()
                 + FOLD_WIDTH
                 + CHANGE_WIDTH;
     }

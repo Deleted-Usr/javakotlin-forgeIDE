@@ -1,5 +1,11 @@
 package com.willclay.forgeide.ui.editor;
 
+import com.willclay.forgeide.ui.editor.docs.DocCommentModel;
+import com.willclay.forgeide.ui.editor.docs.DocCommentModel.DocComment;
+import com.willclay.forgeide.ui.editor.docs.DocCommentPainter;
+
+import javax.swing.JViewport;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -14,8 +20,14 @@ import javax.swing.text.ViewFactory;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Shape;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 
 /// The editor's text surface: everything the caret sits on top of.
@@ -24,7 +36,7 @@ import java.awt.geom.Rectangle2D;
 /// class adds the four things that make it feel like an editor rather than a
 /// text box — a visible current line, a caret you can find, a selection that
 /// does not flatten the syntax colours, and matching brackets — and owns the
-/// [FoldingModel] the gutter drives.
+/// [FoldingModel] and [DocCommentModel] the gutter drives.
 ///
 /// **Why the decorations are highlights rather than painting.** The obvious
 /// approach — override `paintComponent`, draw the band, call `super` —
@@ -64,6 +76,40 @@ public final class ForgeEditorPane extends NoWrapTextPane
     /// initialiser that ran afterwards.
     private FoldingModel folding;
 
+    /// Created lazily for the same reason as [#folding].
+    private DocCommentModel docComments;
+
+    /// Null only while the superclass constructor runs; the view factory checks.
+    private DocCommentPainter docCommentPainter;
+
+    /// Tab width in columns, for lining a rendered comment up with its code.
+    private int indentTabSize = 4;
+
+    /// Where rendered comments wrap, in columns from the start of the line.
+    private int docCommentMaxColumns = 100;
+
+    /// Where the caret was after the last check, so a caret that lands on a
+    /// rendered comment can carry on past it in the direction it was going.
+    private int settledCaretPosition;
+
+    /// True while a check of the caret against rendered comments is queued.
+    private boolean caretCheckQueued;
+
+    /// A rendered comment wraps at the visible width, so it has to be measured
+    /// again whenever the window around the editor is resized.
+    private final ComponentListener viewportResized = new ComponentAdapter()
+    {
+        @Override
+        public void componentResized(ComponentEvent event)
+        {
+            if (getDocCommentModel().comments().isEmpty()) return;
+
+            invalidateLineLayout();
+            revalidate();
+            repaint();
+        }
+    };
+
     private EditorPalette palette;
 
     private Object currentLineTag;
@@ -78,8 +124,11 @@ public final class ForgeEditorPane extends NoWrapTextPane
         setCaret(caret);
         applyPalette();
 
+        docCommentPainter = new DocCommentPainter(this);
+
         foldingRefresh.setRepeats(false);
         getFoldingModel().addChangeListener(this::foldingChanged);
+        getDocCommentModel().addChangeListener(this::docCommentsChanged);
 
         getDocument().addDocumentListener(new DocumentListener()
         {
@@ -104,6 +153,15 @@ public final class ForgeEditorPane extends NoWrapTextPane
         });
 
         addCaretListener(event -> caretMoved());
+
+        addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(MouseEvent event)
+            {
+                if (SwingUtilities.isLeftMouseButton(event)) clickRenderedComment(event.getPoint());
+            }
+        });
     }
 
     /// Installs a view factory that can hide folded lines.
@@ -113,7 +171,7 @@ public final class ForgeEditorPane extends NoWrapTextPane
     @Override
     protected EditorKit createDefaultEditorKit()
     {
-        return new FoldingEditorKit(new FoldingViewFactory(this::getFoldingModel));
+        return new FoldingEditorKit(new FoldingViewFactory(this));
     }
 
     /// The folds for this document. Never null; created on first use.
@@ -122,6 +180,67 @@ public final class ForgeEditorPane extends NoWrapTextPane
         if (folding == null) folding = new FoldingModel();
 
         return folding;
+    }
+
+    /// The doc comments in this document. Never null; created on first use.
+    public DocCommentModel getDocCommentModel()
+    {
+        if (docComments == null) docComments = new DocCommentModel();
+
+        return docComments;
+    }
+
+    /// Null only while this pane is still being constructed.
+    DocCommentPainter getDocCommentPainter()
+    {
+        return docCommentPainter;
+    }
+
+    /// True when this line is not drawn at all: folded away, or part of a
+    /// rendered doc comment other than the line the comment is drawn on.
+    public boolean isLineHidden(int line)
+    {
+        return getFoldingModel().isHidden(line) || getDocCommentModel().isHidden(line);
+    }
+
+    /// Whether loading a document shows its doc comments rendered.
+    public void setRenderDocCommentsByDefault(boolean render)
+    {
+        getDocCommentModel().setRenderByDefault(render);
+    }
+
+    /// Renders every doc comment, or none, according to the default — dropping
+    /// any comment the user has toggled by hand.
+    public void applyDocCommentDefault()
+    {
+        getDocCommentModel().applyDefault(getStyledDocument());
+    }
+
+    public int getIndentTabSize()
+    {
+        return indentTabSize;
+    }
+
+    /// Sets where rendered doc comments wrap when the window is wider, counted
+    /// in columns from the start of the line so they end where code of the same
+    /// length would.
+    public void setDocCommentMaxColumns(int columns)
+    {
+        if (columns < 1) throw new IllegalArgumentException("columns must be positive");
+        if (docCommentMaxColumns == columns) return;
+
+        docCommentMaxColumns = columns;
+
+        // The painter caches heights by width, so a new width re-measures by
+        // itself; the lines only need telling that their heights may differ.
+        invalidateLineLayout();
+        revalidate();
+        repaint();
+    }
+
+    public int getDocCommentMaxColumns()
+    {
+        return docCommentMaxColumns;
     }
 
     public EditorPalette getPalette()
@@ -135,9 +254,12 @@ public final class ForgeEditorPane extends NoWrapTextPane
     public void setIndent(int tabSize, boolean insertSpaces)
     {
         smartTyping.setIndent(tabSize, insertSpaces);
+        indentTabSize = tabSize;
     }
 
-    /// Recomputes the foldable regions now, rather than waiting for the timer.
+    /// Recomputes the foldable regions and the doc comments now, rather than
+    /// waiting for the timer. Both are read from the highlighter's colours, so
+    /// they are found together.
     ///
     /// Worth calling after a document is loaded or its language changes, both of
     /// which reshape every region at once.
@@ -145,13 +267,16 @@ public final class ForgeEditorPane extends NoWrapTextPane
     {
         foldingRefresh.stop();
         getFoldingModel().recompute(getStyledDocument());
+        getDocCommentModel().recompute(getStyledDocument());
     }
 
-    /// Drops every fold, for a document that is about to be replaced.
+    /// Drops every fold and rendered comment, for a document that is about to
+    /// be replaced.
     public void resetFolding()
     {
         foldingRefresh.stop();
         getFoldingModel().clear();
+        getDocCommentModel().clear();
     }
 
     /// Rebuilds the palette whenever the look and feel changes.
@@ -162,6 +287,30 @@ public final class ForgeEditorPane extends NoWrapTextPane
 
         // updateUI runs during the superclass constructor, before these exist.
         if (caret != null) applyPalette();
+
+        // The new UI removed every child, the stamp included, and the new
+        // theme's fonts make every measured height stale.
+        if (docCommentPainter != null)
+        {
+            docCommentPainter.attach();
+            docCommentPainter.invalidate();
+        }
+    }
+
+    @Override
+    public void addNotify()
+    {
+        super.addNotify();
+
+        if (getParent() instanceof JViewport viewport) viewport.addComponentListener(viewportResized);
+    }
+
+    @Override
+    public void removeNotify()
+    {
+        if (getParent() instanceof JViewport viewport) viewport.removeComponentListener(viewportResized);
+
+        super.removeNotify();
     }
 
     private void applyPalette()
@@ -193,6 +342,87 @@ public final class ForgeEditorPane extends NoWrapTextPane
 
         updateCurrentLine(root, line);
         updateBrackets();
+
+        // Checked once the current event is over rather than now: select()
+        // moves the caret twice, and only the second move makes a selection.
+        if (!caretCheckQueued)
+        {
+            caretCheckQueued = true;
+            SwingUtilities.invokeLater(this::keepCaretOutOfRenderedComments);
+        }
+    }
+
+    /// A rendered comment's source is not on screen, so the caret is not
+    /// allowed to sit in it: typing there would edit text you cannot see.
+    ///
+    /// A caret that arrives from above carries on below the comment, and one
+    /// arriving from below carries on above it, so the arrow keys step over a
+    /// rendered comment as if it were one line. A selection that starts and
+    /// ends inside the comment — Find landing on a match there, say — means
+    /// the source is wanted, so the comment is switched back to source instead.
+    private void keepCaretOutOfRenderedComments()
+    {
+        caretCheckQueued = false;
+
+        int dot = getCaretPosition();
+        int previous = settledCaretPosition;
+        settledCaretPosition = dot;
+
+        Element root = getDocument().getDefaultRootElement();
+        DocComment comment = getDocCommentModel().renderedCovering(root.getElementIndex(dot));
+        if (comment == null) return;
+
+        int mark = getCaret().getMark();
+        boolean selecting = mark != dot;
+
+        if (selecting && comment.equals(getDocCommentModel().renderedCovering(root.getElementIndex(mark))))
+        {
+            getDocCommentModel().setRendered(getStyledDocument(), comment.startLine(), false);
+            return;
+        }
+
+        int target = caretTargetPast(root, comment, dot < previous);
+        if (target < 0) return;
+
+        if (selecting) moveCaretPosition(target);
+        else setCaretPosition(target);
+    }
+
+    /// @param upwards whether to leave by the top of the comment rather than the
+    ///                bottom; if that side is the edge of the document, the other
+    ///                side is used
+    /// @return where to put the caret, or -1 if the comment fills the document
+    private static int caretTargetPast(Element root, DocComment comment, boolean upwards)
+    {
+        boolean hasLineAbove = comment.startLine() > 0;
+        boolean hasLineBelow = comment.endLine() + 1 < root.getElementCount();
+
+        if (hasLineAbove && (upwards || !hasLineBelow))
+        {
+            return root.getElement(comment.startLine() - 1).getEndOffset() - 1;
+        }
+
+        return hasLineBelow ? root.getElement(comment.endLine() + 1).getStartOffset() : -1;
+    }
+
+    /// Passes a click on a rendered comment through to it, so its links work.
+    private void clickRenderedComment(Point point)
+    {
+        Element root = getDocument().getDefaultRootElement();
+        int line = root.getElementIndex(viewToModel2D(point));
+
+        DocComment comment = getDocCommentModel().renderedAt(line);
+        if (comment == null) return;
+
+        try
+        {
+            Rectangle2D bounds = modelToView2D(root.getElement(line).getStartOffset());
+            if (bounds != null) docCommentPainter.click(comment, bounds.getBounds(), point);
+        }
+        catch (BadLocationException ignored)
+        {
+            // The line went away between the click and now.
+        }
     }
 
     /// Moves the band to the caret's line and repaints both rows it affects.
@@ -306,6 +536,15 @@ public final class ForgeEditorPane extends NoWrapTextPane
         repaint();
     }
 
+    /// Rendering or un-rendering a comment changes line heights just as a fold
+    /// does, so it needs the same relayout.
+    private void docCommentsChanged()
+    {
+        if (docCommentPainter != null) docCommentPainter.retain(getDocCommentModel().comments());
+
+        foldingChanged();
+    }
+
     private void invalidateLineLayout()
     {
         if (getUI() == null) return;
@@ -316,18 +555,28 @@ public final class ForgeEditorPane extends NoWrapTextPane
         View section = root.getView(0);
         if (section.getViewCount() == 0) return;
 
-        // One child is enough: the box invalidates its whole major axis and
-        // re-measures every line the next time it lays out.
-        section.getView(0).preferenceChanged(null, false, true);
+        // One child is enough: the box invalidates both axes and re-measures
+        // every line the next time it lays out. Width as well as height,
+        // because a hidden line no longer counts towards the widest line.
+        section.getView(0).preferenceChanged(null, true, true);
     }
 
     private void moveCaretOutOfHiddenText()
     {
         Element root = getDocument().getDefaultRootElement();
         int line = root.getElementIndex(getCaretPosition());
-        if (!getFoldingModel().isHidden(line)) return;
 
-        while (line > 0 && getFoldingModel().isHidden(line)) line--;
+        DocComment comment = getDocCommentModel().renderedCovering(line);
+        if (comment != null)
+        {
+            int target = caretTargetPast(root, comment, false);
+            if (target >= 0) setCaretPosition(target);
+            return;
+        }
+
+        if (!isLineHidden(line)) return;
+
+        while (line > 0 && isLineHidden(line)) line--;
 
         setCaretPosition(root.getElement(line).getStartOffset());
     }

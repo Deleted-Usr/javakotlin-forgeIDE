@@ -35,6 +35,13 @@ public final class GeneralSettings extends JPanel
     private JCheckBox insertSpaces;
     private JCheckBox showMinimap;
 
+    private JCheckBox renderDocComments;
+    private final JSpinner docCommentColumns = Utils.integerSpinner(
+            IDESettingsConfiguration.DEFAULT_DOC_COMMENT_COLUMNS,
+            IDESettingsConfiguration.MIN_DOC_COMMENT_COLUMNS,
+            IDESettingsConfiguration.MAX_DOC_COMMENT_COLUMNS,
+            10);
+
     private JCheckBox autoSave;
     private final JSpinner autoSaveDelay = Utils.integerSpinner(5, 1, 60, 1);
     private JCheckBox saveBeforeBuild;
@@ -49,6 +56,7 @@ public final class GeneralSettings extends JPanel
         JPanel sections = Utils.createSettingsPage();
         Utils.addSettingsSection(sections, createStartupSection());
         Utils.addSettingsSection(sections, createEditorSection());
+        Utils.addSettingsSection(sections, createDocCommentsSection());
         Utils.addSettingsSection(sections, createSavingSection());
         Utils.addSettingsSection(sections, createBuildAndRunSection());
 
@@ -75,6 +83,18 @@ public final class GeneralSettings extends JPanel
         Utils.addCompactSettingsFormRow(panel, 2, "Tab width:", tabWidth);
         insertSpaces = Utils.addSettingsCheckBoxRow(panel, 3, "Insert spaces instead of tab characters", true);
         showMinimap  = Utils.addSettingsCheckBoxRow(panel, 4, "Show the minimap beside the editor", true);
+
+        return panel;
+    }
+
+    private JPanel createDocCommentsSection()
+    {
+        JPanel panel = Utils.createSettingsSection("Doc comments");
+
+        renderDocComments = Utils.addSettingsCheckBoxRow(panel, 0, "Render doc comments by default", false);
+        Utils.addCompactSettingsFormRow(panel, 1, "Maximum width (columns):", docCommentColumns);
+        docCommentColumns.setToolTipText(
+                "Rendered doc comments wrap here, counted from the start of the line, even in a wider window");
 
         return panel;
     }
@@ -131,6 +151,7 @@ public final class GeneralSettings extends JPanel
         IDESettingsConfiguration.Editor editor           = settings.editor();
         IDESettingsConfiguration.Saving saving           = settings.saving();
         IDESettingsConfiguration.BuildAndRun buildAndRun = settings.buildAndRun();
+        IDESettingsConfiguration.DocComments docComments = settings.docComments();
 
         startupAction.setSelectedItem(IDESettingsConfiguration.OPEN_EMPTY_WINDOW.equals(startup.action())
                 ? OPEN_EMPTY_WINDOW_LABEL
@@ -145,6 +166,9 @@ public final class GeneralSettings extends JPanel
         tabWidth.setValue(editor.tabWidth());
         insertSpaces.setSelected(editor.insertSpaces());
         showMinimap.setSelected(editor.showMinimap());
+
+        renderDocComments.setSelected(docComments.renderByDefault());
+        docCommentColumns.setValue(docComments.maxColumns());
 
         autoSave.setSelected(saving.autoSave());
         autoSaveDelay.setValue(saving.autoSaveDelaySeconds());
@@ -178,7 +202,10 @@ public final class GeneralSettings extends JPanel
                         ((Number) autoSaveDelay.getValue()).intValue(),
                         saveBeforeBuild.isSelected()),
                 new IDESettingsConfiguration.BuildAndRun(
-                        showConsoleOnRun.isSelected(), clearConsoleOnRun.isSelected())
+                        showConsoleOnRun.isSelected(), clearConsoleOnRun.isSelected()),
+                new IDESettingsConfiguration.DocComments(
+                        renderDocComments.isSelected(),
+                        ((Number) docCommentColumns.getValue()).intValue())
         );
     }
 }
