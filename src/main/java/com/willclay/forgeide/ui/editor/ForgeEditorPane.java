@@ -96,6 +96,11 @@ public final class ForgeEditorPane extends NoWrapTextPane
     /// Where rendered comments wrap, in columns from the start of the line.
     private int docCommentMaxColumns = 100;
 
+    /// Null until settings are applied, leaving the look and feel's own hints.
+    /// Not initialised here, because [#updateUI()] reads it during the
+    /// superclass constructor.
+    private TextRenderingHints textRendering;
+
     /// Where the caret was after the last check, so a caret that lands on a
     /// rendered comment can carry on past it in the direction it was going.
     private int settledCaretPosition;
@@ -189,15 +194,7 @@ public final class ForgeEditorPane extends NoWrapTextPane
 
         try
         {
-            g.setRenderingHint(
-                    RenderingHints.KEY_TEXT_ANTIALIASING,
-                    RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB
-            );
-
-            g.setRenderingHint(
-                    RenderingHints.KEY_FRACTIONALMETRICS,
-                    RenderingHints.VALUE_FRACTIONALMETRICS_ON
-            );
+            if (textRendering != null) textRendering.applyTo(g);
 
             super.paintComponent(g);
         }
@@ -284,6 +281,21 @@ public final class ForgeEditorPane extends NoWrapTextPane
         return docCommentMaxColumns;
     }
 
+    /// Sets how the text is anti-aliased and positioned.
+    public void setTextRendering(TextRenderingHints hints)
+    {
+        if (hints.equals(textRendering)) return;
+
+        textRendering = hints;
+        textRendering.installOn(this);
+
+        // The hints are part of the key Swing measures text with, so the
+        // lines are measured again rather than drawn at their old widths.
+        invalidateLineLayout();
+        revalidate();
+        repaint();
+    }
+
     public EditorPalette getPalette()
     {
         return palette;
@@ -329,6 +341,9 @@ public final class ForgeEditorPane extends NoWrapTextPane
 
         // updateUI runs during the superclass constructor, before these exist.
         if (caret != null) applyPalette();
+
+        // setUI reset the hints to the new look and feel's defaults.
+        if (textRendering != null) textRendering.installOn(this);
 
         // The new UI removed every child, the stamp included, and the new
         // theme's fonts make every measured height stale.

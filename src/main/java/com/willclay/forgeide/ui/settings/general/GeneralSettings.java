@@ -42,6 +42,22 @@ public final class GeneralSettings extends JPanel
             IDESettingsConfiguration.MAX_DOC_COMMENT_COLUMNS,
             10);
 
+    private static final String SYSTEM_ANTIALIAS_LABEL    = "System";
+    private static final String SUBPIXEL_ANTIALIAS_LABEL  = "Subpixel (LCD)";
+    private static final String GREYSCALE_ANTIALIAS_LABEL = "Greyscale";
+
+    private final JComboBox<String> antialiasing = new JComboBox<>(new String[] {
+            SYSTEM_ANTIALIAS_LABEL,
+            SUBPIXEL_ANTIALIAS_LABEL,
+            GREYSCALE_ANTIALIAS_LABEL
+    });
+    private final JSpinner lcdContrast = Utils.integerSpinner(
+            IDESettingsConfiguration.DEFAULT_LCD_CONTRAST,
+            IDESettingsConfiguration.MIN_LCD_CONTRAST,
+            IDESettingsConfiguration.MAX_LCD_CONTRAST,
+            10);
+    private JCheckBox fractionalMetrics;
+
     private JCheckBox autoSave;
     private final JSpinner autoSaveDelay = Utils.integerSpinner(5, 1, 60, 1);
     private JCheckBox saveBeforeBuild;
@@ -57,6 +73,7 @@ public final class GeneralSettings extends JPanel
         Utils.addSettingsSection(sections, createStartupSection());
         Utils.addSettingsSection(sections, createEditorSection());
         Utils.addSettingsSection(sections, createDocCommentsSection());
+        Utils.addSettingsSection(sections, createTextRenderingSection());
         Utils.addSettingsSection(sections, createSavingSection());
         Utils.addSettingsSection(sections, createBuildAndRunSection());
 
@@ -97,6 +114,31 @@ public final class GeneralSettings extends JPanel
                 "Rendered doc comments wrap here, counted from the start of the line, even in a wider window");
 
         return panel;
+    }
+
+    private JPanel createTextRenderingSection()
+    {
+        JPanel panel = Utils.createSettingsSection("Text rendering");
+
+        Utils.addCompactSettingsFormRow(panel, 0, "Anti-aliasing:", antialiasing);
+        antialiasing.setToolTipText(
+                "System follows your desktop's font smoothing (ClearType on Windows)");
+        antialiasing.addActionListener(event -> updateLcdContrastEnabled());
+
+        Utils.addCompactSettingsFormRow(panel, 1, "LCD contrast:", lcdContrast);
+        lcdContrast.setToolTipText("Higher values draw subpixel text darker and sharper (100 to 250)");
+
+        fractionalMetrics = Utils.addSettingsCheckBoxRow(panel, 2, "Use fractional font metrics", false);
+        fractionalMetrics.setToolTipText("Lets letters sit between pixels. Usually blurrier, and "
+                + "the caret can drift from the text, because Swing measures lines without it");
+
+        return panel;
+    }
+
+    /// Contrast only affects subpixel text, and System takes its contrast from the desktop.
+    private void updateLcdContrastEnabled()
+    {
+        lcdContrast.setEnabled(SUBPIXEL_ANTIALIAS_LABEL.equals(antialiasing.getSelectedItem()));
     }
 
     private JPanel createSavingSection()
@@ -145,6 +187,16 @@ public final class GeneralSettings extends JPanel
                 : selected.toString();
     }
 
+    private String selectedAntialiasing()
+    {
+        Object selected = antialiasing.getSelectedItem();
+
+        if (SYSTEM_ANTIALIAS_LABEL.equals(selected))    return IDESettingsConfiguration.ANTIALIAS_SYSTEM;
+        if (GREYSCALE_ANTIALIAS_LABEL.equals(selected)) return IDESettingsConfiguration.ANTIALIAS_GREYSCALE;
+
+        return IDESettingsConfiguration.ANTIALIAS_SUBPIXEL;
+    }
+
     public void load(IDESettingsConfiguration settings)
     {
         IDESettingsConfiguration.Startup startup         = settings.startup();
@@ -152,6 +204,7 @@ public final class GeneralSettings extends JPanel
         IDESettingsConfiguration.Saving saving           = settings.saving();
         IDESettingsConfiguration.BuildAndRun buildAndRun = settings.buildAndRun();
         IDESettingsConfiguration.DocComments docComments = settings.docComments();
+        IDESettingsConfiguration.TextRendering rendering = settings.textRendering();
 
         startupAction.setSelectedItem(IDESettingsConfiguration.OPEN_EMPTY_WINDOW.equals(startup.action())
                 ? OPEN_EMPTY_WINDOW_LABEL
@@ -169,6 +222,16 @@ public final class GeneralSettings extends JPanel
 
         renderDocComments.setSelected(docComments.renderByDefault());
         docCommentColumns.setValue(docComments.maxColumns());
+
+        antialiasing.setSelectedItem(switch (rendering.antialiasing())
+        {
+            case IDESettingsConfiguration.ANTIALIAS_SYSTEM    -> SYSTEM_ANTIALIAS_LABEL;
+            case IDESettingsConfiguration.ANTIALIAS_GREYSCALE -> GREYSCALE_ANTIALIAS_LABEL;
+            default                                           -> SUBPIXEL_ANTIALIAS_LABEL;
+        });
+        lcdContrast.setValue(rendering.lcdContrast());
+        fractionalMetrics.setSelected(rendering.fractionalMetrics());
+        updateLcdContrastEnabled();
 
         autoSave.setSelected(saving.autoSave());
         autoSaveDelay.setValue(saving.autoSaveDelaySeconds());
@@ -205,7 +268,11 @@ public final class GeneralSettings extends JPanel
                         showConsoleOnRun.isSelected(), clearConsoleOnRun.isSelected()),
                 new IDESettingsConfiguration.DocComments(
                         renderDocComments.isSelected(),
-                        ((Number) docCommentColumns.getValue()).intValue())
+                        ((Number) docCommentColumns.getValue()).intValue()),
+                new IDESettingsConfiguration.TextRendering(
+                        selectedAntialiasing(),
+                        ((Number) lcdContrast.getValue()).intValue(),
+                        fractionalMetrics.isSelected())
         );
     }
 }

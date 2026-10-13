@@ -71,6 +71,7 @@ public final class CodeEditorPanel extends JPanel
     private boolean minimapVisible = true;
     private boolean renderDocComments;
     private int docCommentMaxColumns = IDESettingsConfiguration.DEFAULT_DOC_COMMENT_COLUMNS;
+    private TextRenderingHints textRendering = TextRenderingHints.from(new IDESettingsConfiguration.TextRendering());
 
     private final List<Runnable> stateChangeListeners = new ArrayList<>();
     private final List<Runnable> editListeners        = new ArrayList<>();
@@ -367,6 +368,20 @@ public final class CodeEditorPanel extends JPanel
         }
     }
 
+    /// Sets how editor text is drawn, in every open tab and every future one.
+    public void setTextRendering(IDESettingsConfiguration.TextRendering settings)
+    {
+        textRendering = TextRenderingHints.from(settings);
+
+        for (EditorTab tab : getOpenTabs())
+        {
+            if (tab.getTextPane() instanceof ForgeEditorPane editor)
+            {
+                editor.setTextRendering(textRendering);
+            }
+        }
+    }
+
     public void addStateChangeListener(Runnable listener)
     {
         stateChangeListeners.add(Objects.requireNonNull(listener));
@@ -418,6 +433,7 @@ public final class CodeEditorPanel extends JPanel
         {
             editor.setRenderDocCommentsByDefault(renderDocComments);
             editor.setDocCommentMaxColumns(docCommentMaxColumns);
+            editor.setTextRendering(textRendering);
         }
 
         tab.setTheme(theme);

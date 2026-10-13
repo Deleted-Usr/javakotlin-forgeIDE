@@ -138,6 +138,11 @@ public final class SettingsService
                 ),
                 new IDESettingsConfiguration.DocComments(
                         false, IDESettingsConfiguration.DEFAULT_DOC_COMMENT_COLUMNS
+                ),
+                new IDESettingsConfiguration.TextRendering(
+                        IDESettingsConfiguration.ANTIALIAS_SUBPIXEL,
+                        IDESettingsConfiguration.DEFAULT_LCD_CONTRAST,
+                        false
                 )
         );
 

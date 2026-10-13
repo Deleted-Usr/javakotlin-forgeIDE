@@ -22,7 +22,8 @@ data class IDESettingsConfiguration(
     val editor: Editor           = Editor(),
     val saving: Saving           = Saving(),
     val buildAndRun: BuildAndRun = BuildAndRun(),
-    val docComments: DocComments = DocComments()
+    val docComments: DocComments = DocComments(),
+    val textRendering: TextRendering = TextRendering()
 ) : VersionedJsonDocument {
     init {
         VersionedJsonDocument.requireSupportedVersion("IDE Settings", schemaVersion, CURRENT_SCHEMA_VERSION)
@@ -33,7 +34,8 @@ data class IDESettingsConfiguration(
         startup    = startup.normalised(),
         editor     = editor.normalised(),
         saving     = saving.normalised(),
-        docComments = docComments.normalised()
+        docComments = docComments.normalised(),
+        textRendering = textRendering.normalised()
     )
 
     fun withTheme(theme: String) = copy(appearance = Appearance(theme = theme))
@@ -47,6 +49,15 @@ data class IDESettingsConfiguration(
         const val DEFAULT_DOC_COMMENT_COLUMNS = 100
         const val MIN_DOC_COMMENT_COLUMNS     = 40
         const val MAX_DOC_COMMENT_COLUMNS     = 200
+
+        const val ANTIALIAS_SYSTEM    = "system"
+        const val ANTIALIAS_SUBPIXEL  = "subpixel"
+        const val ANTIALIAS_GREYSCALE = "greyscale"
+
+        // Java2D's own default and the range it accepts for KEY_TEXT_LCD_CONTRAST.
+        const val DEFAULT_LCD_CONTRAST = 140
+        const val MIN_LCD_CONTRAST     = 100
+        const val MAX_LCD_CONTRAST     = 250
 
         @JvmStatic
         fun defaults() = IDESettingsConfiguration(schemaVersion = CURRENT_SCHEMA_VERSION)
@@ -127,6 +138,34 @@ data class IDESettingsConfiguration(
         fun normalised() = copy(
             maxColumns = if (maxColumns in MIN_DOC_COMMENT_COLUMNS..MAX_DOC_COMMENT_COLUMNS) maxColumns
                          else DEFAULT_DOC_COMMENT_COLUMNS
+        )
+    }
+
+    /**
+     * How the editor draws its text.
+     *
+     * @property antialiasing [ANTIALIAS_SYSTEM] to follow Windows' ClearType
+     *   settings, [ANTIALIAS_SUBPIXEL] for coloured (LCD) smoothing, or
+     *   [ANTIALIAS_GREYSCALE] for plain smoothing
+     * @property lcdContrast how dark subpixel text is drawn, from 100 (light)
+     *   to 250 (dark); only used by [ANTIALIAS_SUBPIXEL]
+     * @property fractionalMetrics whether glyphs may sit between pixels rather
+     *   than being snapped to whole-pixel advances
+     */
+    @JvmRecord
+    @Serializable
+    data class TextRendering(
+        val antialiasing: String       = ANTIALIAS_SUBPIXEL,
+        val lcdContrast: Int           = DEFAULT_LCD_CONTRAST,
+        val fractionalMetrics: Boolean = false
+    ) {
+        fun normalised() = copy(
+            antialiasing = when (antialiasing) {
+                ANTIALIAS_SYSTEM, ANTIALIAS_SUBPIXEL, ANTIALIAS_GREYSCALE -> antialiasing
+                else -> ANTIALIAS_SUBPIXEL
+            },
+            lcdContrast = if (lcdContrast in MIN_LCD_CONTRAST..MAX_LCD_CONTRAST) lcdContrast
+                          else DEFAULT_LCD_CONTRAST
         )
     }
 
