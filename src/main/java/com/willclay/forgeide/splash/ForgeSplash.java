@@ -46,7 +46,7 @@ import java.util.Random;
 /// `volatile` field that the next frame reads.
 ///
 /// The anvil image (`forge-splash.png`) comes from
-/// `packaging/icon/ForgeIconGenerator.java`, the same drawing as the app icon
+/// `packaging/icon/forge_icon_generator.kts`, the same drawing as the app icon
 /// without its tile and baked-in sparks.
 public final class ForgeSplash
 {
