@@ -1,4 +1,4 @@
-package com.willclay.forgeide.ui.editor;
+package com.willclay.forgeide.ui.editor.typing;
 
 import com.willclay.forgeide.highlighting.TokenTheme;
 

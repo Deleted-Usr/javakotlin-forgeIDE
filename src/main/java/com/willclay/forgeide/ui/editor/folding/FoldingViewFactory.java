@@ -1,5 +1,6 @@
-package com.willclay.forgeide.ui.editor;
+package com.willclay.forgeide.ui.editor.folding;
 
+import com.willclay.forgeide.ui.editor.ForgeEditorPane;
 import com.willclay.forgeide.ui.editor.docs.DocCommentModel;
 import com.willclay.forgeide.ui.editor.docs.DocCommentModel.DocComment;
 

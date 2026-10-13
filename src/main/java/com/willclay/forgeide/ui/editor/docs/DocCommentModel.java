@@ -3,8 +3,9 @@ package com.willclay.forgeide.ui.editor.docs;
 import com.willclay.forgeide.editor.DocCommentMarkdown;
 import com.willclay.forgeide.highlighting.TokenTheme;
 import com.willclay.forgeide.highlighting.TokenType;
-import com.willclay.forgeide.ui.editor.FoldingModel;
-import com.willclay.forgeide.ui.editor.FoldingViewFactory;
+import com.willclay.forgeide.ui.gutter.elements.foldarrows.FoldingModel;
+import com.willclay.forgeide.ui.editor.folding.FoldingViewFactory;
+import com.willclay.forgeide.ui.gutter.elements.docs.DocTogglePainter;
 
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
@@ -24,7 +25,7 @@ import java.util.Objects;
 /// This is the model half of rendered doc comments, built the same way as
 /// [FoldingModel]: [FoldingViewFactory] reads it to draw a rendered comment
 /// in place of its lines, [DocCommentPainter] does the drawing, and
-/// [com.willclay.forgeide.ui.gutter.TabGutter] draws the toggle beside each one.
+/// [DocTogglePainter] draws the toggle beside each one.
 ///
 /// **Where the comments come from.** The language plugins' lexers already
 /// colour doc comments as [TokenType#DOC_COMMENT], so finding them is a walk

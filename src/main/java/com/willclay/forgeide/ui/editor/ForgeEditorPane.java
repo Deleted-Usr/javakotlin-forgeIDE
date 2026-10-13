@@ -3,6 +3,11 @@ package com.willclay.forgeide.ui.editor;
 import com.willclay.forgeide.ui.editor.docs.DocCommentModel;
 import com.willclay.forgeide.ui.editor.docs.DocCommentModel.DocComment;
 import com.willclay.forgeide.ui.editor.docs.DocCommentPainter;
+import com.willclay.forgeide.ui.gutter.elements.colours.ColourSwatchModel;
+import com.willclay.forgeide.ui.gutter.elements.foldarrows.FoldingModel;
+import com.willclay.forgeide.ui.editor.folding.FoldingViewFactory;
+import com.willclay.forgeide.ui.editor.typing.BracketMatcher;
+import com.willclay.forgeide.ui.editor.typing.SmartTyping;
 
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
@@ -81,6 +86,9 @@ public final class ForgeEditorPane extends NoWrapTextPane
 
     /// Null only while the superclass constructor runs; the view factory checks.
     private DocCommentPainter docCommentPainter;
+
+    /// Created lazily for the same reason as [folding].
+    private ColourSwatchModel colours;
 
     /// Tab width in columns, for lining a rendered comment up with its code.
     private int indentTabSize = 4;
@@ -174,6 +182,31 @@ public final class ForgeEditorPane extends NoWrapTextPane
         return new FoldingEditorKit(new FoldingViewFactory(this));
     }
 
+    @Override
+    protected void paintComponent(Graphics graphics)
+    {
+        Graphics2D g = (Graphics2D) graphics.create();
+
+        try
+        {
+            g.setRenderingHint(
+                    RenderingHints.KEY_TEXT_ANTIALIASING,
+                    RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB
+            );
+
+            g.setRenderingHint(
+                    RenderingHints.KEY_FRACTIONALMETRICS,
+                    RenderingHints.VALUE_FRACTIONALMETRICS_ON
+            );
+
+            super.paintComponent(g);
+        }
+        finally
+        {
+            g.dispose();
+        }
+    }
+
     /// The folds for this document. Never null; created on first use.
     public FoldingModel getFoldingModel()
     {
@@ -191,9 +224,17 @@ public final class ForgeEditorPane extends NoWrapTextPane
     }
 
     /// Null only while this pane is still being constructed.
-    DocCommentPainter getDocCommentPainter()
+    public DocCommentPainter getDocCommentPainter()
     {
         return docCommentPainter;
+    }
+
+    /// The colour swatches for this document. Never null; created on first use.
+    public ColourSwatchModel getColourSwatchModel()
+    {
+        if (colours == null)  colours = new ColourSwatchModel();
+
+        return colours;
     }
 
     /// True when this line is not drawn at all: folded away, or part of a
@@ -268,6 +309,7 @@ public final class ForgeEditorPane extends NoWrapTextPane
         foldingRefresh.stop();
         getFoldingModel().recompute(getStyledDocument());
         getDocCommentModel().recompute(getStyledDocument());
+        getColourSwatchModel().recompute(getStyledDocument());
     }
 
     /// Drops every fold and rendered comment, for a document that is about to

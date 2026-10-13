@@ -1,6 +1,7 @@
-package com.willclay.forgeide.ui.editor;
+package com.willclay.forgeide.ui.gutter.elements.foldarrows;
 
 import com.willclay.forgeide.highlighting.TokenTheme;
+import com.willclay.forgeide.ui.editor.folding.FoldingViewFactory;
 
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
@@ -17,7 +18,7 @@ import java.util.Objects;
 ///
 /// This is the model half of code folding; [FoldingViewFactory] is the half
 /// that makes the folded lines take up no room, and
-/// [com.willclay.forgeide.ui.gutter.TabGutter] is the half that draws the
+/// [FoldArrowPainter] is the half that draws the
 /// arrows. None of the three knows how the others work.
 ///
 /// **Where the regions come from.** Two shapes are recognised, and both are
@@ -257,11 +258,16 @@ public final class FoldingModel
 
     /// @param trailingLines lines at the end of the span to leave visible — one
     ///                      for a brace pair, so the closing brace still shows
-    private static void addRegion(Map<Integer, Region> found, Element root,
-                                  int startOffset, int endOffset, int trailingLines)
+    private static void addRegion(
+            Map<Integer, Region> found,
+            Element root,
+            int startOffset,
+            int endOffset,
+            int trailingLines
+    )
     {
         int startLine = root.getElementIndex(startOffset);
-        int endLine = root.getElementIndex(endOffset) - trailingLines;
+        int endLine   = root.getElementIndex(endOffset) - trailingLines;
 
         if (endLine <= startLine) return;
 

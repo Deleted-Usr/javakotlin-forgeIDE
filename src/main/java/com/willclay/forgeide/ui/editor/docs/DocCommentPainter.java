@@ -124,7 +124,8 @@ public final class DocCommentPainter
 
         stamp.paintComponent(
                 graphics,
-                rendered.view, pane,
+                rendered.view,
+                pane,
                 contentX(line, comment),
                 y,
                 rendered.width,

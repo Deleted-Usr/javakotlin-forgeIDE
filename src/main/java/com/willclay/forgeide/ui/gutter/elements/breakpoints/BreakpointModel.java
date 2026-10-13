@@ -1,4 +1,4 @@
-package com.willclay.forgeide.ui.gutter;
+package com.willclay.forgeide.ui.gutter.elements.breakpoints;
 
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;

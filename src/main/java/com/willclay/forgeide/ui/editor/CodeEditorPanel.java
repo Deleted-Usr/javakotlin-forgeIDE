@@ -4,6 +4,7 @@ import com.willclay.forgeide.application.IDESettingsConfiguration;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.highlighting.TokenTheme;
 import com.willclay.forgeide.ui.editor.markdown.MarkdownTab;
+import com.willclay.forgeide.ui.editor.tabs.EditorBreadcrumb;
 import com.willclay.forgeide.ui.editor.tabs.EditorTab;
 import com.willclay.forgeide.ui.editor.tabs.EditorTabHeader;
 import com.willclay.forgeide.ui.editor.tabs.ForgeTabbedPaneUI;

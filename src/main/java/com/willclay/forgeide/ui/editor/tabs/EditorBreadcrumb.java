@@ -1,7 +1,6 @@
-package com.willclay.forgeide.ui.editor;
+package com.willclay.forgeide.ui.editor.tabs;
 
 import com.formdev.flatlaf.util.UIScale;
-import com.willclay.forgeide.ui.editor.tabs.EditorTab;
 import com.willclay.forgeide.ui.icons.FileIcons;
 import javax.swing.JLabel;
 import java.awt.Dimension;
@@ -14,11 +13,11 @@ import java.util.List;
 
 /// Displays the active document's location without reading the filesystem.
 /// Parent segments collapse first in narrow editors; the tooltip keeps the full path.
-final class EditorBreadcrumb extends JLabel
+public final class EditorBreadcrumb extends JLabel
 {
     private List<String> segments = List.of();
 
-    EditorBreadcrumb()
+    public EditorBreadcrumb()
     {
         putClientProperty("FlatLaf.style", "border: 4,10,4,10; foreground: $Label.disabledForeground; iconTextGap: 6");
         addComponentListener(new ComponentAdapter()
@@ -28,7 +27,7 @@ final class EditorBreadcrumb extends JLabel
         });
     }
 
-    void showFile(Path root, EditorTab tab)
+    public void showFile(Path root, EditorTab tab)
     {
         setVisible(tab != null);
         if (tab == null)

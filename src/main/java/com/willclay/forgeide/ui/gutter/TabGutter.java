@@ -1,9 +1,9 @@
 package com.willclay.forgeide.ui.gutter;
 
-import com.willclay.forgeide.ui.editor.docs.DocCommentModel;
 import com.willclay.forgeide.ui.editor.EditorPalette;
 import com.willclay.forgeide.ui.editor.ForgeEditorPane;
-import com.willclay.forgeide.ui.editor.FoldingModel;
+
+import com.willclay.forgeide.ui.editor.tabs.EditorTab;
 
 import javax.swing.JComponent;
 import javax.swing.JViewport;
@@ -15,10 +15,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.Element;
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -26,13 +23,14 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
+import java.util.List;
 import java.util.Objects;
 
-/// The strip down the left of the editor: line numbers, breakpoints, fold arrows
-/// and change marks.
+/// The strip down the left of the editor, made of [GutterPainter]s laid side
+/// by side: by default breakpoints, line numbers, doc comment toggles, fold
+/// arrows and change marks.
 ///
 /// It is installed as the scroll pane's row header, which is what keeps it
 /// scrolled in step with the text without a listener — the viewport moves both
@@ -41,57 +39,48 @@ import java.util.Objects;
 /// that is what makes it correct when a fold has removed a hundred lines from
 /// between two that are still on screen.
 ///
-/// Five columns, left to right, each one the width of what it holds:
+/// **What the gutter does, and what the painters do.** The gutter owns
+/// everything the strips have in common: finding the lines on screen, placing
+/// the strips, working out which strip and line the pointer is over, lighting
+/// up the cell under it, and repainting when anything changes. Each painter
+/// only draws its own cell for one line, from a model it was given. A new kind
+/// of mark is one new painter in the list
+/// [EditorTab] builds; nothing here changes.
 ///
-///   - **Breakpoints.** Clicking here toggles one. Wide enough to be an easy
-///     target, because it is a click that has to be deliberate.
-///   - **Line numbers.** Right-aligned, with the caret's line picked out.
-///   - **Doc comment toggles.** A small page beside each doc comment that
-///     switches it between source and rendered, filled in while rendered.
-///     The column only exists in a file that has doc comments.
-///   - **Fold arrows.** Drawn only on lines that start a foldable region, and
-///     only lit while the pointer is over them; a column of arrows down every
-///     brace would be louder than the code.
-///   - **Change marks.** A thin bar against the text, green for a line added
-///     since the last save and blue for one edited.
-///
-/// The models are supplied rather than owned. A breakpoint belongs to the
-/// document, not to the strip that happens to draw it, and the same is true of
-/// folds — which the view hierarchy also reads.
+/// **Placing the strips.** They are measured from the right edge, so the
+/// strips next to the text stay next to it when the scroll pane gives the row
+/// header more room than it asked for. Any extra room goes to the first strip.
 public final class TabGutter extends JComponent implements Scrollable
 {
-    private static final int HORIZONTAL_PADDING = 6;
-    private static final int MINIMUM_DIGITS = 3;
-
-    private static final int BREAKPOINT_WIDTH = 16;
-    private static final int FOLD_WIDTH = 14;
-    private static final int DOC_WIDTH = 14;
-    private static final int CHANGE_WIDTH = 3;
-
-    private static final int BREAKPOINT_INSET = 3;
-    private static final int ARROW_SIZE = 7;
-
     /// Lines skipped over while looking for the next visible one before giving
     /// up. A collapsed region can hide any number of lines, and the search runs
     /// on every repaint.
     private static final int HIDDEN_LINE_LIMIT = 100_000;
 
+    /// One painter, placed: where its strip starts and how wide it is.
+    private record Strip(GutterPainter painter, int x, int width)
+    {
+        boolean contains(int pointX)
+        {
+            return pointX >= x && pointX < x + width;
+        }
+    }
+
     private final ForgeEditorPane textPane;
-    private final BreakpointModel breakpoints;
-    private final LineChangeTracker changes;
+    private final List<GutterPainter> painters;
 
     private final DocumentListener documentListener = new DocumentListener()
     {
         @Override
         public void insertUpdate(DocumentEvent event)
         {
-            documentChanged();
+            refresh();
         }
 
         @Override
         public void removeUpdate(DocumentEvent event)
         {
-            documentChanged();
+            refresh();
         }
 
         @Override
@@ -103,32 +92,34 @@ public final class TabGutter extends JComponent implements Scrollable
 
     private int preferredWidth;
 
-    /// The fold arrow under the pointer, or -1. Hover is per line rather than a
-    /// boolean because only one arrow lights up at a time.
-    private int hoveredFoldLine = -1;
+    /// The interactive cell under the pointer — its painter and line — or null
+    /// and -1. Only one cell in the whole gutter is lit at a time.
+    private GutterPainter hoveredPainter;
+    private int hoveredLine = -1;
 
-    /// The doc comment toggle under the pointer, or -1.
-    private int hoveredDocLine = -1;
-
-    public TabGutter(ForgeEditorPane textPane, BreakpointModel breakpoints, LineChangeTracker changes)
+    /// @param painters the strips, left to right
+    public TabGutter(ForgeEditorPane textPane, List<GutterPainter> painters)
     {
         this.textPane = Objects.requireNonNull(textPane, "textPane");
-        this.breakpoints = Objects.requireNonNull(breakpoints, "breakpoints");
-        this.changes = Objects.requireNonNull(changes, "changes");
+        this.painters = List.copyOf(painters);
+
+        if (this.painters.isEmpty()) throw new IllegalArgumentException("a gutter needs at least one painter");
 
         setOpaque(true);
         setFont(textPane.getFont());
         updatePreferredWidth();
 
         textPane.getDocument().addDocumentListener(documentListener);
+
         textPane.addCaretListener(event -> repaint());
+
         textPane.addPropertyChangeListener("font", this::fontChanged);
         textPane.addPropertyChangeListener("document", this::documentChanged);
 
-        textPane.getFoldingModel().addChangeListener(this::foldingChanged);
-        textPane.getDocCommentModel().addChangeListener(this::documentChanged);
-        breakpoints.addChangeListener(this::repaint);
-        changes.addChangeListener(this::repaint);
+        // A model changing can change how wide its strip is — the doc toggles
+        // appear with the first doc comment — and a fold changes how tall the
+        // document is, so every change re-measures rather than just repainting.
+        for (GutterPainter painter : this.painters) painter.addChangeListener(this::refresh);
 
         installMouseHandling();
 
@@ -142,35 +133,18 @@ public final class TabGutter extends JComponent implements Scrollable
         return new Dimension(preferredWidth, textPane.getPreferredSize().height);
     }
 
+    /// The tooltip of the strip under the pointer, or just the line's number
+    /// when that strip has nothing to say about this line.
     @Override
     public String getToolTipText(MouseEvent event)
     {
         int line = lineAtPoint(event.getPoint());
         if (line < 0) return null;
 
-        if (event.getX() < BREAKPOINT_WIDTH)
-        {
-            return breakpoints.isSet(textPane.getDocument(), line)
-                    ? "Remove the breakpoint on line " + (line + 1)
-                    : "Set a breakpoint on line " + (line + 1);
-        }
+        Strip strip    = stripAt(event.getX());
+        String tooltip = strip == null ? null : strip.painter().tooltip(line);
 
-        if (isInDocColumn(event.getX()) && docs().isCommentStart(line))
-        {
-            return docs().isRendered(line) ? "Show the doc comment's source" : "Show the doc comment rendered";
-        }
-
-        if (isInFoldColumn(event.getX()) && hasFoldArrow(line))
-        {
-            return folding().isCollapsed(line) ? "Expand" : "Collapse";
-        }
-
-        return switch (changes.at(line))
-        {
-            case ADDED -> "Line " + (line + 1) + " — added since the last save";
-            case MODIFIED -> "Line " + (line + 1) + " — changed since the last save";
-            case null -> "Line " + (line + 1);
-        };
+        return tooltip != null ? tooltip : "Line " + (line + 1);
     }
 
     @Override
@@ -185,10 +159,9 @@ public final class TabGutter extends JComponent implements Scrollable
 
             copy.setColor(palette.gutterBackground());
             copy.fillRect(clip.x, clip.y, clip.width, clip.height);
-            copy.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-                    RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-            copy.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON);
+
+            copy.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            copy.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
             paintLines(copy, palette, clip);
 
@@ -209,170 +182,105 @@ public final class TabGutter extends JComponent implements Scrollable
     private void paintLines(Graphics2D graphics, EditorPalette palette, Rectangle clip)
     {
         Element root = textPane.getDocument().getDefaultRootElement();
-        int lineCount = root.getElementCount();
-        int activeLine = root.getElementIndex(textPane.getCaretPosition());
 
-        Font normalFont = textPane.getFont();
-        Font activeFont = normalFont.deriveFont(Font.BOLD);
-        int bottom = clip.y + clip.height;
+        int lineCount  = root.getElementCount();
+        int activeLine = root.getElementIndex(textPane.getCaretPosition());
+        int rowHeight  = graphics.getFontMetrics(textPane.getFont()).getHeight();
+        int bottom     = clip.y + clip.height;
+
+        List<Strip> strips = placeStrips();
 
         for (int line = firstVisibleLine(root, clip.y); line >= 0 && line < lineCount; line++)
         {
             if (textPane.isLineHidden(line)) continue;
 
             Rectangle2D bounds = boundsOf(root, line);
-            if (bounds == null) continue;
+
+            if (bounds == null)         continue;
             if (bounds.getY() > bottom) return;
 
-            paintLine(graphics, palette, line, activeLine, bounds, normalFont, activeFont);
+            paintLine(graphics, palette, strips, line, line == activeLine, bounds, rowHeight);
         }
     }
 
-    private void paintLine(Graphics2D graphics, EditorPalette palette, int line, int activeLine,
-                           Rectangle2D bounds, Font normalFont, Font activeFont)
+    /// Hands each strip its cell for one line.
+    private void paintLine(
+            Graphics2D graphics,
+            EditorPalette palette,
+            List<Strip> strips,
+            int line,
+            boolean active,
+            Rectangle2D bounds,
+            int rowHeight
+    )
     {
-        int y = (int) Math.round(bounds.getY());
-        int height = (int) Math.round(bounds.getHeight());
+        int y          = (int) Math.round(bounds.getY());
+        int lineHeight = (int) Math.round(bounds.getHeight());
 
         // A rendered doc comment is one "line" as tall as the whole comment.
         // The marks belong beside its first row, not stretched down its height.
-        int rowHeight = Math.min(height, graphics.getFontMetrics(normalFont).getHeight());
+        int cellHeight = Math.min(lineHeight, rowHeight);
 
-        if (breakpoints.isSet(textPane.getDocument(), line))
+        for (Strip strip : strips)
         {
-            graphics.setColor(palette.breakpoint());
-            graphics.fillOval(BREAKPOINT_INSET, y + BREAKPOINT_INSET,
-                    BREAKPOINT_WIDTH - (BREAKPOINT_INSET * 2), rowHeight - (BREAKPOINT_INSET * 2));
+            if (strip.width() <= 0) continue;
+
+            GutterCell cell = new GutterCell(
+                    line,
+                    new Rectangle(strip.x(), y, strip.width(), cellHeight),
+                    lineHeight,
+                    strip.painter() == hoveredPainter && line == hoveredLine,
+                    active,
+                    palette
+            );
+
+            // Each painter gets its own copy, so a colour or font one sets
+            // cannot leak into the next.
+            Graphics2D cellGraphics = (Graphics2D) graphics.create();
+
+            try
+            {
+                strip.painter().paint(cellGraphics, cell);
+            }
+            finally
+            {
+                cellGraphics.dispose();
+            }
         }
-
-        boolean active = line == activeLine;
-        Font font = active ? activeFont : normalFont;
-        FontMetrics metrics = graphics.getFontMetrics(font);
-        String label = Integer.toString(line + 1);
-
-        graphics.setFont(font);
-        graphics.setColor(active ? palette.gutterActiveForeground() : palette.gutterForeground());
-        graphics.drawString(label,
-                docColumnX() - HORIZONTAL_PADDING - metrics.stringWidth(label),
-                y + metrics.getAscent());
-
-        if (docs().isCommentStart(line)) paintDocToggle(graphics, palette, line, y, rowHeight);
-        if (hasFoldArrow(line)) paintFoldArrow(graphics, palette, line, y, rowHeight);
-
-        paintChangeMark(graphics, palette, line, y, height);
-    }
-
-    /// A triangle: pointing down when the region is open, right when it is folded.
-    private void paintFoldArrow(Graphics2D graphics, EditorPalette palette, int line, int y, int height)
-    {
-        boolean collapsed = folding().isCollapsed(line);
-        int centreX = foldColumnX() + (FOLD_WIDTH / 2);
-        int centreY = y + (height / 2);
-        int half = ARROW_SIZE / 2;
-
-        Path2D arrow = new Path2D.Float();
-
-        if (collapsed)
-        {
-            arrow.moveTo(centreX - half + 1, centreY - half);
-            arrow.lineTo(centreX + half, centreY);
-            arrow.lineTo(centreX - half + 1, centreY + half);
-        }
-        else
-        {
-            arrow.moveTo(centreX - half, centreY - half + 1);
-            arrow.lineTo(centreX + half, centreY - half + 1);
-            arrow.lineTo(centreX, centreY + half);
-        }
-
-        arrow.closePath();
-
-        Color colour = palette.foldArrow();
-        if (collapsed) colour = palette.foldCollapsed();
-        if (line == hoveredFoldLine) colour = palette.foldArrowHover();
-
-        graphics.setColor(colour);
-        graphics.fill(arrow);
-    }
-
-    /// A small page with lines of text on it: outlined while the comment shows
-    /// its source, filled while it is rendered.
-    private void paintDocToggle(Graphics2D graphics, EditorPalette palette, int line, int y, int height)
-    {
-        boolean rendered = docs().isRendered(line);
-        int pageWidth = 9;
-        int pageHeight = 11;
-        int x = docColumnX() + ((DOC_WIDTH - pageWidth) / 2);
-        int top = y + ((height - pageHeight) / 2);
-
-        Color colour = rendered ? palette.foldCollapsed() : palette.foldArrow();
-        if (line == hoveredDocLine) colour = palette.foldArrowHover();
-
-        graphics.setColor(colour);
-
-        if (rendered)
-        {
-            graphics.fillRoundRect(x, top, pageWidth, pageHeight, 3, 3);
-            graphics.setColor(palette.gutterBackground());
-        }
-        else
-        {
-            graphics.drawRoundRect(x, top, pageWidth - 1, pageHeight - 1, 3, 3);
-        }
-
-        for (int row = 0; row < 3; row++)
-        {
-            int lineY = top + 3 + (row * 2);
-            graphics.drawLine(x + 2, lineY, x + pageWidth - (row == 2 ? 5 : 3), lineY);
-        }
-    }
-
-    private void paintChangeMark(Graphics2D graphics, EditorPalette palette, int line, int y, int height)
-    {
-        LineChangeTracker.Change change = changes.at(line);
-        if (change == null) return;
-
-        graphics.setColor(change == LineChangeTracker.Change.ADDED
-                ? palette.addedLine()
-                : palette.modifiedLine());
-        graphics.fillRect(getWidth() - CHANGE_WIDTH - 1, y, CHANGE_WIDTH, height);
     }
 
     // --- Geometry --- //
 
-    /// Measured from the right edge, so the arrows stay beside the text even when
-    /// the scroll pane gives the row header more room than it asked for.
-    private int foldColumnX()
+    /// Places every strip, from the right edge leftwards. The first strip starts
+    /// at 0 and takes whatever room is left, so any extra width goes to it.
+    private List<Strip> placeStrips()
     {
-        return getWidth() - CHANGE_WIDTH - FOLD_WIDTH;
+        Strip[] strips = new Strip[painters.size()];
+        int right      = getWidth();
+
+        for (int index = painters.size() - 1; index > 0; index--)
+        {
+            GutterPainter painter = painters.get(index);
+            int width             = painter.width();
+
+            right -= width;
+            strips[index] = new Strip(painter, right, width);
+        }
+
+        strips[0] = new Strip(painters.getFirst(), 0, Math.max(0, right));
+
+        return List.of(strips);
     }
 
-    private boolean isInFoldColumn(int x)
+    /// @return the strip under this x position, or null
+    private Strip stripAt(int x)
     {
-        return x >= foldColumnX() && x < foldColumnX() + FOLD_WIDTH;
-    }
+        for (Strip strip : placeStrips())
+        {
+            if (strip.contains(x)) return strip;
+        }
 
-    /// Zero wide in a file with no doc comments, so it costs nothing there.
-    private int docColumnWidth()
-    {
-        return docs().hasComments() ? DOC_WIDTH : 0;
-    }
-
-    private int docColumnX()
-    {
-        return foldColumnX() - docColumnWidth();
-    }
-
-    private boolean isInDocColumn(int x)
-    {
-        return x >= docColumnX() && x < foldColumnX();
-    }
-
-    /// A rendered doc comment has no lines to fold, so the arrow its source
-    /// would have carried is left off while it is rendered.
-    private boolean hasFoldArrow(int line)
-    {
-        return folding().isFoldStart(line) && !docs().isRendered(line);
+        return null;
     }
 
     /// @return the first line at or below `y` that is not folded away, or -1
@@ -392,7 +300,7 @@ public final class TabGutter extends JComponent implements Scrollable
     private int lineAtPoint(Point point)
     {
         Element root = textPane.getDocument().getDefaultRootElement();
-        int line = root.getElementIndex(textPane.viewToModel2D(new Point(0, Math.max(0, point.y))));
+        int line     = root.getElementIndex(textPane.viewToModel2D(new Point(0, Math.max(0, point.y))));
 
         return textPane.isLineHidden(line) ? -1 : line;
     }
@@ -421,36 +329,26 @@ public final class TabGutter extends JComponent implements Scrollable
             {
                 if (!SwingUtilities.isLeftMouseButton(event)) return;
 
-                int line = lineAtPoint(event.getPoint());
-                if (line < 0) return;
+                int line    = lineAtPoint(event.getPoint());
+                Strip strip = interactiveStripAt(event.getX(), line);
 
-                if (event.getX() < BREAKPOINT_WIDTH)
-                {
-                    breakpoints.toggle(textPane.getDocument(), line);
-                }
-                else if (isInDocColumn(event.getX()))
-                {
-                    docs().toggle(textPane.getStyledDocument(), line);
-                }
-                else if (isInFoldColumn(event.getX()) && hasFoldArrow(line))
-                {
-                    folding().toggle(textPane.getStyledDocument(), line);
-                }
+                if (strip != null) ((GutterInteraction) strip.painter()).click(line, event);
             }
 
             @Override
             public void mouseMoved(MouseEvent event)
             {
-                int line = lineAtPoint(event.getPoint());
+                int line    = lineAtPoint(event.getPoint());
+                Strip strip = interactiveStripAt(event.getX(), line);
 
-                setHovered(isInFoldColumn(event.getX()) && line >= 0 && hasFoldArrow(line) ? line : -1,
-                        isInDocColumn(event.getX()) && line >= 0 && docs().isCommentStart(line) ? line : -1);
+                if (strip == null) setHovered(null, -1);
+                else setHovered(strip.painter(), line);
             }
 
             @Override
             public void mouseExited(MouseEvent event)
             {
-                setHovered(-1, -1);
+                setHovered(null, -1);
             }
         };
 
@@ -458,36 +356,37 @@ public final class TabGutter extends JComponent implements Scrollable
         addMouseMotionListener(handler);
     }
 
-    private void setHovered(int foldLine, int docLine)
+    /// @return the strip under this x position if it can act on this line, or null
+    private Strip interactiveStripAt(int x, int line)
     {
-        if (hoveredFoldLine == foldLine && hoveredDocLine == docLine) return;
+        if (line < 0) return null;
 
-        hoveredFoldLine = foldLine;
-        hoveredDocLine = docLine;
+        Strip strip = stripAt(x);
+
+        boolean interactive = strip != null
+                && strip.painter() instanceof GutterInteraction interaction
+                && interaction.isInteractive(line);
+
+        return interactive ? strip : null;
+    }
+
+    private void setHovered(GutterPainter painter, int line)
+    {
+        if (hoveredPainter == painter && hoveredLine == line) return;
+
+        hoveredPainter = painter;
+        hoveredLine    = line;
+
         repaint();
     }
 
     // --- Keeping up with the editor --- //
 
-    private FoldingModel folding()
-    {
-        return textPane.getFoldingModel();
-    }
-
-    private DocCommentModel docs()
-    {
-        return textPane.getDocCommentModel();
-    }
-
-    /// A fold changes how tall the document is, so the row header has to be
-    /// re-measured and not merely repainted.
-    private void foldingChanged()
-    {
-        revalidate();
-        repaint();
-    }
-
-    private void documentChanged()
+    /// Re-measures and repaints. Lines being added or removed can widen the
+    /// line numbers, and a fold or rendered doc comment changes how tall the
+    /// document is, so the row header has to be laid out again rather than
+    /// merely repainted.
+    private void refresh()
     {
         updatePreferredWidth();
         revalidate();
@@ -505,26 +404,21 @@ public final class TabGutter extends JComponent implements Scrollable
             newDocument.addDocumentListener(documentListener);
         }
 
-        documentChanged();
+        refresh();
     }
 
     private void fontChanged(PropertyChangeEvent event)
     {
         setFont(textPane.getFont());
-        documentChanged();
+        refresh();
     }
 
     private void updatePreferredWidth()
     {
-        int lineCount = textPane.getDocument().getDefaultRootElement().getElementCount();
-        int digits = Math.max(MINIMUM_DIGITS, Integer.toString(lineCount).length());
-        FontMetrics metrics = textPane.getFontMetrics(textPane.getFont());
+        int width = 0;
+        for (GutterPainter painter : painters) width += painter.width();
 
-        preferredWidth = BREAKPOINT_WIDTH
-                + (metrics.charWidth('0') * digits) + (HORIZONTAL_PADDING * 2)
-                + docColumnWidth()
-                + FOLD_WIDTH
-                + CHANGE_WIDTH;
+        preferredWidth = width;
     }
 
     // --- Scrollable --- //
@@ -556,7 +450,6 @@ public final class TabGutter extends JComponent implements Scrollable
     @Override
     public boolean getScrollableTracksViewportHeight()
     {
-        return getParent() instanceof JViewport viewport
-                && viewport.getHeight() > getPreferredSize().height;
+        return getParent() instanceof JViewport viewport && viewport.getHeight() > getPreferredSize().height;
     }
 }

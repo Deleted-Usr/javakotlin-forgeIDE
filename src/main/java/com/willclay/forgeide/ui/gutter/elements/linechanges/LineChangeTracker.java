@@ -1,4 +1,4 @@
-package com.willclay.forgeide.ui.gutter;
+package com.willclay.forgeide.ui.gutter.elements.linechanges;
 
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;

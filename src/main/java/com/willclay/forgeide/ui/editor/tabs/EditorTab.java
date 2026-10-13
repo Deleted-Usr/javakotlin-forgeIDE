@@ -7,8 +7,14 @@ import com.willclay.forgeide.highlighting.TokenTheme;
 import com.willclay.forgeide.ui.editor.ForgeEditorPane;
 import com.willclay.forgeide.ui.editor.Minimap;
 import com.willclay.forgeide.ui.editor.markdown.MarkdownTab;
-import com.willclay.forgeide.ui.gutter.BreakpointModel;
-import com.willclay.forgeide.ui.gutter.LineChangeTracker;
+import com.willclay.forgeide.ui.gutter.elements.breakpoints.BreakpointModel;
+import com.willclay.forgeide.ui.gutter.elements.breakpoints.BreakpointPainter;
+import com.willclay.forgeide.ui.gutter.elements.colours.ColourSwatchPainter;
+import com.willclay.forgeide.ui.gutter.elements.linechanges.ChangeMarkPainter;
+import com.willclay.forgeide.ui.gutter.elements.docs.DocTogglePainter;
+import com.willclay.forgeide.ui.gutter.elements.foldarrows.FoldArrowPainter;
+import com.willclay.forgeide.ui.gutter.elements.linechanges.LineChangeTracker;
+import com.willclay.forgeide.ui.gutter.elements.linenumbers.LineNumberPainter;
 import com.willclay.forgeide.ui.gutter.TabGutter;
 import com.willclay.forgeide.layouts.MinimapScrollPaneLayout;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
@@ -47,22 +53,22 @@ public class EditorTab extends JPanel
     /// as one piece when it rearranges the tab, as [MarkdownTab] does.
     private final JPanel editorArea = new JPanel(new BorderLayout());
 
-    private final ForgeEditorPane textPane = new ForgeEditorPane();
+    private final ForgeEditorPane textPane      = new ForgeEditorPane();
     private final SyntaxHighlighter highlighter = new SyntaxHighlighter();
     private final SyntaxUndoManager undoManager = new SyntaxUndoManager();
 
-    private final BreakpointModel breakpoints = new BreakpointModel();
+    private final BreakpointModel breakpoints   = new BreakpointModel();
     private final LineChangeTracker lineChanges = new LineChangeTracker(textPane.getDocument());
 
     private final List<Runnable> textChangeListeners = new ArrayList<>();
-    private final List<Runnable> editListeners = new ArrayList<>();
-    private final List<Runnable> undoStateListeners = new ArrayList<>();
+    private final List<Runnable> editListeners       = new ArrayList<>();
+    private final List<Runnable> undoStateListeners  = new ArrayList<>();
 
     // Dirty lines waiting to be highlighted, merged across every edit that has
     // arrived since the last pass. NO_PENDING means there is nothing to do.
     private static final int NO_PENDING = -1;
     private int pendingFirstLine = NO_PENDING;
-    private int pendingLastLine = NO_PENDING;
+    private int pendingLastLine  = NO_PENDING;
     private boolean refreshScheduled;
 
     private boolean loadingContents;
@@ -88,7 +94,7 @@ public class EditorTab extends JPanel
 
         scrollPane = new JScrollPane(textPane);
 
-        scrollPane.setRowHeaderView(new TabGutter(textPane, breakpoints, lineChanges));
+        scrollPane.setRowHeaderView(createGutter());
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
         minimap = new Minimap(textPane, scrollPane.getViewport());
@@ -98,6 +104,20 @@ public class EditorTab extends JPanel
 
         editorArea.add(scrollPane, BorderLayout.CENTER);
         add(editorArea, BorderLayout.CENTER);
+    }
+
+    /// The gutter's strips, left to right. Each painter draws one model; adding
+    /// a kind of mark to the gutter means adding its painter here.
+    private TabGutter createGutter()
+    {
+        return new TabGutter(textPane, List.of(
+                new BreakpointPainter(breakpoints, textPane.getDocument()),
+                new LineNumberPainter(textPane, lineChanges),
+                new DocTogglePainter(textPane.getDocCommentModel(), textPane),
+                new FoldArrowPainter(textPane.getFoldingModel(), textPane.getDocCommentModel(), textPane),
+                new ChangeMarkPainter(lineChanges),
+                new ColourSwatchPainter(textPane.getColourSwatchModel())
+        ));
     }
 
     public void setMinimapVisible(boolean visible)
