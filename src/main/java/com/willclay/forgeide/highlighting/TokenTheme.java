@@ -61,6 +61,28 @@ public final class TokenTheme
         return styles.get(TokenType.PLAIN);
     }
 
+    /// One token type's look, in plain values rather than an [AttributeSet].
+    public record TokenStyle(Color colour, boolean bold) { }
+
+    /// How this theme draws `type`.
+    public TokenStyle styleOf(TokenType type)
+    {
+        AttributeSet attributes = attributesFor(type);
+
+        return new TokenStyle(StyleConstants.getForeground(attributes), StyleConstants.isBold(attributes));
+    }
+
+    /// A copy of this theme with some token types restyled. Every type that is
+    /// not in `changes` keeps the style it has here, which is how a custom
+    /// theme builds on a built-in one without having to list every colour.
+    public TokenTheme withStyles(Map<TokenType, TokenStyle> changes)
+    {
+        Map<TokenType, AttributeSet> restyled = new EnumMap<>(styles);
+        changes.forEach((type, style) -> restyled.put(type, style(style.colour(), style.bold())));
+
+        return new TokenTheme(restyled);
+    }
+
     /// Whether a character carrying these attributes is inside a literal or a
     /// comment — text that happens to be in the file rather than code.
     ///

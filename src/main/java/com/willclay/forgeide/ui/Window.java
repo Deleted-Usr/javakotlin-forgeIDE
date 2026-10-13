@@ -152,7 +152,7 @@ public final class Window extends JFrame
         applicationShutdown.addTask("stop automatic saving", settingsRuntime::close);
         applicationShutdown.addTask("save the IDE session", () -> sessionService.save(captureSession()));
 
-        ThemeService themeService             = new ThemeService(this, editorPanel, settingsService);
+        ThemeService themeService             = new ThemeService(this, editorPanel, editorManager, settingsService, bootstrap.themes());
         ProjectSettingsService projectService = new ProjectSettingsService(workspaceService);
 
         SettingsDialogController settingsDialogController = new SettingsDialogController(this, settingsService, projectService, themeService);
@@ -222,7 +222,7 @@ public final class Window extends JFrame
         setJMenuBar(new EditorMenuBar(actions));
         workbench.setSideBar(new EditorSideBar(actions));
         workbench.setToolBar(new EditorToolBar(actions, runConfigurationManager));
-        workbench.setStatusBar(new StatusBar(executionManager, workspace, editorManager, settingsService));
+        workbench.setStatusBar(new StatusBar(executionManager, workspace, editorManager, settingsService, themeService));
         projectTree.setContextMenu(new ProjectContextMenu(actions));
 
         // Move lives only in the context menu, so its F6 has to be bound on the

@@ -6,6 +6,7 @@ import com.willclay.forgeide.json.KotlinxJsonCodec
 import com.willclay.forgeide.lang.LanguageRegistry
 import com.willclay.forgeide.services.session.SessionService
 import com.willclay.forgeide.services.settings.SettingsService
+import com.willclay.forgeide.services.settings.theme.ThemeCatalog
 
 import java.io.IOException
 
@@ -56,10 +57,18 @@ class ForgeBootstrap {
             throw BootstrapException("No usable languages were found: ${e.message}", e)
         }
 
+        // Phase 4 - Read before the window exists, so the saved theme can be
+        // installed first. A broken document only loses its own theme.
+        progress.phase("Loading custom themes")
+        val themes = ThemeCatalog(directories.themeDirectory())
+        themes.reload()
+        themes.problems().forEach { warnings += BootstrapWarning("Theme", it) }
+
         return BootstrapResult(
             directories,
             settings,
             session,
+            themes,
             registry,
             discovered.classLoader,
             warnings

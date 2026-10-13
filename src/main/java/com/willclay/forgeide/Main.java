@@ -1,12 +1,14 @@
 package com.willclay.forgeide;
 
+import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMTMaterialDarkerIJTheme;
 
 import com.willclay.forgeide.application.bootstrap.BootstrapException;
 import com.willclay.forgeide.application.bootstrap.BootstrapResult;
 import com.willclay.forgeide.application.bootstrap.ForgeBootstrap;
-import com.willclay.forgeide.services.settings.theme.AppTheme;
+import com.willclay.forgeide.services.settings.theme.Theme;
+import com.willclay.forgeide.services.settings.theme.ThemeService;
 import com.willclay.forgeide.splash.ForgeSplash;
 import com.willclay.forgeide.ui.SmoothScrollPaneUI;
 import com.willclay.forgeide.ui.Window;
@@ -28,7 +30,6 @@ import javax.swing.*;
  *  - lightweight editor - vs-code type (open a file and run without a project, jshell maybe?)
  *  - Movable / Dockable tabs
  *  - System Terminal Integration (Keep Current Console and implement a toggle in settings).
- *  - Custom theme documents for user-authored Swing/token theme combinations
  *  - A BlueJ style class diagram mode/setting
  *  - Git Integration (IntelliJ-like)
  */
@@ -94,7 +95,7 @@ public final class Main
             try
             {
                 splash.setStatus("Opening the editor");
-                setLookAndFeel(bootstrap.settings().getTheme());
+                setLookAndFeel(bootstrap.themes().resolve(bootstrap.settings().getThemeId()));
                 FlatAnimatedLafChange.duration = 300;
 
                 Window w = new Window("Forge IDE", bootstrap);
@@ -110,18 +111,20 @@ public final class Main
         });
     }
 
-    private static void setLookAndFeel(AppTheme theme)
+    private static void setLookAndFeel(Theme theme)
     {
         // Registered once; it outlives every later theme change.
         SmoothScrollPaneUI.install();
 
         try
         {
-            UIManager.setLookAndFeel(theme.getSwingTheme());
+            ThemeService.installLookAndFeel(theme);
         }
         catch (Exception _)
         {
-            // Keep a known-good bundled look and feel when a saved theme cannot be installed.
+            // Keep a known-good bundled look and feel when a saved theme cannot
+            // be installed, without the failed theme's Swing overrides.
+            FlatLaf.setGlobalExtraDefaults(null);
             FlatMTMaterialDarkerIJTheme.setup();
         }
     }

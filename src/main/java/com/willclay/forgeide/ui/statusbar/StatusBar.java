@@ -4,7 +4,9 @@ import com.willclay.forgeide.application.IDESettingsConfiguration;
 import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.execution.ExecutionManager;
 import com.willclay.forgeide.services.settings.SettingsService;
-import com.willclay.forgeide.services.settings.theme.AppTheme;
+import com.willclay.forgeide.services.settings.theme.CustomTheme;
+import com.willclay.forgeide.services.settings.theme.Theme;
+import com.willclay.forgeide.services.settings.theme.ThemeService;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.editor.tabs.EditorTab;
 import com.willclay.forgeide.workspace.Project;
@@ -33,6 +35,7 @@ public final class StatusBar extends JToolBar
     private final Workspace workspace;
     private final EditorManager editorManager;
     private final SettingsService settingsService;
+    private final ThemeService themeService;
 
     private final JLabel compilerStatus = Utils.addStatusBarField("Ready", "Build and run status");
     private final JLabel saveStatus = Utils.addStatusBarField("", "Most recent save");
@@ -48,7 +51,13 @@ public final class StatusBar extends JToolBar
     private final CaretListener caretListener = this::caretMoved;
     private JTextPane observedTextPane;
 
-    public StatusBar(ExecutionManager executionManager, Workspace workspace, EditorManager editorManager, SettingsService settingsService)
+    public StatusBar(
+            ExecutionManager executionManager,
+            Workspace workspace,
+            EditorManager editorManager,
+            SettingsService settingsService,
+            ThemeService themeService
+    )
     {
         super(HORIZONTAL);
 
@@ -56,6 +65,7 @@ public final class StatusBar extends JToolBar
         this.workspace        = Objects.requireNonNull(workspace, "workspace");
         this.editorManager    = Objects.requireNonNull(editorManager, "editorManager");
         this.settingsService  = Objects.requireNonNull(settingsService, "settingsService");
+        this.themeService     = Objects.requireNonNull(themeService, "themeService");
 
 
         setFloatable(false);
@@ -88,25 +98,39 @@ public final class StatusBar extends JToolBar
             saveFeedbackTimer.restart();
         }));
         workspace.addChangeListener(
-                () -> onEventDispatchThread(this::updateProjectInformation));
+                () -> onEventDispatchThread(this::updateProjectInformation)
+        );
+
         editorManager.addChangeListener(
-                () -> onEventDispatchThread(this::updateEditorInformation));
+                () -> onEventDispatchThread(this::updateEditorInformation)
+        );
+
         settingsService.addChangeListener(settings ->
-                onEventDispatchThread(() -> updateSettings(settings)));
+                onEventDispatchThread(() -> updateSettings(settings))
+        );
+
+        themeService.addChangeListener(() -> onEventDispatchThread(this::updateTheme)
+        );
 
         updateCompilerStatus();
         updateProjectInformation();
         updateEditorInformation();
         updateSettings(settingsService.get());
+        updateTheme();
     }
 
     private void updateCompilerStatus()
     {
         taskFeedbackTimer.stop();
         compilerStatus.setText(executionManager.getStatusText());
+
         if (executionManager.getStatus() == ExecutionManager.Status.SUCCEEDED
-                || executionManager.getStatus() == ExecutionManager.Status.CANCELLED)
+             ||
+            executionManager.getStatus() == ExecutionManager.Status.CANCELLED
+        )
+        {
             taskFeedbackTimer.restart();
+        }
     }
 
     private void updateProjectInformation()
@@ -136,10 +160,17 @@ public final class StatusBar extends JToolBar
 
         if (observedTextPane != currentTextPane)
         {
-            if (observedTextPane != null) observedTextPane.removeCaretListener(caretListener);
+            if (observedTextPane != null)
+            {
+                observedTextPane.removeCaretListener(caretListener);
+            }
 
             observedTextPane = currentTextPane;
-            if (observedTextPane != null) observedTextPane.addCaretListener(caretListener);
+
+            if (observedTextPane != null)
+            {
+                observedTextPane.addCaretListener(caretListener);
+            }
         }
 
         lineEnding.setText(currentTab == null ? "--" : currentTab.getLineEnding().name());
@@ -159,10 +190,12 @@ public final class StatusBar extends JToolBar
             return;
         }
 
-        int offset = observedTextPane.getCaretPosition();
-        Element root = observedTextPane.getDocument().getDefaultRootElement();
-        int lineIndex = root.getElementIndex(offset);
+        int offset    = observedTextPane.getCaretPosition();
+        Element root  = observedTextPane.getDocument().getDefaultRootElement();
+
+        int lineIndex       = root.getElementIndex(offset);
         Element currentLine = root.getElement(lineIndex);
+
         int columnIndex = offset - currentLine.getStartOffset();
 
         caretPosition.setText("Ln " + (lineIndex + 1) + ", Col " + (columnIndex + 1));
@@ -172,9 +205,19 @@ public final class StatusBar extends JToolBar
     {
         IDESettingsConfiguration.Editor editor = settings.editor();
         tabSize.setText((editor.insertSpaces() ? "Spaces: " : "Tab Size: ") + editor.tabWidth());
+    }
 
-        AppTheme currentTheme = AppTheme.find(settings.appearance().theme()).orElse(AppTheme.DEFAULT);
-        theme.setText(currentTheme.getDisplayName());
+    /// Shows the theme actually on screen, which is not always the saved one:
+    /// a custom theme whose document is broken falls back to the default.
+    private void updateTheme()
+    {
+        Theme current = themeService.getTheme();
+
+        theme.setText(current.getDisplayName());
+        theme.setToolTipText(current instanceof CustomTheme custom
+                ? "Custom theme from " + custom.getDocument()
+                : "Current theme"
+        );
     }
 
     /// Settings and workspace services are not Swing classes and may eventually

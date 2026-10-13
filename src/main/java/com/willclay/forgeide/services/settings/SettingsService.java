@@ -2,7 +2,8 @@ package com.willclay.forgeide.services.settings;
 
 import com.willclay.forgeide.application.IDESettingsConfiguration;
 import com.willclay.forgeide.json.JsonFileStore;
-import com.willclay.forgeide.services.settings.theme.AppTheme;
+import com.willclay.forgeide.services.settings.theme.Theme;
+import com.willclay.forgeide.services.settings.theme.ThemeCatalog;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -22,8 +23,10 @@ import java.util.function.Consumer;
 ///
 /// The current configuration is loaded eagerly from `settings.json` in the
 /// supplied configuration directory. Missing or unreadable settings fall back to
-/// [IDESettingsConfiguration#defaults()], and unsupported theme identifiers
-/// are replaced with [AppTheme#DEFAULT]. Access to the current snapshot and
+/// [IDESettingsConfiguration#defaults()]. The theme id is kept exactly as
+/// saved, even when no theme has it: it may name a custom theme whose document
+/// is broken for now, and [ThemeCatalog#resolve] already falls back to the
+/// default theme for display. Access to the current snapshot and
 /// listener collection is synchronized; listeners themselves run on the thread
 /// that calls [#save(IDESettingsConfiguration)] and outside this service's
 /// monitor.
@@ -44,7 +47,7 @@ public final class SettingsService
         Path directory = Objects.requireNonNull(configDirectory, "configDirectory");
         this.settingsFile = directory.toAbsolutePath().normalize().resolve("settings.json");
         this.store = Objects.requireNonNull(store, "store");
-        this.config = normalise(load());
+        this.config = load().normalised();
     }
 
     /// Returns the current immutable settings snapshot.
@@ -150,20 +153,14 @@ public final class SettingsService
         return migrated;
     }
 
-    /// Ensures persisted theme identifiers refer to a theme available at runtime.
-    private static IDESettingsConfiguration normalise(IDESettingsConfiguration config)
-    {
-        config = config.normalised();
-        if (AppTheme.find(config.appearance().theme()).isPresent()) return config;
-        return config.withTheme(AppTheme.DEFAULT.id());
-    }
-
-    /// Resolves the configured theme, falling back to the application default.
+    /// The id of the chosen theme, exactly as saved. Turning it into a [Theme]
+    /// is [ThemeCatalog#resolve]'s job, since only the catalog knows which
+    /// custom themes exist.
     ///
-    /// @return the active theme represented by the current settings
-    public synchronized AppTheme getTheme()
+    /// @return a built-in id such as `forge-dark`, or a custom one such as `custom:copper-night`
+    public synchronized String getThemeId()
     {
-        return AppTheme.find(config.appearance().theme()).orElse(AppTheme.DEFAULT);
+        return config.appearance().theme();
     }
 
     /// Saves a copy of the current configuration with the selected theme.
@@ -171,9 +168,9 @@ public final class SettingsService
     /// @param theme theme to persist
     /// @throws IOException if the updated configuration cannot be written
     /// @throws NullPointerException if `theme` is `null`
-    public void setTheme(AppTheme theme) throws IOException
+    public void setTheme(Theme theme) throws IOException
     {
-        AppTheme updated = Objects.requireNonNull(theme, "theme");
+        Theme updated = Objects.requireNonNull(theme, "theme");
         save(get().withTheme(updated.id()));
     }
 

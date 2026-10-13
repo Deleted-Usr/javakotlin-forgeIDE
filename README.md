@@ -76,8 +76,11 @@ Javadoc (Java) and KDoc (Kotlin).
 - **Tool windows:** a vertical stripe toggles the Project tool window, and the bottom area
   switches between the Console and a TODO tool window. The TODO window is currently an
   empty frame; listing the project's TODOs is still to come.
-- **Themes:** Material Darker, Forge Dark, Forge Light, Swing Metal, and the system look
-  and feel, each with matching syntax colours.
+- **Themes:** Material Darker, Forge Dark, Forge Light, Tokyo Night, Catppuccin Mocha,
+  Swing Metal, and the system look and feel, each with matching syntax colours.
+- **Custom themes:** JSON documents in `~/.forge/themes` that start from a built-in theme
+  and change its Swing UI defaults and token colours. Saving one in Forge's editor applies
+  it straight away. See [Custom Themes](docs/markdown/CustomThemes.md).
 - **Customisation:** editor font and settings, show or hide the toolbar, status bar, and
   tool windows, and reset the layout.
 - **Persistent settings and session:** IDE preferences, the workbench layout, and project
@@ -255,7 +258,7 @@ com.willclay.forgeide                 Main application (src/main/java/)
 │   ├── session/                     SessionService
 │   └── settings/                    SettingsService, IDESettingsRuntime
 │       ├── project/                 ProjectSettingsService, ProjectSettingsValues
-│       └── theme/                   ThemeService, AppTheme, ForgeDarkLaf
+│       └── theme/                   ThemeService, ThemeCatalog, Theme, AppTheme, CustomTheme, ForgeDarkLaf
 ├── workspace/                       Workspace, Project, ProjectItem, WorkspaceListener
 │   ├── metadata/                    ProjectMetadata, ProjectConfiguration, encoding/, lineseparators/
 │   └── runconfig/                   RunConfiguration, RunConfigurationManager, RunConfigurationsStore
@@ -342,6 +345,7 @@ Thread, while compilation and process execution run in background tasks.
 | `~/.forge/config/settings.json`           | IDE-wide preferences, including editor and theme settings.        |
 | `~/.forge/config/session.json`            | Last project, open files, and workbench layout for startup.       |
 | `~/.forge/plugins/`                       | External language plugin JARs loaded at startup.                  |
+| `~/.forge/themes/`                        | Custom theme documents, one `.json` file per theme.               |
 | `<project>/.forge/project.json`           | Project metadata, file handling, and language settings.           |
 | `<project>/.forge/runConfigurations.json` | Saved run configurations for that project.                        |
 

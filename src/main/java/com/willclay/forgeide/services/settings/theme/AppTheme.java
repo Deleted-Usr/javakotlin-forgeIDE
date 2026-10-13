@@ -9,7 +9,9 @@ import javax.swing.plaf.metal.MetalLookAndFeel;
 import java.util.Arrays;
 import java.util.Optional;
 
-public enum AppTheme
+/// The themes built into Forge. A user's own themes are [CustomTheme]s, read
+/// from documents that start from one of these; both are a [Theme].
+public enum AppTheme implements Theme
 {
     MATERIAL_DARKER(
             "material-darker",
@@ -81,10 +83,10 @@ public enum AppTheme
         this.tokenTheme  = tokenTheme;
     }
 
-    public String id()                 { return id; }
-    public String getDisplayName()     { return displayName; }
-    public LookAndFeel getSwingTheme() { return swingTheme; }
-    public TokenTheme getTokenTheme()  { return tokenTheme; }
+    @Override public String id()                 { return id; }
+    @Override public String getDisplayName()     { return displayName; }
+    @Override public LookAndFeel getSwingTheme() { return swingTheme; }
+    @Override public TokenTheme getTokenTheme()  { return tokenTheme; }
 
     private static LookAndFeel systemLookAndFeel()
     {

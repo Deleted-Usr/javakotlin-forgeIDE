@@ -7,7 +7,8 @@ import java.nio.file.Paths;
 
 public record AppDirectories(
         Path configDirectory,
-        Path pluginDirectory
+        Path pluginDirectory,
+        Path themeDirectory
 )
 {
     public static AppDirectories resolve() throws IOException
@@ -16,6 +17,7 @@ public record AppDirectories(
 
         Path configPath = Paths.get(homePath, ".forge", "config");  // Users/../.forge/config
         Path pluginPath = Paths.get(homePath, ".forge", "plugins"); // Users/../.forge/plugins
+        Path themePath  = Paths.get(homePath, ".forge", "themes");  // Users/../.forge/themes
 
         if (!Files.exists(configPath))
         {
@@ -29,6 +31,14 @@ public record AppDirectories(
             Files.createDirectories(pluginPath);
         }
 
-        return new AppDirectories(configPath, pluginPath);
+        // Created up front, like the plugin folder, so there is somewhere
+        // obvious to put a theme document before Forge has written one.
+        if (!Files.exists(themePath))
+        {
+            System.out.println("Creating new theme path...");
+            Files.createDirectories(themePath);
+        }
+
+        return new AppDirectories(configPath, pluginPath, themePath);
     }
 }

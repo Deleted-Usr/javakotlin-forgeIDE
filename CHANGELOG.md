@@ -18,9 +18,21 @@ egui window that is turned on by a Cargo feature.
 - Full syntax highlighting for Markdown, Json, and Toml file types
 - Language documentation comments (Javadoc, KDoc, Rustdoc, Doxygen) now have in-line rendering using `MarkdownView`
 
+#### Themes
+- **Custom themes**: JSON documents in `~/.forge/themes` that start from a built-in theme (`base`) and change its
+FlatLaf UI defaults (`swing`) and token colours (`tokens`). They appear in the theme list beside the built-in themes.
+- The Theme settings page can create a new theme as a copy of the current one, open a theme's document in the editor,
+reload the documents, and browse the look and feel's UI keys. Problems in a document are listed there and in the Console.
+- Saving a theme document in Forge's editor re-applies it straight away; a document with a mistake keeps the last good
+version on screen.
+
 ### Changed
 - Removed the legacy Markdown API (`MarkdownToHtml.kt`, `MarkdownPreviewPanel.kt`), `MarkdownTab.kt` now lives
 under the `ui.editor.tabs` package.
+- Themes share a `Theme` interface (`AppTheme` for built-in themes, `CustomTheme` for documents), and
+`SettingsService.getTheme()` is replaced by `getThemeId()`: a saved theme id that matches no theme is now kept rather
+than reset, so a custom theme with a broken document comes back once it is fixed.
+- The status bar shows the theme actually applied, with the document's path in its tooltip for a custom theme.
 
 ## [1.3.1] - 2026-10-11
 

@@ -4,6 +4,7 @@ import com.willclay.forgeide.application.AppDirectories;
 import com.willclay.forgeide.lang.LanguageRegistry;
 import com.willclay.forgeide.services.session.SessionService;
 import com.willclay.forgeide.services.settings.SettingsService;
+import com.willclay.forgeide.services.settings.theme.ThemeCatalog;
 
 import com.willclay.forgeide.services.ApplicationShutdown;
 
@@ -19,6 +20,7 @@ public record BootstrapResult(
         AppDirectories directories,
         SettingsService settings,
         SessionService session,
+        ThemeCatalog themes,
         LanguageRegistry languages,
         AutoCloseable pluginClassLoader,
         List<BootstrapWarning> warnings
@@ -29,6 +31,7 @@ public record BootstrapResult(
         Objects.requireNonNull(directories, "directories");
         Objects.requireNonNull(settings, "settings");
         Objects.requireNonNull(session, "session");
+        Objects.requireNonNull(themes, "themes");
         Objects.requireNonNull(languages, "languages");
 
         warnings = warnings == null ? List.of() : List.copyOf(warnings);
