@@ -17,6 +17,7 @@ egui window that is turned on by a Cargo feature.
 - FlatLaf-backed scroll pane UI that smooths ordinary mouse-wheel clicks with an eased glide animation 
 - Full syntax highlighting for Markdown, Json, and Toml file types
 - Language documentation comments (Javadoc, KDoc, Rustdoc, Doxygen) now have in-line rendering using `MarkdownView`
+- Colour swatches now appear next to declared colours in the Editor Gutter
 
 #### Themes
 - **Custom themes**: JSON documents in `~/.forge/themes` that start from a built-in theme (`base`) and change its
@@ -33,6 +34,7 @@ under the `ui.editor.tabs` package.
 `SettingsService.getTheme()` is replaced by `getThemeId()`: a saved theme id that matches no theme is now kept rather
 than reset, so a custom theme with a broken document comes back once it is fixed.
 - The status bar shows the theme actually applied, with the document's path in its tooltip for a custom theme.
+- The tab gutter not delegates painting to subclasses instead of painting directly from `paintComponent`
 
 ## [1.3.1] - 2026-10-11
 
