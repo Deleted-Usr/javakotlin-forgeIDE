@@ -100,7 +100,8 @@ data class IDESettingsConfiguration(
         val fontSize: Int         = 14,
         val tabWidth: Int         = 4,
         val insertSpaces: Boolean = true,
-        val showMinimap: Boolean  = true
+        val showMinimap: Boolean  = true,
+        val showColourSwatches: Boolean = true
     ) {
         fun normalised() = copy(
             fontFamily = fontFamily.ifBlank { EditorFonts.BUNDLED },

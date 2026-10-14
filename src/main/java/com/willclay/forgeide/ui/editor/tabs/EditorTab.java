@@ -24,9 +24,11 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.text.AbstractDocument;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
+import javax.swing.undo.CompoundEdit;
 import javax.swing.undo.UndoableEdit;
 import java.awt.*;
 import java.nio.file.Path;
@@ -59,6 +61,14 @@ public class EditorTab extends JPanel
 
     private final BreakpointModel breakpoints   = new BreakpointModel();
     private final LineChangeTracker lineChanges = new LineChangeTracker(textPane.getDocument());
+
+    /// Kept, unlike the other painters, so the setting can show and hide it.
+    private final ColourSwatchPainter colourSwatches =
+            new ColourSwatchPainter(textPane.getColourSwatchModel(), textPane, this::replaceAsOneEdit);
+
+    /// While [#replaceAsOneEdit] runs, the edits it makes are gathered here
+    /// instead of going to the undo history one by one.
+    private CompoundEdit collectingEdit;
 
     private final List<Runnable> textChangeListeners = new ArrayList<>();
     private final List<Runnable> editListeners       = new ArrayList<>();
@@ -113,11 +123,17 @@ public class EditorTab extends JPanel
         return new TabGutter(textPane, List.of(
                 new BreakpointPainter(breakpoints, textPane.getDocument()),
                 new LineNumberPainter(textPane, lineChanges),
+                colourSwatches,
                 new DocTogglePainter(textPane.getDocCommentModel(), textPane),
                 new FoldArrowPainter(textPane.getFoldingModel(), textPane.getDocCommentModel(), textPane),
-                new ChangeMarkPainter(lineChanges),
-                new ColourSwatchPainter(textPane.getColourSwatchModel())
+                new ChangeMarkPainter(lineChanges)
         ));
+    }
+
+    /// Shows or hides the colour swatches in this tab's gutter.
+    public void setColourSwatchesVisible(boolean visible)
+    {
+        colourSwatches.setVisible(visible);
     }
 
     public void setMinimapVisible(boolean visible)
@@ -386,7 +402,43 @@ public class EditorTab extends JPanel
         if (edit instanceof AbstractDocument.DefaultDocumentEvent documentEvent
                 && documentEvent.getType() == DocumentEvent.EventType.CHANGE) return;
 
+        if (collectingEdit != null)
+        {
+            collectingEdit.addEdit(edit);
+            return;
+        }
+
         undoManager.addEdit(edit);
+        fireUndoStateChanged();
+    }
+
+    /// Replaces a range of text as one undoable step.
+    ///
+    /// A document replaces text as a removal followed by an insertion, and each
+    /// arrives here as its own edit — so without this, undoing a colour picked
+    /// in the gutter would first leave the old colour deleted and nothing in
+    /// its place. Collecting both into one [CompoundEdit] makes Ctrl+Z put the
+    /// old text straight back.
+    public void replaceAsOneEdit(int offset, int length, String text)
+    {
+        CompoundEdit compound = new CompoundEdit();
+        collectingEdit = compound;
+
+        try
+        {
+            ((AbstractDocument) textPane.getDocument()).replace(offset, length, text, null);
+        }
+        catch (BadLocationException exception)
+        {
+            Toolkit.getDefaultToolkit().beep();
+        }
+        finally
+        {
+            collectingEdit = null;
+            compound.end();
+        }
+
+        undoManager.addEdit(compound);
         fireUndoStateChanged();
     }
 

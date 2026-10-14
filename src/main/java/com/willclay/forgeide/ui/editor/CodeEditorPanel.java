@@ -69,6 +69,7 @@ public final class CodeEditorPanel extends JPanel
     private int tabSize = 4;
     private boolean insertSpaces   = true;
     private boolean minimapVisible = true;
+    private boolean colourSwatchesVisible = true;
     private boolean renderDocComments;
     private int docCommentMaxColumns = IDESettingsConfiguration.DEFAULT_DOC_COMMENT_COLUMNS;
     private TextRenderingHints textRendering = TextRenderingHints.from(new IDESettingsConfiguration.TextRendering());
@@ -330,6 +331,17 @@ public final class CodeEditorPanel extends JPanel
         }
     }
 
+    /// Shows or hides the gutter's colour swatches on every open tab and every future one.
+    public void setColourSwatchesVisible(boolean visible)
+    {
+        colourSwatchesVisible = visible;
+
+        for (EditorTab tab : getOpenTabs())
+        {
+            tab.setColourSwatchesVisible(visible);
+        }
+    }
+
     /// Sets whether files open with their doc comments rendered.
     ///
     /// Only an actual change is applied to the open tabs, and it re-renders
@@ -428,6 +440,7 @@ public final class CodeEditorPanel extends JPanel
 
         applyEditorSettings(tab.getTextPane());
         tab.setMinimapVisible(minimapVisible);
+        tab.setColourSwatchesVisible(colourSwatchesVisible);
 
         if (tab.getTextPane() instanceof ForgeEditorPane editor)
         {

@@ -14,15 +14,6 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// - Delegate to painter (g.setColor(item.colour); g.fillRect(swatch.x, item.y, 5, 5);)
-
-// TODO - Add setting in settings: Render Colour Swatches in Gutter
-
-// - # followed by three digits in a string, like "issue #123", will show a swatch,
-//   because #123 is valid CSS. If that bothers you, add a lookbehind so # must not
-//   follow a word character or & (which also skips HTML entities like &#123;): (?<![\w&])#(...).
-//   Or accept the 3-digit form only when it contains a letter.
-//
 // - Not handled yet: new Color(1.0f, 0.5f, 0f) floats, Color.RED-style constants, and
 //   rgb(255, 136, 0) in CSS. Each one is just another pattern and parser pair passed to
 //   addMatches, so they’re easy to add later.
@@ -34,7 +25,10 @@ public final class ColourSwatchModel
     private static final int MAXIMUM_LENGTH = 2_000_000;
 
     /// `#RGB`, `#RRGGBB`, `#AARRGGBB` / `0xRRGGBB`, `0xAARRGGBB` / `Color(r, g, b[, a])`
-    private static final Pattern HEX  = Pattern.compile("#(\\p{XDigit}{8}|\\p{XDigit}{6}|\\p{XDigit}{3})\\b");
+    ///
+    /// A `#` straight after a letter, digit or `&` is not a colour: that skips
+    /// `Foo#bar` references and HTML entities like `&#123;`.
+    private static final Pattern HEX  = Pattern.compile("(?<![\\w&])#(\\p{XDigit}{8}|\\p{XDigit}{6}|\\p{XDigit}{3})\\b");
     private static final Pattern INT  = Pattern.compile("\\b0x(\\p{XDigit}{8}|\\p{XDigit}{6})\\b");
     private static final Pattern CTOR = Pattern.compile("\\bColor\\s*\\(\\s*(\\d{1,3})\\s*,\\s*(\\d{1,3})\\s*,\\s*(\\d{1,3})\\s*(?:,\\s*(\\d{1,3})\\s*)?\\)");
 
@@ -63,6 +57,34 @@ public final class ColourSwatchModel
     {
         swatches = document.getLength() > MAXIMUM_LENGTH ? Map.of() : findColours(document);
         fireChanged();
+    }
+
+    /// Forgets every colour, for when the document is replaced wholesale.
+    public void clear()
+    {
+        swatches = Map.of();
+        fireChanged();
+    }
+
+    /// Reads one literal on its own, as the scan would have: `#FF8800`,
+    /// `0xFF8800` or `Color(255, 136, 0)`.
+    ///
+    /// @return its colour, or null if the text is not exactly one colour literal
+    public static Color parse(String literal)
+    {
+        Map<Pattern, Function<MatchResult, Color>> parsers = Map.of(
+                HEX,  ColourSwatchModel::parseHex,
+                INT,  ColourSwatchModel::parseInt,
+                CTOR, ColourSwatchModel::parseConstructor
+        );
+
+        for (Map.Entry<Pattern, Function<MatchResult, Color>> parser : parsers.entrySet())
+        {
+            Matcher matcher = parser.getKey().matcher(literal);
+            if (matcher.matches()) return parser.getValue().apply(matcher);
+        }
+
+        return null;
     }
 
     private Map<Integer, List<ColourSwatch>> findColours(StyledDocument document)
@@ -99,10 +121,8 @@ public final class ColourSwatchModel
 
         while (matcher.find())
         {
-            if (isInComment(document, matcher.start()))
-            {
-                return;
-            }
+            // Skip this match only; the next one may well be in code.
+            if (isInComment(document, matcher.start())) continue;
 
             Color colour = parse.apply(matcher);
             if (colour == null) continue;
@@ -114,7 +134,8 @@ public final class ColourSwatchModel
                             line,
                             matcher.start(),
                             matcher.end() - matcher.start(),
-                            colour
+                            colour,
+                            matcher.group()
                     )
             );
         }

@@ -331,6 +331,7 @@ public final class ForgeEditorPane extends NoWrapTextPane
         foldingRefresh.stop();
         getFoldingModel().clear();
         getDocCommentModel().clear();
+        getColourSwatchModel().clear();
     }
 
     /// Rebuilds the palette whenever the look and feel changes.
@@ -487,6 +488,16 @@ public final class ForgeEditorPane extends NoWrapTextPane
     /// The repaint is explicit because the highlighter only knows about the
     /// characters on the line, while the band is drawn the full width of the
     /// editor — leaving everything to the right of the last character stale.
+    ///
+    /// **The repaint has to wait.** A document tells its listeners about an
+    /// edit in reverse order of registration, and the caret registered after
+    /// the views — so when an edit moves the caret, this runs before the views
+    /// have heard about the edit. Measuring a line then (`modelToView2D`)
+    /// lays out views that still describe the old text; after a removal, the
+    /// line's flow layout can never place the missing characters and adds
+    /// empty rows forever, freezing the editor. Undoing a typed character was
+    /// enough to trigger it. Swing's own caret defers its drawing for the same
+    /// reason; moving the highlight itself is safe straight away.
     private void updateCurrentLine(Element root, int line)
     {
         Element element = root.getElement(line);
@@ -510,9 +521,14 @@ public final class ForgeEditorPane extends NoWrapTextPane
             return;
         }
 
-        repaintLine(highlightedLine);
-        repaintLine(line);
+        int previous    = highlightedLine;
         highlightedLine = line;
+
+        SwingUtilities.invokeLater(() ->
+        {
+            repaintLine(previous);
+            repaintLine(line);
+        });
     }
 
     private void repaintLine(int line)

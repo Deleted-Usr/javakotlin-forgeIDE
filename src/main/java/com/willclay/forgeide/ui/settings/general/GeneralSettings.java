@@ -34,6 +34,7 @@ public final class GeneralSettings extends JPanel
     private final JSpinner tabWidth = Utils.integerSpinner(4, 1, 16, 1);
     private JCheckBox insertSpaces;
     private JCheckBox showMinimap;
+    private JCheckBox showColourSwatches;
 
     private JCheckBox renderDocComments;
     private final JSpinner docCommentColumns = Utils.integerSpinner(
@@ -100,6 +101,7 @@ public final class GeneralSettings extends JPanel
         Utils.addCompactSettingsFormRow(panel, 2, "Tab width:", tabWidth);
         insertSpaces = Utils.addSettingsCheckBoxRow(panel, 3, "Insert spaces instead of tab characters", true);
         showMinimap  = Utils.addSettingsCheckBoxRow(panel, 4, "Show the minimap beside the editor", true);
+        showColourSwatches = Utils.addSettingsCheckBoxRow(panel, 5, "Show colour swatches in the gutter", true);
 
         return panel;
     }
@@ -219,6 +221,7 @@ public final class GeneralSettings extends JPanel
         tabWidth.setValue(editor.tabWidth());
         insertSpaces.setSelected(editor.insertSpaces());
         showMinimap.setSelected(editor.showMinimap());
+        showColourSwatches.setSelected(editor.showColourSwatches());
 
         renderDocComments.setSelected(docComments.renderByDefault());
         docCommentColumns.setValue(docComments.maxColumns());
@@ -259,7 +262,8 @@ public final class GeneralSettings extends JPanel
                         ((Number) fontSize.getValue()).intValue(),
                         ((Number) tabWidth.getValue()).intValue(),
                         insertSpaces.isSelected(),
-                        showMinimap.isSelected()),
+                        showMinimap.isSelected(),
+                        showColourSwatches.isSelected()),
                 new IDESettingsConfiguration.Saving(
                         autoSave.isSelected(),
                         ((Number) autoSaveDelay.getValue()).intValue(),
