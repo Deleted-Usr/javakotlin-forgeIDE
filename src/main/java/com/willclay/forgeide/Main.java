@@ -29,6 +29,7 @@ import javax.swing.*;
  *  - IntelliJ-style double shift project search function
  *  - lightweight editor - vs-code type (open a file and run without a project, jshell maybe?)
  *  - Movable / Dockable tabs
+ *  - Custom Text Component to resolve performance issues.
  *  - System Terminal Integration (Keep Current Console and implement a toggle in settings).
  *  - A BlueJ style class diagram mode/setting
  *  - Git Integration (IntelliJ-like)
