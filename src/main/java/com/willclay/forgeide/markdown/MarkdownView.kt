@@ -48,7 +48,7 @@ import javax.swing.border.MatteBorder
 class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkHandler = LinkHandler.DESKTOP) : JPanel(ColumnLayout()), Scrollable
 {
     private val headings = mutableMapOf<String, JComponent>()
-    private var built = false  // false while JPanel's constructor calls updateUI, before these fields are set
+    private var built    = false  // false while JPanel's constructor calls updateUI, before these fields are set
 
     /** The parsed document. Set it directly to parse on another thread with [Markdown.parse]. */
     var document: List<Block> = Markdown.parse(markdown)
@@ -85,20 +85,22 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
     val outline: List<Block.Heading> get() = document.filterIsInstance<Block.Heading>()
 
     private val handler = LinkHandler { destination ->
-        if (destination.startsWith("#")) scrollTo(destination.removePrefix("#"))
-        else this.links.open(destination)
+        if (destination.startsWith("#")) {
+            scrollTo(destination.removePrefix("#"))
+        }
+        else {
+            this.links.open(destination)
+        }
     }
 
-    init
-    {
+    init {
         isOpaque = false
         built = true
         rebuild()
     }
 
     /** Parses [source] and shows it. */
-    fun setMarkdown(source: String)
-    {
+    fun setMarkdown(source: String) {
         document = Markdown.parse(source)
     }
 
@@ -106,36 +108,34 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
      * Scrolls the enclosing scroll pane so the heading with this anchor is at the top.
      * @return false if there's no such heading or no scroll pane
      */
-    fun scrollTo(anchor: String): Boolean
-    {
-        val heading = headings[anchor] ?: return false
+    fun scrollTo(anchor: String): Boolean {
+        val heading  = headings[anchor] ?: return false
         val viewport = SwingUtilities.getAncestorOfClass(JViewport::class.java, this) as? JViewport ?: return false
-        val view = viewport.view as? JComponent ?: return false
+        val view     = viewport.view as? JComponent ?: return false
 
         val top = SwingUtilities.convertPoint(heading, 0, 0, view).y - UIScale.scale(12)
         val max = (view.height - viewport.height).coerceAtLeast(0)
+
         viewport.viewPosition = Point(0, top.coerceIn(0, max))
+
         return true
     }
 
-    override fun updateUI()
-    {
+    override fun updateUI() {
         super.updateUI()
-        if (built && theme == null)
-        {
+        if (built && theme == null) {
             rebuild()
         }
     }
 
-    private fun rebuild()
-    {
-        if (!built)
-        {
+    private fun rebuild() {
+        if (!built) {
             return
         }
 
-        val old = renderedTheme
+        val old  = renderedTheme
         val base = theme ?: MarkdownTheme.fromUIManager()
+
         renderedTheme = codeColors?.let { base.copy(code = it) } ?: base
 
         removeAll()
@@ -149,14 +149,14 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
 
     // Scrollable: match the viewport's width so text wraps instead of scrolling sideways.
 
-    override fun getPreferredSize(): Dimension
-    {
+    override fun getPreferredSize(): Dimension {
         // A viewport asks for the preferred size before it sets our width, so measure against the viewport.
         val viewport = parent as? JViewport
-        if (viewport != null && viewport.width > 0 && viewport.width != width)
-        {
+
+        if (viewport != null && viewport.width > 0 && viewport.width != width) {
             setSize(viewport.width, height.coerceAtLeast(1))
         }
+
         return super.getPreferredSize()
     }
 
@@ -165,7 +165,12 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
     override fun getScrollableUnitIncrement(visible: Rectangle, orientation: Int, direction: Int) = UIScale.scale(24)
 
     override fun getScrollableBlockIncrement(visible: Rectangle, orientation: Int, direction: Int) =
-        if (orientation == SwingConstants.VERTICAL) (visible.height - UIScale.scale(48)).coerceAtLeast(visible.height / 2) else visible.width
+        if (orientation == SwingConstants.VERTICAL) {
+            (visible.height - UIScale.scale(48)).coerceAtLeast(visible.height / 2)
+        }
+        else {
+            visible.width
+        }
 
     override fun getScrollableTracksViewportWidth() = true
 
@@ -174,32 +179,32 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
     // Rendering
 
     /** @param gap space between blocks; list items use a tighter one so nested lists hug their item */
-    private fun addBlocks(parent: JComponent, blocks: List<Block>, foreground: Color, gap: Int = 12)
-    {
+    private fun addBlocks(parent: JComponent, blocks: List<Block>, foreground: Color, gap: Int = 12) {
         blocks.forEachIndexed { index, block ->
-            if (index > 0)
-            {
+            if (index > 0) {
                 parent.add(Box.createVerticalStrut(UIScale.scale(if (block is Block.Heading) 20 else gap)))
             }
             parent.add(render(block, foreground))
         }
     }
 
-    private fun render(block: Block, foreground: Color): JComponent = when (block)
-    {
+    private fun render(block: Block, foreground: Color): JComponent = when (block) {
         is Block.Heading -> heading(block)
 
-        is Block.Paragraph ->
-        {
+        is Block.Paragraph -> {
             val image = block.text.singleOrNull() as? Inline.Image
-            if (image != null) image(image)
-            else RichText(block.text, renderedTheme, handler, foreground = foreground)
+
+            if (image != null) {
+                image(image)
+            }
+            else {
+                RichText(block.text, renderedTheme, handler, foreground = foreground)
+            }
         }
 
         is Block.Bullets -> column().apply {
             block.items.forEachIndexed { index, item ->
-                if (index > 0)
-                {
+                if (index > 0) {
                     add(Box.createVerticalStrut(UIScale.scale(4)))
                 }
                 add(listItem(block, index, item, foreground))
@@ -218,13 +223,11 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
         Block.Rule -> JSeparator().apply { this.foreground = renderedTheme.border }
     }
 
-    private fun heading(block: Block.Heading): JComponent
-    {
+    private fun heading(block: Block.Heading): JComponent {
         val text = RichText(block.text, renderedTheme, handler, renderedTheme.headingFont(block.level))
 
         // Like GitHub, the two top levels get a rule underneath.
-        if (block.level <= 2)
-        {
+        if (block.level <= 2) {
             text.border = CompoundBorder(MatteBorder(0, 0, 1, 0, renderedTheme.border), EmptyBorder(0, 0, 6, 0))
         }
 
@@ -232,37 +235,46 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
         return text
     }
 
-    private fun image(image: Inline.Image): JComponent
-    {
+    private fun image(image: Inline.Image): JComponent {
         val loaded = resolve(image.source)?.let { uri -> runCatching { images.load(uri) }.getOrNull() }
 
-        return if (loaded != null) ImageBlock(loaded, image.alt)
-        else ImagePlaceholder("Image: ${image.alt}  (${image.source})", renderedTheme)
+        return if (loaded != null) {
+            ImageBlock(loaded, image.alt)
+        }
+        else {
+            ImagePlaceholder("Image: ${image.alt}  (${image.source})", renderedTheme)
+        }
     }
 
     /** [source] as written in the document, resolved against [baseUri]; null if it isn't a valid URI. */
-    private fun resolve(source: String): URI? = try
-    {
-        val uri = if (source.contains(':')) URI(source)
-        else URI(null, null, source.substringBefore('#'), source.substringAfter('#', "").ifEmpty { null })
+    private fun resolve(source: String): URI? = try {
+        val uri = if (source.contains(':')) {
+            URI(source)
+        }
+        else {
+            URI(null, null, source.substringBefore('#'), source.substringAfter('#', "").ifEmpty { null })
+        }
 
         baseUri?.resolve(uri) ?: uri
     }
-    catch (_: Exception)
-    {
+    catch (_: Exception) {
         null
     }
 
-    private fun listItem(list: Block.Bullets, index: Int, item: Block.Item, foreground: Color): JComponent
-    {
-        val marker = when
-        {
-            item.checked == true -> "☑"
+    private fun listItem(list: Block.Bullets, index: Int, item: Block.Item, foreground: Color): JComponent {
+        val marker = when {
+            item.checked == true  -> "☑"
             item.checked == false -> "☐"
-            list.ordered -> "${list.start + index}."
-            else -> "•"
+            list.ordered          -> "${list.start + index}."
+            else                  -> "•"
         }
-        val markerColor = if (item.checked == true) renderedTheme.success else renderedTheme.accent
+
+        val markerColor = if (item.checked == true) {
+            renderedTheme.success
+        }
+        else {
+            renderedTheme.accent
+        }
 
         val content = column()
         addBlocks(content, item.blocks, foreground, gap = 4)
@@ -271,50 +283,61 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
     }
 
     /** A box holding syntax-coloured code. Long lines scroll sideways inside the box instead of wrapping. */
-    private fun code(block: Block.Code): JComponent
-    {
+    private fun code(block: Block.Code): JComponent {
         val language = Language.forFence(block.language)
+
         val text = CodeText(renderedTheme).apply {
             isOpaque = false
-            border = BorderFactory.createEmptyBorder()
+            border   = BorderFactory.createEmptyBorder()
+
             show(block.code, language)
         }
 
-        val scroll = object : JScrollPane(text, VERTICAL_SCROLLBAR_NEVER, HORIZONTAL_SCROLLBAR_AS_NEEDED)
-        {
+        val scroll = object : JScrollPane(text, VERTICAL_SCROLLBAR_NEVER, HORIZONTAL_SCROLLBAR_AS_NEEDED) {
             // JScrollPane doesn't count an as-needed scrollbar in its preferred height, so it would cover the last line.
-            override fun getPreferredSize(): Dimension
-            {
-                val content = text.preferredSize
+            override fun getPreferredSize(): Dimension {
+                val content  = text.preferredSize
                 val needsBar = width > 0 && content.width > width - insets.left - insets.right
-                val bar = if (needsBar) horizontalScrollBar.preferredSize.height else 0
+
+                val bar = if (needsBar) {
+                    horizontalScrollBar.preferredSize.height
+                }
+                else {
+                    0
+                }
 
                 return Dimension(content.width, content.height + bar + insets.top + insets.bottom)
             }
         }.apply {
             // Not null: updateUI() (run on every theme switch) treats a null border as unset and installs the look and
             // feel's, which in FlatLaf draws a focus ring whenever the code inside is clicked.
-            border = BorderFactory.createEmptyBorder()
-            isOpaque = false
-            viewport.isOpaque = false
+            border    = BorderFactory.createEmptyBorder()
+            isOpaque  = false
+            viewport.isOpaque       = false
             isWheelScrollingEnabled = false  // let the mouse wheel scroll the page, not this
         }
 
         // Header: the language (its proper name when known, e.g. "rs" -> "Rust") and a Copy button.
         val header = JPanel(BorderLayout()).apply {
             isOpaque = false
-            border = EmptyBorder(0, 0, 6, 0)
+            border   = EmptyBorder(0, 0, 6, 0)
+
             add(JLabel(language?.displayName ?: block.language.orEmpty()).apply {
                 foreground = renderedTheme.muted
-                font = renderedTheme.smallFont
+                font       = renderedTheme.smallFont
             }, BorderLayout.WEST)
+
             add(JButton("Copy").apply {
                 putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON)
                 putClientProperty(FlatClientProperties.STYLE, "margin: 1,6,1,6")
-                font = renderedTheme.smallFont
-                foreground = renderedTheme.muted
+
+                font        = renderedTheme.smallFont
+                foreground  = renderedTheme.muted
                 isFocusable = false
-                addActionListener { Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(block.code), null) }
+
+                addActionListener {
+                    Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(block.code), null)
+                }
             }, BorderLayout.EAST)
         }
 
@@ -324,18 +347,16 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
         }
     }
 
-    private fun table(block: Block.Table): JComponent
-    {
+    private fun table(block: Block.Table): JComponent {
         val box = RoundedBox(renderedTheme, GridBagLayout())
         val c = GridBagConstraints().apply {
             anchor = GridBagConstraints.WEST
-            fill = GridBagConstraints.HORIZONTAL
+            fill   = GridBagConstraints.HORIZONTAL
             insets = Insets(4, 0, 4, 24)
-            gridy = 0
+            gridy  = 0
         }
 
-        fun row(cells: List<List<Inline>>, font: Font)
-        {
+        fun row(cells: List<List<Inline>>, font: Font) {
             cells.forEachIndexed { column, cell ->
                 c.gridx = column
                 c.weightx = if (column == cells.lastIndex) 1.0 else 0.0
@@ -347,10 +368,10 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
         row(block.header, renderedTheme.font.deriveFont(Font.BOLD))
 
         box.add(JSeparator().apply { foreground = renderedTheme.border }, GridBagConstraints().apply {
-            gridy = c.gridy++
+            gridy     = c.gridy++
             gridwidth = GridBagConstraints.REMAINDER
-            fill = GridBagConstraints.HORIZONTAL
-            insets = Insets(2, 0, 2, 0)
+            fill      = GridBagConstraints.HORIZONTAL
+            insets    = Insets(2, 0, 2, 0)
         })
 
         block.rows.forEach { row(it, renderedTheme.font) }

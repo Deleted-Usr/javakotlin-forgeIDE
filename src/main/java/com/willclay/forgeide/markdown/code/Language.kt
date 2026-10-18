@@ -22,44 +22,46 @@ enum class Language(
     private val extensions: Set<String> = emptySet(),
 )
 {
-    JAVA("Java", "J", Color(0xB07219), Lexer.C_LIKE, true, Keywords.JAVA, setOf("java")),
-    KOTLIN("Kotlin", "K", Color(0xA97BFF), Lexer.C_LIKE, true, Keywords.KOTLIN, setOf("kt", "kts")),
-    CPP("C++", "C", Color(0xF34B7D), Lexer.C_LIKE, true, Keywords.CPP, setOf("cpp", "cc", "cxx", "c", "h", "hpp", "hh", "hxx")),
-    RUST("Rust", "R", Color(0xDEA584), Lexer.C_LIKE, true, Keywords.RUST, setOf("rs")),
-    JSON("JSON", "{}", Color(0xCBCB41), Lexer.JSON, false, extensions = setOf("json")),
-    XML("XML", "<>", Color(0xE37933), Lexer.XML, false, extensions = setOf("xml", "iml", "vcxproj", "filters", "slnx", "user", "svg")),
-    MARKDOWN("Markdown", "M", Color(0x6B9BD2), Lexer.MARKDOWN, false, extensions = setOf("md", "markdown")),
-    PROPERTIES("Properties", "P", Color(0x8A8F98), Lexer.HASH_COMMENTS, false, extensions = setOf("properties", "toml", "gitignore", "gitattributes", "editorconfig")),
-    SHELL("Shell", "$", Color(0x89E051), Lexer.HASH_COMMENTS, false, extensions = setOf("sh", "bash")),
-    TEXT("Plain Text", "T", Color(0x8A8F98), Lexer.PLAIN, false, extensions = setOf("txt", "csv", "log", "bat", "cmd", "map")),
-    IMAGE("Image", "I", Color(0x5FB3A1), Lexer.PLAIN, false, extensions = setOf("png", "jpg", "jpeg", "gif", "bmp")),
-    BINARY("Binary", "B", Color(0x6E737B), Lexer.PLAIN, false);
+    JAVA       ("Java", "J", Color(0xB07219), Lexer.C_LIKE, true, Keywords.JAVA, setOf("java")),
+    KOTLIN     ("Kotlin", "K", Color(0xA97BFF), Lexer.C_LIKE, true, Keywords.KOTLIN, setOf("kt", "kts")),
+    CPP        ("C++", "C", Color(0xF34B7D), Lexer.C_LIKE, true, Keywords.CPP, setOf("cpp", "cc", "cxx", "c", "h", "hpp", "hh", "hxx")),
+    RUST       ("Rust", "R", Color(0xDEA584), Lexer.C_LIKE, true, Keywords.RUST, setOf("rs")),
+    JSON       ("JSON", "{}", Color(0xCBCB41), Lexer.JSON, false, extensions = setOf("json")),
+    XML        ("XML", "<>", Color(0xE37933), Lexer.XML, false, extensions = setOf("xml", "iml", "vcxproj", "filters", "slnx", "user", "svg")),
+    MARKDOWN   ("Markdown", "M", Color(0x6B9BD2), Lexer.MARKDOWN, false, extensions = setOf("md", "markdown")),
+    PROPERTIES ("Properties", "P", Color(0x8A8F98), Lexer.HASH_COMMENTS, false, extensions = setOf("properties", "toml", "gitignore", "gitattributes", "editorconfig")),
+    SHELL      ("Shell", "$", Color(0x89E051), Lexer.HASH_COMMENTS, false, extensions = setOf("sh", "bash")),
+    TEXT       ("Plain Text", "T", Color(0x8A8F98), Lexer.PLAIN, false, extensions = setOf("txt", "csv", "log", "bat", "cmd", "map")),
+    IMAGE      ("Image", "I", Color(0x5FB3A1), Lexer.PLAIN, false, extensions = setOf("png", "jpg", "jpeg", "gif", "bmp")),
+    BINARY     ("Binary", "B", Color(0x6E737B), Lexer.PLAIN, false);
 
     val isImage: Boolean get() = this == IMAGE
 
-    companion object
-    {
+    companion object {
         private val byExtension: Map<String, Language> = entries.flatMap { language -> language.extensions.map { it to language } }.toMap()
 
         /** By file name, or null for an unknown extension (callers decide between [TEXT] and [BINARY]). */
-        fun of(fileName: String): Language?
-        {
-            val name = fileName.lowercase()
-            val extension = if (name.startsWith(".") && name.count { it == '.' } == 1) name.drop(1) else name.substringAfterLast('.', "")
+        fun of(fileName: String): Language? {
+            val name      = fileName.lowercase()
+            val extension = if (name.startsWith(".") && name.count { it == '.' } == 1) {
+                name.drop(1)
+            }
+            else {
+                name.substringAfterLast('.', "")
+            }
 
             return byExtension[extension]
         }
 
         /** Names people write after ``` that aren't also a file extension. */
         private val fenceAliases: Map<String, Language> = mapOf(
-            "kotlin" to KOTLIN, "rust" to RUST, "c++" to CPP, "markdown" to MARKDOWN, "html" to XML,
-            "shell" to SHELL, "console" to SHELL, "zsh" to SHELL, "gradle" to KOTLIN, "text" to TEXT, "plaintext" to TEXT,
+            "kotlin" to KOTLIN, "rust"    to RUST,  "c++" to CPP,   "markdown" to MARKDOWN, "html" to XML,
+            "shell"  to SHELL,  "console" to SHELL, "zsh" to SHELL, "gradle"   to KOTLIN,   "text" to TEXT, "plaintext" to TEXT,
         )
 
         /** The language of a fenced code block (```rust, ```Kotlin, ```kts …), or null if unknown or not given. */
         @JvmStatic
-        fun forFence(name: String?): Language?
-        {
+        fun forFence(name: String?): Language? {
             val key = name?.trim()?.lowercase()?.takeIf { it.isNotEmpty() } ?: return null
             return fenceAliases[key] ?: byExtension[key]
         }

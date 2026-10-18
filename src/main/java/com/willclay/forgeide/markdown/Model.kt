@@ -5,8 +5,7 @@ package com.willclay.forgeide.markdown
  * so the renderer never deals with the parser's token types, and the conversion can be unit-tested
  * without any Swing.
  */
-sealed interface Block
-{
+sealed interface Block {
     /** @param anchor GitHub-style id ("Keyboard shortcuts" -> "keyboard-shortcuts") for "#..." links */
     data class Heading(val level: Int, val text: List<Inline>, val anchor: String) : Block
 
@@ -27,8 +26,7 @@ sealed interface Block
     data class Item(val checked: Boolean?, val blocks: List<Block>)
 }
 
-sealed interface Inline
-{
+sealed interface Inline {
     data class Text(val text: String) : Inline
 
     data class Strong(val children: List<Inline>) : Inline
@@ -46,14 +44,13 @@ sealed interface Inline
 
 /** The text of some inlines with all formatting dropped, e.g. for anchors and the outline. */
 fun List<Inline>.plainText(): String = joinToString("") {
-    when (it)
-    {
-        is Inline.Text -> it.text
-        is Inline.Code -> it.code
-        is Inline.Image -> it.alt
-        is Inline.Strong -> it.children.plainText()
-        is Inline.Emphasis -> it.children.plainText()
+    when (it) {
+        is Inline.Text          -> it.text
+        is Inline.Code          -> it.code
+        is Inline.Image         -> it.alt
+        is Inline.Strong        -> it.children.plainText()
+        is Inline.Emphasis      -> it.children.plainText()
         is Inline.Strikethrough -> it.children.plainText()
-        is Inline.Link -> it.children.plainText()
+        is Inline.Link          -> it.children.plainText()
     }
 }

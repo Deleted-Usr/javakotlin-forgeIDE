@@ -39,8 +39,7 @@ data class MarkdownTheme(
     /** The font for a heading of [level] 1 to 6. */
     fun headingFont(level: Int): Font = headingFonts[(level - 1).coerceIn(0, headingFonts.lastIndex)]
 
-    companion object
-    {
+    companion object {
         /**
          * A theme from the current look and feel. Each value is read from the first key that's set:
          *
@@ -65,34 +64,33 @@ data class MarkdownTheme(
          * the background, so this works under any look and feel, not just FlatLaf.
          */
         @JvmStatic
-        fun fromUIManager(): MarkdownTheme
-        {
-            val box = color("Markdown.boxBackground", "Panel.background") ?: Color(0xF6F8FA)
-            val dark = luminance(box) < 0.5
+        fun fromUIManager(): MarkdownTheme {
+            val box        = color("Markdown.boxBackground", "Panel.background") ?: Color(0xF6F8FA)
+            val dark       = luminance(box) < 0.5
             val foreground = color("Markdown.foreground", "Label.foreground") ?: if (dark) Color(0xDFE1E5) else Color(0x1F2328)
-            val link = color("Markdown.linkColor", "Component.linkColor") ?: if (dark) Color(0x89B5DF) else Color(0x0969DA)
+            val link       = color("Markdown.linkColor", "Component.linkColor") ?: if (dark) Color(0x89B5DF) else Color(0x0969DA)
 
-            val font = font("Markdown.font", "Label.font") ?: Font(Font.SANS_SERIF, Font.PLAIN, 13)
+            val font         = font("Markdown.font", "Label.font") ?: Font(Font.SANS_SERIF, Font.PLAIN, 13)
             val headingSteps = listOf(10, 6, 3, 1)
-            val headings = headingSteps.mapIndexed { index, step ->
+            val headings     = headingSteps.mapIndexed { index, step ->
                 font("h${index + 1}.font") ?: font.deriveFont(Font.BOLD, font.size2D + step)
             }
 
             return MarkdownTheme(
-                foreground = foreground,
-                muted = color("Markdown.mutedForeground", "Label.disabledForeground") ?: blend(foreground, box, 0.45),
-                link = link,
-                accent = color("Markdown.accentColor", "Component.accentColor") ?: link,
-                success = color("Markdown.successColor", "Actions.Green") ?: if (dark) Color(0x8DC59A) else Color(0x1A7F37),
-                border = color("Markdown.borderColor", "Component.borderColor", "Separator.foreground") ?: blend(foreground, box, 0.2),
-                background = color("Markdown.background", "TextPane.background") ?: box,
-                box = box,
-                chip = color("Markdown.chipBackground") ?: blend(foreground, box, 0.1),
-                font = font,
-                smallFont = font("small.font") ?: font.deriveFont(font.size2D - 2),
+                foreground   = foreground,
+                muted        = color("Markdown.mutedForeground", "Label.disabledForeground") ?: blend(foreground, box, 0.45),
+                link         = link,
+                accent       = color("Markdown.accentColor", "Component.accentColor") ?: link,
+                success      = color("Markdown.successColor", "Actions.Green") ?: if (dark) Color(0x8DC59A) else Color(0x1A7F37),
+                border       = color("Markdown.borderColor", "Component.borderColor", "Separator.foreground") ?: blend(foreground, box, 0.2),
+                background   = color("Markdown.background", "TextPane.background") ?: box,
+                box          = box,
+                chip         = color("Markdown.chipBackground") ?: blend(foreground, box, 0.1),
+                font         = font,
+                smallFont    = font("small.font") ?: font.deriveFont(font.size2D - 2),
                 headingFonts = headings,
-                codeFont = font("Markdown.codeFont") ?: monospaceFont(font.size),
-                code = CodeColors.fromUIManager((if (dark) CodeColors.DARK else CodeColors.LIGHT).copy(plain = foreground)),
+                codeFont     = font("Markdown.codeFont") ?: monospaceFont(font.size),
+                code         = CodeColors.fromUIManager((if (dark) CodeColors.DARK else CodeColors.LIGHT).copy(plain = foreground)),
             )
         }
 
@@ -125,8 +123,7 @@ data class MarkdownTheme(
         private fun luminance(c: Color) = (0.2126 * c.red + 0.7152 * c.green + 0.0722 * c.blue) / 255
 
         /** [amount] of the way from [to] towards [from]. */
-        private fun blend(from: Color, to: Color, amount: Double): Color
-        {
+        private fun blend(from: Color, to: Color, amount: Double): Color {
             fun mix(a: Int, b: Int) = (b + (a - b) * amount).toInt().coerceIn(0, 255)
             return Color(mix(from.red, to.red), mix(from.green, to.green), mix(from.blue, to.blue))
         }
@@ -158,38 +155,37 @@ data class CodeColors(
         /** Forge Dark's code colours. */
         @JvmField
         val DARK = CodeColors(
-            plain = Color(0xDFE1E5),
-            keyword = Color(0xD99A70), function = Color(0xE1BD78), string = Color(0xA5C99B), number = Color(0x89B5DF),
-            comment = Color(0x9098A5), docComment = Color(0x9CAE9C), annotation = Color(0xBEA2E0), punctuation = Color(0xB8BDC6),
+            plain     = Color(0xDFE1E5),
+            keyword   = Color(0xD99A70), function = Color(0xE1BD78), string = Color(0xA5C99B), number = Color(0x89B5DF),
+            comment   = Color(0x9098A5), docComment = Color(0x9CAE9C), annotation = Color(0xBEA2E0), punctuation = Color(0xB8BDC6),
             selection = Color(0x795A46),
         )
 
         /** GitHub-like colours for light themes. */
         @JvmField
         val LIGHT = CodeColors(
-            plain = Color(0x1F2328),
-            keyword = Color(0xCF222E), function = Color(0x8250DF), string = Color(0x0A3069), number = Color(0x0550AE),
-            comment = Color(0x6E7781), docComment = Color(0x57606A), annotation = Color(0x953800), punctuation = Color(0x24292F),
+            plain     = Color(0x1F2328),
+            keyword   = Color(0xCF222E), function = Color(0x8250DF), string = Color(0x0A3069), number = Color(0x0550AE),
+            comment   = Color(0x6E7781), docComment = Color(0x57606A), annotation = Color(0x953800), punctuation = Color(0x24292F),
             selection = Color(0xB6D7FF),
         )
 
         /** The `Markdown.code.*` keys that are set, with [defaults] for the rest. */
         @JvmStatic
-        fun fromUIManager(defaults: CodeColors): CodeColors
-        {
+        fun fromUIManager(defaults: CodeColors): CodeColors {
             fun key(name: String, default: Color) = MarkdownTheme.color("Markdown.code.$name") ?: default
 
             return defaults.copy(
-                plain = key("plain", defaults.plain),
-                keyword = key("keyword", defaults.keyword),
-                function = key("function", defaults.function),
-                string = key("string", defaults.string),
-                number = key("number", defaults.number),
-                comment = key("comment", defaults.comment),
-                docComment = key("docComment", defaults.docComment),
-                annotation = key("annotation", defaults.annotation),
+                plain       = key("plain", defaults.plain),
+                keyword     = key("keyword", defaults.keyword),
+                function    = key("function", defaults.function),
+                string      = key("string", defaults.string),
+                number      = key("number", defaults.number),
+                comment     = key("comment", defaults.comment),
+                docComment  = key("docComment", defaults.docComment),
+                annotation  = key("annotation", defaults.annotation),
                 punctuation = key("punctuation", defaults.punctuation),
-                selection = key("selection", defaults.selection),
+                selection   = key("selection", defaults.selection),
             )
         }
     }

@@ -21,9 +21,7 @@ import javax.swing.*;
  *  - Image viewer
  *  - Scrolling settings in the IDE settings page
  *  - Small hover info dialogs for classes, methods, etc.
- *  - Colour swatch in gutter (with JColorPicker)
  *  - Lines of Code counter
- *  - Markdown editor syntax highlighting
  *  - File icons based on type (icons for final classes, abstract classes, interfaces, etc.)
  *  - Multi-Language projects (Add language project)
  *  - IntelliJ-style double shift project search function

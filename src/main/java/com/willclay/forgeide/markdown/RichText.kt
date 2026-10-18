@@ -25,15 +25,13 @@ internal class RichText(
     private val links: LinkHandler,
     font: Font = theme.font,
     foreground: Color = theme.foreground,
-) : JTextPane()
-{
-    init
-    {
-        isEditable = false
+) : JTextPane() {
+    init {
+        isEditable  = false
         isFocusable = false
-        isOpaque = false
-        border = BorderFactory.createEmptyBorder()  // not null, or a theme switch installs the look and feel's
-        margin = Insets(0, 0, 0, 0)
+        isOpaque    = false
+        border      = BorderFactory.createEmptyBorder()  // not null, or a theme switch installs the look and feel's
+        margin      = Insets(0, 0, 0, 0)
         highlighter = null
 
         // Otherwise the caret follows every insert to the end of the text, and once the page is shown it
@@ -42,7 +40,8 @@ internal class RichText(
 
         // Without this the default style ignores the component's font and colour.
         putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, true)
-        this.font = font
+
+        this.font       = font
         this.foreground = foreground
 
         append(inlines, SimpleAttributeSet())
@@ -50,54 +49,47 @@ internal class RichText(
 
         toolTipText = ""  // registers with ToolTipManager; the text comes from getToolTipText(MouseEvent)
 
-        val mouse = object : MouseAdapter()
-        {
-            override fun mouseMoved(e: MouseEvent)
-            {
+        val mouse = object : MouseAdapter() {
+            override fun mouseMoved(e: MouseEvent) {
                 cursor = Cursor.getPredefinedCursor(if (linkAt(e) != null) Cursor.HAND_CURSOR else Cursor.DEFAULT_CURSOR)
             }
 
-            override fun mouseClicked(e: MouseEvent)
-            {
+            override fun mouseClicked(e: MouseEvent) {
                 linkAt(e)?.let(links::open)
             }
         }
+
         addMouseListener(mouse)
         addMouseMotionListener(mouse)
     }
 
     override fun getToolTipText(event: MouseEvent): String? = linkAt(event)
 
-    private fun linkAt(event: MouseEvent): String?
-    {
+    private fun linkAt(event: MouseEvent): String? {
         val offset = viewToModel2D(event.point)
-        if (offset < 0 || offset >= styledDocument.length)
-        {
+        if (offset < 0 || offset >= styledDocument.length) {
             return null
         }
 
         // viewToModel2D snaps to the nearest character, so also check the pointer is really over it.
-        val box = modelToView2D(offset) ?: return null
-        val next = modelToView2D(offset + 1)
+        val box   = modelToView2D(offset) ?: return null
+        val next  = modelToView2D(offset + 1)
         val right = if (next != null && next.y == box.y) next.x else box.x + box.width
-        if (event.x < minOf(box.x, right) - 1 || event.x > maxOf(box.x, right) + 1)
-        {
+
+        if (event.x < minOf(box.x, right) - 1 || event.x > maxOf(box.x, right) + 1) {
             return null
         }
 
         return styledDocument.getCharacterElement(offset).attributes.getAttribute(LINK) as? String
     }
 
-    private fun append(inlines: List<Inline>, style: AttributeSet)
-    {
-        for (inline in inlines)
-        {
-            when (inline)
-            {
+    private fun append(inlines: List<Inline>, style: AttributeSet) {
+        for (inline in inlines) {
+            when (inline) {
                 is Inline.Text -> styledDocument.insertString(styledDocument.length, inline.text, style)
 
-                is Inline.Strong -> append(inline.children, style.with { StyleConstants.setBold(it, true) })
-                is Inline.Emphasis -> append(inline.children, style.with { StyleConstants.setItalic(it, true) })
+                is Inline.Strong        -> append(inline.children, style.with { StyleConstants.setBold(it, true) })
+                is Inline.Emphasis      -> append(inline.children, style.with { StyleConstants.setItalic(it, true) })
                 is Inline.Strikethrough -> append(inline.children, style.with { StyleConstants.setStrikeThrough(it, true) })
 
                 is Inline.Code -> styledDocument.insertString(styledDocument.length, " ${inline.code} ", style.with {
@@ -119,8 +111,7 @@ internal class RichText(
         }
     }
 
-    private companion object
-    {
+    private companion object {
         /** Attribute key marking link text; its value is the link destination. */
         val LINK = Any()
     }

@@ -18,8 +18,7 @@ import org.intellij.markdown.parser.MarkdownParser
  * Anything this doesn't recognise (HTML, reference links, ...) degrades to its plain text
  * rather than disappearing.
  */
-object Markdown
-{
+object Markdown {
     private val flavour = GFMFlavourDescriptor()
 
     private val headingLevels: Map<IElementType, Int> = mapOf(
@@ -133,15 +132,15 @@ object Markdown
 
                 when (node.type) {
                     // Bold, italic and strikethrough keep their marker tokens as children: ** text **
-                    MarkdownElementTypes.STRONG -> add(Inline.Strong(inlines(node.children.drop(2).dropLast(2))))
-                    MarkdownElementTypes.EMPH -> add(Inline.Emphasis(inlines(node.children.drop(1).dropLast(1))))
+                    MarkdownElementTypes.STRONG   -> add(Inline.Strong(inlines(node.children.drop(2).dropLast(2))))
+                    MarkdownElementTypes.EMPH     -> add(Inline.Emphasis(inlines(node.children.drop(1).dropLast(1))))
                     GFMElementTypes.STRIKETHROUGH -> add(Inline.Strikethrough(inlines(node.children.drop(2).dropLast(2))))
 
                     MarkdownElementTypes.CODE_SPAN -> add(Inline.Code(node.text().trim('`').trim()))
 
                     MarkdownElementTypes.INLINE_LINK -> add(link(node))
-                    MarkdownElementTypes.AUTOLINK -> node.text().trim('<', '>').let { add(Inline.Link(it, listOf(Inline.Text(it)))) }
-                    GFMTokenTypes.GFM_AUTOLINK -> node.text().let { add(Inline.Link(it, listOf(Inline.Text(it)))) }
+                    MarkdownElementTypes.AUTOLINK    -> node.text().trim('<', '>').let { add(Inline.Link(it, listOf(Inline.Text(it)))) }
+                    GFMTokenTypes.GFM_AUTOLINK       -> node.text().let { add(Inline.Link(it, listOf(Inline.Text(it)))) }
 
                     MarkdownElementTypes.IMAGE -> {
                         val link = node.findChildOfType(MarkdownElementTypes.INLINE_LINK)
@@ -154,7 +153,7 @@ object Markdown
                     }
 
                     // A single newline inside a paragraph is just a space; a hard break is a real one.
-                    MarkdownTokenTypes.EOL -> add(Inline.Text(" "))
+                    MarkdownTokenTypes.EOL             -> add(Inline.Text(" "))
                     MarkdownTokenTypes.HARD_LINE_BREAK -> add(Inline.Text("\n"))
 
                     // Continuation markers of a multi-line quote ("> ") inside its paragraph.

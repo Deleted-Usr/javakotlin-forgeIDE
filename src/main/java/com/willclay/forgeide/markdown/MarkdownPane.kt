@@ -20,8 +20,7 @@ class MarkdownPane @JvmOverloads constructor(markdown: String = "", links: LinkH
 {
     val view = MarkdownView(markdown, links)
 
-    init
-    {
+    init {
         border = BorderFactory.createEmptyBorder()  // not null, or a theme switch puts the look and feel's border back
         view.border = EmptyBorder(UIScale.scale(20), UIScale.scale(28), UIScale.scale(28), UIScale.scale(28))
         setViewportView(view)
