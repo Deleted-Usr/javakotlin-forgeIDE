@@ -26,12 +26,16 @@ class LanguagePluginLoader(
     fun discover(warnings: MutableList<BootstrapWarning>): LanguageDiscovery {
         val accepted = LinkedHashMap<String, Language>()
 
+        // Every provider class pass 1 enumerated, so pass 2 can tell a built-in
+        // it sees again apart from a plugin class shadowed by the host.
+        val builtInTypes = HashSet<Class<*>>()
+
         // Pass 1 - Built-ins, from the application class loader.
         val builtIn = ServiceLoader.load(
             LanguageProvider::class.java,
             LanguageProvider::class.java.classLoader
         )
-        collect(builtIn, accepted, warnings, external = false)
+        collect(builtIn, accepted, warnings, builtInTypes, external = false)
 
         // Pass 2 - external plugin JARs.
         val jars = pluginJars(warnings)
@@ -44,7 +48,7 @@ class LanguagePluginLoader(
             )
             collect(
                 ServiceLoader.load(LanguageProvider::class.java, pluginLoader),
-                accepted, warnings, external = true, onlyFrom = pluginLoader
+                accepted, warnings, builtInTypes, external = true, onlyFrom = pluginLoader
             )
         }
 
@@ -55,6 +59,7 @@ class LanguagePluginLoader(
         providers : ServiceLoader<LanguageProvider>,
         accepted  : MutableMap<String, Language>,
         warnings  : MutableList<BootstrapWarning>,
+        builtIns  : MutableSet<Class<*>>,
         external  : Boolean,
         onlyFrom  : ClassLoader? = null
     ) {
@@ -87,12 +92,30 @@ class LanguagePluginLoader(
                 continue
             }
 
-            // The plugin loader delegates to the application loader, so pass 2
-            // re-enumerates every built-in provider. Without this, each one is
-            // reported as a duplicate of itself.
-            if (onlyFrom != null && candidate.type().classLoader !== onlyFrom) continue
+            val type = candidate.type()
+            val name = type.name
 
-            val name = candidate.type().name
+            if (onlyFrom == null) {
+                builtIns += type
+            } else if (type.classLoader !== onlyFrom) {
+                // The plugin loader delegates to the application loader, so pass 2
+                // re-enumerates every built-in provider. Without this, each one is
+                // reported as a duplicate of itself.
+                if (type in builtIns) continue
+
+                // Otherwise a plugin's service file named a class that the host
+                // ALSO contains (usually a stale copy left in ForgeIDE.jar).
+                // Parent-first loading means the host's class wins, and the
+                // plugin's own class never loads, so say so rather than drop it.
+                warnings += BootstrapWarning(
+                    name,
+                    "plugin ignored: its provider class is shadowed by a class of the " +
+                    "same name inside ForgeIDE itself. ForgeIDE was probably built from " +
+                    "stale sources."
+                )
+                continue
+            }
+
             try {
                 val provider = candidate.get()
                 val pluginId = require(provider.pluginId(), "pluginId", name)

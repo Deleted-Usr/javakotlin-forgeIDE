@@ -19,7 +19,6 @@ import javax.swing.*;
 /*
  * TODO:
  *  - Image viewer
- *  - Scrolling settings in the IDE settings page
  *  - Small hover info dialogs for classes, methods, etc.
  *  - Lines of Code counter
  *  - File icons based on type (icons for final classes, abstract classes, interfaces, etc.)
@@ -62,7 +61,7 @@ import javax.swing.*;
 /// only consulted when a component is created.
 public final class Main
 {
-    private static final int INITIAL_WIDTH = 1920;
+    private static final int INITIAL_WIDTH  = 1920;
     private static final int INITIAL_HEIGHT = 1080;
 
     public static void main(String[] args) // The Entry Point for the Program
@@ -85,7 +84,9 @@ public final class Main
             // A dialog as well: started from ForgeIDE.exe there is no console,
             // so stderr alone would leave the user with nothing at all.
             SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
-                    null, ex.getMessage(), "Forge IDE could not start", JOptionPane.ERROR_MESSAGE));
+                    null, ex.getMessage(), "Forge IDE could not start", JOptionPane.ERROR_MESSAGE)
+            );
+
             return;
         }
 
