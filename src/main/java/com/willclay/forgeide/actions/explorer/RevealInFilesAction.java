@@ -15,7 +15,7 @@ import java.util.Locale;
 /// Java has no cross-platform way to *select* a file in the file manager, so
 /// this runs each platform's own command:
 ///
-/// - Windows: `explorer /select,<path>`
+/// - Windows: `explorer /select, <path>`
 /// - macOS:   `open -R <path>`
 /// - Others:  no standard command, so fall back to [Desktop#open] on the
 ///   parent folder. The folder opens, but nothing is selected.
@@ -58,7 +58,11 @@ public final class RevealInFilesAction extends ExplorerAction
         {
             if (WINDOWS)
             {
-                launch(List.of("explorer", "/select," + target));
+                // "/select," and the path must be separate arguments. Java quotes
+                // any argument containing a space, and Explorer ignores a quoted
+                // "/select,..." switch, opening its default folder instead.
+                // Split, only the path gets quoted: explorer /select, "C:\a b\c"
+                launch(List.of("explorer", "/select,", target.toString()));
             }
             else if (MAC)
             {

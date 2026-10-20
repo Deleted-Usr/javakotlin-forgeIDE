@@ -33,8 +33,11 @@ under the `ui.editor.tabs` package.
 - Themes share a `Theme` interface (`AppTheme` for built-in themes, `CustomTheme` for documents), and
 `SettingsService.getTheme()` is replaced by `getThemeId()`: a saved theme id that matches no theme is now kept rather
 than reset, so a custom theme with a broken document comes back once it is fixed.
-- The status bar shows the theme actually applied, with the document's path in its tooltip for a custom theme.
+- The status bar shows the theme actually applied, with the document's path in its tooltip for a custom theme
 - The tab gutter not delegates painting to subclasses instead of painting directly from `paintComponent`
+
+### Fixed
+- Fixed a bug in `RevealInFilesAction.java` where the explorer would open, but not to the correct directory.
 
 ## [1.3.1] - 2026-10-11
 
