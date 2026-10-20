@@ -15,7 +15,7 @@ sourceSets {
 }
 
 group = "com.willclay"
-version = "1.3.2"
+version = "1.4.0"
 
 repositories {
     mavenCentral()

@@ -35,7 +35,7 @@ val icoSizes = intArrayOf(
 
 val splashSize = 512
 
-val pngDir = Path.of(
+val pngDir: Path = Path.of(
     "src/main/resources/com/willclay/forgeide/icons/app"
 )
 
@@ -84,12 +84,12 @@ fun render(
     if (!markOnly) { drawTile(g, tiny) }
 
     val anvil = anvil()
-    g.setPaint(GradientPaint(0f, 112f, steelLight, 0f, 212f, steelDark))
+    g.paint = GradientPaint(0f, 112f, steelLight, 0f, 212f, steelDark)
     g.fill(anvil)
 
     // The face of the anvil catches the ingot's light.
-    g.setClip(anvil)
-    g.setPaint(GradientPaint(0f, 112f, withAlpha(hot, 150), 0f, 128f, withAlpha(hot, 0)))
+    g.clip = anvil
+    g.paint = GradientPaint(0f, 112f, withAlpha(hot, 150), 0f, 128f, withAlpha(hot, 0))
     g.fillRect(40, 112, 180, 16)
     g.setClip(null)
 
@@ -102,7 +102,7 @@ fun render(
 
     if (!tiny) glow(g, ingotX + ingotW / 2, 103.0, 70.0)
 
-    g.setPaint(GradientPaint(0f, ingotTop.toFloat(), whiteHot, 0f, 112f, hot))
+    g.paint = GradientPaint(0f, ingotTop.toFloat(), whiteHot, 0f, 112f, hot)
     g.fill(ingot)
 
 
@@ -127,19 +127,18 @@ fun drawTile(
     val inset = (if (tiny) 0 else 8).toDouble()
     val tile  = RoundRectangle2D.Double(inset, inset, 256 - 2 * inset, 256 - 2 * inset, 60.0, 60.0)
 
-    g.setPaint(GradientPaint(0f, 0f, tileTop, 0f, 256f, tileBottom))
+    g.paint = GradientPaint(0f, 0f, tileTop, 0f, 256f, tileBottom)
     g.fill(tile)
 
 
     // The forge's glow: warm light spilling from the ingot across the tile.
-    g.setClip(tile)
+    g.clip = tile
 
-    g.setPaint(RadialGradientPaint(
-            Point2D.Double(154.0, 108.0),
-            120f,
-            floatArrayOf(0f, 0.55f, 1f),
-            arrayOf<Color>(withAlpha(ember, 120), withAlpha(ember, 28), withAlpha(ember, 0))
-        )
+    g.paint = RadialGradientPaint(
+        Point2D.Double(154.0, 108.0),
+        120f,
+        floatArrayOf(0f, 0.55f, 1f),
+        arrayOf<Color>(withAlpha(ember, 120), withAlpha(ember, 28), withAlpha(ember, 0))
     )
 
     g.fill(tile)
@@ -147,8 +146,8 @@ fun drawTile(
 
     if (!tiny) {
         // A faint rim of light so the tile doesn't vanish on a dark taskbar.
-        g.setStroke(BasicStroke(3f))
-        g.setColor(Color(255, 255, 255, 22))
+        g.stroke = BasicStroke(3f)
+        g.color = Color(255, 255, 255, 22)
         g.draw(RoundRectangle2D.Double(inset + 1.5, inset + 1.5, 253 - 2 * inset, 253 - 2 * inset, 58.0, 58.0))
     }
 }
@@ -181,13 +180,12 @@ fun glow(
     cy: Double,
     radius: Double
 ) {
-    g.setPaint(RadialGradientPaint(
-            Point2D.Double(cx, cy),
-            radius.toFloat(),
-            floatArrayOf(0f, 0.4f, 1f),
-            arrayOf<Color>(withAlpha(hot, 170), withAlpha(ember, 60), withAlpha(ember, 0)),
-            MultipleGradientPaint.CycleMethod.NO_CYCLE
-        )
+    g.paint = RadialGradientPaint(
+        Point2D.Double(cx, cy),
+        radius.toFloat(),
+        floatArrayOf(0f, 0.4f, 1f),
+        arrayOf<Color>(withAlpha(hot, 170), withAlpha(ember, 60), withAlpha(ember, 0)),
+        MultipleGradientPaint.CycleMethod.NO_CYCLE
     )
 
     g.fill(Ellipse2D.Double(cx - radius, cy - radius, radius * 2, radius * 2))
@@ -199,17 +197,17 @@ fun spark(
     cy: Double,
     r: Double
 ) {
-    g.setPaint(RadialGradientPaint(
+    g.paint = RadialGradientPaint(
         Point2D.Double(cx, cy),
         (r * 3).toFloat(),
         floatArrayOf(0f, 1f),
         arrayOf(withAlpha(hot, 140), withAlpha(ember, 0))
-    ))
+    )
 
     g.fill(Ellipse2D.Double(cx - r * 3, cy - r * 3, r * 6, r * 6))
 
-    g.setComposite(AlphaComposite.SrcOver)
-    g.setColor(whiteHot)
+    g.composite = AlphaComposite.SrcOver
+    g.color = whiteHot
     g.fill(Ellipse2D.Double(cx - r, cy - r, r * 2, r * 2))
 }
 

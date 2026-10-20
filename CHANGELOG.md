@@ -5,7 +5,9 @@ All notable changes to ForgeIDE are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.4.0] - 2026-10-20
+
+This release focuses on a more distinct editor pane and gutter, custom themes, and small QOL changes.
 
 ### Added
 
@@ -34,10 +36,22 @@ under the `ui.editor.tabs` package.
 `SettingsService.getTheme()` is replaced by `getThemeId()`: a saved theme id that matches no theme is now kept rather
 than reset, so a custom theme with a broken document comes back once it is fixed.
 - The status bar shows the theme actually applied, with the document's path in its tooltip for a custom theme
-- The tab gutter not delegates painting to subclasses instead of painting directly from `paintComponent`
+- The tab gutter now delegates painting to subclasses instead of painting directly from `paintComponent`
+- Turn `ForgeIconGenerator.java` into a `.kts` Kotlin Script (`forge_icon_generator.kts`)
+
+## [1.3.2] - 2026-10-20
+
+A hotfix release so the Rust plugin actually loads.
+
+### Changed
+- Language plugins whose provider class is shadowed by a class inside ForgeIDE are now reported in the Console
+instead of being silently ignored.
 
 ### Fixed
-- Fixed a bug in `RevealInFilesAction.java` where the explorer would open, but not to the correct directory.
+- The Rust plugin did not appear in the New Project dialog: the 1.3.1 release was packaged with a stale `ForgeIDE.jar`
+that still contained the old built-in Rust placeholder, which shadowed the plugin's own provider.
+- Fixed a bug in `RevealInFilesAction.java` where the explorer would open, but not to the correct directory, for
+paths containing spaces.
 
 ## [1.3.1] - 2026-10-11
 
@@ -200,3 +214,5 @@ full move to the Gradle build system.
 [1.2.0]: https://github.com/Deleted-Usr/javakotlin-forgeIDE/compare/v1.1.0...v1.2.0
 [1.3.0]: https://github.com/Deleted-Usr/javakotlin-forgeIDE/compare/v1.2.0...v1.3.0
 [1.3.1]: https://github.com/Deleted-Usr/javakotlin-forgeIDE/compare/v1.3.0...v1.3.1
+[1.3.2]: https://github.com/Deleted-Usr/javakotlin-forgeIDE/compare/v1.3.1...v1.3.2
+[1.4.0]: https://github.com/Deleted-Usr/javakotlin-forgeIDE/compare/v1.3.2...v1.4.0

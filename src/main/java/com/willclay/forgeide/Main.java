@@ -22,6 +22,7 @@ import javax.swing.*;
  *  - Small hover info dialogs for classes, methods, etc.
  *  - Lines of Code counter
  *  - File icons based on type (icons for final classes, abstract classes, interfaces, etc.)
+ *  - Build System Support (Gradle/Maven)
  *  - Multi-Language projects (Add language project)
  *  - IntelliJ-style double shift project search function
  *  - lightweight editor - vs-code type (open a file and run without a project, jshell maybe?)
