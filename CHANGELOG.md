@@ -5,6 +5,14 @@ All notable changes to ForgeIDE are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Added
+
+#### Editor
+- The editor now paints a thin vertical line guide spanning opening and closing brackets. This can be turned on and off
+in a new settings option under Settings → General → Editor defaults → “Show indent guides between brackets”
+
 ## [1.4.0] - 2026-10-20
 
 This release focuses on a more distinct editor pane and gutter, custom themes, and small QOL changes.

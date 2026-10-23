@@ -64,6 +64,7 @@ public final class IDESettingsRuntime implements AutoCloseable
         );
         editorPanel.setMinimapVisible(editor.showMinimap());
         editorPanel.setColourSwatchesVisible(editor.showColourSwatches());
+        editorPanel.setIndentGuidesVisible(editor.showIndentGuides());
         editorPanel.setRenderDocCommentsByDefault(updated.docComments().renderByDefault());
         editorPanel.setDocCommentMaxColumns(updated.docComments().maxColumns());
         editorPanel.setTextRendering(updated.textRendering());

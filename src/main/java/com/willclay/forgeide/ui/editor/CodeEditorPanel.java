@@ -70,6 +70,7 @@ public final class CodeEditorPanel extends JPanel
     private boolean insertSpaces   = true;
     private boolean minimapVisible = true;
     private boolean colourSwatchesVisible = true;
+    private boolean indentGuidesVisible   = true;
     private boolean renderDocComments;
     private int docCommentMaxColumns = IDESettingsConfiguration.DEFAULT_DOC_COMMENT_COLUMNS;
     private TextRenderingHints textRendering = TextRenderingHints.from(new IDESettingsConfiguration.TextRendering());
@@ -342,6 +343,20 @@ public final class CodeEditorPanel extends JPanel
         }
     }
 
+    /// Shows or hides indent guides on every open tab and every future one.
+    public void setIndentGuidesVisible(boolean visible)
+    {
+        indentGuidesVisible = visible;
+
+        for (EditorTab tab : getOpenTabs())
+        {
+            if (tab.getTextPane() instanceof ForgeEditorPane editor)
+            {
+                editor.setIndentGuidesVisible(visible);
+            }
+        }
+    }
+
     /// Sets whether files open with their doc comments rendered.
     ///
     /// Only an actual change is applied to the open tabs, and it re-renders
@@ -447,6 +462,7 @@ public final class CodeEditorPanel extends JPanel
             editor.setRenderDocCommentsByDefault(renderDocComments);
             editor.setDocCommentMaxColumns(docCommentMaxColumns);
             editor.setTextRendering(textRendering);
+            editor.setIndentGuidesVisible(indentGuidesVisible);
         }
 
         tab.setTheme(theme);

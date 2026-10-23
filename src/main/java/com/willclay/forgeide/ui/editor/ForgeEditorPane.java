@@ -6,6 +6,8 @@ import com.willclay.forgeide.ui.editor.docs.DocCommentPainter;
 import com.willclay.forgeide.ui.gutter.elements.colours.ColourSwatchModel;
 import com.willclay.forgeide.ui.gutter.elements.foldarrows.FoldingModel;
 import com.willclay.forgeide.ui.editor.folding.FoldingViewFactory;
+import com.willclay.forgeide.ui.editor.guides.IndentGuideModel;
+import com.willclay.forgeide.ui.editor.guides.IndentGuidePainter;
 import com.willclay.forgeide.ui.editor.typing.BracketMatcher;
 import com.willclay.forgeide.ui.editor.typing.SmartTyping;
 
@@ -40,7 +42,8 @@ import java.awt.geom.Rectangle2D;
 /// [NoWrapTextPane] gives it long lines and a horizontal scrollbar. This
 /// class adds the four things that make it feel like an editor rather than a
 /// text box — a visible current line, a caret you can find, a selection that
-/// does not flatten the syntax colours, and matching brackets — and owns the
+/// does not flatten the syntax colours, matching brackets and indent guides —
+/// and owns the
 /// [FoldingModel] and [DocCommentModel] the gutter drives.
 ///
 /// **Why the decorations are highlights rather than painting.** The obvious
@@ -55,6 +58,10 @@ import java.awt.geom.Rectangle2D;
 /// layered ones on purpose: a plain painter is handed the whole component's
 /// bounds, which is what lets the current-line band run the full width of the
 /// editor instead of stopping at the last character on the line.
+///
+/// Plain highlights paint in the order they were added, so the opaque band
+/// is added before the indent guides — the other way round, it would cover
+/// them on the caret's line. [#installLineDecorations()] keeps that order.
 public final class ForgeEditorPane extends NoWrapTextPane
 {
     /// How long after the last edit the foldable regions are recomputed.
@@ -71,6 +78,8 @@ public final class ForgeEditorPane extends NoWrapTextPane
     private final SelectionPainter selectionPainter = new SelectionPainter(null);
     private final CurrentLinePainter currentLinePainter = new CurrentLinePainter();
     private final BracketPainter bracketPainter = new BracketPainter();
+    private final IndentGuideModel indentGuides = new IndentGuideModel();
+    private final IndentGuidePainter indentGuidePainter = new IndentGuidePainter(this, indentGuides);
     private final ForgeCaret caret = new ForgeCaret(selectionPainter);
 
     private final Timer foldingRefresh = new Timer(FOLDING_REFRESH_DELAY, event -> refreshFolding());
@@ -128,6 +137,7 @@ public final class ForgeEditorPane extends NoWrapTextPane
     private Object currentLineTag;
     private Object openBracketTag;
     private Object closeBracketTag;
+    private Object indentGuideTag;
 
     /// The line the band was last drawn on, so the old one can be repainted.
     private int highlightedLine = -1;
@@ -136,6 +146,7 @@ public final class ForgeEditorPane extends NoWrapTextPane
     {
         setCaret(caret);
         applyPalette();
+        installLineDecorations();
 
         docCommentPainter = new DocCommentPainter(this);
 
@@ -322,6 +333,10 @@ public final class ForgeEditorPane extends NoWrapTextPane
         getFoldingModel().recompute(getStyledDocument());
         getDocCommentModel().recompute(getStyledDocument());
         getColourSwatchModel().recompute(getStyledDocument());
+
+        indentGuides.recompute(getStyledDocument());
+        indentGuidePainter.caretMovedTo(getDocument().getDefaultRootElement().getElementIndex(getCaretPosition()));
+        repaint();
     }
 
     /// Drops every fold and rendered comment, for a document that is about to
@@ -332,6 +347,16 @@ public final class ForgeEditorPane extends NoWrapTextPane
         getFoldingModel().clear();
         getDocCommentModel().clear();
         getColourSwatchModel().clear();
+        indentGuides.clear();
+    }
+
+    /// Shows or hides the lines joining each opening bracket to its closing one.
+    public void setIndentGuidesVisible(boolean visible)
+    {
+        if (indentGuidePainter.isVisible() == visible) return;
+
+        indentGuidePainter.setVisible(visible);
+        repaint();
     }
 
     /// Rebuilds the palette whenever the look and feel changes.
@@ -342,6 +367,9 @@ public final class ForgeEditorPane extends NoWrapTextPane
 
         // updateUI runs during the superclass constructor, before these exist.
         if (caret != null) applyPalette();
+
+        // The new UI brought a new highlighter, without the old one's highlights.
+        if (indentGuidePainter != null) installLineDecorations();
 
         // setUI reset the hints to the new look and feel's defaults.
         if (textRendering != null) textRendering.installOn(this);
@@ -400,6 +428,10 @@ public final class ForgeEditorPane extends NoWrapTextPane
 
         updateCurrentLine(root, line);
         updateBrackets();
+
+        // Only when the caret crosses into another block; the emphasised guide
+        // can run the height of the window, so the whole editor is repainted.
+        if (indentGuidePainter.caretMovedTo(line)) repaint();
 
         // Checked once the current event is over rather than now: select()
         // moves the caret twice, and only the second move makes a selection.
@@ -480,6 +512,32 @@ public final class ForgeEditorPane extends NoWrapTextPane
         catch (BadLocationException ignored)
         {
             // The line went away between the click and now.
+        }
+    }
+
+    /// Adds the highlights that are always present: the current-line band, then
+    /// the indent guides, in that order so the band does not cover the guides.
+    ///
+    /// Runs again after a look-and-feel change, because the new UI replaces
+    /// the highlighter and every highlight in the old one is lost with it.
+    /// Removing the old tags first keeps this safe if the highlighter survived.
+    private void installLineDecorations()
+    {
+        Highlighter highlighter = getHighlighter();
+
+        currentLineTag = removeHighlight(highlighter, currentLineTag);
+        indentGuideTag = removeHighlight(highlighter, indentGuideTag);
+
+        Element root = getDocument().getDefaultRootElement();
+        updateCurrentLine(root, root.getElementIndex(getCaretPosition()));
+
+        try
+        {
+            indentGuideTag = highlighter.addHighlight(0, 0, indentGuidePainter);
+        }
+        catch (BadLocationException ignored)
+        {
+            // Offset 0 is always in the document.
         }
     }
 

@@ -34,6 +34,8 @@ public record EditorPalette(
         Color bracketFill,
         Color bracketBorder,
         Color bracketMismatch,
+        Color indentGuide,
+        Color indentGuideActive,
         Color gutterBackground,
         Color gutterForeground,
         Color gutterActiveForeground,
@@ -80,6 +82,9 @@ public record EditorPalette(
                 translucent(accent, 60),
                 accent,
                 MISMATCH,
+
+                blend(background, foreground, 0.12f),
+                blend(background, foreground, 0.32f),
 
                 background,
                 blend(background, foreground, 0.45f),

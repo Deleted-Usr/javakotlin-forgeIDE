@@ -128,7 +128,7 @@ public final class SettingsService
                         legacy.getStartupAction(), legacy.getRestoreOpenFiles(), legacy.getConfirmDiscard()
                 ),
                 new IDESettingsConfiguration.Editor(
-                        "", legacy.getEditorFontSize(), legacy.getTabWidth(), legacy.getInsertSpaces(), true, true
+                        "", legacy.getEditorFontSize(), legacy.getTabWidth(), legacy.getInsertSpaces(), true, true, true
                 ),
                 new IDESettingsConfiguration.Saving(
                         legacy.getAutoSave(), legacy.getAutoSaveDelaySeconds(), legacy.getSaveBeforeBuild()
