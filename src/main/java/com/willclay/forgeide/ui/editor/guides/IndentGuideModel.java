@@ -83,7 +83,10 @@ public final class IndentGuideModel
     private static List<Guide> findGuides(StyledDocument document)
     {
         String text = textOf(document);
-        if (text == null) return List.of();
+        if (text == null)
+        {
+            return List.of();
+        }
 
         Element root = document.getDefaultRootElement();
         List<Integer> openBrackets = new ArrayList<>();
@@ -93,9 +96,13 @@ public final class IndentGuideModel
 
         for (int offset = 0; offset < text.length(); offset++)
         {
-            char character = text.charAt(offset);
+            char character  = text.charAt(offset);
             boolean opening = OPENING.indexOf(character) >= 0;
-            if (!opening && CLOSING.indexOf(character) < 0) continue;
+
+            if (!opening && CLOSING.indexOf(character) < 0)
+            {
+                continue;
+            }
 
             Element run = document.getCharacterElement(offset);
             if (TokenTheme.isLiteralOrComment(run.getAttributes()))
@@ -111,19 +118,32 @@ public final class IndentGuideModel
                 continue;
             }
 
-            if (openBrackets.isEmpty()) continue;
+            if (openBrackets.isEmpty())
+            {
+                continue;
+            }
 
             int open = openBrackets.getLast();
-            if (text.charAt(open) != OPENING.charAt(CLOSING.indexOf(character))) continue;
+            if (text.charAt(open) != OPENING.charAt(CLOSING.indexOf(character)))
+            {
+                continue;
+            }
 
             openBrackets.removeLast();
 
             int openLine  = root.getElementIndex(open);
             int closeLine = root.getElementIndex(offset);
-            if (closeLine - openLine < 2) continue;
+
+            if (closeLine - openLine < 2)
+            {
+                continue;
+            }
 
             int[] existing = byLine.get(openLine);
-            if (existing == null || existing[1] < offset) byLine.put(openLine, new int[] { open, offset });
+            if (existing == null || existing[1] < offset)
+            {
+                byLine.put(openLine, new int[] { open, offset });
+            }
         }
 
         List<Guide> found = new ArrayList<>(byLine.size());

@@ -19,7 +19,8 @@ import javax.swing.*;
 /*
  * TODO:
  *  - Image viewer
- *  - Small hover info dialogs for classes, methods, etc.
+ *  - Small hover info dialogs for classes, methods, etc. SHOW DESCRIPTIONS FOR KEYWORDS TOO!!!
+ *  - User-defined file templates
  *  - Lines of Code counter
  *  - File icons based on type (icons for final classes, abstract classes, interfaces, etc.)
  *  - Build System Support (Gradle/Maven)
@@ -27,10 +28,12 @@ import javax.swing.*;
  *  - IntelliJ-style double shift project search function
  *  - lightweight editor - vs-code type (open a file and run without a project, jshell maybe?)
  *  - Movable / Dockable tabs
- *  - Custom Text Component to resolve performance issues.
- *  - System Terminal Integration (Keep Current Console and implement a toggle in settings).
  *  - A BlueJ style class diagram mode/setting
  *  - Git Integration (IntelliJ-like)
+ *
+ * TODO - For Later
+ *  - Custom Text Component to resolve performance issues.
+ *  - System Terminal Integration (Keep Current Console and implement a toggle in settings).
  */
 
 /*

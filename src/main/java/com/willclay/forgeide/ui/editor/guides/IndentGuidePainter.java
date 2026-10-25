@@ -36,7 +36,7 @@ import java.awt.geom.Rectangle2D;
 /// of a paint depends on the height of the window, not the length of the file.
 public final class IndentGuidePainter implements Highlighter.HighlightPainter
 {
-    private static final int WIDTH = 1;
+    private static final int WIDTH = 2;
 
     /// Indent recorded for a line with no text on it, so every guide passes.
     private static final int BLANK = Integer.MAX_VALUE;
@@ -87,7 +87,7 @@ public final class IndentGuidePainter implements Highlighter.HighlightPainter
 
             if (open <= line && line <= close && open > innermostOpen)
             {
-                innermost = guide;
+                innermost     = guide;
                 innermostOpen = open;
             }
         }
@@ -101,20 +101,26 @@ public final class IndentGuidePainter implements Highlighter.HighlightPainter
     @Override
     public void paint(Graphics graphics, int start, int end, Shape bounds, JTextComponent component)
     {
-        if (!visible || model.guides().isEmpty()) return;
+        if (!visible || model.guides().isEmpty())
+        {
+            return;
+        }
 
         Rectangle clip = graphics.getClipBounds();
-        if (clip == null) clip = component.getVisibleRect();
+        if (clip == null)
+        {
+            clip = component.getVisibleRect();
+        }
 
         Document document = component.getDocument();
-        Element root = document.getDefaultRootElement();
+        Element root      = document.getDefaultRootElement();
 
         int first = root.getElementIndex(component.viewToModel2D(new Point(0, clip.y)));
         int last  = root.getElementIndex(component.viewToModel2D(new Point(0, clip.y + clip.height)));
 
         Row[] rows = measureRows(component, root, first, last);
 
-        int left = component.getInsets().left;
+        int left       = component.getInsets().left;
         int spaceWidth = component.getFontMetrics(component.getFont()).charWidth(' ');
 
         for (Guide guide : model.guides())
@@ -126,19 +132,26 @@ public final class IndentGuidePainter implements Highlighter.HighlightPainter
             int from = Math.max(open + 1, first);
             int to   = Math.min(close - 1, last);
 
-            if (from > to || pane.isLineHidden(open)) continue;
+            if (from > to || pane.isLineHidden(open))
+            {
+                continue;
+            }
 
             int column = indentOf(document, root.getElement(open));
-            int x = left + (column * spaceWidth);
+            int x      = left + (column * spaceWidth);
 
-            graphics.setColor(guide == active
+            graphics.setColor(
+                    guide == active
                     ? pane.getPalette().indentGuideActive()
                     : pane.getPalette().indentGuide());
 
             for (int line = from; line <= to; line++)
             {
                 Row row = rows[line - first];
-                if (row == null || row.indent <= column) continue;
+                if (row == null || row.indent <= column)
+                {
+                    continue;
+                }
 
                 graphics.fillRect(x, row.y, WIDTH, row.height);
             }
@@ -158,14 +171,20 @@ public final class IndentGuidePainter implements Highlighter.HighlightPainter
 
         for (int line = first; line <= last; line++)
         {
-            if (pane.isLineHidden(line)) continue;
+            if (pane.isLineHidden(line))
+            {
+                continue;
+            }
 
             Element element = root.getElement(line);
 
             try
             {
                 Rectangle2D bounds = component.modelToView2D(element.getStartOffset());
-                if (bounds == null) continue;
+                if (bounds == null)
+                {
+                    continue;
+                }
 
                 rows[line - first] = new Row(
                         (int) bounds.getY(),
@@ -192,14 +211,23 @@ public final class IndentGuidePainter implements Highlighter.HighlightPainter
         try
         {
             // The line's own newline is left out; it is not text.
-            int length = line.getEndOffset() - line.getStartOffset() - 1;
+            int length  = line.getEndOffset() - line.getStartOffset() - 1;
             String text = document.getText(line.getStartOffset(), Math.max(length, 0));
 
             for (char character : text.toCharArray())
             {
-                if (character == '\t') columns = ((columns / tabSize) + 1) * tabSize;
-                else if (character == ' ') columns++;
-                else return columns;
+                if (character == '\t')
+                {
+                    columns = ((columns / tabSize) + 1) * tabSize;
+                }
+                else if (character == ' ')
+                {
+                    columns++;
+                }
+                else
+                {
+                    return columns;
+                }
             }
         }
         catch (BadLocationException ignored)

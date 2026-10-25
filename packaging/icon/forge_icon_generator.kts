@@ -258,7 +258,9 @@ fun writeIco(
 
     Files.newOutputStream(file).use { output ->
         output.write(header.array())
-        for (png in pngs) output.write(png)
+        for (png in pngs) {
+            output.write(png)
+        }
     }
 }
 
@@ -294,7 +296,9 @@ fun execute() {
     ImageIO.write(render(splashSize, markOnly = true), "png", pngDir.resolve("forge-splash.png").toFile())
 
     val icoImages = icoSizes.map { toPng(render(it)) }
-    for (file in icoFiles) writeIco(file, icoSizes, icoImages)
+    for (file in icoFiles) {
+        writeIco(file, icoSizes, icoImages)
+    }
 
     println("Wrote ${pngSizes.size} PNGs and forge-splash.png to $pngDir and icons to ${icoFiles.joinToString()}")
 }
