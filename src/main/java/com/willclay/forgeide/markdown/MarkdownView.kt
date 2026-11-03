@@ -47,12 +47,28 @@ import javax.swing.border.MatteBorder
  */
 class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkHandler = LinkHandler.DESKTOP) : JPanel(ColumnLayout()), Scrollable
 {
+    /** A top-level block, the component drawn for it, and the headings inside that component. */
+    private class Rendered(val block: Block, val component: JComponent, val headings: Map<String, JComponent>)
+
     private val headings = mutableMapOf<String, JComponent>()
     private var built    = false  // false while JPanel's constructor calls updateUI, before these fields are set
 
-    /** The parsed document. Set it directly to parse on another thread with [Markdown.parse]. */
+    /** What is on screen, one entry per top-level block, reused while its block stays equal. */
+    private var rendered = listOf<Rendered>()
+    /** Where [heading] files the headings of the top-level block being rendered. */
+    private var blockHeadings = mutableMapOf<String, JComponent>()
+
+    /** The source lines of each top-level block when set through [setMarkdown]; empty otherwise. */
+    private var sourceLines = listOf<IntRange>()
+
+    /**
+     * The parsed document. Set it directly to parse on another thread with [Markdown.parse].
+     *
+     * Only the blocks that differ from the previous document are rendered again, so
+     * a live preview can be updated on every keystroke without rebuilding everything.
+     */
     var document: List<Block> = Markdown.parse(markdown)
-        set(value) { field = value; rebuild() }
+        set(value) { field = value; sourceLines = emptyList(); showDocument() }
 
     /** Where clicked links go; "#anchor" links are handled here instead. Defaults to [LinkHandler.DESKTOP]. */
     var links: LinkHandler = links
@@ -99,9 +115,65 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
         rebuild()
     }
 
-    /** Parses [source] and shows it. */
+    /** Parses [source] and shows it, remembering which source lines each block came from (see [yForSourceLine]). */
     fun setMarkdown(source: String) {
-        document = Markdown.parse(source)
+        val parsed = Markdown.parseMapped(source)
+
+        document    = parsed.blocks
+        sourceLines = parsed.lines
+    }
+
+    /**
+     * The height in this view at which a source line is drawn, for scrolling a preview in step with
+     * its editor. [line] is 0-based and may be fractional (halfway down line 3 is 3.5); within a block
+     * the position is interpolated, as one block's lines don't map exactly onto its rendered height.
+     *
+     * @return null unless the document was set with [setMarkdown] and has been laid out
+     */
+    fun yForSourceLine(line: Double): Int? {
+        val (lines, ys) = scrollAnchors() ?: return null
+        return interpolate(lines, ys, line).toInt()
+    }
+
+    /** The inverse of [yForSourceLine]: the fractional source line drawn at height [y]. */
+    fun sourceLineForY(y: Int): Double? {
+        val (lines, ys) = scrollAnchors() ?: return null
+        return interpolate(ys, lines, y.toDouble())
+    }
+
+    /**
+     * Matching points along the source and along this view: the top and bottom of every top-level block,
+     * against the first line of its source and the line after its last. Both lists only ever increase.
+     */
+    private fun scrollAnchors(): Pair<DoubleArray, DoubleArray>? {
+        if (sourceLines.size != rendered.size || rendered.isEmpty() || height <= 0) return null
+
+        val lines = DoubleArray(rendered.size * 2 + 1)
+        val ys    = DoubleArray(rendered.size * 2 + 1)
+
+        rendered.forEachIndexed { index, entry ->
+            val component = entry.component
+
+            lines[index * 2 + 1] = sourceLines[index].first.toDouble()
+            ys[index * 2 + 1]    = component.y.toDouble()
+
+            lines[index * 2 + 2] = sourceLines[index].last + 1.0
+            ys[index * 2 + 2]    = (component.y + component.height).toDouble()
+        }
+
+        return lines to ys
+    }
+
+    /** Reads [x] off the piecewise-linear curve through ([xs], [ys]), holding the last value past its end. */
+    private fun interpolate(xs: DoubleArray, ys: DoubleArray, x: Double): Double {
+        for (i in 1 until xs.size) {
+            if (x > xs[i]) continue
+
+            val span = xs[i] - xs[i - 1]
+            return if (span <= 0) ys[i] else ys[i - 1] + (ys[i] - ys[i - 1]) * ((x - xs[i - 1]) / span).coerceIn(0.0, 1.0)
+        }
+
+        return ys.last()
     }
 
     /**
@@ -138,14 +210,55 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
 
         renderedTheme = codeColors?.let { base.copy(code = it) } ?: base
 
-        removeAll()
-        headings.clear()
-        addBlocks(this, document, renderedTheme.foreground)
-        revalidate()
-        repaint()
+        // Everything was drawn with the old settings, so none of it can be reused.
+        rendered = emptyList()
+        showDocument()
 
         firePropertyChange("renderedTheme", old, renderedTheme)
     }
+
+    /**
+     * Shows [document], rendering only the blocks that changed since the last call. An edit
+     * usually changes one block in the middle, so the unchanged blocks before and after it
+     * keep their components (and their loaded images).
+     */
+    private fun showDocument() {
+        if (!built) {
+            return
+        }
+
+        val old = rendered
+        val new = document
+
+        var prefix = 0
+        while (prefix < minOf(old.size, new.size) && old[prefix].block == new[prefix]) prefix++
+
+        var suffix = 0
+        while (suffix < minOf(old.size, new.size) - prefix && old[old.lastIndex - suffix].block == new[new.lastIndex - suffix]) suffix++
+
+        rendered = old.take(prefix) + new.subList(prefix, new.size - suffix).map(::renderTopLevel) + old.takeLast(suffix)
+
+        removeAll()
+        headings.clear()
+
+        rendered.forEachIndexed { index, entry ->
+            if (index > 0) {
+                add(Box.createVerticalStrut(gapBefore(entry.block, 12)))
+            }
+            add(entry.component)
+            headings.putAll(entry.headings)
+        }
+
+        revalidate()
+        repaint()
+    }
+
+    private fun renderTopLevel(block: Block): Rendered {
+        blockHeadings = mutableMapOf()
+        return Rendered(block, render(block, renderedTheme.foreground), blockHeadings)
+    }
+
+    private fun gapBefore(block: Block, gap: Int) = UIScale.scale(if (block is Block.Heading) 20 else gap)
 
     // Scrollable: match the viewport's width so text wraps instead of scrolling sideways.
 
@@ -182,7 +295,7 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
     private fun addBlocks(parent: JComponent, blocks: List<Block>, foreground: Color, gap: Int = 12) {
         blocks.forEachIndexed { index, block ->
             if (index > 0) {
-                parent.add(Box.createVerticalStrut(UIScale.scale(if (block is Block.Heading) 20 else gap)))
+                parent.add(Box.createVerticalStrut(gapBefore(block, gap)))
             }
             parent.add(render(block, foreground))
         }
@@ -231,7 +344,7 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
             text.border = CompoundBorder(MatteBorder(0, 0, 1, 0, renderedTheme.border), EmptyBorder(0, 0, 6, 0))
         }
 
-        headings[block.anchor] = text
+        blockHeadings[block.anchor] = text
         return text
     }
 

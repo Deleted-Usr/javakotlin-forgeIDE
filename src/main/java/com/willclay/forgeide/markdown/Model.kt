@@ -26,6 +26,13 @@ sealed interface Block {
     data class Item(val checked: Boolean?, val blocks: List<Block>)
 }
 
+/**
+ * A parsed document and where it came from: `lines[i]` is the 0-based range of source lines
+ * that `blocks[i]` was parsed from. Kept apart from [Block], so a block that only moved
+ * (a line was added above it) still equals its old self and need not be re-rendered.
+ */
+data class MappedDocument(val blocks: List<Block>, val lines: List<IntRange>)
+
 sealed interface Inline {
     data class Text(val text: String) : Inline
 

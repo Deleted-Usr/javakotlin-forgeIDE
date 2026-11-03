@@ -10,13 +10,14 @@ import org.intellij.markdown.flavours.gfm.GFMElementTypes
 import org.intellij.markdown.flavours.gfm.GFMFlavourDescriptor
 import org.intellij.markdown.flavours.gfm.GFMTokenTypes
 import org.intellij.markdown.parser.CancellationToken
+import org.intellij.markdown.parser.LinkMap
 import org.intellij.markdown.parser.MarkdownParser
 
 /**
  * Parses GitHub-flavoured markdown with JetBrains' parser and converts its tree into Block / Inline.
  *
- * Anything this doesn't recognise (HTML, reference links, ...) degrades to its plain text
- * rather than disappearing.
+ * Anything this doesn't recognise (HTML, a reference to a link that is never defined, ...)
+ * degrades to its plain text rather than disappearing.
  */
 object Markdown {
     private val flavour = GFMFlavourDescriptor()
@@ -29,23 +30,60 @@ object Markdown {
     )
 
     @JvmStatic
-    fun parse(source: String): List<Block> {
+    fun parse(source: String): List<Block> = parseMapped(source).blocks
+
+    /**
+     * Like [parse], and also reports which source lines each top-level block came from,
+     * so a preview can scroll in step with the editor showing the source.
+     */
+    @JvmStatic
+    fun parseMapped(source: String): MappedDocument {
         val src = source.replace("\r\n", "\n")
         val root = MarkdownParser(flavour, cancellationToken = CancellationToken.NonCancellable).buildMarkdownTreeFromString(src as CharSequence)
 
-        return Converter(src).blocks(root.children)
+        // Definitions ("[label]: https://...") may come after the links that use them,
+        // usually at the bottom of the document, so they are all collected up front.
+        val converter  = Converter(src, LinkMap.buildLinkMap(root, src))
+        val lineStarts = lineStarts(src)
+
+        val blocks = mutableListOf<Block>()
+        val lines  = mutableListOf<IntRange>()
+
+        for (node in root.children) {
+            val block = converter.block(node) ?: continue
+
+            blocks += block
+            lines  += lineOf(lineStarts, node.startOffset)..lineOf(lineStarts, (node.endOffset - 1).coerceAtLeast(node.startOffset))
+        }
+
+        return MappedDocument(blocks, lines)
+    }
+
+    /** The offset at which each line of [src] begins. */
+    private fun lineStarts(src: String): IntArray {
+        val starts = mutableListOf(0)
+        src.forEachIndexed { index, char -> if (char == '\n') starts += index + 1 }
+
+        return starts.toIntArray()
+    }
+
+    /** The 0-based line holding [offset]. */
+    private fun lineOf(lineStarts: IntArray, offset: Int): Int {
+        val found = lineStarts.binarySearch(offset)
+        return if (found >= 0) found else -found - 2
     }
 
     /**
      * One conversion run. Holds the source text and the anchors used so far, so duplicate
      * headings get "-1", "-2" suffixes the way GitHub does.
      */
-    private class Converter(private val src: String) {
+    private class Converter(private val src: String, private val linkMap: LinkMap) {
         private val anchors = mutableMapOf<String, Int>()
 
         fun blocks(nodes: List<ASTNode>): List<Block> = nodes.mapNotNull(::block)
 
-        private fun block(node: ASTNode): Block? = when (node.type) {
+        /** Null for anything that shows nothing, link definitions included. */
+        fun block(node: ASTNode): Block? = when (node.type) {
             in headingLevels -> heading(node)
 
             MarkdownElementTypes.PARAGRAPH -> Block.Paragraph(inlines(node.children))
@@ -139,17 +177,32 @@ object Markdown {
                     MarkdownElementTypes.CODE_SPAN -> add(Inline.Code(node.text().trim('`').trim()))
 
                     MarkdownElementTypes.INLINE_LINK -> add(link(node))
+
+                    // "[text][label]", "[label][]" and "[label]", resolved against the document's definitions.
+                    MarkdownElementTypes.FULL_REFERENCE_LINK, MarkdownElementTypes.SHORT_REFERENCE_LINK -> {
+                        val destination = referenceDestination(node)
+
+                        if (destination == null) {
+                            addAll(inlines(node.children))
+                        }
+                        else {
+                            add(Inline.Link(destination, referenceText(node)))
+                        }
+                    }
                     MarkdownElementTypes.AUTOLINK    -> node.text().trim('<', '>').let { add(Inline.Link(it, listOf(Inline.Text(it)))) }
                     GFMTokenTypes.GFM_AUTOLINK       -> node.text().let { add(Inline.Link(it, listOf(Inline.Text(it)))) }
 
                     MarkdownElementTypes.IMAGE -> {
-                        val link = node.findChildOfType(MarkdownElementTypes.INLINE_LINK)
+                        val link      = node.findChildOfType(MarkdownElementTypes.INLINE_LINK)
+                        val reference = node.findChildOfType(MarkdownElementTypes.FULL_REFERENCE_LINK)
+                            ?: node.findChildOfType(MarkdownElementTypes.SHORT_REFERENCE_LINK)
+                        val referenced = reference?.let(::referenceDestination)
 
-                        if (link == null) {
-                            add(Inline.Text(node.text()))
+                        when {
+                            link != null       -> add(Inline.Image(destination(link), linkText(link).plainText()))
+                            referenced != null -> add(Inline.Image(referenced, referenceText(reference).plainText()))
+                            else               -> add(Inline.Text(node.text()))
                         }
-
-                        else add(Inline.Image(destination(link), linkText(link).plainText()))
                     }
 
                     // A single newline inside a paragraph is just a space; a hard break is a real one.
@@ -176,6 +229,21 @@ object Markdown {
         }
 
         private fun destination(link: ASTNode): String = link.findChildOfType(MarkdownElementTypes.LINK_DESTINATION)?.text()?.trim('<', '>').orEmpty()
+
+        /** Where a reference link's label points, or null when the document never defines it. */
+        private fun referenceDestination(reference: ASTNode): String? {
+            val label = reference.findChildOfType(MarkdownElementTypes.LINK_LABEL) ?: return null
+            return linkMap.getLinkInfo(label.text())?.destination?.toString()?.trim('<', '>')
+        }
+
+        /** "[text][label]" shows its text; "[label]" and "[label][]" show the label itself. */
+        private fun referenceText(reference: ASTNode): List<Inline> =
+            if (reference.findChildOfType(MarkdownElementTypes.LINK_TEXT) != null) {
+                linkText(reference)
+            }
+            else {
+                inlines(reference.findChildOfType(MarkdownElementTypes.LINK_LABEL)?.children.orEmpty().drop(1).dropLast(1))
+            }
 
         /** The children of LINK_TEXT without its [ and ] tokens. */
         private fun linkText(link: ASTNode): List<Inline> = inlines(link.findChildOfType(MarkdownElementTypes.LINK_TEXT)?.children.orEmpty().drop(1).dropLast(1))
