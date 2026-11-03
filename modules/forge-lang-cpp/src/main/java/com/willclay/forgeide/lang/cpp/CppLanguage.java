@@ -1,5 +1,6 @@
 package com.willclay.forgeide.lang.cpp;
 
+import com.willclay.forgeide.highlighting.filetypes.FileType;
 import com.willclay.forgeide.lang.api.EntryPoints;
 import com.willclay.forgeide.lang.api.FileIconStyle;
 import com.willclay.forgeide.lang.api.Language;
@@ -26,6 +27,11 @@ public final class CppLanguage implements Language
 {
     private final Lexer lexer = new CppLexer();
     private final Toolchain toolchain = new CppToolchain();
+
+    /// `CMakeLists.txt` is matched by its whole name, because `.txt` says
+    /// nothing about it, and modules such as `FindFoo.cmake` by extension.
+    private final FileType cmake = new FileType(
+            "CMake", Set.of("cmake"), Set.of("CMakeLists.txt"), new CMakeLexer());
 
     @Override
     public String id()
@@ -58,6 +64,14 @@ public final class CppLanguage implements Language
     public Lexer lexer()
     {
         return lexer;
+    }
+
+    /// CMake scripts get their own colours, but are never mistaken for C++
+    /// sources: [CppSources] still decides what is compiled.
+    @Override
+    public List<FileType> fileTypes()
+    {
+        return List.of(cmake);
     }
 
     @Override

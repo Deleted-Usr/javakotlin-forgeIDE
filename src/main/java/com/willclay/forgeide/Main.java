@@ -18,6 +18,7 @@ import javax.swing.*;
 
 /*
  * TODO:
+ *  - Github release watcher and ForgeIDE installer (C++/Rust for Installer???)
  *  - Add bottom of doc links in the markdown viewer
  *  - Have more flexibility for C++ Projects
  *  - Java + Kotlin and C++ + Rust project templates (after multi-language projects)
@@ -33,7 +34,7 @@ import javax.swing.*;
  *  - lightweight editor - vs-code type (open a file and run without a project, jshell maybe?)
  *  - Movable / Dockable tabs
  *  - A BlueJ style class diagram mode/setting
- *  - Git Integration (IntelliJ-like)
+ *  - Git Integration (IntelliJ-like or Github Client-like)
  *
  * TODO - For Later
  *  - Custom Text Component to resolve performance issues.

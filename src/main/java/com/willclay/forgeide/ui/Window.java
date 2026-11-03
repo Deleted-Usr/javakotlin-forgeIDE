@@ -8,6 +8,7 @@ import com.willclay.forgeide.application.bootstrap.BootstrapResult;
 import com.willclay.forgeide.application.bootstrap.BootstrapWarning;
 import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.execution.ExecutionManager;
+import com.willclay.forgeide.highlighting.filetypes.FileType;
 import com.willclay.forgeide.highlighting.filetypes.FileTypes;
 import com.willclay.forgeide.lang.LanguageRegistry;
 import com.willclay.forgeide.services.ApplicationShutdown;
@@ -293,6 +294,16 @@ public final class Window extends JFrame
             if (project != null && (file == null || project.language().recognises(file)))
             {
                 return project.language().lexer();
+            }
+
+            // Then the language's other files, such as a C++ project's
+            // CMakeLists.txt, which it can colour but does not compile.
+            if (project != null)
+            {
+                for (FileType type : project.language().fileTypes())
+                {
+                    if (type.matches(file)) return type.lexer();
+                }
             }
 
             // Anything else may still be a format core knows, such as

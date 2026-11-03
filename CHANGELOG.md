@@ -13,6 +13,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - The editor now paints a thin vertical line guide spanning opening and closing brackets. This can be turned on and off
 in a new settings option under Settings → General → Editor defaults → “Show indent guides between brackets”
 
+#### C++ plugin
+- Syntax highlighting for CMake: `CMakeLists.txt` and `.cmake` files now colour commands, keyword arguments,
+variable references, generator expressions, strings, bracket arguments and comments
+
 ## [1.4.0] - 2026-10-20
 
 This release focuses on a more distinct editor pane and gutter, custom themes, and small QOL changes.

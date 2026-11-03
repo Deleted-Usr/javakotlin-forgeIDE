@@ -1,5 +1,6 @@
 package com.willclay.forgeide.lang.api;
 
+import com.willclay.forgeide.highlighting.filetypes.FileType;
 import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage;
 import com.willclay.forgeide.lang.api.templates.FileTemplates;
 import com.willclay.forgeide.workspace.Project;
@@ -34,6 +35,20 @@ public interface Language
     String defaultExtension();
 
     Lexer lexer();
+
+    /// Files this language can colour without owning them as sources, such as
+    /// the build scripts that sit beside them: C++'s `CMakeLists.txt`.
+    ///
+    /// Asked only while a project in this language is open, and only for files
+    /// [#recognises(Path)] rejects. A file matched here is therefore never
+    /// counted as a source or handed to the toolchain; it only gets colours.
+    ///
+    /// Optional. Most languages have nothing to add beyond core's own
+    /// [com.willclay.forgeide.highlighting.filetypes.FileTypes].
+    default List<FileType> fileTypes()
+    {
+        return List.of();
+    }
 
     String newFileTemplate(String typeName);
 
