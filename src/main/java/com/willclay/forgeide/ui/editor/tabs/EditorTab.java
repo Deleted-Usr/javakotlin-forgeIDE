@@ -246,6 +246,14 @@ public class EditorTab extends JPanel
         return modified;
     }
 
+    /// Whether this tab's text is the file's contents, for Save to write back.
+    /// A viewer such as [ImageTab] shows a file it cannot represent as text,
+    /// and saving its empty text pane would wipe that file.
+    public boolean isTextDocument()
+    {
+        return true;
+    }
+
     public void markSaved()
     {
         modified = false;

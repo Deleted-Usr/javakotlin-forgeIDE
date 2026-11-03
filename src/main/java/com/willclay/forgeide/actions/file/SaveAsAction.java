@@ -4,6 +4,7 @@ import com.willclay.forgeide.actions.ForgeAction;
 import com.willclay.forgeide.actions.Shortcuts;
 import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
+import com.willclay.forgeide.ui.editor.tabs.EditorTab;
 import com.willclay.forgeide.workspace.Project;
 
 import java.awt.event.KeyEvent;
@@ -33,7 +34,8 @@ public final class SaveAsAction extends ForgeAction
     public boolean saveAs(Path suggested)
     {
         Project project = context.getWorkspace().getProject();
-        if (project == null || context.getEditorManager().getCurrentTab() == null) return false;
+        EditorTab tab = context.getEditorManager().getCurrentTab();
+        if (project == null || tab == null || !tab.isTextDocument()) return false;
 
         Path file = context.getDialogs().chooseFileToSave(project.language(), suggested);
         if (file == null) return false; // cancelled, or declined the overwrite

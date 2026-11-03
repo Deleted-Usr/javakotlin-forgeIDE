@@ -8,6 +8,7 @@ import com.willclay.forgeide.ui.editor.tabs.EditorBreadcrumb;
 import com.willclay.forgeide.ui.editor.tabs.EditorTab;
 import com.willclay.forgeide.ui.editor.tabs.EditorTabHeader;
 import com.willclay.forgeide.ui.editor.tabs.ForgeTabbedPaneUI;
+import com.willclay.forgeide.ui.editor.tabs.ImageTab;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 
 import javax.swing.Action;
@@ -164,6 +165,24 @@ public final class CodeEditorPanel extends JPanel
 
         EditorTab tab = createTab(file, lineEnding);
         tab.setText(contents);
+        addTab(tab);
+
+        return tab;
+    }
+
+    /// Opens an image in a viewer tab; it reads the file itself, so there are no contents to pass.
+    public EditorTab openImage(Path file)
+    {
+        Objects.requireNonNull(file);
+
+        EditorTab existing = findTab(file);
+        if (existing != null)
+        {
+            selectTab(existing);
+            return existing;
+        }
+
+        EditorTab tab = createTab(file, LineEnding.LF);
         addTab(tab);
 
         return tab;
@@ -449,9 +468,10 @@ public final class CodeEditorPanel extends JPanel
 
     private EditorTab createTab(Path file, LineEnding lineEnding)
     {
-        EditorTab tab = isMarkdown(file)
-                ? new MarkdownTab(file, lineEnding)
-                : new EditorTab(file, lineEnding);
+        EditorTab tab;
+        if (ImageTab.canView(file)) tab = new ImageTab(file);
+        else if (isMarkdown(file))  tab = new MarkdownTab(file, lineEnding);
+        else                        tab = new EditorTab(file, lineEnding);
 
         applyEditorSettings(tab.getTextPane());
         tab.setMinimapVisible(minimapVisible);

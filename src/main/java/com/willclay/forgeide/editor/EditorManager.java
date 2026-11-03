@@ -3,6 +3,7 @@ package com.willclay.forgeide.editor;
 import com.willclay.forgeide.files.SourceFileIO;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 import com.willclay.forgeide.ui.editor.tabs.EditorTab;
+import com.willclay.forgeide.ui.editor.tabs.ImageTab;
 import com.willclay.forgeide.workspace.metadata.encoding.Encoding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineEnding;
 import com.willclay.forgeide.workspace.metadata.lineseparators.LineSeparatorPolicy;
@@ -90,6 +91,12 @@ public final class EditorManager
         if (existing != null)
         {
             editor.selectTab(existing);
+            return;
+        }
+
+        if (ImageTab.canView(file))
+        {
+            editor.openImage(file);
             return;
         }
 
@@ -239,6 +246,13 @@ public final class EditorManager
         if (duplicate != null && duplicate != tab)
         {
             throw new IOException("That file is already open in another editor tab.");
+        }
+
+        // A viewer never changes its file, so it is already saved where it is.
+        if (!tab.isTextDocument())
+        {
+            if (normalize(target).equals(normalize(tab.getFile()))) return;
+            throw new IOException(tab.getDisplayName() + " is open in a viewer and cannot be saved as text.");
         }
 
         LineEnding lineEnding = lineSeparatorPolicy.resolve(tab.getLineEnding());
