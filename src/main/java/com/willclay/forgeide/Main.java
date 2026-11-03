@@ -18,6 +18,10 @@ import javax.swing.*;
 
 /*
  * TODO:
+ *  - Add bottom of doc links in the markdown viewer
+ *  - Have more flexibility for C++ Projects
+ *  - Java + Kotlin and C++ + Rust project templates (after multi-language projects)
+ *  - CMakeLists.txt syntax highlighting (comes with the C++ plugin)
  *  - Image viewer
  *  - Small hover info dialogs for classes, methods, etc. SHOW DESCRIPTIONS FOR KEYWORDS TOO!!!
  *  - User-defined file templates
