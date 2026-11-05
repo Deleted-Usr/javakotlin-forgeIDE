@@ -12,6 +12,8 @@ import com.willclay.forgeide.highlighting.filetypes.FileType;
 import com.willclay.forgeide.highlighting.filetypes.FileTypes;
 import com.willclay.forgeide.lang.LanguageRegistry;
 import com.willclay.forgeide.services.ApplicationShutdown;
+import com.willclay.forgeide.services.linecount.LineCounter;
+import com.willclay.forgeide.services.linecount.LineCountService;
 import com.willclay.forgeide.services.session.SessionService;
 import com.willclay.forgeide.services.settings.SettingsService;
 import com.willclay.forgeide.services.settings.IDESettingsRuntime;
@@ -120,6 +122,8 @@ public final class Window extends JFrame
         TodoService todoService = new TodoService(new TodoScanner(languages));
         TodoPanel todoPanel     = new TodoPanel(todoService);
 
+        LineCountService lineCountService = new LineCountService(new LineCounter(languages));
+
         workbench = new WorkbenchPanel(new ProjectTreePanel(projectTree), editorPanel, console);
 
         workbench.addBottomTool(WorkbenchPanel.TODO, todoPanel);
@@ -209,6 +213,10 @@ public final class Window extends JFrame
         workspace.addChangeListener(() -> todoService.projectChanged(workspace.getProject()));
         editorManager.addSaveListener(todoService::fileSaved);
 
+        workspace.addChangeListener(() -> lineCountService.projectChanged(workspace.getProject()));
+        editorManager.addSaveListener(lineCountService::filesChanged);
+        workspaceService.addListener(lineCountService::filesChanged);
+
         editorPanel.setCloseRequestHandler(this::confirmCloseTab);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter()
@@ -223,7 +231,7 @@ public final class Window extends JFrame
         setJMenuBar(new EditorMenuBar(actions));
         workbench.setSideBar(new EditorSideBar(actions));
         workbench.setToolBar(new EditorToolBar(actions, runConfigurationManager));
-        workbench.setStatusBar(new StatusBar(executionManager, workspace, editorManager, settingsService, themeService));
+        workbench.setStatusBar(new StatusBar(executionManager, workspace, editorManager, settingsService, themeService, lineCountService));
         projectTree.setContextMenu(new ProjectContextMenu(actions));
 
         // Move lives only in the context menu, so its F6 has to be bound on the

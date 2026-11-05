@@ -3,6 +3,8 @@ package com.willclay.forgeide.ui.statusbar;
 import com.willclay.forgeide.application.IDESettingsConfiguration;
 import com.willclay.forgeide.editor.EditorManager;
 import com.willclay.forgeide.execution.ExecutionManager;
+import com.willclay.forgeide.services.linecount.LineCountService;
+import com.willclay.forgeide.services.linecount.LineCounts;
 import com.willclay.forgeide.services.settings.SettingsService;
 import com.willclay.forgeide.services.settings.theme.CustomTheme;
 import com.willclay.forgeide.services.settings.theme.Theme;
@@ -36,6 +38,7 @@ public final class StatusBar extends JToolBar
     private final EditorManager editorManager;
     private final SettingsService settingsService;
     private final ThemeService themeService;
+    private final LineCountService lineCountService;
 
     private final JLabel compilerStatus = Utils.addStatusBarField("Ready", "Build and run status");
     private final JLabel saveStatus = Utils.addStatusBarField("", "Most recent save");
@@ -44,6 +47,7 @@ public final class StatusBar extends JToolBar
     private final JLabel lineEnding     = Utils.addStatusBarField("LF", "Line endings in the current file");
     private final JLabel encoding       = Utils.addStatusBarField("UTF-8", "Project file encoding");
     private final JLabel project        = Utils.addStatusBarField("No Project", "Current project");
+    private final JLabel linesOfCode    = Utils.addStatusBarField("-- LOC", "Lines of code in the project");
     private final JLabel caretPosition  = Utils.addStatusBarField("Ln 1, Col 1", "Caret position");
     private final JLabel tabSize        = Utils.addStatusBarField("Spaces: 4", "Indentation used by the editor");
     private final JLabel theme          = Utils.addStatusBarField("Material Darker", "Current theme");
@@ -56,7 +60,8 @@ public final class StatusBar extends JToolBar
             Workspace workspace,
             EditorManager editorManager,
             SettingsService settingsService,
-            ThemeService themeService
+            ThemeService themeService,
+            LineCountService lineCountService
     )
     {
         super(HORIZONTAL);
@@ -66,13 +71,15 @@ public final class StatusBar extends JToolBar
         this.editorManager    = Objects.requireNonNull(editorManager, "editorManager");
         this.settingsService  = Objects.requireNonNull(settingsService, "settingsService");
         this.themeService     = Objects.requireNonNull(themeService, "themeService");
-
+        this.lineCountService = Objects.requireNonNull(lineCountService, "lineCountService");
 
         setFloatable(false);
         setRollover(false);
         setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
 
         add(project);
+        addSeparator();
+        add(linesOfCode);
         addSeparator();
         add(compilerStatus);
         add(saveStatus);
@@ -112,8 +119,13 @@ public final class StatusBar extends JToolBar
         themeService.addChangeListener(() -> onEventDispatchThread(this::updateTheme)
         );
 
+        lineCountService.addChangeListener(
+                () -> onEventDispatchThread(this::updateLinesOfCode)
+        );
+
         updateCompilerStatus();
         updateProjectInformation();
+        updateLinesOfCode();
         updateEditorInformation();
         updateSettings(settingsService.get());
         updateTheme();
@@ -150,6 +162,28 @@ public final class StatusBar extends JToolBar
         project.setToolTipText(currentProject.root().toString());
         encoding.setText(currentProject.configuration().fileHandling().encoding().toString());
         encoding.setToolTipText("Project file encoding");
+    }
+
+    /// The tooltip spells out what was and was not counted, because "lines of
+    /// code" means different things to different tools.
+    private void updateLinesOfCode()
+    {
+        LineCounts counts = lineCountService.getCounts();
+
+        if (counts == null)
+        {
+            linesOfCode.setText("-- LOC");
+            linesOfCode.setToolTipText("Lines of code in the project");
+            return;
+        }
+
+        linesOfCode.setText("%,d LOC".formatted(counts.getCode()));
+        linesOfCode.setToolTipText(
+                "<html>%,d lines of code in %,d source %s<br>".formatted(
+                        counts.getCode(), counts.getFiles(), counts.getFiles() == 1 ? "file" : "files")
+                + "Not counted: comment lines (%,d), blank lines (%,d)<br>".formatted(counts.getComments(), counts.getBlank())
+                + "Skips hidden folders, build output and excluded paths</html>"
+        );
     }
 
     /// Rebinds the caret listener when the selected editor tab changes.

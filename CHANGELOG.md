@@ -12,6 +12,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
 #### Editor
 - The editor now paints a thin vertical line guide spanning opening and closing brackets. This can be turned on and off
 in a new settings option under Settings → General → Editor defaults → “Show indent guides between brackets”
+- The status bar now shows the project's lines of code, leaving out comments and blank lines. Its tooltip shows the full
+breakdown. It updates when a file is saved, created or deleted.
 
 #### C++ plugin
 - Syntax highlighting for CMake: `CMakeLists.txt` and `.cmake` files now colour commands, keyword arguments,

@@ -23,7 +23,6 @@ import javax.swing.*;
  *  - Java + Kotlin and C++ + Rust project templates (after multi-language projects)
  *  - Small hover info dialogs for classes, methods, etc. SHOW DESCRIPTIONS FOR KEYWORDS TOO!!!
  *  - User-defined file templates
- *  - Lines of Code counter
  *  - File icons based on type (icons for final classes, abstract classes, interfaces, etc.)
  *  - Build System Support (Gradle/Maven)
  *  - Multi-Language projects (Add language project)

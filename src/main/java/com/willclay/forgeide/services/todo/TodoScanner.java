@@ -1,6 +1,7 @@
 package com.willclay.forgeide.services.todo;
 
 import com.willclay.forgeide.files.SourceFileIO;
+import com.willclay.forgeide.filesystem.ProjectFiles;
 import com.willclay.forgeide.highlighting.TodoFinder;
 import com.willclay.forgeide.highlighting.Token;
 import com.willclay.forgeide.lang.LanguageRegistry;
@@ -10,11 +11,7 @@ import com.willclay.forgeide.workspace.Project;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
 /// Finds the TO-DOs in source files, using each file's own lexer so that
@@ -22,9 +19,6 @@ import java.util.*;
 /// decide where this runs.
 public final class TodoScanner
 {
-    private static final Set<String> BUILD_DIRECTORIES = Set.of("build", "out", "target");
-    private static final long MAX_FILE_SIZE = 2 * 1024 * 1024; // generated or minified files, not source anyone wrote
-
     private final LanguageRegistry languages;
 
     public TodoScanner(LanguageRegistry languages)
@@ -112,67 +106,24 @@ public final class TodoScanner
     /// Walks a whole project. Hidden folder and build output are skipped.
     public Map<Path, List<TodoItem>> scanProject(Project project) throws IOException
     {
-        Path root       = project.root();
         Charset charset = project.configuration().fileHandling().encoding().charset();
 
         TreeMap<Path, List<TodoItem>> results = new TreeMap<>();
 
-        if (!Files.isDirectory(root))
+        ProjectFiles.forEachFile(project, file ->
         {
-            return results;
-        }
-
-        Files.walkFileTree(root, new SimpleFileVisitor<>()
-        {
-            @Override
-            public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attributes) throws IOException
+            try
             {
-                // Always enter the explicitly requested project root.
-                if (!directory.equals(root))
+                List<TodoItem> todos = scanFile(file, charset);
+
+                if (!todos.isEmpty())
                 {
-                    String name = directory.getFileName().toString();
-
-                    boolean hidden      = name.startsWith(".") || Files.isHidden(directory);
-                    boolean buildOutput = BUILD_DIRECTORIES.contains(name) || name.startsWith("cmake-build-");
-
-                    if (hidden || buildOutput || project.isExcluded(directory))
-                    {
-                        return FileVisitResult.SKIP_SUBTREE;
-                    }
+                    results.put(file, todos);
                 }
-
-                return FileVisitResult.CONTINUE;
             }
-
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) throws IOException
+            catch (IOException unreadable)
             {
-                if (attributes.isRegularFile() && (attributes.size() <= MAX_FILE_SIZE))
-                {
-                    try
-                    {
-                        List<TodoItem> todos = scanFile(file, charset);
-
-                        if (!todos.isEmpty())
-                        {
-                            results.put(file, todos);
-                        }
-                    }
-                    catch (IOException unreadable)
-                    {
-                        // One unreadable file should not hide every other file's TODOs.
-                    }
-                }
-
-                return FileVisitResult.CONTINUE;
-            }
-
-            // SimpleFileVisitor rethrows here by default, which would end the walk
-            // at the first folder or file the OS refuses to open.
-            @Override
-            public FileVisitResult visitFileFailed(Path file, IOException exception)
-            {
-                return FileVisitResult.CONTINUE;
+                // One unreadable file should not hide every other file's TODOs.
             }
         });
 
