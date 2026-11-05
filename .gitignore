@@ -12,6 +12,9 @@ bin/
 classes/
 .kotlin/
 
+cmake-build-debug/
+cmake-build-release/
+
 !src/main/java/com/willclay/**/build/
 
 # ---------- Packaged artifacts ----------
