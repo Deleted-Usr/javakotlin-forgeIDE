@@ -19,6 +19,7 @@ arguments, interface blocks, structs, `gl_` built-ins, preprocessor directives a
 extensions (`.vert`, `.frag`, `.comp`, `.rgen`, ...) and `.vsh`/`.fsh`/`.gsh` open as GLSL by default
 - A new Settings → File Types page chooses which extensions open as GLSL, JSON, TOML or Markdown, such as adding `.vs`
 and `.fs` for shaders. Open files are re-highlighted when the settings are applied
+- GLSL is now a recognised language in markdown documents and is highlighted correctly in a rendered markdown preview.
 
 #### C++ plugin
 - Syntax highlighting for CMake: `CMakeLists.txt` and `.cmake` files now colour commands, keyword arguments,

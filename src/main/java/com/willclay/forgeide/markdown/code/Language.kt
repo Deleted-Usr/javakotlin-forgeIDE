@@ -22,18 +22,19 @@ enum class Language(
     private val extensions: Set<String> = emptySet(),
 )
 {
-    JAVA       ("Java", "J", Color(0xB07219), Lexer.C_LIKE, true, Keywords.JAVA, setOf("java")),
-    KOTLIN     ("Kotlin", "K", Color(0xA97BFF), Lexer.C_LIKE, true, Keywords.KOTLIN, setOf("kt", "kts")),
-    CPP        ("C++", "C", Color(0xF34B7D), Lexer.C_LIKE, true, Keywords.CPP, setOf("cpp", "cc", "cxx", "c", "h", "hpp", "hh", "hxx")),
-    RUST       ("Rust", "R", Color(0xDEA584), Lexer.C_LIKE, true, Keywords.RUST, setOf("rs")),
-    JSON       ("JSON", "{}", Color(0xCBCB41), Lexer.JSON, false, extensions = setOf("json")),
-    XML        ("XML", "<>", Color(0xE37933), Lexer.XML, false, extensions = setOf("xml", "iml", "vcxproj", "filters", "slnx", "user", "svg")),
-    MARKDOWN   ("Markdown", "M", Color(0x6B9BD2), Lexer.MARKDOWN, false, extensions = setOf("md", "markdown")),
-    PROPERTIES ("Properties", "P", Color(0x8A8F98), Lexer.HASH_COMMENTS, false, extensions = setOf("properties", "toml", "gitignore", "gitattributes", "editorconfig")),
-    SHELL      ("Shell", "$", Color(0x89E051), Lexer.HASH_COMMENTS, false, extensions = setOf("sh", "bash")),
-    TEXT       ("Plain Text", "T", Color(0x8A8F98), Lexer.PLAIN, false, extensions = setOf("txt", "csv", "log", "bat", "cmd", "map")),
-    IMAGE      ("Image", "I", Color(0x5FB3A1), Lexer.PLAIN, false, extensions = setOf("png", "jpg", "jpeg", "gif", "bmp")),
-    BINARY     ("Binary", "B", Color(0x6E737B), Lexer.PLAIN, false);
+    JAVA       ("Java",       "J", Color(0xB07219), Lexer.C_LIKE,        true,  Keywords.JAVA,   setOf("java")),
+    KOTLIN     ("Kotlin",     "K", Color(0xA97BFF), Lexer.C_LIKE,        true,  Keywords.KOTLIN, setOf("kt", "kts")),
+    CPP        ("C++",        "C", Color(0xF34B7D), Lexer.C_LIKE,        true,  Keywords.CPP,    setOf("cpp", "cc", "cxx", "c", "h", "hpp", "hh", "hxx")),
+    RUST       ("Rust",       "R", Color(0xDEA584), Lexer.C_LIKE,        true,  Keywords.RUST,   setOf("rs")),
+    GLSL       ("GLSL",      "gl", Color(0x5586a4), Lexer.C_LIKE,        true,  Keywords.GLSL,   setOf("glsl", "vert", "frag", "vs", "fs")),
+    JSON       ("JSON",      "{}", Color(0xCBCB41), Lexer.JSON,          false,                 extensions = setOf("json")),
+    XML        ("XML",       "<>", Color(0xE37933), Lexer.XML,           false,                 extensions = setOf("xml", "iml", "vcxproj", "filters", "slnx", "user", "svg")),
+    MARKDOWN   ("Markdown",   "M", Color(0x6B9BD2), Lexer.MARKDOWN,      false,                 extensions = setOf("md", "markdown")),
+    PROPERTIES ("Properties", "P", Color(0x8A8F98), Lexer.HASH_COMMENTS, false,                 extensions = setOf("properties", "toml", "gitignore", "gitattributes", "editorconfig")),
+    SHELL      ("Shell",      "$", Color(0x89E051), Lexer.HASH_COMMENTS, false,                 extensions = setOf("sh", "bash")),
+    TEXT       ("Plain Text", "T", Color(0x8A8F98), Lexer.PLAIN,         false,                 extensions = setOf("txt", "csv", "log", "bat", "cmd", "map")),
+    IMAGE      ("Image",      "I", Color(0x5FB3A1), Lexer.PLAIN,         false,                 extensions = setOf("png", "jpg", "jpeg", "gif", "bmp")),
+    BINARY     ("Binary",     "B", Color(0x6E737B), Lexer.PLAIN,         false);
 
     val isImage: Boolean get() = this == IMAGE
 
@@ -57,6 +58,7 @@ enum class Language(
         private val fenceAliases: Map<String, Language> = mapOf(
             "kotlin" to KOTLIN, "rust"    to RUST,  "c++" to CPP,   "markdown" to MARKDOWN, "html" to XML,
             "shell"  to SHELL,  "console" to SHELL, "zsh" to SHELL, "gradle"   to KOTLIN,   "text" to TEXT, "plaintext" to TEXT,
+            "glsl"   to GLSL
         )
 
         /** The language of a fenced code block (```rust, ```Kotlin, ```kts …), or null if unknown or not given. */
@@ -99,6 +101,13 @@ private object Keywords
     val RUST = words("""
         as async await break const continue crate dyn else enum extern false fn for if impl in let loop match mod move
         mut pub ref return self Self static struct super trait true type unsafe use where while union
+    """)
+
+    val GLSL = words("""
+        break continue do for while switch case of else return discard demote terminateInvocation struct const uniform buffer shared
+        attribute varying in out inout layout subroutine centroid flat smooth noperspective patch sample invariant precise lowp mediump
+        highp precision coherent volatile restrict readonly writeonly nonuniformEXT rayPayloadEXT rayPayloadInEXT hitAttributeEXT
+        callableDataEXT callableDataInEXT shaderRecordEXT taskPayloadSharedEXT perprimitiveEXT hitObjectAttributeNV
     """)
 
     private fun words(text: String): Set<String> = text.split(Regex("\\s+")).filter { it.isNotEmpty() }.toSet()

@@ -51,7 +51,7 @@ public final class GLShaderLexer implements Lexer
             "coherent", "volatile", "restrict", "readonly", "writeonly", "nonuniformEXT",
 
             // Ray Tracing and Mesh Shader Storage Qualifiers
-            "rayPayloadEXT", "rayPayloadInEXT", "hitAttributeEXT", "callableDatEXT",
+            "rayPayloadEXT", "rayPayloadInEXT", "hitAttributeEXT", "callableDataEXT",
             "callableDataInEXT", "shaderRecordEXT", "taskPayloadSharedEXT", "perprimitiveEXT",
             "hitObjectAttributeNV"
     );
