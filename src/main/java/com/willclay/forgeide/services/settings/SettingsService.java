@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -44,10 +45,10 @@ public final class SettingsService
     /// @throws NullPointerException if `configDirectory` or `store` is `null`
     public SettingsService(Path configDirectory, JsonFileStore store)
     {
-        Path directory = Objects.requireNonNull(configDirectory, "configDirectory");
+        Path directory    = Objects.requireNonNull(configDirectory, "configDirectory");
         this.settingsFile = directory.toAbsolutePath().normalize().resolve("settings.json");
-        this.store = Objects.requireNonNull(store, "store");
-        this.config = load().normalised();
+        this.store        = Objects.requireNonNull(store, "store");
+        this.config       = load().normalised();
     }
 
     /// Returns the current immutable settings snapshot.
@@ -76,7 +77,8 @@ public final class SettingsService
         synchronized (this)
         {
             store.write(settingsFile, updated);
-            this.config = updated;
+
+            this.config       = updated;
             listenersSnapshot = List.copyOf(listeners);
         }
 
@@ -143,7 +145,8 @@ public final class SettingsService
                         IDESettingsConfiguration.ANTIALIAS_SUBPIXEL,
                         IDESettingsConfiguration.DEFAULT_LCD_CONTRAST,
                         false
-                )
+                ),
+                new IDESettingsConfiguration.FileTypeAssociations(Map.of())
         );
 
         try

@@ -1,12 +1,14 @@
 package com.willclay.forgeide.ui.settings;
 
 import com.formdev.flatlaf.util.UIScale;
+import com.willclay.forgeide.application.IDESettingsConfiguration;
 import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage;
 import com.willclay.forgeide.services.settings.SettingsService;
 import com.willclay.forgeide.services.settings.theme.ThemeService;
 import com.willclay.forgeide.services.settings.project.ProjectSettingsService;
 import com.willclay.forgeide.ui.Utils;
 import com.willclay.forgeide.ui.menu.SettingsButton;
+import com.willclay.forgeide.ui.settings.filetypes.FileTypeSettings;
 import com.willclay.forgeide.ui.settings.general.GeneralSettings;
 import com.willclay.forgeide.ui.settings.project.ProjectSettings;
 import com.willclay.forgeide.ui.settings.theme.ThemeSettings;
@@ -33,6 +35,7 @@ public final class SettingsWindow extends JDialog
     private final ProjectSettingsService projectService;
     private final ThemeService themeService;
     private final GeneralSettings generalSettings;
+    private final FileTypeSettings fileTypeSettings;
     private final ProjectSettings projectSettings;
 
     private final JPanel sidebar             = new JPanel();
@@ -57,10 +60,12 @@ public final class SettingsWindow extends JDialog
         this.projectService  = projectService;
         this.themeService    = themeService;
 
-        this.generalSettings = new GeneralSettings();
-        this.projectSettings = new ProjectSettings(projectService);
+        this.generalSettings  = new GeneralSettings();
+        this.fileTypeSettings = new FileTypeSettings();
+        this.projectSettings  = new ProjectSettings(projectService);
 
         this.generalSettings.load(settingsService.get());
+        this.fileTypeSettings.load(settingsService.get());
 
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setBorder(BorderFactory.createEmptyBorder(10, 8, 10, 8));
@@ -84,6 +89,12 @@ public final class SettingsWindow extends JDialog
                 "Theme",
                 "How Forge looks. A new theme applies straight away.",
                 new ThemeSettings(themeService),
+                false
+        );
+        addPage(
+                "File Types",
+                "Which extensions open as GLSL, JSON, TOML or Markdown, in any project.",
+                fileTypeSettings,
                 false
         );
 
@@ -218,7 +229,11 @@ public final class SettingsWindow extends JDialog
     {
         try
         {
-            settingsService.save(generalSettings.getValues(settingsService.get().appearance().theme()));
+            IDESettingsConfiguration current = settingsService.get();
+
+            settingsService.save(generalSettings.getValues(current)
+                    .withFileTypes(fileTypeSettings.getValues())
+                    .normalised());
         }
         catch (IOException | IllegalArgumentException exception)
         {

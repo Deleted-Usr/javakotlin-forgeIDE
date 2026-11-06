@@ -14,6 +14,11 @@ and this project follows [Semantic Versioning](https://semver.org/).
 in a new settings option under Settings → General → Editor defaults → “Show indent guides between brackets”
 - The status bar now shows the project's lines of code, leaving out comments and blank lines. Its tooltip shows the full
 breakdown. It updates when a file is saved, created or deleted.
+- Syntax highlighting for GLSL shaders in every project: built-in types and constructors, qualifiers, `layout(...)`
+arguments, interface blocks, structs, `gl_` built-ins, preprocessor directives and comments. `.glsl`, the Vulkan stage
+extensions (`.vert`, `.frag`, `.comp`, `.rgen`, ...) and `.vsh`/`.fsh`/`.gsh` open as GLSL by default
+- A new Settings → File Types page chooses which extensions open as GLSL, JSON, TOML or Markdown, such as adding `.vs`
+and `.fs` for shaders. Open files are re-highlighted when the settings are applied
 
 #### C++ plugin
 - Syntax highlighting for CMake: `CMakeLists.txt` and `.cmake` files now colour commands, keyword arguments,

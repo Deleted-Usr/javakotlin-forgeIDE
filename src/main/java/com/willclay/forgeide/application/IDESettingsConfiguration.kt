@@ -23,7 +23,8 @@ data class IDESettingsConfiguration(
     val saving: Saving           = Saving(),
     val buildAndRun: BuildAndRun = BuildAndRun(),
     val docComments: DocComments = DocComments(),
-    val textRendering: TextRendering = TextRendering()
+    val textRendering: TextRendering = TextRendering(),
+    val fileTypes: FileTypeAssociations = FileTypeAssociations()
 ) : VersionedJsonDocument {
     init {
         VersionedJsonDocument.requireSupportedVersion("IDE Settings", schemaVersion, CURRENT_SCHEMA_VERSION)
@@ -35,10 +36,13 @@ data class IDESettingsConfiguration(
         editor     = editor.normalised(),
         saving     = saving.normalised(),
         docComments = docComments.normalised(),
-        textRendering = textRendering.normalised()
+        textRendering = textRendering.normalised(),
+        fileTypes = fileTypes.normalised()
     )
 
     fun withTheme(theme: String) = copy(appearance = Appearance(theme = theme))
+
+    fun withFileTypes(fileTypes: FileTypeAssociations) = copy(fileTypes = fileTypes)
 
     companion object {
         const val CURRENT_SCHEMA_VERSION = 1
@@ -139,7 +143,7 @@ data class IDESettingsConfiguration(
     ) {
         fun normalised() = copy(
             maxColumns = if (maxColumns in MIN_DOC_COMMENT_COLUMNS..MAX_DOC_COMMENT_COLUMNS) maxColumns
-                         else DEFAULT_DOC_COMMENT_COLUMNS
+            else DEFAULT_DOC_COMMENT_COLUMNS
         )
     }
 
@@ -167,7 +171,33 @@ data class IDESettingsConfiguration(
                 else -> ANTIALIAS_SUBPIXEL
             },
             lcdContrast = if (lcdContrast in MIN_LCD_CONTRAST..MAX_LCD_CONTRAST) lcdContrast
-                          else DEFAULT_LCD_CONTRAST
+            else DEFAULT_LCD_CONTRAST
+        )
+    }
+
+    /**
+     * The extensions the user chose for core file types, such as GLSL.
+     *
+     * Only types the user changed are listed; any other keeps the extensions
+     * Forge ships with, including ones a later version adds. An empty list is
+     * kept, because it is how a type is stopped from claiming any extension.
+     *
+     * @property extensions by file type id (`glsl`, `json`, ...), each without
+     *   its dot and in lower case
+     */
+    @JvmRecord
+    @Serializable
+    data class FileTypeAssociations(
+        val extensions: Map<String, List<String>> = emptyMap()
+    ) {
+        fun normalised() = copy(
+            extensions = extensions
+                .filterKeys { it.isNotBlank() }
+                .mapValues { (_, list) ->
+                    list.map { it.trim().trimStart('.').lowercase() }
+                        .filter { it.isNotEmpty() }
+                        .distinct()
+                }
         )
     }
 

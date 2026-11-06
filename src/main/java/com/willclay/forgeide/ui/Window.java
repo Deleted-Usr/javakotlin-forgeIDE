@@ -48,6 +48,7 @@ import com.willclay.forgeide.workspace.Workspace;
 import com.willclay.forgeide.workspace.runconfig.RunConfigurationManager;
 
 import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 import java.awt.Font;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -77,6 +78,9 @@ public final class Window extends JFrame
     private final String baseTitle;
     private final SettingsService settingsService;
 
+    /// The extensions the open tabs were last highlighted with. Only touched on the EDT.
+    private IDESettingsConfiguration.FileTypeAssociations appliedFileTypes;
+
     private final CodeEditorPanel editorPanel;
     private final EditorManager editorManager;
     private final ConsolePanel console;
@@ -101,6 +105,7 @@ public final class Window extends JFrame
         SessionService sessionService   = bootstrap.session();
 
         this.settingsService = Objects.requireNonNull(settingsService, "settingsService");
+        this.appliedFileTypes = settingsService.get().fileTypes();
         Objects.requireNonNull(sessionService, "sessionService");
 
         Font editorFont = EditorFonts.load(
@@ -278,6 +283,22 @@ public final class Window extends JFrame
     {
         editorManager.addChangeListener(this::updateTitle);
         workspace.addChangeListener(this::showCurrentProject);
+        settingsService.addChangeListener(this::fileTypesMayHaveChanged);
+    }
+
+    /// Re-highlights open files when the file type extensions are saved, so a
+    /// `.vs` the user has just added opens as GLSL without being reopened.
+    private void fileTypesMayHaveChanged(IDESettingsConfiguration updated)
+    {
+        IDESettingsConfiguration.FileTypeAssociations fileTypes = updated.fileTypes();
+
+        SwingUtilities.invokeLater(() ->
+        {
+            if (fileTypes.equals(appliedFileTypes)) return;
+
+            appliedFileTypes = fileTypes;
+            installLexerResolver(workspace.getProject());
+        });
     }
 
     private void showCurrentProject()
@@ -295,6 +316,15 @@ public final class Window extends JFrame
                 : project.configuration().fileHandling().lineSeparators());
 
         projectTree.showRoot(project == null ? null : project.rootItem());
+        installLexerResolver(project);
+        updateTitle();
+    }
+
+    /// Chooses each tab's highlighter from its path. Setting a resolver
+    /// re-lexes every open tab, which is also how a change to the file type
+    /// extensions reaches files that are already open.
+    private void installLexerResolver(Project project)
+    {
         editorPanel.setLexerResolver(file ->
         {
             // The project's language comes first: its own sources, and new
@@ -316,9 +346,11 @@ public final class Window extends JFrame
 
             // Anything else may still be a format core knows, such as
             // Cargo.toml or package.json, with or without a project open.
-            return FileTypes.lexerFor(file);
+            // The extensions are the user's, so they are read on every lookup
+            // rather than captured when the project opened.
+            return FileTypes.lexerFor(file,
+                    FileTypes.configured(settingsService.get().fileTypes().extensions()));
         });
-        updateTitle();
     }
 
     private void updateTitle()

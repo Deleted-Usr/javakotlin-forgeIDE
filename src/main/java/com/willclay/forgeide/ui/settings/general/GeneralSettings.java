@@ -248,8 +248,9 @@ public final class GeneralSettings extends JPanel
         clearConsoleOnRun.setSelected(buildAndRun.clearConsoleOnRun());
     }
 
-    /// Returns the edited general values while preserving the independently edited theme.
-    public IDESettingsConfiguration getValues(String theme)
+    /// Returns the edited general values, keeping what other pages edit — the
+    /// theme and file type extensions — as they are in `current`.
+    public IDESettingsConfiguration getValues(IDESettingsConfiguration current)
     {
         String startup = OPEN_EMPTY_WINDOW_LABEL.equals(startupAction.getSelectedItem())
                 ? IDESettingsConfiguration.OPEN_EMPTY_WINDOW
@@ -257,7 +258,7 @@ public final class GeneralSettings extends JPanel
 
         return new IDESettingsConfiguration(
                 IDESettingsConfiguration.CURRENT_SCHEMA_VERSION,
-                new IDESettingsConfiguration.Appearance(theme),
+                current.appearance(),
                 new IDESettingsConfiguration.Startup(
                         startup, restoreOpenFiles.isSelected(), confirmDiscard.isSelected()),
                 new IDESettingsConfiguration.Editor(
@@ -280,7 +281,8 @@ public final class GeneralSettings extends JPanel
                 new IDESettingsConfiguration.TextRendering(
                         selectedAntialiasing(),
                         ((Number) lcdContrast.getValue()).intValue(),
-                        fractionalMetrics.isSelected())
+                        fractionalMetrics.isSelected()),
+                current.fileTypes()
         );
     }
 }

@@ -20,21 +20,48 @@ import java.util.stream.Collectors;
 /// A record rather than an interface, because a file type is only data: the
 /// names it matches and the lexer that colours it.
 ///
+/// @param id          a stable key for settings, such as `glsl`; never shown
 /// @param displayName shown to people, for example `TOML`
 /// @param extensions  without the dot, such as `json`; matched ignoring case
 /// @param fileNames   whole names, for files whose extension says nothing about
 ///                    them, such as `Cargo.lock`; matched ignoring case
 /// @param lexer       colours files of this type; must be stateless, because one
 ///                    instance is shared by every open file
-public record FileType(String displayName, Set<String> extensions, Set<String> fileNames, Lexer lexer)
+public record FileType(String id, String displayName, Set<String> extensions, Set<String> fileNames, Lexer lexer)
 {
     public FileType
     {
+        Objects.requireNonNull(id, "id");
         Objects.requireNonNull(displayName, "displayName");
         Objects.requireNonNull(lexer, "lexer");
 
+        if (id.isBlank())
+        {
+            throw new IllegalArgumentException("id must not be blank");
+        }
+
         extensions = lowerCase(extensions);
         fileNames = lowerCase(fileNames);
+    }
+
+    /// A file type whose id is its display name in lower case, which is what
+    /// language plugins written before ids existed get.
+    public FileType(String displayName, Set<String> extensions, Set<String> fileNames, Lexer lexer)
+    {
+        this(
+            Objects.requireNonNull(displayName, "displayName").toLowerCase(Locale.ROOT),
+            displayName,
+            extensions,
+            fileNames,
+            lexer
+        );
+    }
+
+    /// This type, matching `replacement` instead of its own extensions. Whole
+    /// file names are kept.
+    public FileType withExtensions(Set<String> replacement)
+    {
+        return new FileType(id, displayName, replacement, fileNames, lexer);
     }
 
     /// Whether `file` is of this type, judged by its name alone. The file is
