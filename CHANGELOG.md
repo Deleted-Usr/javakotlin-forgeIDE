@@ -25,6 +25,9 @@ and `.fs` for shaders. Open files are re-highlighted when the settings are appli
 - Syntax highlighting for CMake: `CMakeLists.txt` and `.cmake` files now colour commands, keyword arguments,
 variable references, generator expressions, strings, bracket arguments and comments
 
+### Fixed
+- The rendered markdown preview now allows scrolling when the mouse is sitting inside a code block
+
 ## [1.4.0] - 2026-10-20
 
 This release focuses on a more distinct editor pane and gutter, custom themes, and small QOL changes.

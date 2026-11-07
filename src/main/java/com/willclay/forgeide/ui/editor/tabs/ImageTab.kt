@@ -27,6 +27,7 @@ import javax.swing.*
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 /**
  * A read-only tab that shows an image file, aimed at checking game sprites.
@@ -48,7 +49,7 @@ import kotlin.math.min
 class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
     private var image: BufferedImage? = null
     /** Why [image] is missing, shown in its place. */
-    private var loadError: String? = null
+    private var loadError: String?            = null
     private var loadedModifiedTime: FileTime? = null
 
     /** Screen pixels per image pixel. */
@@ -56,7 +57,7 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
     /** Until the viewport has a size, the first fit has to wait for it. */
     private var fitPending = true
 
-    private val canvas = ImageCanvas()
+    private val canvas     = ImageCanvas()
     private val scrollPane = JScrollPane(canvas).apply {
         border = BorderFactory.createEmptyBorder()
         // Plain wheel scrolling should move a large image at a usable speed.
@@ -64,11 +65,12 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
         horizontalScrollBar.unitIncrement = 16
     }
 
-    private val details = JLabel()
-    private val pointer = JLabel()
+    private val details   = JLabel()
+    private val pointer   = JLabel()
     private val zoomLabel = JLabel("", SwingConstants.CENTER).apply {
         preferredSize = Dimension(48, preferredSize.height)
     }
+
     private val gridToggle = JToggleButton("Grid", true)
 
     /** Polls the file's modified time while the tab is on screen. */
@@ -78,12 +80,15 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
         textPane.isEditable = false
 
         remove(editorArea)
+
         add(createToolbar(), BorderLayout.NORTH)
         add(scrollPane, BorderLayout.CENTER)
 
         scrollPane.viewport.addComponentListener(object : ComponentAdapter() {
             override fun componentResized(event: ComponentEvent) {
-                if (fitPending && image != null && scrollPane.viewport.width > 0) fitToWindow()
+                if (fitPending && image != null && scrollPane.viewport.width > 0) {
+                    fitToWindow()
+                }
             }
         })
 
@@ -105,20 +110,24 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
     private fun createToolbar(): JComponent {
         val buttons = JToolBar().apply {
             isFloatable = false
-            isOpaque = false
-            border = BorderFactory.createEmptyBorder()
+            isOpaque    = false
+            border      = BorderFactory.createEmptyBorder()
         }
 
         fun button(text: String, tip: String, action: () -> Unit) = JButton(text).apply {
             isFocusable = false
             toolTipText = tip
+
             putClientProperty("JButton.buttonType", "toolBarButton")
             putClientProperty("FlatLaf.style", "toolbar.margin: 3,6,3,6; arc: 6")
+
             addActionListener { action() }
         }
 
         buttons.add(button("−", "Zoom out (Ctrl + wheel down)") { zoomBy(-1, null) })
+
         buttons.add(zoomLabel)
+
         buttons.add(button("+", "Zoom in (Ctrl + wheel up)") { zoomBy(1, null) })
         buttons.add(button("1:1", "Actual size") { setZoom(1.0, null) })
         buttons.add(button("Fit", "Fit to window") { fitToWindow() })
@@ -126,8 +135,10 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
         gridToggle.apply {
             isFocusable = false
             toolTipText = "Show a pixel grid when zoomed in to ${GRID_MIN_ZOOM.toInt() * 100}% or more"
+
             putClientProperty("JButton.buttonType", "toolBarButton")
             putClientProperty("FlatLaf.style", "toolbar.margin: 3,6,3,6; arc: 6")
+
             addActionListener { canvas.repaint() }
         }
         buttons.add(gridToggle)
@@ -137,6 +148,7 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
 
         return JPanel(BorderLayout(12, 0)).apply {
             border = BorderFactory.createEmptyBorder(2, 10, 2, 6)
+
             add(details, BorderLayout.WEST)
             add(pointer, BorderLayout.CENTER)
             add(buttons, BorderLayout.EAST)
@@ -149,10 +161,17 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
 
         try {
             loadedModifiedTime = Files.getLastModifiedTime(path)
-            image = ImageIO.read(path.toFile())
-            loadError = if (image == null) "${getDisplayName()} is not in an image format Forge can read." else null
-        } catch (exception: IOException) {
-            image = null
+            image              = ImageIO.read(path.toFile())
+
+            loadError = if (image == null) {
+                "${getDisplayName()} is not in an image format Forge can read."
+            }
+            else {
+                null
+            }
+        }
+        catch (exception: IOException) {
+            image     = null
             loadError = "Could not read ${getDisplayName()}: ${exception.message}"
         }
 
@@ -160,6 +179,7 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
         pointer.text = ""
 
         updateDetails(path)
+
         canvas.revalidate()
         canvas.repaint()
     }
@@ -179,26 +199,40 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
 
     private fun updateDetails(path: Path) {
         val current = image
+
         if (current == null) {
-            details.text = ""
-            pointer.text = ""
+            details.text   = ""
+            pointer.text   = ""
             zoomLabel.text = ""
+
             return
         }
 
-        val size = try { formatSize(Files.size(path)) } catch (ignored: IOException) { "" }
+        val size   = try {
+            formatSize(Files.size(path))
+        }
+        catch (ignored: IOException) {
+            ""
+        }
+
         val format = path.fileName.toString().substringAfterLast('.', "").uppercase(Locale.ROOT)
 
         details.text = listOf("${current.width} × ${current.height} px", format, size)
             .filter { it.isNotEmpty() }
             .joinToString("  ·  ")
-        zoomLabel.text = "${Math.round(zoom * 100)}%"
+
+        zoomLabel.text = "${(zoom * 100).roundToInt()}%"
     }
 
     /** Steps to the next [ZOOM_LEVELS] entry, keeping [anchor] (canvas coordinates) still on screen. */
     private fun zoomBy(steps: Int, anchor: Point?) {
-        val next = if (steps > 0) ZOOM_LEVELS.firstOrNull { it > zoom + 1e-9 } ?: ZOOM_LEVELS.last()
-                   else ZOOM_LEVELS.lastOrNull { it < zoom - 1e-9 } ?: ZOOM_LEVELS.first()
+        val next = if (steps > 0) {
+            ZOOM_LEVELS.firstOrNull { it > zoom + 1e-9 } ?: ZOOM_LEVELS.last()
+        }
+        else {
+            ZOOM_LEVELS.lastOrNull { it < zoom - 1e-9 } ?: ZOOM_LEVELS.first()
+        }
+
         setZoom(next, anchor)
     }
 
@@ -207,26 +241,30 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
         fitPending = false
         if (level == zoom) return
 
-        val viewport = scrollPane.viewport
+        val viewport     = scrollPane.viewport
         val viewPosition = viewport.viewPosition
 
         // Without a pointer, zoom around the middle of what is visible.
-        val point = anchor ?: Point(viewPosition.x + viewport.width / 2, viewPosition.y + viewport.height / 2)
+        val point  = anchor ?: Point(viewPosition.x + viewport.width / 2, viewPosition.y + viewport.height / 2)
         val origin = canvas.imageOrigin()
+
         val imageX = (point.x - origin.x) / zoom
         val imageY = (point.y - origin.y) / zoom
 
         zoom = level
+
         canvas.revalidate()
         viewport.validate()
 
         // Put the same image point back under the pointer (or the middle).
         val newOrigin = canvas.imageOrigin()
+
         val newX = newOrigin.x + imageX * zoom - (point.x - viewPosition.x)
         val newY = newOrigin.y + imageY * zoom - (point.y - viewPosition.y)
 
         val maxX = max(0, canvas.width - viewport.width)
         val maxY = max(0, canvas.height - viewport.height)
+
         viewport.viewPosition = Point(newX.toInt().coerceIn(0, maxX), newY.toInt().coerceIn(0, maxY))
 
         updateDetails(this.file ?: return)
@@ -239,12 +277,15 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
      * since fractional scaling makes pixel art uneven.
      */
     private fun fitToWindow() {
-        val current = image ?: return
+        val current  = image ?: return
         val viewport = scrollPane.viewport
-        if (viewport.width <= 0 || viewport.height <= 0) return
+
+        if (viewport.width <= 0 || viewport.height <= 0) {
+            return
+        }
 
         val margin = 2 * FIT_MARGIN
-        val ratio = min(
+        val ratio  = min(
             (viewport.width - margin).toDouble() / current.width,
             (viewport.height - margin).toDouble() / current.height,
         )
@@ -255,9 +296,11 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
         }
 
         // The whole image is on screen afterwards, so there is no point to keep still.
-        zoom = level
+        zoom       = level
         fitPending = false
+
         canvas.revalidate()
+
         scrollPane.viewport.validate()
         scrollPane.viewport.viewPosition = Point(0, 0)
 
@@ -281,7 +324,7 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
                     }
                 }
 
-                override fun mouseMoved(event: MouseEvent) = showPixel(event.point)
+                override fun mouseMoved(event: MouseEvent)   = showPixel(event.point)
                 override fun mouseDragged(event: MouseEvent) = showPixel(event.point)
                 override fun mouseExited(event: MouseEvent) { pointer.text = "" }
             }
@@ -303,7 +346,8 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
 
         private fun showPixel(point: Point) {
             val current = image ?: return
-            val origin = imageOrigin()
+            val origin  = imageOrigin()
+
             val x = floor((point.x - origin.x) / zoom).toInt()
             val y = floor((point.y - origin.y) / zoom).toInt()
 
@@ -312,10 +356,16 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
                 return
             }
 
-            val argb = current.getRGB(x, y)
+            val argb  = current.getRGB(x, y)
             val alpha = argb ushr 24
-            val hex = String.format(Locale.ROOT, "#%06X", argb and 0xFFFFFF)
-            pointer.text = "x $x, y $y  ·  $hex" + if (alpha != 255) "  ·  alpha $alpha" else ""
+            val hex   = String.format(Locale.ROOT, "#%06X", argb and 0xFFFFFF)
+
+            pointer.text = "x $x, y $y  ·  $hex" + if (alpha != 255) {
+                "  ·  alpha $alpha"
+            }
+            else {
+                ""
+            }
         }
 
         override fun getPreferredSize(): Dimension {
@@ -325,6 +375,7 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
 
         override fun paintComponent(graphics: Graphics) {
             val g = graphics.create() as Graphics2D
+
             try {
                 g.color = UIManager.getColor("Panel.background") ?: Color.DARK_GRAY
                 g.fillRect(0, 0, width, height)
@@ -345,9 +396,12 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
                     if (zoom >= 1) RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR
                     else RenderingHints.VALUE_INTERPOLATION_BILINEAR,
                 )
+
                 g.drawImage(current, bounds.x, bounds.y, bounds.width, bounds.height, null)
 
-                if (gridToggle.isSelected && zoom >= GRID_MIN_ZOOM) paintGrid(g, current, bounds)
+                if (gridToggle.isSelected && zoom >= GRID_MIN_ZOOM) {
+                    paintGrid(g, current, bounds)
+                }
             } finally {
                 g.dispose()
             }
@@ -355,58 +409,73 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
 
         private fun paintCheckerboard(g: Graphics2D, bounds: Rectangle) {
             val clip = bounds.intersection(g.clipBounds ?: bounds)
-            if (clip.isEmpty) return
+
+            if (clip.isEmpty) {
+                return
+            }
 
             g.color = CHECKER_LIGHT
             g.fill(clip)
             g.color = CHECKER_DARK
 
-            val size = CHECKER_SIZE
-            val firstColumn = (clip.x - bounds.x) / size
-            val firstRow = (clip.y - bounds.y) / size
-            val lastColumn = (clip.x + clip.width - bounds.x) / size
-            val lastRow = (clip.y + clip.height - bounds.y) / size
+            val size         = CHECKER_SIZE
+
+            val firstColumn  = (clip.x - bounds.x) / size
+            val firstRow     = (clip.y - bounds.y) / size
+            val lastColumn   = (clip.x + clip.width  - bounds.x) / size
+            val lastRow      = (clip.y + clip.height - bounds.y) / size
 
             val saved = g.clip
             g.clip(clip)
+
             for (row in firstRow..lastRow) {
                 for (column in firstColumn..lastColumn) {
-                    if ((row + column) % 2 == 1) g.fillRect(bounds.x + column * size, bounds.y + row * size, size, size)
+                    if ((row + column) % 2 == 1) {
+                        g.fillRect(bounds.x + column * size, bounds.y + row * size, size, size)
+                    }
                 }
             }
+
             g.clip = saved
         }
 
         /** Only the lines inside the clip are drawn, so a large zoomed sheet stays quick. */
         private fun paintGrid(g: Graphics2D, current: BufferedImage, bounds: Rectangle) {
             val clip = bounds.intersection(g.clipBounds ?: bounds)
-            if (clip.isEmpty) return
 
-            g.color = GRID_COLOR
+            if (clip.isEmpty) {
+                return
+            }
+
+            g.color  = GRID_COLOR
             g.stroke = BasicStroke(1f)
 
             val firstColumn = max(0, floor((clip.x - bounds.x) / zoom).toInt())
-            val lastColumn = min(current.width, ((clip.x + clip.width - bounds.x) / zoom).toInt() + 1)
+            val lastColumn  = min(current.width, ((clip.x + clip.width - bounds.x) / zoom).toInt() + 1)
+
             for (column in firstColumn..lastColumn) {
-                val x = bounds.x + Math.round(column * zoom).toInt()
+                val x = bounds.x + (column * zoom).roundToInt()
                 g.drawLine(x, clip.y, x, clip.y + clip.height)
             }
 
             val firstRow = max(0, floor((clip.y - bounds.y) / zoom).toInt())
-            val lastRow = min(current.height, ((clip.y + clip.height - bounds.y) / zoom).toInt() + 1)
+            val lastRow  = min(current.height, ((clip.y + clip.height - bounds.y) / zoom).toInt() + 1)
+
             for (row in firstRow..lastRow) {
-                val y = bounds.y + Math.round(row * zoom).toInt()
+                val y = bounds.y + (row * zoom).roundToInt()
                 g.drawLine(clip.x, y, clip.x + clip.width, y)
             }
         }
 
         private fun paintMessage(g: Graphics2D, message: String) {
             g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON)
+
             g.color = UIManager.getColor("Label.disabledForeground") ?: Color.GRAY
-            g.font = UIManager.getFont("Label.font")
+            g.font  = UIManager.getFont("Label.font")
 
             val metrics = g.fontMetrics
             val visible = visibleRect
+
             g.drawString(
                 message,
                 visible.x + (visible.width - metrics.stringWidth(message)) / 2,
@@ -415,12 +484,17 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
         }
 
         // Filling the viewport whenever the image is smaller lets imageOrigin centre it.
-        override fun getScrollableTracksViewportWidth() = preferredSize.width <= (parent?.width ?: 0)
+        override fun getScrollableTracksViewportWidth()  = preferredSize.width <= (parent?.width ?: 0)
         override fun getScrollableTracksViewportHeight() = preferredSize.height <= (parent?.height ?: 0)
         override fun getPreferredScrollableViewportSize(): Dimension = preferredSize
-        override fun getScrollableUnitIncrement(visible: Rectangle, orientation: Int, direction: Int) = 16
+        override fun getScrollableUnitIncrement(visible:  Rectangle, orientation: Int, direction: Int) = 16
         override fun getScrollableBlockIncrement(visible: Rectangle, orientation: Int, direction: Int) =
-            if (orientation == SwingConstants.VERTICAL) visible.height else visible.width
+            if (orientation == SwingConstants.VERTICAL) {
+                visible.height
+            }
+            else {
+                visible.width
+            }
     }
 
     companion object {
@@ -430,12 +504,12 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
 
         /** Below this a grid line would cover most of each pixel. */
         private const val GRID_MIN_ZOOM = 8.0
-        private const val FIT_MARGIN = 16
-        private const val CHECKER_SIZE = 8
+        private const val FIT_MARGIN    = 16
+        private const val CHECKER_SIZE  = 8
 
         private val CHECKER_LIGHT = Color(0x5A5A5A)
-        private val CHECKER_DARK = Color(0x464646)
-        private val GRID_COLOR = Color(0, 0, 0, 70)
+        private val CHECKER_DARK  = Color(0x464646)
+        private val GRID_COLOR    = Color(0, 0, 0, 70)
 
         /** Every suffix the installed image readers accept (PNG, JPEG, GIF, BMP, WBMP and TIFF in a standard JDK). */
         private val SUFFIXES: Set<String> by lazy {
@@ -446,7 +520,11 @@ class ImageTab(file: Path) : EditorTab(file, LineEnding.LF) {
         @JvmStatic
         fun canView(file: Path?): Boolean {
             val name = file?.fileName?.toString() ?: return false
-            if (!name.contains('.')) return false
+
+            if (!name.contains('.')) {
+                return false
+            }
+
             return name.substringAfterLast('.').lowercase(Locale.ROOT) in SUFFIXES
         }
 

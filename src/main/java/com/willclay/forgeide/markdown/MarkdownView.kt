@@ -111,7 +111,7 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
 
     init {
         isOpaque = false
-        built = true
+        built    = true
         rebuild()
     }
 
@@ -170,7 +170,12 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
             if (x > xs[i]) continue
 
             val span = xs[i] - xs[i - 1]
-            return if (span <= 0) ys[i] else ys[i - 1] + (ys[i] - ys[i - 1]) * ((x - xs[i - 1]) / span).coerceIn(0.0, 1.0)
+            return if (span <= 0) {
+                ys[i]
+            }
+            else {
+                ys[i - 1] + (ys[i] - ys[i - 1]) * ((x - xs[i - 1]) / span).coerceIn(0.0, 1.0)
+            }
         }
 
         return ys.last()
@@ -231,10 +236,14 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
         val new = document
 
         var prefix = 0
-        while (prefix < minOf(old.size, new.size) && old[prefix].block == new[prefix]) prefix++
+        while (prefix < minOf(old.size, new.size) && old[prefix].block == new[prefix]) {
+            prefix++
+        }
 
         var suffix = 0
-        while (suffix < minOf(old.size, new.size) - prefix && old[old.lastIndex - suffix].block == new[new.lastIndex - suffix]) suffix++
+        while (suffix < minOf(old.size, new.size) - prefix && old[old.lastIndex - suffix].block == new[new.lastIndex - suffix]) {
+            suffix++
+        }
 
         rendered = old.take(prefix) + new.subList(prefix, new.size - suffix).map(::renderTopLevel) + old.takeLast(suffix)
 
@@ -245,6 +254,7 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
             if (index > 0) {
                 add(Box.createVerticalStrut(gapBefore(entry.block, 12)))
             }
+
             add(entry.component)
             headings.putAll(entry.headings)
         }
@@ -274,7 +284,6 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
     }
 
     override fun getPreferredScrollableViewportSize(): Dimension = preferredSize
-
     override fun getScrollableUnitIncrement(visible: Rectangle, orientation: Int, direction: Int) = UIScale.scale(24)
 
     override fun getScrollableBlockIncrement(visible: Rectangle, orientation: Int, direction: Int) =
@@ -285,8 +294,7 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
             visible.width
         }
 
-    override fun getScrollableTracksViewportWidth() = true
-
+    override fun getScrollableTracksViewportWidth()  = true
     override fun getScrollableTracksViewportHeight() = false
 
     // Rendering
@@ -427,7 +435,12 @@ class MarkdownView @JvmOverloads constructor(markdown: String = "", links: LinkH
             border    = BorderFactory.createEmptyBorder()
             isOpaque  = false
             viewport.isOpaque       = false
-            isWheelScrollingEnabled = false  // let the mouse wheel scroll the page, not this
+
+            isWheelScrollingEnabled = false  // let the mouse wheel scroll the page, not this by passing the event onto the parent component
+            addMouseWheelListener { e ->
+                val parent = parent ?: return@addMouseWheelListener
+                parent.dispatchEvent(SwingUtilities.convertMouseEvent(this, e, parent))
+            }
         }
 
         // Header: the language (its proper name when known, e.g. "rs" -> "Rust") and a Copy button.
