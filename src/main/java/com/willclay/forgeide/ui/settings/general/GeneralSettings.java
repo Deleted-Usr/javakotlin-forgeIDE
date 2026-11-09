@@ -37,6 +37,13 @@ public final class GeneralSettings extends JPanel
     private JCheckBox showColourSwatches;
     private JCheckBox showIndentGuides;
 
+    private static final String MARKDOWN_EDITOR_LABEL  = "Editor Only";
+    private static final String MARKDOWN_SPLIT_LABEL   = "Editor and Preview";
+    private static final String MARKDOWN_PREVIEW_LABEL = "Preview Only";
+    private final JComboBox<String> markdownViewMode = new JComboBox<>(new String[] {
+            MARKDOWN_EDITOR_LABEL, MARKDOWN_SPLIT_LABEL, MARKDOWN_PREVIEW_LABEL
+    });
+
     private JCheckBox renderDocComments;
     private final JSpinner docCommentColumns = Utils.integerSpinner(
             IDESettingsConfiguration.DEFAULT_DOC_COMMENT_COLUMNS,
@@ -104,6 +111,9 @@ public final class GeneralSettings extends JPanel
         showMinimap  = Utils.addSettingsCheckBoxRow(panel, 4, "Show the minimap beside the editor", true);
         showColourSwatches = Utils.addSettingsCheckBoxRow(panel, 5, "Show colour swatches in the gutter", true);
         showIndentGuides   = Utils.addSettingsCheckBoxRow(panel, 6, "Show indent guides between brackets", true);
+        Utils.addSettingsFormRow(panel, 7, "Default Markdown view:", markdownViewMode);
+        markdownViewMode.setSelectedItem(MARKDOWN_SPLIT_LABEL);
+        markdownViewMode.setToolTipText("Used when opening Markdown tabs; open tabs keep their current view");
 
         return panel;
     }
@@ -201,6 +211,14 @@ public final class GeneralSettings extends JPanel
         return IDESettingsConfiguration.ANTIALIAS_SUBPIXEL;
     }
 
+    private String selectedMarkdownViewMode()
+    {
+        Object selected = markdownViewMode.getSelectedItem();
+        if (MARKDOWN_EDITOR_LABEL.equals(selected))  return IDESettingsConfiguration.MARKDOWN_EDITOR;
+        if (MARKDOWN_PREVIEW_LABEL.equals(selected)) return IDESettingsConfiguration.MARKDOWN_PREVIEW;
+        return IDESettingsConfiguration.MARKDOWN_SPLIT;
+    }
+
     public void load(IDESettingsConfiguration settings)
     {
         IDESettingsConfiguration.Startup startup         = settings.startup();
@@ -225,6 +243,12 @@ public final class GeneralSettings extends JPanel
         showMinimap.setSelected(editor.showMinimap());
         showColourSwatches.setSelected(editor.showColourSwatches());
         showIndentGuides.setSelected(editor.showIndentGuides());
+        markdownViewMode.setSelectedItem(switch (editor.markdownViewMode())
+        {
+            case IDESettingsConfiguration.MARKDOWN_EDITOR  -> MARKDOWN_EDITOR_LABEL;
+            case IDESettingsConfiguration.MARKDOWN_PREVIEW -> MARKDOWN_PREVIEW_LABEL;
+            default                                       -> MARKDOWN_SPLIT_LABEL;
+        });
 
         renderDocComments.setSelected(docComments.renderByDefault());
         docCommentColumns.setValue(docComments.maxColumns());
@@ -268,7 +292,8 @@ public final class GeneralSettings extends JPanel
                         insertSpaces.isSelected(),
                         showMinimap.isSelected(),
                         showColourSwatches.isSelected(),
-                        showIndentGuides.isSelected()),
+                        showIndentGuides.isSelected(),
+                        selectedMarkdownViewMode()),
                 new IDESettingsConfiguration.Saving(
                         autoSave.isSelected(),
                         ((Number) autoSaveDelay.getValue()).intValue(),

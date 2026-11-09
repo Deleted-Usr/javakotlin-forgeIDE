@@ -55,22 +55,26 @@ public final class IDESettingsRuntime implements AutoCloseable
     private void apply(IDESettingsConfiguration updated)
     {
         configuration = Objects.requireNonNull(updated, "updated");
+
         IDESettingsConfiguration.Editor editor = updated.editor();
         IDESettingsConfiguration.Saving saving = updated.saving();
+
         editorPanel.applyEditorSettings(
                 EditorFonts.load(editor.fontFamily(), editor.fontSize()),
                 editor.tabWidth(),
                 editor.insertSpaces()
         );
-        editorPanel.setMinimapVisible(editor.showMinimap());
-        editorPanel.setColourSwatchesVisible(editor.showColourSwatches());
-        editorPanel.setIndentGuidesVisible(editor.showIndentGuides());
-        editorPanel.setRenderDocCommentsByDefault(updated.docComments().renderByDefault());
-        editorPanel.setDocCommentMaxColumns(updated.docComments().maxColumns());
-        editorPanel.setTextRendering(updated.textRendering());
 
-        autoSaveTimer.setInitialDelay(saving.autoSaveDelaySeconds() * 1_000);
-        autoSaveTimer.setDelay(saving.autoSaveDelaySeconds() * 1_000);
+        editorPanel.setMinimapVisible             (editor.showMinimap());
+        editorPanel.setColourSwatchesVisible      (editor.showColourSwatches());
+        editorPanel.setIndentGuidesVisible        (editor.showIndentGuides());
+        editorPanel.setDefaultMarkdownViewMode    (editor.markdownViewMode());
+        editorPanel.setRenderDocCommentsByDefault (updated.docComments().renderByDefault());
+        editorPanel.setDocCommentMaxColumns       (updated.docComments().maxColumns());
+        editorPanel.setTextRendering              (updated.textRendering());
+
+        autoSaveTimer.setInitialDelay (saving.autoSaveDelaySeconds() * 1_000);
+        autoSaveTimer.setDelay        (saving.autoSaveDelaySeconds() * 1_000);
 
         if (!saving.autoSave()) autoSaveTimer.stop();
         else if (editorManager.hasModifiedFiles()) autoSaveTimer.restart();

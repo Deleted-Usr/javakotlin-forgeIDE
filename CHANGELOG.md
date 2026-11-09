@@ -20,6 +20,7 @@ extensions (`.vert`, `.frag`, `.comp`, `.rgen`, ...) and `.vsh`/`.fsh`/`.gsh` op
 - A new Settings → File Types page chooses which extensions open as GLSL, JSON, TOML or Markdown, such as adding `.vs`
 and `.fs` for shaders. Open files are re-highlighted when the settings are applied
 - GLSL is now a recognised language in markdown documents and is highlighted correctly in a rendered markdown preview.
+- Default markdown tab view setting under Settings → General → Editor defaults → "Default markdown view"
 
 #### C++ plugin
 - Syntax highlighting for CMake: `CMakeLists.txt` and `.cmake` files now colour commands, keyword arguments,

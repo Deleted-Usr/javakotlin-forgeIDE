@@ -50,6 +50,10 @@ data class IDESettingsConfiguration(
         const val OPEN_EMPTY_WINDOW      = "open-empty-window"
         const val DEFAULT_THEME          = "material-darker"
 
+        const val MARKDOWN_EDITOR  = "editor"
+        const val MARKDOWN_SPLIT   = "split"
+        const val MARKDOWN_PREVIEW = "preview"
+
         const val DEFAULT_DOC_COMMENT_COLUMNS = 100
         const val MIN_DOC_COMMENT_COLUMNS     = 40
         const val MAX_DOC_COMMENT_COLUMNS     = 200
@@ -99,19 +103,25 @@ data class IDESettingsConfiguration(
      */
     @JvmRecord
     @Serializable
-    data class Editor(
+    data class Editor @JvmOverloads constructor(
         val fontFamily: String    = EditorFonts.BUNDLED,
         val fontSize: Int         = 14,
         val tabWidth: Int         = 4,
         val insertSpaces: Boolean = true,
         val showMinimap: Boolean  = true,
         val showColourSwatches: Boolean = true,
-        val showIndentGuides: Boolean = true
+        val showIndentGuides: Boolean = true,
+        /** Initial view for newly opened Markdown tabs; existing tabs keep their chosen view. */
+        val markdownViewMode: String = MARKDOWN_SPLIT
     ) {
         fun normalised() = copy(
             fontFamily = fontFamily.ifBlank { EditorFonts.BUNDLED },
             fontSize = if (fontSize in 8..48) fontSize else 14,
             tabWidth = if (tabWidth in 1..16) tabWidth else 4,
+            markdownViewMode = when (markdownViewMode) {
+                MARKDOWN_EDITOR, MARKDOWN_SPLIT, MARKDOWN_PREVIEW -> markdownViewMode
+                else -> MARKDOWN_SPLIT
+            },
         )
     }
 

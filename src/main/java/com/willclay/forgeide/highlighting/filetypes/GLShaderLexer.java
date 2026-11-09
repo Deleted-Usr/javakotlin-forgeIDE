@@ -95,7 +95,7 @@ public final class GLShaderLexer implements Lexer
 
         for (int index = 0; index < lexemes.size(); index++)
         {
-            Lexeme lexeme = lexemes.get(index);
+            Lexeme lexeme  = lexemes.get(index);
             TokenType type = highlightType(text, lexemes, index, declaredTypes, parenthesisPairs, inLayout);
 
             if (type != null && type != TokenType.PLAIN)

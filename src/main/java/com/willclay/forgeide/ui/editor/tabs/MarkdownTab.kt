@@ -43,8 +43,11 @@ import kotlin.math.floor
  *
  * @param file the document's path, or `null` for an unsaved document
  * @param lineEnding the document's line-ending metadata used when saving
+ * @param initialViewMode the view to show when this tab opens
  */
-class MarkdownTab(file: Path?, lineEnding: LineEnding) : EditorTab(file, lineEnding) {
+class MarkdownTab @JvmOverloads constructor(
+    file: Path?, lineEnding: LineEnding, initialViewMode: ViewMode = ViewMode.SPLIT
+) : EditorTab(file, lineEnding) {
     /** Which of the source and the preview the tab currently shows. */
     enum class ViewMode(val label: String, val icon: ToolbarIcon) {
         EDITOR("Editor Only", ToolbarIcon.EDITOR),
@@ -96,7 +99,7 @@ class MarkdownTab(file: Path?, lineEnding: LineEnding) : EditorTab(file, lineEnd
      *
      * Call this on the Event Dispatch Thread.
      */
-    var viewMode = ViewMode.SPLIT
+    var viewMode = initialViewMode
         set(mode) {
             if (field == mode) return
             if (field == ViewMode.SPLIT) lastDividerLocation = splitPane.dividerLocation

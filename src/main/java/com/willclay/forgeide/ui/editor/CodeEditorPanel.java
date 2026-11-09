@@ -72,6 +72,7 @@ public final class CodeEditorPanel extends JPanel
     private boolean minimapVisible = true;
     private boolean colourSwatchesVisible = true;
     private boolean indentGuidesVisible   = true;
+    private MarkdownTab.ViewMode defaultMarkdownViewMode = MarkdownTab.ViewMode.SPLIT;
     private boolean renderDocComments;
     private int docCommentMaxColumns = IDESettingsConfiguration.DEFAULT_DOC_COMMENT_COLUMNS;
     private TextRenderingHints textRendering = TextRenderingHints.from(new IDESettingsConfiguration.TextRendering());
@@ -94,9 +95,9 @@ public final class CodeEditorPanel extends JPanel
         tabs.addChangeListener(event -> activeTabChanged());
 
         content.add(emptyState, EMPTY_CARD);
-        content.add(tabs, TABS_CARD);
+        content.add(tabs,       TABS_CARD);
 
-        add(content, BorderLayout.CENTER);
+        add(content,    BorderLayout.CENTER);
         add(breadcrumb, BorderLayout.SOUTH);
 
         breadcrumb.showFile(null, null);
@@ -466,11 +467,22 @@ public final class CodeEditorPanel extends JPanel
         return tab;
     }
 
+    /// Sets the initial view of future Markdown tabs, preserving each open tab's choice.
+    public void setDefaultMarkdownViewMode(String mode)
+    {
+        defaultMarkdownViewMode = switch (mode)
+        {
+            case IDESettingsConfiguration.MARKDOWN_EDITOR  -> MarkdownTab.ViewMode.EDITOR;
+            case IDESettingsConfiguration.MARKDOWN_PREVIEW -> MarkdownTab.ViewMode.PREVIEW;
+            default                                       -> MarkdownTab.ViewMode.SPLIT;
+        };
+    }
+
     private EditorTab createTab(Path file, LineEnding lineEnding)
     {
         EditorTab tab;
         if (ImageTab.canView(file)) tab = new ImageTab(file);
-        else if (isMarkdown(file))  tab = new MarkdownTab(file, lineEnding);
+        else if (isMarkdown(file))  tab = new MarkdownTab(file, lineEnding, defaultMarkdownViewMode);
         else                        tab = new EditorTab(file, lineEnding);
 
         applyEditorSettings(tab.getTextPane());

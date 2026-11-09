@@ -18,6 +18,8 @@ import javax.swing.*;
 
 /*
  * TODO:
+ *  - TO-DO client/editor
+ *  - C# plugin
  *  - Mermaid Rendering in markdown documents and mermaid documents (.mmd / .mermaid)
  *  - In-lay hints with setting
  *  - Recent projects menu
@@ -33,10 +35,10 @@ import javax.swing.*;
  *  - IntelliJ-style double shift project search function
  *  - lightweight editor - vs-code type (open a file and run without a project, jshell maybe?)
  *  - Movable / Dockable tabs
- *  - A BlueJ style class diagram mode/setting
- *  - Git Integration (IntelliJ-like or Github Client-like)
  *
  * TODO - For Later
+ *  - A BlueJ style class diagram mode/setting
+ *  - Git Integration (IntelliJ-like or Github Client-like)
  *  - JetBrains Air Style Forge Client (with ForgeIDE integration)
  *  - Custom Text Component to resolve performance issues.
  *  - System Terminal Integration (Keep Current Console and implement a toggle in settings).
