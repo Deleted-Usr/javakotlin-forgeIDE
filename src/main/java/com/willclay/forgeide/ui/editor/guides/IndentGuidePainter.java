@@ -36,7 +36,7 @@ import java.awt.geom.Rectangle2D;
 /// of a paint depends on the height of the window, not the length of the file.
 public final class IndentGuidePainter implements Highlighter.HighlightPainter
 {
-    private static final int WIDTH = 2;
+    private static final int WIDTH = 1;
 
     /// Indent recorded for a line with no text on it, so every guide passes.
     private static final int BLANK = Integer.MAX_VALUE;

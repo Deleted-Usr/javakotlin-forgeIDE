@@ -35,11 +35,11 @@ import java.util.Map;
 /// Markdown and configuration files.
 public final class FileIcons
 {
-    private static final Icon MARKDOWN = new FileIcon("M", "Objects.Blue");
-    private static final Icon CONFIG = new FileIcon("=", "Objects.Green");
-    private static final Icon FILE = new FileIcon("", "Objects.Grey");
-    private static final Icon SOURCE = new FileIcon("", "Objects.Green");
-    private static final Icon FOLDER = new FileIcon(null, "Objects.Yellow");
+    private static final Icon MARKDOWN = new FileIcon("M",  "Objects.Blue");
+    private static final Icon CONFIG   = new FileIcon("=",  "Objects.Green");
+    private static final Icon FILE     = new FileIcon("",   "Objects.Grey");
+    private static final Icon SOURCE   = new FileIcon("",   "Objects.Green");
+    private static final Icon FOLDER   = new FileIcon(null, "Objects.Yellow");
 
     private static final Map<String, Icon> BUILT_IN = Map.of(
             "md", MARKDOWN, "markdown", MARKDOWN,
@@ -98,8 +98,7 @@ public final class FileIcons
 
     public static Icon forPath(Path path, boolean sourceFile)
     {
-        String name = path == null || path.getFileName() == null
-                ? "" : path.getFileName().toString().toLowerCase(Locale.ROOT);
+        String name = path == null || path.getFileName() == null ? "" : path.getFileName().toString().toLowerCase(Locale.ROOT);
 
         // Try every suffix, longest first, so a language can claim a compound
         // extension such as `.d.ts` as well as an ordinary one.
@@ -109,8 +108,16 @@ public final class FileIcons
             String extension = name.substring(dot + 1);
 
             Icon icon = languages.get(extension);
-            if (icon == null) icon = BUILT_IN.get(extension);
-            if (icon != null) return icon;
+
+            if (icon == null)
+            {
+                icon = BUILT_IN.get(extension);
+            }
+
+            if (icon != null)
+            {
+                return icon;
+            }
         }
 
         return sourceFile ? SOURCE : FILE;
@@ -136,9 +143,10 @@ public final class FileIcons
         private FileIcon(String letter, String colourKey, boolean round)
         {
             super(16, 16, null);
-            this.letter = letter;
+
+            this.letter    = letter;
             this.colourKey = colourKey;
-            this.round = round;
+            this.round     = round;
         }
 
         @Override
@@ -154,7 +162,7 @@ public final class FileIcons
             graphics.setColor(colour == null ? Color.GRAY : colour);
 
             Shape outline = round ? new Ellipse2D.Float(1, 1, 14, 14) : pageOutline(letter == null);
-            Area shape = new Area(outline);
+            Area shape    = new Area(outline);
 
             if (letter != null && !letter.isEmpty())
             {
@@ -177,6 +185,7 @@ public final class FileIcons
         private static Path2D pageOutline(boolean folder)
         {
             Path2D outline = new Path2D.Float();
+
             if (folder)
             {
                 outline.moveTo(1, 3.5); outline.lineTo(6, 3.5); outline.lineTo(8, 5.5);
@@ -187,6 +196,7 @@ public final class FileIcons
                 outline.moveTo(2.5, 1); outline.lineTo(10, 1); outline.lineTo(13.5, 4.5);
                 outline.lineTo(13.5, 15); outline.lineTo(2.5, 15);
             }
+
             outline.closePath();
             return outline;
         }
