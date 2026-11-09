@@ -38,14 +38,24 @@ public final class DocCommentMarkdown
 
     /// A Markdown reference such as `[String]` or `[Vec::new]` that is not
     /// followed by a link target, which in KDoc, rustdoc and Markdown Javadoc
-    /// means "link to this symbol". The lookbehind skips `array[index]`.
-    private static final Pattern SYMBOL_LINK = Pattern.compile("(?<![\\w\\]])\\[([^\\[\\]]+)](?![(\\[:])");
+    /// means "link to this symbol". Inline code is matched first so its brackets
+    /// stay literal; the lookbehind also skips `array[index]` and escaped brackets.
+    private static final Pattern CODE_OR_SYMBOL_LINK = Pattern.compile(
+            "(?<!`)(`+)(?!`)(.*?)(?<!`)\\1(?!`)" + "|(?<![\\w\\]\\\\])\\[([^\\[\\]]+)](?![(\\[:])"
+    );
+
+    /// Qualified names and optional method parameters, not arbitrary bracketed
+    /// text such as C++ lambda captures (`[&]`, `[=]`, `[&, value]`).
+    private static final Pattern SYMBOL_REFERENCE = Pattern.compile(
+            "#?[\\p{L}_$][\\p{L}\\p{N}_$]*(?:(?:\\.|::|#)[\\p{L}_$][\\p{L}\\p{N}_$]*)*"
+            + "(?:\\([^\\[\\]`]*\\))?"
+    );
 
     /// What comes before the box of a task-list item: `- ` or `* `.
     private static final Pattern TASK_PREFIX = Pattern.compile("\\s*[-*+]\\s+");
 
     private static final Pattern PRE_CODE = Pattern.compile("<pre>\\s*\\{@code\\s?(.*?)}\\s*</pre>", Pattern.DOTALL);
-    private static final Pattern PRE = Pattern.compile("<pre>(.*?)</pre>", Pattern.DOTALL);
+    private static final Pattern PRE      = Pattern.compile("<pre>(.*?)</pre>", Pattern.DOTALL);
 
     private DocCommentMarkdown() { }
 
@@ -57,7 +67,7 @@ public final class DocCommentMarkdown
     {
         List<String> lines = stripMarkers(comment);
 
-        List<String> body = new ArrayList<>();
+        List<String> body              = new ArrayList<>();
         Map<String, List<String>> tags = new LinkedHashMap<>();
         splitTags(lines, body, tags);
 
@@ -73,7 +83,7 @@ public final class DocCommentMarkdown
     /// then the indentation the lines have in common.
     private static List<String> stripMarkers(String comment)
     {
-        String text = comment.replace("\r\n", "\n").strip();
+        String text       = comment.replace("\r\n", "\n").strip();
         boolean lineStyle = text.startsWith("///") || text.startsWith("//!");
 
         List<String> lines = new ArrayList<>();
@@ -83,7 +93,10 @@ public final class DocCommentMarkdown
             for (String line : text.split("\n", -1))
             {
                 String trimmed = line.stripLeading();
-                if (trimmed.startsWith("///") || trimmed.startsWith("//!")) trimmed = trimmed.substring(3);
+                if (trimmed.startsWith("///") || trimmed.startsWith("//!"))
+                {
+                    trimmed = trimmed.substring(3);
+                }
 
                 lines.add(trimmed);
             }
@@ -92,19 +105,36 @@ public final class DocCommentMarkdown
         }
 
         // "/**" or "/*!" at the front, "*/" at the back.
-        if (text.startsWith("/**") || text.startsWith("/*!")) text = text.substring(3);
-        if (text.endsWith("*/")) text = text.substring(0, text.length() - 2);
+        if (text.startsWith("/**") || text.startsWith("/*!"))
+        {
+            text = text.substring(3);
+        }
+
+        if (text.endsWith("*/"))
+        {
+            text = text.substring(0, text.length() - 2);
+        }
 
         boolean inFence = false;
         for (String line : text.split("\n", -1))
         {
             String trimmed = line.stripLeading();
-            if (trimmed.startsWith("*")) trimmed = trimmed.substring(1);
+            if (trimmed.startsWith("*"))
+            {
+                trimmed = trimmed.substring(1);
+            }
 
             // Classic Javadoc is HTML, where indentation means nothing — but in
             // Markdown four spaces make a code block. Only fenced code keeps it.
-            if (!inFence) trimmed = trimmed.stripLeading();
-            if (trimmed.stripLeading().startsWith("```")) inFence = !inFence;
+            if (!inFence)
+            {
+                trimmed = trimmed.stripLeading();
+            }
+
+            if (trimmed.stripLeading().startsWith("```"))
+            {
+                inFence = !inFence;
+            }
 
             lines.add(trimmed);
         }
@@ -123,14 +153,24 @@ public final class DocCommentMarkdown
             if (line.isBlank()) continue;
 
             int indent = 0;
-            while (indent < line.length() && line.charAt(indent) == ' ') indent++;
+            while (indent < line.length() && line.charAt(indent) == ' ')
+            {
+                indent++;
+            }
+
             common = Math.min(common, indent);
         }
 
-        if (common == Integer.MAX_VALUE || common == 0) return lines;
+        if (common == Integer.MAX_VALUE || common == 0)
+        {
+            return lines;
+        }
 
         List<String> result = new ArrayList<>();
-        for (String line : lines) result.add(line.isBlank() ? "" : line.substring(common));
+        for (String line : lines)
+        {
+            result.add(line.isBlank() ? "" : line.substring(common));
+        }
 
         return result;
     }
@@ -142,13 +182,16 @@ public final class DocCommentMarkdown
     /// fenced code block are code — `@Override` in an example — not tags.
     private static void splitTags(List<String> lines, List<String> body, Map<String, List<String>> tags)
     {
-        boolean inFence = false;
-        StringBuilder currentTag = null;
-        String currentName = null;
+        boolean       inFence     = false;
+        StringBuilder currentTag  = null;
+        String        currentName = null;
 
         for (String line : lines)
         {
-            if (line.stripLeading().startsWith("```")) inFence = !inFence;
+            if (line.stripLeading().startsWith("```"))
+            {
+                inFence = !inFence;
+            }
 
             Matcher tag = inFence ? null : BLOCK_TAG.matcher(line.strip());
 
@@ -157,12 +200,19 @@ public final class DocCommentMarkdown
                 addTag(tags, currentName, currentTag);
 
                 currentName = tag.group(1).toLowerCase();
-                currentTag = new StringBuilder(tag.group(2));
+                currentTag  = new StringBuilder(tag.group(2));
+
                 continue;
             }
 
-            if (currentTag != null) currentTag.append(' ').append(line.strip());
-            else body.add(line);
+            if (currentTag != null)
+            {
+                currentTag.append(' ').append(line.strip());
+            }
+            else
+            {
+                body.add(line);
+            }
         }
 
         addTag(tags, currentName, currentTag);
@@ -175,9 +225,10 @@ public final class DocCommentMarkdown
         // Synonyms, so `@returns` and `\return` land in the same section.
         String key = switch (name)
         {
-            case "returns", "return", "result" -> "return";
-            case "exception", "throws", "throw" -> "throws";
-            case "tparam" -> "param";
+            case "returns",   "return", "result" -> "return";
+            case "exception", "throws", "throw"  -> "throws";
+            case "tparam"                        -> "param";
+
             default -> name;
         };
 
@@ -191,13 +242,16 @@ public final class DocCommentMarkdown
         // Doxygen's \brief and \details are just the body under another name.
         for (String body : List.of("brief", "details"))
         {
-            for (String text : tags.getOrDefault(body, List.of())) section(markdown, convertInline(text));
+            for (String text : tags.getOrDefault(body, List.of()))
+            {
+                section(markdown, convertInline(text));
+            }
         }
 
-        appendNamedList(markdown, "Params", tags.get("param"));
-        appendNamedList(markdown, "Properties", tags.get("property"));
-        appendText(markdown, "Returns", tags.get("return"));
-        appendNamedList(markdown, "Throws", tags.get("throws"));
+        appendNamedList (markdown, "Params",     tags.get("param"));
+        appendNamedList (markdown, "Properties", tags.get("property"));
+        appendText      (markdown, "Returns",    tags.get("return"));
+        appendNamedList (markdown, "Throws",     tags.get("throws"));
 
         for (Map.Entry<String, List<String>> tag : tags.entrySet())
         {
@@ -212,7 +266,10 @@ public final class DocCommentMarkdown
         if (see != null)
         {
             List<String> targets = new ArrayList<>();
-            for (String target : see) targets.add(seeTarget(target));
+            for (String target : see)
+            {
+                targets.add(seeTarget(target));
+            }
 
             section(markdown, "**See also:** " + String.join(", ", targets));
         }
@@ -221,18 +278,26 @@ public final class DocCommentMarkdown
     /// `@param name description` as a list item with the name as code.
     private static void appendNamedList(StringBuilder markdown, String heading, List<String> entries)
     {
-        if (entries == null || entries.isEmpty()) return;
+        if (entries == null || entries.isEmpty())
+        {
+            return;
+        }
 
         StringBuilder list = new StringBuilder("**").append(heading).append(":**\n");
 
         for (String entry : entries)
         {
-            String[] parts = entry.split("\\s+", 2);
-            String name = parts[0];
+            String[] parts     = entry.split("\\s+", 2);
+            String name        = parts[0];
             String description = parts.length > 1 ? convertInline(parts[1]) : "";
 
             list.append("- `").append(name).append('`');
-            if (!description.isBlank()) list.append(" – ").append(description);
+
+            if (!description.isBlank())
+            {
+                list.append(" – ").append(description);
+            }
+
             list.append('\n');
         }
 
@@ -254,7 +319,10 @@ public final class DocCommentMarkdown
     /// `@see "Some book"` is plain text.
     private static String seeTarget(String target)
     {
-        if (target.startsWith("<") || target.startsWith("\"")) return convertInline(target);
+        if (target.startsWith("<") || target.startsWith("\""))
+        {
+            return convertInline(target);
+        }
 
         String[] parts = target.split("\\s+", 2);
         return parts.length > 1 ? convertInline(parts[1]) : "`" + symbol(parts[0]) + "`";
@@ -264,7 +332,11 @@ public final class DocCommentMarkdown
     {
         if (text.isBlank()) return;
 
-        if (!markdown.isEmpty()) markdown.append("\n\n");
+        if (!markdown.isEmpty())
+        {
+            markdown.append("\n\n");
+        }
+
         markdown.append(text.strip());
     }
 
@@ -279,16 +351,20 @@ public final class DocCommentMarkdown
         text = PRE.matcher(text).replaceAll(match -> Matcher.quoteReplacement("\n```\n" + match.group(1).strip() + "\n```\n"));
 
         StringBuilder result = new StringBuilder();
-        boolean inFence = false;
+        boolean inFence      = false;
 
         for (String line : text.split("\n", -1))
         {
-            if (!result.isEmpty()) result.append('\n');
+            if (!result.isEmpty())
+            {
+                result.append('\n');
+            }
 
             if (line.stripLeading().startsWith("```"))
             {
                 inFence = !inFence;
                 result.append(line);
+
                 continue;
             }
 
@@ -302,28 +378,33 @@ public final class DocCommentMarkdown
     {
         line = convertInlineTags(line);
 
-        line = line.replaceAll("(?i)</?p>", "\n\n")
-                .replaceAll("(?i)<br\\s*/?>", "  \n")
-                .replaceAll("(?i)</?(code|tt)>", "`")
-                .replaceAll("(?i)</?(b|strong)>", "**")
-                .replaceAll("(?i)</?(i|em)>", "*")
-                .replaceAll("(?i)</?(ul|ol)>", "\n")
-                .replaceAll("(?i)<li>", "\n- ")
-                .replaceAll("(?i)</li>", "")
-                .replaceAll("(?i)<a\\s+href=\"([^\"]*)\"\\s*>(.*?)</a>", "[$2]($1)");
+        line = line.replaceAll("(?i)</?p>",                                 "\n\n")
+                   .replaceAll("(?i)<br\\s*/?>",                            "  \n")
+                   .replaceAll("(?i)</?(code|tt)>",                         "`")
+                   .replaceAll("(?i)</?(b|strong)>",                        "**")
+                   .replaceAll("(?i)</?(i|em)>",                            "*")
+                   .replaceAll("(?i)</?(ul|ol)>",                           "\n")
+                   .replaceAll("(?i)<li>",                                  "\n- ")
+                   .replaceAll("(?i)</li>",                                 "")
+                   .replaceAll("(?i)<a\\s+href=\"([^\"]*)\"\\s*>(.*?)</a>", "[$2]($1)");
 
         String withTags = line;
-        line = SYMBOL_LINK.matcher(withTags).replaceAll(match ->
+        line = CODE_OR_SYMBOL_LINK.matcher(withTags).replaceAll(match ->
         {
-            String inner = match.group(1);
+            if (match.group(1) != null) return Matcher.quoteReplacement(match.group());
+
+            String inner = match.group(3);
 
             // "- [ ]" and "- [x]" are task-list boxes, not links — but KDoc's
             // [x] anywhere else is a link to the parameter x.
-            boolean taskBox = (inner.isBlank() || inner.equalsIgnoreCase("x"))
-                    && TASK_PREFIX.matcher(withTags.substring(0, match.start())).matches();
-            if (taskBox) return Matcher.quoteReplacement(match.group());
+            boolean taskBox = (inner.isBlank() || inner.equalsIgnoreCase("x")) && TASK_PREFIX.matcher(withTags.substring(0, match.start())).matches();
 
-            return Matcher.quoteReplacement(inner.startsWith("`") ? inner : "`" + symbol(inner) + "`");
+            if (taskBox || !SYMBOL_REFERENCE.matcher(inner).matches())
+            {
+                return Matcher.quoteReplacement(match.group());
+            }
+
+            return Matcher.quoteReplacement("`" + symbol(inner) + "`");
         });
 
         return decodeEntities(line);
@@ -347,15 +428,16 @@ public final class DocCommentMarkdown
 
             result.append(line, index, start);
 
-            String content = line.substring(start + 2, end);
-            String[] parts = content.split("\\s+", 2);
+            String content  = line.substring(start + 2, end);
+            String[] parts  = content.split("\\s+", 2);
             String argument = parts.length > 1 ? parts[1].strip() : "";
 
             result.append(switch (parts[0])
             {
-                case "code", "value" -> argument.isEmpty() ? "" : "`" + argument + "`";
-                case "literal" -> argument;
+                case "code", "value"     -> argument.isEmpty() ? "" : "`" + argument + "`";
+                case "literal"           -> argument;
                 case "link", "linkplain" -> link(argument);
+
                 default -> ""; // {@inheritDoc}, {@docRoot}: nothing useful to show
             });
 
@@ -374,6 +456,7 @@ public final class DocCommentMarkdown
         for (int index = open; index < line.length(); index++)
         {
             char character = line.charAt(index);
+
             if (character == '{') depth++;
             if (character == '}' && --depth == 0) return index;
         }
@@ -387,7 +470,10 @@ public final class DocCommentMarkdown
     private static String link(String argument)
     {
         String[] parts = argument.split("\\s+", 2);
-        if (parts.length > 1) return parts[1];
+        if (parts.length > 1)
+        {
+            return parts[1];
+        }
 
         return "`" + symbol(parts[0]) + "`";
     }
@@ -395,19 +481,22 @@ public final class DocCommentMarkdown
     /// `Foo#bar(int)` reads better as `Foo.bar(int)`, and `#bar` as `bar`.
     private static String symbol(String reference)
     {
-        if (reference.startsWith("#")) return reference.substring(1);
+        if (reference.startsWith("#"))
+        {
+            return reference.substring(1);
+        }
 
         return reference.replace('#', '.');
     }
 
     private static String decodeEntities(String line)
     {
-        return line.replace("&lt;", "<")
-                .replace("&gt;", ">")
-                .replace("&quot;", "\"")
-                .replace("&nbsp;", " ")
-                .replace("&#64;", "@")
-                .replace("&amp;", "&");
+        return line.replace("&lt;",   "<")
+                   .replace("&gt;",   ">")
+                   .replace("&quot;", "\"")
+                   .replace("&nbsp;", " ")
+                   .replace("&#64;",  "@")
+                   .replace("&amp;",  "&");
     }
 
     private static String capitalise(String word)

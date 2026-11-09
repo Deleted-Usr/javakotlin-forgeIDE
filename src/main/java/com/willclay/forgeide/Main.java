@@ -23,7 +23,6 @@ import javax.swing.*;
  *  - Mermaid Rendering in markdown documents and mermaid documents (.mmd / .mermaid)
  *  - In-lay hints with setting
  *  - Recent projects menu
- *  - Fix [&] not rendering properly in doc comments
  *  - Github release watcher and ForgeIDE installer (C++/Rust for Installer???)
  *  - Have more flexibility for C++ Projects
  *  - Java + Kotlin and C++ + Rust project templates (after multi-language projects)
