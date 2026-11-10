@@ -232,9 +232,9 @@ public final class GeneralSettings extends JPanel
 
         startupAction.setSelectedItem(switch (startup.action())
         {
-            case IDESettingsConfiguration.OPEN_EMPTY_WINDOW -> OPEN_EMPTY_WINDOW_LABEL;
-            case IDESettingsConfiguration.SHOW_RECENT_PROJECTS -> RECENT_PROJECTS_LABEL;
-            default -> REOPEN_LAST_PROJECT_LABEL;
+            case IDESettingsConfiguration.REOPEN_LAST_PROJECT -> REOPEN_LAST_PROJECT_LABEL;
+            case IDESettingsConfiguration.OPEN_EMPTY_WINDOW   -> OPEN_EMPTY_WINDOW_LABEL;
+            default                                           -> RECENT_PROJECTS_LABEL;
         });
         restoreOpenFiles.setSelected(startup.restoreOpenFiles());
         confirmDiscard.setSelected(startup.confirmDiscard());
@@ -283,9 +283,9 @@ public final class GeneralSettings extends JPanel
     {
         String startup = switch (String.valueOf(startupAction.getSelectedItem()))
         {
-            case OPEN_EMPTY_WINDOW_LABEL -> IDESettingsConfiguration.OPEN_EMPTY_WINDOW;
-            case RECENT_PROJECTS_LABEL   -> IDESettingsConfiguration.SHOW_RECENT_PROJECTS;
-            default                      -> IDESettingsConfiguration.REOPEN_LAST_PROJECT;
+            case REOPEN_LAST_PROJECT_LABEL -> IDESettingsConfiguration.REOPEN_LAST_PROJECT;
+            case OPEN_EMPTY_WINDOW_LABEL   -> IDESettingsConfiguration.OPEN_EMPTY_WINDOW;
+            default                        -> IDESettingsConfiguration.SHOW_RECENT_PROJECTS;
         };
 
         return new IDESettingsConfiguration(

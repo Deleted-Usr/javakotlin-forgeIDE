@@ -5,6 +5,7 @@ import com.willclay.forgeide.actions.Shortcuts;
 import com.willclay.forgeide.lang.api.Language;
 import com.willclay.forgeide.services.ActionContext;
 import com.willclay.forgeide.ui.Utils;
+import com.willclay.forgeide.ui.projects.ProjectProgress;
 
 import java.awt.event.KeyEvent;
 import java.io.IOException;
@@ -33,7 +34,7 @@ public final class OpenProjectAction extends ForgeAction
 
         try
         {
-            if (context.getWorkspaceService().isConfiguredProject(root))
+            if (ProjectProgress.run(context.getFrame(), "Checking project", () -> context.getWorkspaceService().isConfiguredProject(root)))
             {
                 context.getProjectWorkspaceController().openProject(root);
             }

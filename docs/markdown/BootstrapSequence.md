@@ -1,3 +1,5 @@
+> Historical design notes. The current launch flow is documented in [Welcome-first startup](WelcomeStartup.md).
+
 A bootstrap sequence is not strictly required just to read a settings file, but it is the right architectural step for ForgeIDE. Settings, language discovery, plugin diagnostics, theme installation, and session restoration all need to happen in a deliberate order before or around UI construction.
 
 The bootstrap infrastructure can be implemented first using defaults, then the file-backed settings stage added afterward.

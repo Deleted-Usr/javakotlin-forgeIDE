@@ -54,10 +54,12 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
-/// The main frame, and only the composition root: it creates the parts, puts
+/// The editor composition root: it creates the parts, puts
 /// them in a [ActionContext], and lets the [ActionManager] build
 /// everything that can be clicked.
 ///
@@ -92,194 +94,248 @@ public final class Window extends JFrame
 
     private final ActionContext context;
     private final ActionManager actions;
+    private final boolean startupWarnings;
+    private final List<Runnable> disposalTasks = new ArrayList<>();
+    private boolean resourcesClosed;
 
     public Window(String title, BootstrapResult bootstrap)
     {
         super(title);
         this.baseTitle = title;
+        this.startupWarnings = !bootstrap.warnings().isEmpty();
 
-        SettingsService settingsService = bootstrap.settings();
-        SessionService sessionService   = bootstrap.session();
-
-        this.settingsService = Objects.requireNonNull(settingsService, "settingsService");
-        this.appliedFileTypes = settingsService.get().fileTypes();
-        Objects.requireNonNull(sessionService, "sessionService");
-
-        Font editorFont = EditorFonts.load(
-                settingsService.get().editor().fontFamily(),
-                settingsService.get().editor().fontSize()
-        );
-
-        editorPanel   = new CodeEditorPanel(editorFont);
-        editorManager = new EditorManager(editorPanel);
-        console       = new ConsolePanel(editorFont.deriveFont(CONSOLE_FONT_SIZE));
-        ForgeConsole.attach(console::append);
-
-        languages = bootstrap.languages();
-        FileIcons.registerLanguages(languages.languages());
-
-        workspaceService = createWorkspaceService();
-        projectTree      = new ProjectTree(new ProjectTreeModel(workspaceService));
-
-        TodoService todoService = new TodoService(new TodoScanner(languages));
-        TodoPanel todoPanel     = new TodoPanel(todoService);
-
-        LineCountService lineCountService = new LineCountService(new LineCounter(languages));
-
-        workbench = new WorkbenchPanel(new ProjectTreePanel(projectTree), editorPanel, console);
-
-        workbench.addBottomTool(WorkbenchPanel.TODO, todoPanel);
-        todoPanel.setOnItemActivated(item ->
+        try
         {
-            try
+            SettingsService settingsService = bootstrap.settings();
+            SessionService sessionService   = bootstrap.session();
+
+            this.settingsService = Objects.requireNonNull(settingsService, "settingsService");
+            this.appliedFileTypes = settingsService.get().fileTypes();
+            Objects.requireNonNull(sessionService, "sessionService");
+
+            Font editorFont = EditorFonts.load(
+                    settingsService.get().editor().fontFamily(),
+                    settingsService.get().editor().fontSize()
+            );
+
+            editorPanel   = new CodeEditorPanel(editorFont);
+            editorManager = new EditorManager(editorPanel);
+            console       = new ConsolePanel(editorFont.deriveFont(CONSOLE_FONT_SIZE));
+
+            Consumer<String> consoleSink = console::append;
+
+            ForgeConsole.attach(consoleSink);
+            disposalTasks.add(() -> ForgeConsole.detach(consoleSink));
+
+            languages = bootstrap.languages();
+            FileIcons.registerLanguages(languages.languages());
+
+            workspaceService = createWorkspaceService();
+            disposalTasks.add(workspaceService::close);
+            projectTree      = new ProjectTree(new ProjectTreeModel(workspaceService));
+
+            TodoService todoService = new TodoService(new TodoScanner(languages));
+            disposalTasks.add(() -> todoService.projectChanged(null));
+            TodoPanel todoPanel     = new TodoPanel(todoService);
+
+            LineCountService lineCountService = new LineCountService(new LineCounter(languages));
+            disposalTasks.add(() -> lineCountService.projectChanged(null));
+
+            workbench = new WorkbenchPanel(new ProjectTreePanel(projectTree), editorPanel, console);
+
+            workbench.addBottomTool(WorkbenchPanel.TODO, todoPanel);
+            todoPanel.setOnItemActivated(item ->
             {
-                editorManager.openFile(item.file(), item.line(), item.column());
-            }
-            catch (IOException e)
+                try
+                {
+                    editorManager.openFile(item.file(), item.line(), item.column());
+                }
+                catch (IOException e)
+                {
+                    Utils.showErrorMessage(this, "Could not open " + item.file().getFileName() + ": " + e.getMessage());
+                }
+            });
+
+            // The context has to exist before the actions, the actions before the
+            // toolbar and the context menu — and both of those live on components
+            // the context already holds. Hence the two setters below rather than
+            // constructor arguments.
+            ExecutionManager executionManager       = new ExecutionManager();
+            ApplicationShutdown applicationShutdown = new ApplicationShutdown(
+                    this,
+                    editorManager,
+                    executionManager,
+                    workspaceService,
+                    settingsService
+            );
+
+            settingsRuntime = new IDESettingsRuntime(this, settingsService, editorPanel, editorManager);
+            disposalTasks.add(settingsRuntime::close);
+
+            applicationShutdown.addTask("stop automatic saving", settingsRuntime::close);
+
+            ThemeService themeService             = new ThemeService(this, editorPanel, editorManager, settingsService, bootstrap.themes());
+            ProjectSettingsService projectService = new ProjectSettingsService(workspaceService);
+
+            SettingsDialogController settingsDialogController = new SettingsDialogController(this, settingsService, projectService, themeService);
+
+            RunConfigurationManager runConfigurationManager  = new RunConfigurationManager(workspaceService);
+            RunConfigDialogController configDialogController = new RunConfigDialogController(this, runConfigurationManager);
+
+            ProjectWorkspaceController projectWorkspaceController = new ProjectWorkspaceController(
+                    this,
+                    workspaceService,
+                    editorManager,
+                    editorPanel,
+                    workbench,
+                    settingsService,
+                    sessionService,
+                    runConfigurationManager,
+                    this::restoreLayout
+            );
+
+            applicationShutdown.addTask("save the workspace and IDE session", projectWorkspaceController::saveSession);
+
+            context = new ActionContext(
+                    this,
+                    editorPanel,
+                    editorManager,
+                    console,
+                    workbench,
+                    projectTree,
+                    workspaceService,
+                    executionManager,
+                    applicationShutdown,
+                    new FileDialogs(this, languages),
+                    settingsService,
+                    settingsDialogController,
+                    configDialogController,
+                    runConfigurationManager,
+                    todoService,
+                    projectWorkspaceController
+            );
+            actions = new ActionManager(context);
+
+            editorPanel.setEmptyStateActions(
+                    actions.getNewFileAction(),
+                    actions.getOpenFileAction(),
+                    actions.getNewProjectAction(),
+                    actions.getOpenProjectAction()
+            );
+
+            console.setOnMinimise(() -> actions.getToggleConsoleAction().setSelected(false));
+            todoPanel.setOnMinimise(() -> actions.getToggleTodoAction().setSelected(false));
+
+            workbench.setOnReturnToEditor(editorPanel::focusEditor);
+
+            Runnable updateConsoleSummary = () -> workbench.setConsoleSummary(
+                    executionManager.getStatus() == ExecutionManager.Status.READY
+                            ? (console.hasOutput() ? "Output available" : "No output yet")
+                            : executionManager.getStatusText()
+            );
+            console.addContentListener(updateConsoleSummary);
+
+            executionManager.addChangeListener(() ->
             {
-                Utils.showErrorMessage(this, "Could not open " + item.file().getFileName() + ": " + e.getMessage());
+                updateConsoleSummary.run();
+                if (executionManager.getStatus() == ExecutionManager.Status.FAILED)
+                    actions.getToggleConsoleAction().setSelected(true);
+            });
+
+            workspace.addChangeListener(() -> todoService.projectChanged(workspace.getProject()));
+            editorManager.addSaveListener(todoService::fileSaved);
+
+            workspace.addChangeListener(() -> lineCountService.projectChanged(workspace.getProject()));
+            editorManager.addSaveListener(lineCountService::filesChanged);
+            workspaceService.addListener(lineCountService::filesChanged);
+
+            editorPanel.setCloseRequestHandler(this::confirmCloseTab);
+            setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+            addWindowListener(new WindowAdapter()
+            {
+                @Override
+                public void windowClosing(WindowEvent event)
+                {
+                    actions.getExitAction().trigger();
+                }
+            });
+
+            setJMenuBar(new EditorMenuBar(actions));
+            workbench.setSideBar(new EditorSideBar(actions));
+            workbench.setToolBar(new EditorToolBar(actions, runConfigurationManager));
+            StatusBar statusBar = new StatusBar(executionManager, workspace, editorManager, settingsService, themeService, lineCountService);
+            disposalTasks.add(statusBar::close);
+            workbench.setStatusBar(statusBar);
+            projectTree.setContextMenu(new ProjectContextMenu(actions));
+
+            // Move lives only in the context menu, so its F6 has to be bound on the
+            // tree by hand — see ProjectTree.installShortcut.
+            projectTree.installShortcut(actions.getMoveItemsAction());
+
+            // The tree reports that a file was activated; what that means is the
+            // action's business, not the tree's.
+            projectTree.setOnFileActivated(item -> actions.getOpenSelectedFileAction().trigger());
+
+            if (bootstrap.pluginClassLoader() != null)
+            {
+                applicationShutdown.addTask("close plugin class loader", bootstrap.pluginClassLoader()::close);
             }
-        });
 
-        // The context has to exist before the actions, the actions before the
-        // toolbar and the context menu — and both of those live on components
-        // the context already holds. Hence the two setters below rather than
-        // constructor arguments.
-        ExecutionManager executionManager       = new ExecutionManager();
-        ApplicationShutdown applicationShutdown = new ApplicationShutdown(
-                this,
-                editorManager,
-                executionManager,
-                workspaceService,
-                settingsService
-        );
+            for (BootstrapWarning warning : bootstrap.warnings())
+            {
+                console.appendLine("Startup: " + warning);
+            }
 
-        settingsRuntime = new IDESettingsRuntime(this, settingsService, editorPanel, editorManager);
+            add(workbench);
 
-        applicationShutdown.addTask("stop automatic saving", settingsRuntime::close);
+            // The startup look and feel is installed before construction; this pass
+            // restores the user's choice and applies its matching syntax colours.
+            wireState();
+            themeService.applySavedTheme();
+            disposalTasks.add(editorManager::closeFile);
+            updateTitle();
 
-        ThemeService themeService             = new ThemeService(this, editorPanel, editorManager, settingsService, bootstrap.themes());
-        ProjectSettingsService projectService = new ProjectSettingsService(workspaceService);
-
-        SettingsDialogController settingsDialogController = new SettingsDialogController(this, settingsService, projectService, themeService);
-
-        RunConfigurationManager runConfigurationManager  = new RunConfigurationManager(workspaceService);
-        RunConfigDialogController configDialogController = new RunConfigDialogController(this, runConfigurationManager);
-
-        ProjectWorkspaceController projectWorkspaceController = new ProjectWorkspaceController(
-                this,
-                workspaceService,
-                editorManager,
-                editorPanel,
-                workbench,
-                settingsService,
-                sessionService,
-                runConfigurationManager,
-                this::restoreLayout
-        );
-
-        applicationShutdown.addTask("save the workspace and IDE session", projectWorkspaceController::saveSession);
-
-        context = new ActionContext(
-                this,
-                editorPanel,
-                editorManager,
-                console,
-                workbench,
-                projectTree,
-                workspaceService,
-                executionManager,
-                applicationShutdown,
-                new FileDialogs(this, languages),
-                settingsService,
-                settingsDialogController,
-                configDialogController,
-                runConfigurationManager,
-                todoService,
-                projectWorkspaceController
-        );
-        actions = new ActionManager(context);
-
-        editorPanel.setEmptyStateActions(
-                actions.getNewFileAction(),
-                actions.getOpenFileAction(),
-                actions.getNewProjectAction(),
-                actions.getOpenProjectAction()
-        );
-
-        console.setOnMinimise(() -> actions.getToggleConsoleAction().setSelected(false));
-        todoPanel.setOnMinimise(() -> actions.getToggleTodoAction().setSelected(false));
-
-        workbench.setOnReturnToEditor(editorPanel::focusEditor);
-
-        Runnable updateConsoleSummary = () -> workbench.setConsoleSummary(
-                executionManager.getStatus() == ExecutionManager.Status.READY
-                        ? (console.hasOutput() ? "Output available" : "No output yet")
-                        : executionManager.getStatusText()
-        );
-        console.addContentListener(updateConsoleSummary);
-
-        executionManager.addChangeListener(() ->
-        {
-            updateConsoleSummary.run();
-            if (executionManager.getStatus() == ExecutionManager.Status.FAILED)
+            if (startupWarnings)
+            {
                 actions.getToggleConsoleAction().setSelected(true);
-        });
-
-        workspace.addChangeListener(() -> todoService.projectChanged(workspace.getProject()));
-        editorManager.addSaveListener(todoService::fileSaved);
-
-        workspace.addChangeListener(() -> lineCountService.projectChanged(workspace.getProject()));
-        editorManager.addSaveListener(lineCountService::filesChanged);
-        workspaceService.addListener(lineCountService::filesChanged);
-
-        editorPanel.setCloseRequestHandler(this::confirmCloseTab);
-        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-        addWindowListener(new WindowAdapter()
-        {
-            @Override
-            public void windowClosing(WindowEvent event)
-            {
-                actions.getExitAction().trigger();
             }
-        });
-
-        setJMenuBar(new EditorMenuBar(actions));
-        workbench.setSideBar(new EditorSideBar(actions));
-        workbench.setToolBar(new EditorToolBar(actions, runConfigurationManager));
-        workbench.setStatusBar(new StatusBar(executionManager, workspace, editorManager, settingsService, themeService, lineCountService));
-        projectTree.setContextMenu(new ProjectContextMenu(actions));
-
-        // Move lives only in the context menu, so its F6 has to be bound on the
-        // tree by hand — see ProjectTree.installShortcut.
-        projectTree.installShortcut(actions.getMoveItemsAction());
-
-        // The tree reports that a file was activated; what that means is the
-        // action's business, not the tree's.
-        projectTree.setOnFileActivated(item -> actions.getOpenSelectedFileAction().trigger());
-
-        if (bootstrap.pluginClassLoader() != null)
-        {
-            applicationShutdown.addTask("close plugin class loader", bootstrap.pluginClassLoader()::close);
         }
-
-        for (BootstrapWarning warning : bootstrap.warnings())
+        catch (RuntimeException | LinkageError failure)
         {
-            console.appendLine("Startup: " + warning);
+            dispose();
+            throw failure;
         }
+    }
 
-        add(workbench);
+    /// Completes the welcome-screen handover using the normal workspace restoration path.
+    public void openInitialProject(Project project) throws IOException
+    {
+        if (!SwingUtilities.isEventDispatchThread()) throw new IllegalStateException("Open projects on the EDT");
+        context.getProjectWorkspaceController().openProject(project);
+        if (startupWarnings) actions.getToggleConsoleAction().setSelected(true);
+    }
 
-        // The startup look and feel is installed before construction; this pass
-        // restores the user's choice and applies its matching syntax colours.
-        wireState();
-        themeService.applySavedTheme();
-        SwingUtilities.invokeLater(() ->
+    /// Also used to abandon a failed launch without saving an empty session or unloading shared plugins.
+    @Override
+    public void dispose()
+    {
+        if (!resourcesClosed)
         {
-            restoreSession(sessionService);
-            if (!bootstrap.warnings().isEmpty()) actions.getToggleConsoleAction().setSelected(true);
-        });
-        updateTitle();
+            resourcesClosed = true;
+            for (int index = disposalTasks.size() - 1; index >= 0; index--)
+            {
+                try
+                {
+                    disposalTasks.get(index).run();
+                }
+                catch (RuntimeException | LinkageError failure)
+                {
+                    System.err.println("Could not release editor resources: " + failure.getMessage());
+                }
+            }
+            disposalTasks.clear();
+        }
+        super.dispose();
     }
 
     private boolean confirmCloseTab(EditorTab tab)
@@ -296,7 +352,9 @@ public final class Window extends JFrame
     {
         editorManager.addChangeListener(this::updateTitle);
         workspace.addChangeListener(this::showCurrentProject);
-        settingsService.addChangeListener(this::fileTypesMayHaveChanged);
+        Consumer<IDESettingsConfiguration> listener = this::fileTypesMayHaveChanged;
+        settingsService.addChangeListener(listener);
+        disposalTasks.add(() -> settingsService.removeChangeListener(listener));
     }
 
     /// Re-highlights open files when the file type extensions are saved, so a
@@ -307,6 +365,7 @@ public final class Window extends JFrame
 
         SwingUtilities.invokeLater(() ->
         {
+            if (resourcesClosed) return;
             if (fileTypes.equals(appliedFileTypes)) return;
 
             appliedFileTypes = fileTypes;
@@ -386,31 +445,6 @@ public final class Window extends JFrame
         actions.syncBottomToolTicks(); // the workbench has already opened the right one
         actions.getToggleToolBarAction().setSelected(layout.toolbarVisible());
         actions.getToggleStatusBarAction().setSelected(layout.statusbarVisible());
-    }
-
-    private void restoreSession(SessionService sessionService)
-    {
-        String startup = settingsService.get().startup().action();
-        if (IDESettingsConfiguration.SHOW_RECENT_PROJECTS.equals(startup))
-        {
-            actions.getRecentProjectsAction().trigger();
-            return;
-        }
-
-        if (!IDESettingsConfiguration.REOPEN_LAST_PROJECT.equals(startup)) return;
-
-        Path projectRoot = sessionService.get().projectRoot();
-        if (projectRoot == null) return;
-
-        try
-        {
-            context.getProjectWorkspaceController().openProject(projectRoot);
-        }
-        catch (IOException exception)
-        {
-            Utils.showErrorMessage(this, "Could not reopen the last project: " + exception.getMessage());
-            actions.getRecentProjectsAction().trigger();
-        }
     }
 
     /// The one thing here that cannot fail gracefully: the watcher needs a

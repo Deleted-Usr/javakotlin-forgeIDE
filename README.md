@@ -52,6 +52,9 @@ Javadoc (Java) and KDoc (Kotlin).
 
 ### Projects and files
 
+- **Welcome window:** startup defaults to Recent Projects. Create a project, open a
+  directory, or select a recent project to launch the editor and restore its workspace.
+  General Settings also offers reopening the last project or opening an empty editor.
 - **Project explorer:** create, open, and close projects; create files and folders; rename
   inline (`F2`), move (`F6` or drag and drop), and delete entries; copy paths; and reveal
   files in the system file manager. Multi-select works for open, move, copy path, and
@@ -84,8 +87,8 @@ Javadoc (Java) and KDoc (Kotlin).
 - **Customisation:** editor font and settings, show or hide the toolbar, status bar, and
   tool windows, and reset the layout.
 - **Persistent settings and session:** IDE preferences, the workbench layout, and project
-  configuration are stored as JSON, with options to restore the previous project and its
-  open files at startup.
+  configuration are stored as JSON. Selecting a project restores its workspace, with an
+  option to restore its open files.
 
 ## Language Support
 
@@ -354,8 +357,11 @@ Here, `~` means the user's home directory. Global settings and project settings 
 separate scopes, so changing one project's compiler or source paths does not change
 every other project.
 
-**File → Recent Projects** opens a searchable list of previously opened projects. Select
-**Show Recent Projects** under **Settings → General → On startup** to start there.
+**Settings → General → On startup** offers **Show Recent Projects** (the default),
+**Reopen the last project**, and **Open an empty window**. Show Recent Projects opens a
+standalone, searchable welcome window before creating the editor. Reopening falls back
+to welcome if no previous project is saved or the project cannot be opened.
+**File → Recent Projects** opens the same project-selection interface inside the editor.
 Removing an entry only removes it from history; it does not delete the project.
 
 Project workspaces are saved when switching or closing projects and on a clean exit.
@@ -388,7 +394,7 @@ implementation for the feature you want to explore.
 - [`CHANGELOG.md`](CHANGELOG.md) lists changes by release.
 - [`docs/direction/`](docs/direction/markdown/) describes where ForgeIDE is heading.
 - [`docs/markdown/`](docs/markdown/) contains development notes on systems such as
-  [startup](docs/markdown/BootstrapSequence.md),
+  [startup](docs/markdown/WelcomeStartup.md),
   [run configurations](docs/markdown/RunConfigurations.md),
   [syntax highlighting](docs/markdown/Per-FileSyntaxHighlighting.md),
   [language settings](docs/markdown/LanguageSettings.md), and the

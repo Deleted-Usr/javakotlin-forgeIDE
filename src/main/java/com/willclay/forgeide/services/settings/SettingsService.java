@@ -192,4 +192,9 @@ public final class SettingsService
     {
         listeners.add(Objects.requireNonNull(listener, "listener"));
     }
+
+    public synchronized void removeChangeListener(Consumer<IDESettingsConfiguration> listener)
+    {
+        listeners.remove(listener);
+    }
 }

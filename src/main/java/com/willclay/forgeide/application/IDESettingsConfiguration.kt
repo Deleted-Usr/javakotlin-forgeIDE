@@ -85,14 +85,14 @@ data class IDESettingsConfiguration(
     @JvmRecord
     @Serializable
     data class Startup(
-        val action: String            = REOPEN_LAST_PROJECT,
+        val action: String            = SHOW_RECENT_PROJECTS,
         val restoreOpenFiles: Boolean = true,
         val confirmDiscard: Boolean   = true
     ) {
         fun normalised() = copy(
             action = when (action) {
                 REOPEN_LAST_PROJECT, OPEN_EMPTY_WINDOW, SHOW_RECENT_PROJECTS -> action
-                else -> REOPEN_LAST_PROJECT
+                else -> SHOW_RECENT_PROJECTS
             }
         )
     }

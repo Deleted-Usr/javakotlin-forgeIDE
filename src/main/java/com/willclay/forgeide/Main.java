@@ -11,8 +11,7 @@ import com.willclay.forgeide.services.settings.theme.Theme;
 import com.willclay.forgeide.services.settings.theme.ThemeService;
 import com.willclay.forgeide.splash.ForgeSplash;
 import com.willclay.forgeide.ui.SmoothScrollPaneUI;
-import com.willclay.forgeide.ui.Window;
-import com.willclay.forgeide.ui.icons.AppIcons;
+import com.willclay.forgeide.ui.projects.StartupController;
 
 import javax.swing.*;
 
@@ -59,8 +58,8 @@ import javax.swing.*;
  * the VM Options when running the code.
  */
 
-/// The entry point: sizes the frame, sets the look and feel, and hands over to
-/// [Window].
+/// The entry point: bootstraps services, installs the look and feel, and delegates
+/// the saved startup choice to [StartupController].
 ///
 /// Everything happens inside `invokeLater` because Swing components may
 /// only be touched on the Event Dispatch Thread — including while they are being
@@ -72,9 +71,6 @@ import javax.swing.*;
 /// only consulted when a component is created.
 public final class Main
 {
-    private static final int INITIAL_WIDTH  = 1920;
-    private static final int INITIAL_HEIGHT = 1080;
-
     public static void main(String[] args) // The Entry Point for the Program
     {
         // First, so there is something on screen while bootstrap runs. Bootstrap
@@ -105,15 +101,15 @@ public final class Main
         {
             try
             {
-                splash.setStatus("Opening the editor");
+                splash.setStatus("Opening Forge IDE");
                 setLookAndFeel(bootstrap.themes().resolve(bootstrap.settings().getThemeId()));
                 FlatAnimatedLafChange.duration = 300;
 
-                Window w = new Window("Forge IDE", bootstrap);
-                AppIcons.install(w);
-                w.setSize(INITIAL_WIDTH, INITIAL_HEIGHT);
-                w.setLocationRelativeTo(null);
-                w.setVisible(true);
+                StartupController startup = new StartupController(bootstrap);
+                // Reopening a project can show progress or an error dialog. Let
+                // the always-on-top splash fade out before those need attention.
+                splash.close();
+                startup.start();
             }
             finally
             {

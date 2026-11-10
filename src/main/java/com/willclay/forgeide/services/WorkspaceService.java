@@ -32,14 +32,14 @@ import java.util.List;
 public final class WorkspaceService implements AutoCloseable
 {
     private final Workspace workspace;
-    private final LanguageRegistry languages;
+    private final ProjectService projects;
     private final FileWatcher watcher;
     private final List<WorkspaceListener> listeners = new ArrayList<>();
 
     public WorkspaceService(Workspace workspace, LanguageRegistry languages) throws IOException
     {
         this.workspace = workspace;
-        this.languages = languages;
+        this.projects = new ProjectService(languages);
         this.watcher = new FileWatcher(this::fireDirectoryChanged);
 
         watcher.start();
@@ -59,28 +59,29 @@ public final class WorkspaceService implements AutoCloseable
     /// Prepares metadata and source directories off the EDT without publishing a workspace change.
     public Project prepareProject(Path root, String displayName, Language language) throws IOException
     {
-        ProjectConfiguration configuration = ProjectConfiguration.defaultsForLanguage(displayName, language.id());
-        Project project = Project.at(root, language, configuration);
+        return projects.prepareProject(root, displayName, language);
+    }
 
-        FileOperations.ensureDirectory(root); // Creates the project root
-        language.createProjectStructure(project); // Creates the source root
+    public Project prepareNewProject(Path root, String displayName, Language language) throws IOException
+    {
+        return projects.createNewProject(root, displayName, language);
+    }
 
-        ProjectMetadata.write(root, configuration);
-
-        return project;
+    public Project prepareConfiguredProject(Path root, Language language) throws IOException
+    {
+        return projects.configureProject(root, language);
     }
 
     /// Returns whether a directory already contains Forge project metadata.
     public boolean isConfiguredProject(Path root)
     {
-        return ProjectMetadata.exists(root);
+        return projects.isConfiguredProject(root);
     }
 
     /// Assigns a language to an existing directory and opens it as a project.
     public void configureProject(Path root, Language language) throws IOException
     {
-        ProjectConfiguration configuration = defaultConfigurationForDirectory(root, language);
-        open(prepareProject(root, configuration.projectName(), language));
+        open(prepareConfiguredProject(root, language));
     }
 
     public void updateConfiguration(ProjectConfiguration next) throws IOException
@@ -112,11 +113,7 @@ public final class WorkspaceService implements AutoCloseable
     /// Reads a configured project without changing the current one. Missing roots are never recreated.
     public Project loadProject(Path root) throws IOException
     {
-        ProjectConfiguration configuration = ProjectMetadata.read(root);
-        Language language = languages.find(configuration.language()).orElseThrow(
-                () -> new IOException("Project language is not installed: " + configuration.language()));
-
-        return Project.at(root, language, configuration);
+        return projects.loadProject(root);
     }
 
     public void closeProject()
@@ -225,15 +222,6 @@ public final class WorkspaceService implements AutoCloseable
     {
         watcher.unwatchAll();
         workspace.openProject(project);
-    }
-
-    private static ProjectConfiguration defaultConfigurationForDirectory(Path root, Language language)
-    {
-        Path normalisedRoot = root.toAbsolutePath().normalize();
-        Path fileName = normalisedRoot.getFileName();
-        String displayName = fileName == null ? normalisedRoot.toString() : fileName.toString();
-
-        return ProjectConfiguration.defaultsForLanguage(displayName, language.id());
     }
 
     private void fireDirectoryChanged(Path directory)

@@ -12,6 +12,7 @@ import javax.swing.Timer;
 import java.awt.Component;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /// Applies IDE settings whose effects are long-lived rather than tied to one
 /// command. Command-specific settings are read directly by their action when it
@@ -23,8 +24,10 @@ public final class IDESettingsRuntime implements AutoCloseable
     private final CodeEditorPanel editorPanel;
     private final EditorManager editorManager;
     private final Timer autoSaveTimer;
+    private final Consumer<IDESettingsConfiguration> settingsListener = this::settingsChanged;
 
     private IDESettingsConfiguration configuration;
+    private boolean closed;
 
     public IDESettingsRuntime(
             Component dialogParent,
@@ -42,7 +45,7 @@ public final class IDESettingsRuntime implements AutoCloseable
         autoSaveTimer.setRepeats(false);
 
         editorManager.addEditListener(this::editorChanged);
-        settings.addChangeListener(this::settingsChanged);
+        settings.addChangeListener(settingsListener);
         apply(settings.get());
     }
 
@@ -54,6 +57,7 @@ public final class IDESettingsRuntime implements AutoCloseable
 
     private void apply(IDESettingsConfiguration updated)
     {
+        if (closed) return;
         configuration = Objects.requireNonNull(updated, "updated");
 
         IDESettingsConfiguration.Editor editor = updated.editor();
@@ -82,6 +86,7 @@ public final class IDESettingsRuntime implements AutoCloseable
 
     private void editorChanged()
     {
+        if (closed) return;
         if (configuration.saving().autoSave()) autoSaveTimer.restart();
     }
 
@@ -108,6 +113,8 @@ public final class IDESettingsRuntime implements AutoCloseable
     @Override
     public void close()
     {
+        closed = true;
         autoSaveTimer.stop();
+        settings.removeChangeListener(settingsListener);
     }
 }

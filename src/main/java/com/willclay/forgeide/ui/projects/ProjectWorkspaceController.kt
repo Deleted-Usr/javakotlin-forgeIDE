@@ -15,13 +15,9 @@ import com.willclay.forgeide.workspace.Project
 import com.willclay.forgeide.workspace.metadata.ProjectWorkspace
 import com.willclay.forgeide.workspace.metadata.ProjectWorkspaceStore
 import com.willclay.forgeide.workspace.runconfig.RunConfigurationManager
-import java.awt.BorderLayout
-import java.awt.Dimension
-import java.awt.KeyboardFocusManager
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.concurrent.ExecutionException
 import java.util.function.Consumer
 import javax.swing.*
 
@@ -48,20 +44,18 @@ class ProjectWorkspaceController(
     @Throws(IOException::class)
     fun openProject(root: Path) = changeProject { workspace.loadProject(root) }
 
+    /** Uses a project already loaded or created by the welcome screen. */
+    @Throws(IOException::class)
+    fun openProject(project: Project) = changeProject { project }
+
     @Throws(IOException::class)
     fun createProject(root: Path, name: String, language: Language) = changeProject {
-        // The directory chooser checked earlier, but another process may have created it since.
-        if (Files.exists(root)) {
-            throw IOException("$root already exists.")
-        }
-
-        workspace.prepareProject(root, name, language)
+        workspace.prepareNewProject(root, name, language)
     }
 
     @Throws(IOException::class)
     fun configureProject(root: Path, language: Language) = changeProject {
-        val base = root.toAbsolutePath().normalize()
-        workspace.prepareProject(base, base.fileName?.toString() ?: base.toString(), language)
+        workspace.prepareConfiguredProject(root, language)
     }
 
     @Throws(IOException::class)
@@ -212,55 +206,6 @@ class ProjectWorkspaceController(
         }
     }
 
-    /** Waits through Swing's modal event loop, keeping repainting responsive while I/O runs. */
-    private fun <T> withProgress(title: String, task: () -> T): T {
-        check(SwingUtilities.isEventDispatchThread())
-
-        val owner = KeyboardFocusManager.getCurrentKeyboardFocusManager().activeWindow ?: frame
-
-        val progress = JDialog(owner, title, java.awt.Dialog.ModalityType.APPLICATION_MODAL).apply {
-            defaultCloseOperation = JDialog.DO_NOTHING_ON_CLOSE
-            isResizable           = false
-
-            contentPane = JPanel(BorderLayout(0, 12)).apply {
-                border = BorderFactory.createEmptyBorder(20, 24, 20, 24)
-
-                add(JLabel("$title..."), BorderLayout.NORTH)
-                add(JProgressBar().apply { isIndeterminate = true }, BorderLayout.CENTER)
-
-                preferredSize = Dimension(320, 92)
-            }
-
-            pack()
-            setLocationRelativeTo(owner)
-        }
-
-        val worker = object : SwingWorker<T, Void>() {
-            override fun doInBackground(): T = task()
-            override fun done()              = progress.dispose()
-        }
-
-        worker.execute()
-        progress.isVisible = true
-
-        try {
-            return worker.get()
-        }
-        catch (exception: ExecutionException) {
-            val cause = exception.cause
-
-            if (cause is IOException) {
-                throw cause
-            }
-
-            throw IOException(cause?.message ?: "Could not update workspace", cause)
-        }
-        catch (exception: InterruptedException) {
-            Thread.currentThread().interrupt()
-            throw IOException("Workspace operation interrupted", exception)
-        }
-        finally {
-            progress.dispose()
-        }
-    }
+    private fun <T> withProgress(title: String, task: () -> T): T =
+        ProjectProgress.run(frame, title) { task() }
 }

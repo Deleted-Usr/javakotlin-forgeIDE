@@ -8,7 +8,6 @@ import com.willclay.forgeide.ui.dialogs.FileDialogs.NewProjectDetails;
 
 import java.awt.event.KeyEvent;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 /// Creates a project with one language selected for its lifetime.
@@ -36,12 +35,6 @@ public final class NewProjectAction extends ForgeAction
         if (details == null) return;
 
         Path root = parent.resolve(details.name());
-        if (Files.exists(root))
-        {
-            Utils.showErrorMessage(context.getFrame(), details.name() + " already exists in " + parent + ".");
-            return;
-        }
-
         try
         {
             context.getProjectWorkspaceController().createProject(root, details.name(), details.language());

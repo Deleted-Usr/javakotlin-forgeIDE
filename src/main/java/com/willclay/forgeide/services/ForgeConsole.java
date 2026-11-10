@@ -31,6 +31,12 @@ public final class ForgeConsole
         pending.clear();
     }
 
+    /// Releases a disposed editor without detaching a newer editor's console.
+    public static synchronized void detach(Consumer<String> consoleSink)
+    {
+        if (sink == consoleSink) sink = null;
+    }
+
     /// Prints text as-is, without adding a newline.
     public static synchronized void print(Object value)
     {
