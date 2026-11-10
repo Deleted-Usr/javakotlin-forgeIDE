@@ -53,6 +53,12 @@ public final class WorkspaceService implements AutoCloseable
     /// Creates, configures and opens a new project using the dialog's display name.
     public void createProject(Path root, String displayName, Language language) throws IOException
     {
+        open(prepareProject(root, displayName, language));
+    }
+
+    /// Prepares metadata and source directories off the EDT without publishing a workspace change.
+    public Project prepareProject(Path root, String displayName, Language language) throws IOException
+    {
         ProjectConfiguration configuration = ProjectConfiguration.defaultsForLanguage(displayName, language.id());
         Project project = Project.at(root, language, configuration);
 
@@ -61,7 +67,7 @@ public final class WorkspaceService implements AutoCloseable
 
         ProjectMetadata.write(root, configuration);
 
-        open(project);
+        return project;
     }
 
     /// Returns whether a directory already contains Forge project metadata.
@@ -73,15 +79,8 @@ public final class WorkspaceService implements AutoCloseable
     /// Assigns a language to an existing directory and opens it as a project.
     public void configureProject(Path root, Language language) throws IOException
     {
-        FileOperations.ensureDirectory(root);
-
         ProjectConfiguration configuration = defaultConfigurationForDirectory(root, language);
-        Project project = Project.at(root, language, configuration);
-        language.createProjectStructure(project);
-
-        ProjectMetadata.write(root, configuration);
-
-        open(project);
+        open(prepareProject(root, configuration.projectName(), language));
     }
 
     public void updateConfiguration(ProjectConfiguration next) throws IOException
@@ -107,12 +106,17 @@ public final class WorkspaceService implements AutoCloseable
     /// Opens a configured project, restoring its persisted language.
     public void openProject(Path root) throws IOException
     {
-        FileOperations.ensureDirectory(root);
+        open(loadProject(root));
+    }
+
+    /// Reads a configured project without changing the current one. Missing roots are never recreated.
+    public Project loadProject(Path root) throws IOException
+    {
         ProjectConfiguration configuration = ProjectMetadata.read(root);
         Language language = languages.find(configuration.language()).orElseThrow(
                 () -> new IOException("Project language is not installed: " + configuration.language()));
 
-        open(Project.at(root, language, configuration));
+        return Project.at(root, language, configuration);
     }
 
     public void closeProject()
@@ -216,7 +220,8 @@ public final class WorkspaceService implements AutoCloseable
         return item.path().getParent();
     }
 
-    private void open(Project project)
+    /// Publishes an already prepared project on the EDT, where workspace listeners update Swing.
+    public void open(Project project)
     {
         watcher.unwatchAll();
         workspace.openProject(project);
@@ -234,7 +239,6 @@ public final class WorkspaceService implements AutoCloseable
     private void fireDirectoryChanged(Path directory)
     {
         if (directory == null) return;
-
         for (WorkspaceListener listener : listeners) listener.directoryChanged(directory);
     }
 

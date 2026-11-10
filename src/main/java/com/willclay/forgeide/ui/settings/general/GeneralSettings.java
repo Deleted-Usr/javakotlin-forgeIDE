@@ -18,11 +18,13 @@ import java.util.List;
 public final class GeneralSettings extends JPanel
 {
     private static final String REOPEN_LAST_PROJECT_LABEL = "Reopen the last project";
-    private static final String OPEN_EMPTY_WINDOW_LABEL = "Open an empty window";
+    private static final String RECENT_PROJECTS_LABEL     = "Show Recent Projects";
+    private static final String OPEN_EMPTY_WINDOW_LABEL   = "Open an empty window";
 
     private final JComboBox<String> startupAction = new JComboBox<>(new String[] {
             REOPEN_LAST_PROJECT_LABEL,
-            OPEN_EMPTY_WINDOW_LABEL
+            OPEN_EMPTY_WINDOW_LABEL,
+            RECENT_PROJECTS_LABEL
     });
     private JCheckBox restoreOpenFiles;
     private JCheckBox confirmDiscard;
@@ -94,7 +96,7 @@ public final class GeneralSettings extends JPanel
         JPanel panel = Utils.createSettingsSection("Startup and shutdown");
 
         Utils.addSettingsFormRow(panel, 0, "On startup:", startupAction);
-        restoreOpenFiles = Utils.addSettingsCheckBoxRow(panel, 1, "Restore files that were open in the last session", true);
+        restoreOpenFiles = Utils.addSettingsCheckBoxRow(panel, 1, "Restore each project's open files", true);
         confirmDiscard   = Utils.addSettingsCheckBoxRow(panel, 2, "Confirm before discarding unsaved changes", true);
 
         return panel;
@@ -228,9 +230,12 @@ public final class GeneralSettings extends JPanel
         IDESettingsConfiguration.DocComments docComments = settings.docComments();
         IDESettingsConfiguration.TextRendering rendering = settings.textRendering();
 
-        startupAction.setSelectedItem(IDESettingsConfiguration.OPEN_EMPTY_WINDOW.equals(startup.action())
-                ? OPEN_EMPTY_WINDOW_LABEL
-                : REOPEN_LAST_PROJECT_LABEL);
+        startupAction.setSelectedItem(switch (startup.action())
+        {
+            case IDESettingsConfiguration.OPEN_EMPTY_WINDOW -> OPEN_EMPTY_WINDOW_LABEL;
+            case IDESettingsConfiguration.SHOW_RECENT_PROJECTS -> RECENT_PROJECTS_LABEL;
+            default -> REOPEN_LAST_PROJECT_LABEL;
+        });
         restoreOpenFiles.setSelected(startup.restoreOpenFiles());
         confirmDiscard.setSelected(startup.confirmDiscard());
 
@@ -276,15 +281,22 @@ public final class GeneralSettings extends JPanel
     /// theme and file type extensions — as they are in `current`.
     public IDESettingsConfiguration getValues(IDESettingsConfiguration current)
     {
-        String startup = OPEN_EMPTY_WINDOW_LABEL.equals(startupAction.getSelectedItem())
-                ? IDESettingsConfiguration.OPEN_EMPTY_WINDOW
-                : IDESettingsConfiguration.REOPEN_LAST_PROJECT;
+        String startup = switch (String.valueOf(startupAction.getSelectedItem()))
+        {
+            case OPEN_EMPTY_WINDOW_LABEL -> IDESettingsConfiguration.OPEN_EMPTY_WINDOW;
+            case RECENT_PROJECTS_LABEL   -> IDESettingsConfiguration.SHOW_RECENT_PROJECTS;
+            default                      -> IDESettingsConfiguration.REOPEN_LAST_PROJECT;
+        };
 
         return new IDESettingsConfiguration(
                 IDESettingsConfiguration.CURRENT_SCHEMA_VERSION,
+
                 current.appearance(),
+
                 new IDESettingsConfiguration.Startup(
-                        startup, restoreOpenFiles.isSelected(), confirmDiscard.isSelected()),
+                        startup, restoreOpenFiles.isSelected(), confirmDiscard.isSelected()
+                ),
+
                 new IDESettingsConfiguration.Editor(
                         selectedFontFamily(),
                         ((Number) fontSize.getValue()).intValue(),
@@ -293,20 +305,30 @@ public final class GeneralSettings extends JPanel
                         showMinimap.isSelected(),
                         showColourSwatches.isSelected(),
                         showIndentGuides.isSelected(),
-                        selectedMarkdownViewMode()),
+                        selectedMarkdownViewMode()
+                ),
+
                 new IDESettingsConfiguration.Saving(
                         autoSave.isSelected(),
                         ((Number) autoSaveDelay.getValue()).intValue(),
-                        saveBeforeBuild.isSelected()),
+                        saveBeforeBuild.isSelected()
+                ),
+
                 new IDESettingsConfiguration.BuildAndRun(
-                        showConsoleOnRun.isSelected(), clearConsoleOnRun.isSelected()),
+                        showConsoleOnRun.isSelected(), clearConsoleOnRun.isSelected()
+                ),
+
                 new IDESettingsConfiguration.DocComments(
                         renderDocComments.isSelected(),
-                        ((Number) docCommentColumns.getValue()).intValue()),
+                        ((Number) docCommentColumns.getValue()).intValue()
+                ),
+
                 new IDESettingsConfiguration.TextRendering(
                         selectedAntialiasing(),
                         ((Number) lcdContrast.getValue()).intValue(),
-                        fractionalMetrics.isSelected()),
+                        fractionalMetrics.isSelected()
+                ),
+
                 current.fileTypes()
         );
     }

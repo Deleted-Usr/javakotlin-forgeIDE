@@ -37,6 +37,7 @@ public final class FileMenu extends JMenu
     {
         add(actions.getNewProjectAction());
         add(actions.getOpenProjectAction());
+        add(actions.getRecentProjectsAction());
         add(actions.getCloseProjectAction());
     }
 

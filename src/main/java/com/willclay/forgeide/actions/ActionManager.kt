@@ -23,6 +23,8 @@ import com.willclay.forgeide.actions.file.NewFileAction
 import com.willclay.forgeide.actions.file.NewProjectAction
 import com.willclay.forgeide.actions.file.OpenFileAction
 import com.willclay.forgeide.actions.file.OpenProjectAction
+import com.willclay.forgeide.actions.file.RecentProjectsAction
+import com.willclay.forgeide.ui.projects.RecentProjectsDialogController
 import com.willclay.forgeide.actions.file.SaveAction
 import com.willclay.forgeide.actions.file.SaveAllAction
 import com.willclay.forgeide.actions.file.SaveAsAction
@@ -58,11 +60,12 @@ class ActionManager(private val context: ActionContext) {
     private val workbench = context.workbench
 
     // File
-    val newProjectAction   = NewProjectAction(context)
-    val openProjectAction  = OpenProjectAction(context)
-    val closeProjectAction = CloseProjectAction(context)
-    val newFileAction      = NewFileAction(context)
-    val openFileAction     = OpenFileAction(context)
+    val newProjectAction     = NewProjectAction(context)
+    val openProjectAction    = OpenProjectAction(context)
+    val recentProjectsAction = RecentProjectsAction(RecentProjectsDialogController(context, newProjectAction, openProjectAction))
+    val closeProjectAction   = CloseProjectAction(context)
+    val newFileAction        = NewFileAction(context)
+    val openFileAction       = OpenFileAction(context)
 
     // Save needs Save As to fall back to, so Save As is built first.
     val saveAsAction  = SaveAsAction(context)

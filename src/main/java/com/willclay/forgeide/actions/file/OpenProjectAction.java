@@ -35,7 +35,7 @@ public final class OpenProjectAction extends ForgeAction
         {
             if (context.getWorkspaceService().isConfiguredProject(root))
             {
-                context.getWorkspaceService().openProject(root);
+                context.getProjectWorkspaceController().openProject(root);
             }
             else
             {
@@ -43,10 +43,8 @@ public final class OpenProjectAction extends ForgeAction
                         "Configure Project", "Choose this project's language. This choice is saved with the project:");
                 if (language == null) return;
 
-                context.getWorkspaceService().configureProject(root, language);
+                context.getProjectWorkspaceController().configureProject(root, language);
             }
-
-            context.getEditorManager().closeFile();
         }
         catch (IOException e)
         {

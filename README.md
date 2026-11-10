@@ -343,15 +343,26 @@ Thread, while compilation and process execution run in background tasks.
 | Path                                      | Contents                                                          |
 |-------------------------------------------|-------------------------------------------------------------------|
 | `~/.forge/config/settings.json`           | IDE-wide preferences, including editor and theme settings.        |
-| `~/.forge/config/session.json`            | Last project, open files, and workbench layout for startup.       |
+| `~/.forge/config/session.json`            | Last project and recent-project history.                          |
 | `~/.forge/plugins/`                       | External language plugin JARs loaded at startup.                  |
 | `~/.forge/themes/`                        | Custom theme documents, one `.json` file per theme.               |
 | `<project>/.forge/project.json`           | Project metadata, file handling, and language settings.           |
 | `<project>/.forge/runConfigurations.json` | Saved run configurations for that project.                        |
+| `<project>/.forge/workspace.json`         | Open tabs, selected tab, tool-window layout, and active run selection. |
 
 Here, `~` means the user's home directory. Global settings and project settings have
 separate scopes, so changing one project's compiler or source paths does not change
 every other project.
+
+**File → Recent Projects** opens a searchable list of previously opened projects. Select
+**Show Recent Projects** under **Settings → General → On startup** to start there.
+Removing an entry only removes it from history; it does not delete the project.
+
+Project workspaces are saved when switching or closing projects and on a clean exit.
+Files inside the project use relative paths so their tabs survive moving the project folder.
+The restore-open-files setting applies whenever a project is opened. Existing global session
+tabs and layout are migrated to the last project's workspace automatically. Saved run selections
+are migrated into each existing project's workspace, including an explicit Current File choice.
 
 ## Direction
 

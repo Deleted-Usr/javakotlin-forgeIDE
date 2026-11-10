@@ -8,7 +8,6 @@ import com.willclay.forgeide.workspace.runconfig.RunConfigurationManager;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
 import java.util.Objects;
 
 /// Presents available run targets and keeps popup commands out of the combo
@@ -20,9 +19,9 @@ import java.util.Objects;
 /// holds when no configuration is active.
 public final class RunConfigurationDropdown extends JComboBox<Object>
 {
-    private static final String CURRENT_FILE = "Current File";
+    private static final String CURRENT_FILE        = "Current File";
     private static final String EDIT_CONFIGURATIONS = "Edit Configurations...";
-    private static final int PREFERRED_WIDTH = 220;
+    private static final int PREFERRED_WIDTH        = 220;
 
     private final ForgeAction openDialog;
     private final RunConfigurationManager manager;
@@ -36,7 +35,7 @@ public final class RunConfigurationDropdown extends JComboBox<Object>
     {
         super();
         this.openDialog = Objects.requireNonNull(openDialog, "openDialog");
-        this.manager = Objects.requireNonNull(manager, "manager");
+        this.manager    = Objects.requireNonNull(manager, "manager");
 
         setFocusable(false);
         setToolTipText("Run Configurations");
@@ -50,7 +49,7 @@ public final class RunConfigurationDropdown extends JComboBox<Object>
         reload();
 
         Dimension preferredSize = getPreferredSize();
-        preferredSize.width = PREFERRED_WIDTH;
+        preferredSize.width     = PREFERRED_WIDTH;
         setPreferredSize(preferredSize);
         setMaximumSize(preferredSize);
     }
@@ -120,7 +119,7 @@ public final class RunConfigurationDropdown extends JComboBox<Object>
         {
             manager.setActive(id);
         }
-        catch (IOException | IllegalArgumentException | IllegalStateException exception)
+        catch (IllegalArgumentException | IllegalStateException exception)
         {
             Utils.showErrorMessage(this, "Could not select the run configuration: " + exception.getMessage());
         }

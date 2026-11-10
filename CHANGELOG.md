@@ -9,6 +9,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+#### Projects
+- A searchable Recent Projects dialog under File, with an optional startup setting, project creation/opening,
+and removal from recent history without deleting files.
+
 #### Editor
 - The editor now paints a thin vertical line guide spanning opening and closing brackets. This can be turned on and off
 in a new settings option under Settings → General → Editor defaults → “Show indent guides between brackets”
@@ -17,14 +21,20 @@ breakdown. It updates when a file is saved, created or deleted.
 - Syntax highlighting for GLSL shaders in every project: built-in types and constructors, qualifiers, `layout(...)`
 arguments, interface blocks, structs, `gl_` built-ins, preprocessor directives and comments. `.glsl`, the Vulkan stage
 extensions (`.vert`, `.frag`, `.comp`, `.rgen`, ...) and `.vsh`/`.fsh`/`.gsh` open as GLSL by default
+- GLSL is now a recognised language in markdown documents and is highlighted correctly in a rendered markdown preview.
+
+#### Settings
 - A new Settings → File Types page chooses which extensions open as GLSL, JSON, TOML or Markdown, such as adding `.vs`
 and `.fs` for shaders. Open files are re-highlighted when the settings are applied
-- GLSL is now a recognised language in markdown documents and is highlighted correctly in a rendered markdown preview.
-- Default markdown tab view setting under Settings → General → Editor defaults → "Default markdown view"
+- A new default markdown tab view setting under Settings → General → Editor defaults → "Default markdown view"
 
 #### C++ plugin
 - Syntax highlighting for CMake: `CMakeLists.txt` and `.cmake` files now colour commands, keyword arguments,
 variable references, generator expressions, strings, bracket arguments and comments
+
+### Changed
+- Open tabs, the selected tab, tool-window layout, and the active run selection are now saved in each project's `.forge/workspace.json`
+when switching, closing, or exiting. The previous global session state is migrated automatically.
 
 ### Fixed
 - The rendered markdown preview now allows scrolling when the mouse is sitting inside a code block

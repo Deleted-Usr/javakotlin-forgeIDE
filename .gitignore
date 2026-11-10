@@ -72,6 +72,7 @@ jdtls/
 .forge/
 !examples/**/.forge/
 !examples/**/.forge/*.json
+examples/**/.forge/workspace.json
 # If its later decided run configurations SHOULD be shared
 # across machines, add:
 # !.forge/runConfigurations/

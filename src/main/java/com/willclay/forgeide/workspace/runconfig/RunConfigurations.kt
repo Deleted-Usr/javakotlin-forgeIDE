@@ -2,10 +2,12 @@ package com.willclay.forgeide.workspace.runconfig
 
 import com.willclay.forgeide.json.VersionedJsonDocument
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.SerialName
 import java.util.Optional
 
 /**
- * Every run configuration belonging to one project, plus the selected one.
+ * Shared run configurations. The legacy selection is read only for workspace migration.
  *
  * The default values do two jobs: Kotlin callers can leave arguments out, and
  * a file missing a property reads as that default instead of failing.
@@ -18,7 +20,10 @@ import java.util.Optional
 data class RunConfigurations(
     val schemaVersion: Int,
     val configs: List<RunConfiguration> = emptyList(),
-    val activeId: String? = null
+
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    @SerialName("activeId")
+    val legacyActiveId: String? = null
 ) : VersionedJsonDocument {
     init {
         VersionedJsonDocument.requireSupportedVersion(
@@ -28,11 +33,8 @@ data class RunConfigurations(
 
     // Optional rather than Kotlin's `RunConfiguration?` because the callers are
     // still Java. Once they are Kotlin, a nullable return reads better.
-    fun active(): Optional<RunConfiguration> = find(activeId)
-
-    /** An [activeId] left dangling by a removal simply selects nothing. */
-    fun find(id: String?): Optional<RunConfiguration> =
-        Optional.ofNullable(configs.firstOrNull { it.id == id })
+    /** A local selection left dangling by a removal simply selects nothing. */
+    fun find(id: String?): Optional<RunConfiguration> = Optional.ofNullable(configs.firstOrNull { it.id == id })
 
     companion object {
         /** `const` makes this a plain static field, visible to Java unchanged. */

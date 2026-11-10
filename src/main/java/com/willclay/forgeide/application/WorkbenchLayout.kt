@@ -3,8 +3,8 @@ package com.willclay.forgeide.application
 import kotlinx.serialization.Serializable
 
 /**
- * Session layout in logical pixels, independent of the display's scale factor.
- * Missing fields from older session files receive usable defaults.
+ * Project workbench layout in logical pixels, independent of the display's scale factor.
+ * Missing fields from older workspace files receive usable defaults.
  *
  * [bottomTool] is the id of the tool open under the editor (see
  * `WorkbenchPanel.CONSOLE` and `WorkbenchPanel.TODO`), or null when that

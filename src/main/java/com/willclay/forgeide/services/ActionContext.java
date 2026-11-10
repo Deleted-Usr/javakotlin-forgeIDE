@@ -6,6 +6,7 @@ import com.willclay.forgeide.services.settings.SettingsService;
 import com.willclay.forgeide.services.todo.TodoService;
 import com.willclay.forgeide.ui.WorkbenchPanel;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
+import com.willclay.forgeide.ui.projects.ProjectWorkspaceController;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 import com.willclay.forgeide.ui.editor.ConsolePanel;
 import com.willclay.forgeide.ui.explorer.ProjectTree;
@@ -45,6 +46,7 @@ public final class ActionContext
     private final RunConfigDialogController runConfigDialogController;
     private final RunConfigurationManager runConfigurationManager;
     private final TodoService todoService;
+    private final ProjectWorkspaceController projectWorkspaceController;
 
     public ActionContext(
             JFrame frame,
@@ -61,7 +63,8 @@ public final class ActionContext
             SettingsDialogController settingsDialogController,
             RunConfigDialogController runConfigDialogController,
             RunConfigurationManager runConfigurationManager,
-            TodoService todoService
+            TodoService todoService,
+            ProjectWorkspaceController projectWorkspaceController
     )
     {
         this.frame                     = frame;
@@ -79,6 +82,7 @@ public final class ActionContext
         this.runConfigDialogController = runConfigDialogController;
         this.runConfigurationManager   = runConfigurationManager;
         this.todoService               = todoService;
+        this.projectWorkspaceController = projectWorkspaceController;
     }
 
     /// Only for parenting dialogs and for closing the application. An action
@@ -112,6 +116,7 @@ public final class ActionContext
     public SettingsService getSettingsService()                     { return settingsService; }
     public SettingsDialogController getSettingsDialogController()   { return settingsDialogController; }
     public RunConfigDialogController getRunConfigDialogController() { return runConfigDialogController; }
+    public ProjectWorkspaceController getProjectWorkspaceController() { return projectWorkspaceController; }
     public TodoService getTodoService()                             { return todoService; }
 
     /// Which configuration Run should use, and the list the toolbar shows.

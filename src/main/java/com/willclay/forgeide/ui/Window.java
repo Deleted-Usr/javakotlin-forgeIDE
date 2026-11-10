@@ -1,7 +1,6 @@
 package com.willclay.forgeide.ui;
 
 import com.willclay.forgeide.actions.ActionManager;
-import com.willclay.forgeide.application.IDESessionConfiguration;
 import com.willclay.forgeide.application.IDESettingsConfiguration;
 import com.willclay.forgeide.application.WorkbenchLayout;
 import com.willclay.forgeide.application.bootstrap.BootstrapResult;
@@ -25,6 +24,7 @@ import com.willclay.forgeide.services.settings.project.ProjectSettingsService;
 import com.willclay.forgeide.services.todo.TodoScanner;
 import com.willclay.forgeide.services.todo.TodoService;
 import com.willclay.forgeide.ui.dialogs.FileDialogs;
+import com.willclay.forgeide.ui.projects.ProjectWorkspaceController;
 import com.willclay.forgeide.ui.editor.CodeEditorPanel;
 import com.willclay.forgeide.ui.editor.ConsolePanel;
 import com.willclay.forgeide.ui.editor.tabs.EditorTab;
@@ -54,10 +54,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 /// The main frame, and only the composition root: it creates the parts, puts
@@ -160,7 +157,6 @@ public final class Window extends JFrame
         settingsRuntime = new IDESettingsRuntime(this, settingsService, editorPanel, editorManager);
 
         applicationShutdown.addTask("stop automatic saving", settingsRuntime::close);
-        applicationShutdown.addTask("save the IDE session", () -> sessionService.save(captureSession()));
 
         ThemeService themeService             = new ThemeService(this, editorPanel, editorManager, settingsService, bootstrap.themes());
         ProjectSettingsService projectService = new ProjectSettingsService(workspaceService);
@@ -169,6 +165,20 @@ public final class Window extends JFrame
 
         RunConfigurationManager runConfigurationManager  = new RunConfigurationManager(workspaceService);
         RunConfigDialogController configDialogController = new RunConfigDialogController(this, runConfigurationManager);
+
+        ProjectWorkspaceController projectWorkspaceController = new ProjectWorkspaceController(
+                this,
+                workspaceService,
+                editorManager,
+                editorPanel,
+                workbench,
+                settingsService,
+                sessionService,
+                runConfigurationManager,
+                this::restoreLayout
+        );
+
+        applicationShutdown.addTask("save the workspace and IDE session", projectWorkspaceController::saveSession);
 
         context = new ActionContext(
                 this,
@@ -185,7 +195,8 @@ public final class Window extends JFrame
                 settingsDialogController,
                 configDialogController,
                 runConfigurationManager,
-                todoService
+                todoService,
+                projectWorkspaceController
         );
         actions = new ActionManager(context);
 
@@ -263,9 +274,11 @@ public final class Window extends JFrame
         // restores the user's choice and applies its matching syntax colours.
         wireState();
         themeService.applySavedTheme();
-        restoreLayout(sessionService.get().layout());
-        restoreSession(sessionService);
-        if (!bootstrap.warnings().isEmpty()) actions.getToggleConsoleAction().setSelected(true);
+        SwingUtilities.invokeLater(() ->
+        {
+            restoreSession(sessionService);
+            if (!bootstrap.warnings().isEmpty()) actions.getToggleConsoleAction().setSelected(true);
+        });
         updateTitle();
     }
 
@@ -366,30 +379,6 @@ public final class Window extends JFrame
         setTitle(project == null ? baseTitle : baseTitle + " — " + project.displayName());
     }
 
-    private IDESessionConfiguration captureSession()
-    {
-        Project project  = workspace.getProject();
-        Path projectRoot = project == null ? null : project.root();
-
-        List<Path> openFiles = editorManager.getOpenTabs().stream()
-                .map(EditorTab::getFile)
-                .filter(Objects::nonNull)
-                .toList();
-
-        EditorTab selected = editorManager.getCurrentTab();
-        Path selectedFile = selected == null ? null : selected.getFile();
-
-        return new IDESessionConfiguration(
-                IDESessionConfiguration.CURRENT_SCHEMA_VERSION,
-
-                projectRoot,
-                openFiles,
-                selectedFile,
-
-                workbench.captureLayout()
-        );
-    }
-
     private void restoreLayout(WorkbenchLayout layout)
     {
         workbench.restoreLayout(layout);
@@ -401,53 +390,26 @@ public final class Window extends JFrame
 
     private void restoreSession(SessionService sessionService)
     {
-        if (!IDESettingsConfiguration.REOPEN_LAST_PROJECT.equals(settingsService.get().startup().action())) return;
+        String startup = settingsService.get().startup().action();
+        if (IDESettingsConfiguration.SHOW_RECENT_PROJECTS.equals(startup))
+        {
+            actions.getRecentProjectsAction().trigger();
+            return;
+        }
 
-        IDESessionConfiguration session = sessionService.get();
-        Path projectRoot = session.projectRoot();
-        if (projectRoot == null || !Files.isDirectory(projectRoot)) return;
+        if (!IDESettingsConfiguration.REOPEN_LAST_PROJECT.equals(startup)) return;
+
+        Path projectRoot = sessionService.get().projectRoot();
+        if (projectRoot == null) return;
 
         try
         {
-            workspaceService.openProject(projectRoot);
+            context.getProjectWorkspaceController().openProject(projectRoot);
         }
         catch (IOException exception)
         {
             Utils.showErrorMessage(this, "Could not reopen the last project: " + exception.getMessage());
-            return;
-        }
-
-        if (!settingsService.get().startup().restoreOpenFiles()) return;
-
-        List<Path> restorable = new ArrayList<>();
-        for (Path file : session.openFiles())
-        {
-            if (file != null && Files.isRegularFile(file)) restorable.add(file);
-        }
-        if (restorable.isEmpty()) return;
-
-        editorManager.closeFile();
-        for (Path file : restorable)
-        {
-            try
-            {
-                editorManager.openFile(file);
-            }
-            catch (IOException exception)
-            {
-                System.err.println("Could not restore open file " + file + ": " + exception.getMessage());
-            }
-        }
-
-        Path selectedFile = session.selectedFile();
-        if (selectedFile == null) return;
-        for (EditorTab tab : editorManager.getOpenTabs())
-        {
-            if (selectedFile.equals(tab.getFile()))
-            {
-                editorManager.selectTab(tab);
-                return;
-            }
+            actions.getRecentProjectsAction().trigger();
         }
     }
 

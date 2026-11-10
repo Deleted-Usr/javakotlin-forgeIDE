@@ -7,36 +7,25 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import java.nio.file.Path
 
-/** The small amount of workspace state that can be restored on the next launch. */
+/** Installation-local project history. Project session state lives in each project's workspace.json. */
 @JvmRecord
 @Serializable
 data class IDESessionConfiguration(
     val schemaVersion: Int,
 
-    val projectRoot: Path?    = null,
-    val openFiles: List<Path> = emptyList(),
-    val selectedFile: Path?   = null,
-
-    val layout: WorkbenchLayout = WorkbenchLayout.defaults(),
+    val projectRoot: Path?                  = null,
+    val recentProjects: List<RecentProject> = emptyList(),
 ) : VersionedJsonDocument {
     init {
         VersionedJsonDocument.requireSupportedVersion("IDE Session", schemaVersion, CURRENT_SCHEMA_VERSION)
     }
 
-    constructor(
-        schemaVersion: Int,
-
-        projectRoot: Path?,
-        openFiles: List<Path>,
-        selectedFile: Path?,
-    ) : this(schemaVersion, projectRoot, openFiles, selectedFile, WorkbenchLayout.defaults())
-
     companion object {
-        const val CURRENT_SCHEMA_VERSION = 1
+        const val CURRENT_SCHEMA_VERSION = 3
 
         @JvmStatic
         fun empty(): IDESessionConfiguration {
-            return IDESessionConfiguration(CURRENT_SCHEMA_VERSION, null, emptyList(), null)
+            return IDESessionConfiguration(CURRENT_SCHEMA_VERSION)
         }
     }
 }

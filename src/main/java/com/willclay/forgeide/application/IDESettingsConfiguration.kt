@@ -47,6 +47,7 @@ data class IDESettingsConfiguration(
     companion object {
         const val CURRENT_SCHEMA_VERSION = 1
         const val REOPEN_LAST_PROJECT    = "reopen-last-project"
+        const val SHOW_RECENT_PROJECTS   = "show-recent-projects"
         const val OPEN_EMPTY_WINDOW      = "open-empty-window"
         const val DEFAULT_THEME          = "material-darker"
 
@@ -90,7 +91,7 @@ data class IDESettingsConfiguration(
     ) {
         fun normalised() = copy(
             action = when (action) {
-                REOPEN_LAST_PROJECT, OPEN_EMPTY_WINDOW -> action
+                REOPEN_LAST_PROJECT, OPEN_EMPTY_WINDOW, SHOW_RECENT_PROJECTS -> action
                 else -> REOPEN_LAST_PROJECT
             }
         )

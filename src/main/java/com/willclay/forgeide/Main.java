@@ -18,11 +18,11 @@ import javax.swing.*;
 
 /*
  * TODO:
+ *  - Types of run configurations (sectioned in the dialog by language)
  *  - TO-DO client/editor
  *  - C# plugin
  *  - Mermaid Rendering in markdown documents and mermaid documents (.mmd / .mermaid)
  *  - In-lay hints with setting
- *  - Recent projects menu
  *  - Github release watcher and ForgeIDE installer (C++/Rust for Installer???)
  *  - Have more flexibility for C++ Projects
  *  - Java + Kotlin and C++ + Rust project templates (after multi-language projects)
