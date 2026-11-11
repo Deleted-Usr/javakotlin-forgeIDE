@@ -4,6 +4,7 @@ import com.willclay.forgeide.lang.api.FileIconStyle
 import com.willclay.forgeide.lang.api.Language
 import com.willclay.forgeide.lang.api.Lexer
 import com.willclay.forgeide.lang.api.Toolchain
+import com.willclay.forgeide.lang.api.run.RunOptionsPage
 import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage
 import com.willclay.forgeide.lang.api.templates.FileTemplates
 import com.willclay.forgeide.workspace.Project
@@ -72,6 +73,6 @@ class RustLanguage : Language {
         if (Files.notExists(main)) Files.writeString(main, newFileTemplate("main"))
     }
 
-    override fun settingsPages(project: Project): List<LanguageSettingsPage> =
-        listOf(RustSettingsPage(project.root(), RustSettings.from(project)))
+    override fun settingsPages(project:  Project): List<LanguageSettingsPage> = listOf(RustSettingsPage(project.root(), RustSettings.from(project)))
+    override fun runOptionsPage(project: Project): Optional<RunOptionsPage>   = Optional.of(RustRunOptionsPage())
 }

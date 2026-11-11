@@ -1,6 +1,7 @@
 package com.willclay.forgeide.lang.api;
 
 import com.willclay.forgeide.highlighting.filetypes.FileType;
+import com.willclay.forgeide.lang.api.run.RunOptionsPage;
 import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage;
 import com.willclay.forgeide.lang.api.templates.FileTemplates;
 import com.willclay.forgeide.workspace.Project;
@@ -104,6 +105,15 @@ public interface Language
     default List<LanguageSettingsPage> settingsPages(Project project)
     {
         return List.of();
+    }
+
+    /// What this language adds to the run configuration dialog: its name for the
+    /// runtime options, and any choices of its own. See [RunOptionsPage].
+    ///
+    /// Optional. Without one, the dialog shows the plain "Runtime options".
+    default Optional<RunOptionsPage> runOptionsPage(Project project)
+    {
+        return Optional.empty();
     }
 
     /// Returns whether a file has an extension owned by this language.

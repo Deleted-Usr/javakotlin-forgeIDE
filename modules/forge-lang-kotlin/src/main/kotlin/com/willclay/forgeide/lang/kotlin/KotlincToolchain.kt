@@ -3,8 +3,10 @@ package com.willclay.forgeide.lang.kotlin
 import com.willclay.forgeide.annotations.SourceEquivalent
 import com.willclay.forgeide.annotations.SourceLanguage
 import com.willclay.forgeide.execution.ProcessRunner
+import com.willclay.forgeide.lang.api.CommandLine
 import com.willclay.forgeide.lang.api.LaunchOptions
 import com.willclay.forgeide.lang.api.Toolchain
+import com.willclay.forgeide.lang.jvm.JvmRunOptions
 import com.willclay.forgeide.lang.kotlin.KotlinSettings
 import com.willclay.forgeide.workspace.Project
 import java.io.IOException
@@ -12,6 +14,7 @@ import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Comparator
+import java.util.Optional
 import java.util.function.Consumer
 
 /** Compiles, builds, cleans, and runs conventional Kotlin/JVM projects. */
@@ -109,36 +112,52 @@ class KotlincToolchain : Toolchain {
         onInputReady: Consumer<Writer>
     ): Int {
         val settings = KotlinSettings.from(project)
-        val classPath = KotlinClassNames.classPath(
-            KotlinClassNames.outputRoot(project),
-            KotlinClassNames.libraryRoots(project)
-        )
-        val encoding = project.configuration.fileHandling.encoding.charset()
+        val command = runCommand(project, sourceFile, options).orElseThrow()
 
-        // Order is the runtime's: everything before the main class is for the JVM,
-        // everything after it is for the program.
-        val command = buildList {
-            add(KotlinClassNames.RUNNER_COMMAND)
-            add(KotlinClassNames.batchSafeArgument("-Dfile.encoding=${encoding.name()}"))
-            options.runtimeOptions().forEach { add(KotlinClassNames.batchSafeArgument(it)) }
-            add("-classpath")
-            add(classPath)
-            add(
-                if (KotlinClassNames.hasExtension(sourceFile, KotlinClassNames.SCRIPT_EXTENSION)) {
-                    sourceFile.toString()
-                } else {
-                    KotlinClassNames.mainClass(sourceFile, encoding)
-                }
-            )
-            addAll(options.programArguments())
-        }
-
-        val builder = ProcessBuilder(command)
+        val builder = ProcessBuilder(command.arguments())
         builder.environment()["JAVA_HOME"] = settings.jvm.jdkPath.toString()
 
         // After JAVA_HOME, so a configuration can deliberately override it.
         options.applyTo(builder, project.workingDirectory())
 
         return ProcessRunner.execute(builder, output, onInputReady)
+    }
+
+    /** The `kotlin` command [run] starts, and the run configuration dialog previews. */
+    @Throws(IOException::class)
+    override fun runCommand(project: Project, sourceFile: Path, options: LaunchOptions): Optional<CommandLine> {
+        val classPath = KotlinClassNames.classPath(
+            KotlinClassNames.outputRoot(project),
+            KotlinClassNames.libraryRoots(project)
+        )
+        val encoding = project.configuration.fileHandling.encoding.charset()
+        val entryPoint =
+            if (KotlinClassNames.hasExtension(sourceFile, KotlinClassNames.SCRIPT_EXTENSION)) {
+                sourceFile.toString()
+            } else {
+                KotlinClassNames.mainClass(sourceFile, encoding)
+            }
+
+        // Order is the runtime's: everything before the main class is for the JVM,
+        // everything after it is for the program.
+        val command = CommandLine()
+        command.add(KotlinClassNames.RUNNER_COMMAND)
+        command.add(KotlinClassNames.batchSafeArgument("-Dfile.encoding=${encoding.name()}"))
+
+        // The kotlin launcher passes a flag on to the JVM only when it starts
+        // with -J, so -ea is written -J-ea here.
+        JvmRunOptions.from(options.languageOptions()).jvmArguments()
+            .forEach {
+                command.add(KotlinClassNames.batchSafeArgument("-J$it"), CommandLine.Origin.LANGUAGE_OPTION)
+            }
+
+        options.runtimeOptions()
+            .forEach { command.add(KotlinClassNames.batchSafeArgument(it), CommandLine.Origin.RUNTIME_OPTION) }
+        command.add("-classpath")
+        command.add(classPath)
+        command.add(entryPoint, CommandLine.Origin.ENTRY_POINT)
+        command.addAll(options.programArguments(), CommandLine.Origin.PROGRAM_ARGUMENT)
+
+        return Optional.of(command)
     }
 }

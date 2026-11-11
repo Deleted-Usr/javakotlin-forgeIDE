@@ -5,10 +5,12 @@ import com.willclay.forgeide.annotations.SourceLanguage
 import com.willclay.forgeide.lang.api.EntryPoints
 import com.willclay.forgeide.lang.api.FileIconStyle
 import com.willclay.forgeide.lang.api.Language
+import com.willclay.forgeide.lang.api.run.RunOptionsPage
 import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage
 import com.willclay.forgeide.lang.api.Lexer
 import com.willclay.forgeide.lang.api.Toolchain
 import com.willclay.forgeide.lang.api.templates.FileTemplates
+import com.willclay.forgeide.lang.jvm.JvmRunOptionsPage
 import com.willclay.forgeide.workspace.Project
 
 import java.io.IOException
@@ -49,11 +51,10 @@ class KotlinLanguage : Language {
 
     @Throws(IOException::class)
     override fun entryPoints(project: Project): List<Path> = EntryPoints.scan(project, this, MAIN_FUNCTION)
+    override fun sourceRoot(project:  Project): Path       = KotlinSettings.from(project).jvm.sourceRoot(project)
 
-    override fun sourceRoot(project: Project): Path = KotlinSettings.from(project).jvm.sourceRoot(project)
-
-    override fun settingsPages(project: Project): List<LanguageSettingsPage> =
-        listOf(KotlinSettingsPage(project.root(), KotlinSettings.from(project)))
+    override fun settingsPages(project:  Project): List<LanguageSettingsPage> = listOf(KotlinSettingsPage(project.root(), KotlinSettings.from(project)))
+    override fun runOptionsPage(project: Project): Optional<RunOptionsPage>   = Optional.of(JvmRunOptionsPage("Kotlin"))
 
     @Throws(IOException::class)
     override fun createProjectStructure(project: Project) {

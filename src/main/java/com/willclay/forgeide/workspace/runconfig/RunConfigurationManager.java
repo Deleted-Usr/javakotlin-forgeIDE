@@ -1,5 +1,6 @@
 package com.willclay.forgeide.workspace.runconfig;
 
+import com.willclay.forgeide.lang.api.LaunchOptions;
 import com.willclay.forgeide.services.WorkspaceService;
 import com.willclay.forgeide.workspace.Project;
 import com.willclay.forgeide.workspace.metadata.ProjectWorkspace;
@@ -39,7 +40,11 @@ public final class RunConfigurationManager
     // --- Reading --- //
 
     public boolean isAvailable() { return projectRoot != null; }
-    public List<RunConfiguration> all() { return current.configs(); }
+
+    /// The open project, whose language decides what a configuration's
+    /// language-specific options are. Empty while no project is open.
+    public Optional<Project> project()         { return Optional.ofNullable(workspaceService.getWorkspace().getProject()); }
+    public List<RunConfiguration> all()        { return current.configs(); }
     public Optional<RunConfiguration> active() { return current.find(activeId); }
 
     /// Captured with the tabs and layout when the project workspace is saved.
@@ -100,7 +105,8 @@ public final class RunConfigurationManager
                 List.of(),
                 Path.of(""), // the project root, as "." normalises to
                 Map.of(),
-                BeforeLaunch.COMPILE_TARGET
+                BeforeLaunch.COMPILE_TARGET,
+                Map.of()
         );
     }
 
@@ -155,6 +161,37 @@ public final class RunConfigurationManager
     /// A dialog is rebuilt every time it is reopened, so a listener that never
     /// leaves would pile up copies of a window nobody can see.
     public void removeChangeListener(Runnable listener) { listeners.remove(listener); }
+
+    // --- Turning a configuration into a run --- //
+
+    /// What a configuration adds to "run this file", in the form a toolchain
+    /// takes it.
+    ///
+    /// The one place this conversion happens. The Run action uses it to start
+    /// a configuration, and the dialog uses it for its command preview, so the
+    /// preview cannot describe a different run from the one Run starts.
+    public static LaunchOptions launchOptions(Project project, RunConfiguration configuration)
+    {
+        // Only the project language's own options: they are the only ones its
+        // toolchain knows how to read.
+        Map<String, Object> languageOptions = configuration.languageOptions()
+                .getOrDefault(project.language().id(), Map.of());
+
+        return new LaunchOptions(
+                configuration.runtimeOptions(),
+                configuration.programArguments(),
+                resolve(project.root(), configuration.workingDirectory()),
+                configuration.environment(),
+                languageOptions
+        );
+    }
+
+    /// The entry point as a full path. A configuration stores it relative to
+    /// the project, so the project can move.
+    public static Path entryPointPath(Project project, RunConfiguration configuration)
+    {
+        return resolve(project.root(), configuration.entryPoint());
+    }
 
     // --- Internals --- //
 

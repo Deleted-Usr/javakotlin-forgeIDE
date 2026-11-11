@@ -5,7 +5,9 @@ import com.willclay.forgeide.lang.api.FileIconStyle;
 import com.willclay.forgeide.lang.api.Toolchain;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.lang.api.Language;
+import com.willclay.forgeide.lang.api.run.RunOptionsPage;
 import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage;
+import com.willclay.forgeide.lang.jvm.JvmRunOptionsPage;
 import com.willclay.forgeide.lang.api.templates.FileTemplates;
 import com.willclay.forgeide.workspace.Project;
 
@@ -23,8 +25,7 @@ public final class JavaLanguage implements Language
 {
     /// Written either way round, and the parameter's spelling varies too much to
     /// be worth matching — `String[] args`, `String... args`, `final String[]`.
-    private static final Pattern MAIN_METHOD = Pattern.compile(
-            "\\b(?:public\\s+static|static\\s+public)\\s+void\\s+main\\s*\\(");
+    private static final Pattern MAIN_METHOD = Pattern.compile("\\b(?:public\\s+static|static\\s+public)\\s+void\\s+main\\s*\\(");
 
     private final Lexer lexer = new JavaLexer();
     private final Toolchain toolchain = new JavacToolchain();
@@ -114,5 +115,11 @@ public final class JavaLanguage implements Language
     public List<LanguageSettingsPage> settingsPages(Project project)
     {
         return List.of(new JavaSettingsPage(project.root(), JavaSettings.from(project)));
+    }
+
+    @Override
+    public Optional<RunOptionsPage> runOptionsPage(Project project)
+    {
+        return Optional.of(new JvmRunOptionsPage("Java"));
     }
 }

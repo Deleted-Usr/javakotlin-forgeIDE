@@ -1,5 +1,6 @@
 package com.willclay.forgeide.lang.cpp;
 
+import com.willclay.forgeide.lang.api.CommandLine;
 import com.willclay.forgeide.lang.api.LaunchOptions;
 import com.willclay.forgeide.lang.api.Toolchain;
 import com.willclay.forgeide.workspace.Project;
@@ -7,8 +8,8 @@ import com.willclay.forgeide.workspace.Project;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /// How a C++ project is compiled, built, cleaned and run.
@@ -86,14 +87,33 @@ public final class CppToolchain implements Toolchain
         Path executable = builder.prepareExecutable(project, sourceFile, options.runtimeOptions(), output);
         if (executable == null) return BUILD_FAILED;
 
-        List<String> command = new ArrayList<>();
-        command.add(executable.toString());
-        command.addAll(options.programArguments());
+        List<String> command = commandFor(executable, options).arguments();
 
         ProcessBuilder process = new ProcessBuilder(command);
         options.applyTo(process, project.workingDirectory());
 
         return CppProcesses.execute(process, command, null, output, onInputReady);
+    }
+
+    /// The run step only: the program and its arguments. The build options are
+    /// not part of it, because they were used up by the build before it.
+    ///
+    /// Where the executable is comes from the builder, without building. For
+    /// a CMake project that has never been built there is nothing to show yet.
+    @Override
+    public Optional<CommandLine> runCommand(Project project, Path sourceFile, LaunchOptions options) throws IOException
+    {
+        return builderFor(project)
+                .expectedExecutable(project, sourceFile)
+                .map(executable -> commandFor(executable, options));
+    }
+
+    /// Shared by [#run] and [#runCommand], so the preview is the command that runs.
+    private static CommandLine commandFor(Path executable, LaunchOptions options)
+    {
+        return new CommandLine()
+                .add(executable.toString(), CommandLine.Origin.ENTRY_POINT)
+                .addAll(options.programArguments(), CommandLine.Origin.PROGRAM_ARGUMENT);
     }
 
     /// Which builder this project uses, from its settings and — when those say

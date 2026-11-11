@@ -5,6 +5,7 @@ import com.willclay.forgeide.workspace.Project;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /// One way of turning a C++ project into an executable.
@@ -57,6 +58,11 @@ interface CppBuilder
     /// @param extraArguments what the run configuration added, applied last
     /// @return the executable, or `null` if it could not be produced — the
     ///         reason has already been written to `output`
-    Path prepareExecutable(Project project, Path entryPoint, List<String> extraArguments, Consumer<String> output)
-            throws IOException, InterruptedException;
+    Path prepareExecutable(Project project, Path entryPoint, List<String> extraArguments, Consumer<String> output) throws IOException, InterruptedException;
+
+    /// Where the executable for `entryPoint` is, or will be, without building
+    /// anything. Used for the run configuration dialog's command preview.
+    ///
+    /// @return empty when that cannot be known until a build has run
+    Optional<Path> expectedExecutable(Project project, Path entryPoint) throws IOException;
 }

@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -162,6 +163,16 @@ final class GppBuilder implements CppBuilder
         }
 
         return link(project, settings, entryPoint, extraArguments, output);
+    }
+
+    /// g++ always writes an executable to the same place for the same entry
+    /// point, so its path is known before anything is built.
+    @Override
+    public Optional<Path> expectedExecutable(Project project, Path entryPoint)
+    {
+        CppSettings settings = CppSettings.from(project);
+
+        return Optional.of(CppSources.executableFor(settings.outputRoot(project), settings.sourceRoot(project), entryPoint));
     }
 
     // --- Internals --- //

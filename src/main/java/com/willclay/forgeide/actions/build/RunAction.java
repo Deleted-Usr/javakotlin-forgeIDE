@@ -13,6 +13,7 @@ import com.willclay.forgeide.execution.RunTask;
 import com.willclay.forgeide.workspace.Project;
 import com.willclay.forgeide.workspace.runconfig.BeforeLaunch;
 import com.willclay.forgeide.workspace.runconfig.RunConfiguration;
+import com.willclay.forgeide.workspace.runconfig.RunConfigurationManager;
 
 import java.awt.event.KeyEvent;
 import java.nio.file.Path;
@@ -72,7 +73,7 @@ public final class RunAction extends ForgeAction
             return;
         }
 
-        LaunchOptions options = configuration.map(config -> optionsOf(project, config)).orElseGet(LaunchOptions::defaults);
+        LaunchOptions options     = configuration.map(config -> RunConfigurationManager.launchOptions(project, config)).orElseGet(LaunchOptions::defaults);
         BeforeLaunch beforeLaunch = configuration.map(RunConfiguration::beforeLaunch).orElse(BeforeLaunch.COMPILE_TARGET);
 
         taskStarter.accept(RunTask.run(project, selected.get(), context.getConsole(), target, options, beforeLaunch));
@@ -84,7 +85,7 @@ public final class RunAction extends ForgeAction
     {
         if (!saveModifiedFiles()) return null;
 
-        return resolve(project, configuration.entryPoint());
+        return RunConfigurationManager.entryPointPath(project, configuration);
     }
 
     /// What Run meant before configurations existed.
@@ -114,24 +115,6 @@ public final class RunAction extends ForgeAction
         return !context.getSettingsService().get().saving().saveBeforeBuild()
                 || !editor.hasModifiedFiles()
                 || saveAll.saveAll();
-    }
-
-    private static LaunchOptions optionsOf(Project project, RunConfiguration configuration)
-    {
-        return new LaunchOptions(
-                configuration.runtimeOptions(),
-                configuration.programArguments(),
-                resolve(project, configuration.workingDirectory()),
-                configuration.environment()
-        );
-    }
-
-    /// A configuration stores paths relative to the project it belongs to.
-    private static Path resolve(Project project, Path path)
-    {
-        Path resolved = path.isAbsolute() ? path : project.root().resolve(path);
-
-        return resolved.toAbsolutePath().normalize();
     }
 
     private void reportWrongEntryPoint(Project project, RunConfiguration configuration, Path target)

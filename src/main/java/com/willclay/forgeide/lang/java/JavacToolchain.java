@@ -1,8 +1,10 @@
 package com.willclay.forgeide.lang.java;
 
 import com.willclay.forgeide.execution.ProcessRunner;
+import com.willclay.forgeide.lang.api.CommandLine;
 import com.willclay.forgeide.lang.api.LaunchOptions;
 import com.willclay.forgeide.lang.api.Toolchain;
+import com.willclay.forgeide.lang.jvm.JvmRunOptions;
 import com.willclay.forgeide.workspace.Project;
 
 import java.io.IOException;
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -147,24 +150,34 @@ public final class JavacToolchain implements Toolchain
     @Override
     public int run(Project project, Path sourceFile, LaunchOptions options, Consumer<String> output, Consumer<Writer> onInputReady) throws IOException, InterruptedException
     {
+        CommandLine command = runCommand(project, sourceFile, options).orElseThrow();
+
+        ProcessBuilder builder = new ProcessBuilder(command.arguments());
+        options.applyTo(builder, project.workingDirectory());
+
+        return ProcessRunner.execute(builder, output, onInputReady);
+    }
+
+    /// The `java` command [#run] starts, and the run configuration dialog previews.
+    @Override
+    public Optional<CommandLine> runCommand(Project project, Path sourceFile, LaunchOptions options) throws IOException
+    {
         JavaSettings settings = JavaSettings.from(project);
         List<Path> libraries = JavaProjectPaths.libraryRoots(project);
         Path out  = JavaProjectPaths.outputRoot(project);
 
         // Order is the JVM's, not ours: everything before the main class is for
         // java, everything after it is for the program.
-        List<String> command = new ArrayList<>();
+        CommandLine command = new CommandLine();
         command.add(settings.jvm().jdkExecutable("java").toString());
         if (settings.previewFeatures()) command.add("--enable-preview");
-        command.addAll(options.runtimeOptions());
+        command.addAll(JvmRunOptions.from(options.languageOptions()).jvmArguments(), CommandLine.Origin.LANGUAGE_OPTION);
+        command.addAll(options.runtimeOptions(), CommandLine.Origin.RUNTIME_OPTION);
         command.add("-cp");
         command.add(JavaClassNames.classPath(out, libraries));
-        command.add(JavaClassNames.of(project, sourceFile));
-        command.addAll(options.programArguments());
+        command.add(JavaClassNames.of(project, sourceFile), CommandLine.Origin.ENTRY_POINT);
+        command.addAll(options.programArguments(), CommandLine.Origin.PROGRAM_ARGUMENT);
 
-        ProcessBuilder builder = new ProcessBuilder(command);
-        options.applyTo(builder, project.workingDirectory());
-
-        return ProcessRunner.execute(builder, output, onInputReady);
+        return Optional.of(command);
     }
 }

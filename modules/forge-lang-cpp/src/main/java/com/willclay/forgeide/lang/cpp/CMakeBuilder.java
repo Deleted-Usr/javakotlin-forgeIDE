@@ -131,6 +131,14 @@ final class CMakeBuilder implements CppBuilder
         return executable.get();
     }
 
+    /// CMake decides where its executables go, so the only way to know is to
+    /// look. Before the first build there is nothing to find yet.
+    @Override
+    public Optional<Path> expectedExecutable(Project project, Path entryPoint) throws IOException
+    {
+        return findExecutable(project, CppSettings.from(project), entryPoint);
+    }
+
     // --- Configure --- //
 
     /// Generates the build tree, but only when it is missing or out of date.

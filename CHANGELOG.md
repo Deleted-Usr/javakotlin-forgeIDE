@@ -15,18 +15,33 @@ and removal from recent history without deleting files.
 
 #### Editor
 - The editor now paints a thin vertical line guide spanning opening and closing brackets. This can be turned on and off
-in a new settings option under Settings → General → Editor defaults → “Show indent guides between brackets”
-- The status bar now shows the project's lines of code, leaving out comments and blank lines. Its tooltip shows the full
-breakdown. It updates when a file is saved, created or deleted.
+in a new settings option under Settings → General → Editor defaults → “Show indent guides between brackets”.
 - Syntax highlighting for GLSL shaders in every project: built-in types and constructors, qualifiers, `layout(...)`
 arguments, interface blocks, structs, `gl_` built-ins, preprocessor directives and comments. `.glsl`, the Vulkan stage
-extensions (`.vert`, `.frag`, `.comp`, `.rgen`, ...) and `.vsh`/`.fsh`/`.gsh` open as GLSL by default
+extensions (`.vert`, `.frag`, `.comp`, `.rgen`, ...) and `.vsh`/`.fsh`/`.gsh` open as GLSL by default.
 - GLSL is now a recognised language in markdown documents and is highlighted correctly in a rendered markdown preview.
+
+#### Workbench & UI
+- The status bar now shows the project's lines of code, leaving out comments and blank lines. Its tooltip shows the full
+breakdown. It updates when a file is saved, created or deleted.
+- Major run configurations dialog redesign:
+  - The dialog now ends with "What Forge will run": the real command for the current settings, updated as a command is
+  being typed.
+  - Hovering over sections of the final command will highlight certain parts of the dialog that correspond to what is
+  in the command.
+  - Language-specific run configuration options
 
 #### Settings
 - A new Settings → File Types page chooses which extensions open as GLSL, JSON, TOML or Markdown, such as adding `.vs`
 and `.fs` for shaders. Open files are re-highlighted when the settings are applied
 - A new default markdown tab view setting under Settings → General → Editor defaults → "Default markdown view"
+
+#### Backend
+- Language API:
+  - `RunOptionsPage.java`: An interface that allows languages to provide custom run configuration options while keeping
+  the same core 4 elements: an entry point, program arguments, a working directory, and environment variables.
+  - `CommandLine.java`: A builder that every toolchain uses to build their terminal commands. Included so commands can
+  be visualised in the run configurations dialog.
 
 #### C++ plugin
 - Syntax highlighting for CMake: `CMakeLists.txt` and `.cmake` files now colour commands, keyword arguments,

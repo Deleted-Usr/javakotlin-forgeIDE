@@ -68,7 +68,7 @@ public final class TodoScanner
             StringBuilder description = new StringBuilder(text.substring(marker.start(), marker.end()).strip());
 
             // TodoFinder emits the marker first, followed by any
-            // continuation spans. A new TO-DO/FIXME starts the next item.
+            // continuation spans. A new TO-DO/FIX-ME starts the next item.
             while (i + 1 < spans.size())
             {
                 Token next = spans.get(i + 1);

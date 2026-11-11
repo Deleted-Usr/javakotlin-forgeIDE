@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  * Missing fields from older workspace files receive usable defaults.
  *
  * [bottomTool] is the id of the tool open under the editor (see
- * `WorkbenchPanel.CONSOLE` and `WorkbenchPanel.TODO`), or null when that
+ * `WorkbenchPanel.CONSOLE` and `WorkbenchPanel.TO-DO`), or null when that
  * area is collapsed. It is a plain string rather than an enum so a session
  * that names a tool this build does not have still loads.
  */

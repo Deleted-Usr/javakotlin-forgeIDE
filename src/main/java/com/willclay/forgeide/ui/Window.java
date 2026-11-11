@@ -215,6 +215,7 @@ public final class Window extends JFrame
                     projectWorkspaceController
             );
             actions = new ActionManager(context);
+            configDialogController.setRunAction(actions.getRunAction());
 
             editorPanel.setEmptyStateActions(
                     actions.getNewFileAction(),

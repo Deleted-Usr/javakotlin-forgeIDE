@@ -1,6 +1,7 @@
 package com.willclay.forgeide.lang.rust
 
 import com.willclay.forgeide.execution.ProcessRunner
+import com.willclay.forgeide.lang.api.CommandLine
 import com.willclay.forgeide.lang.api.LaunchOptions
 import com.willclay.forgeide.lang.api.Toolchain
 import com.willclay.forgeide.workspace.Project
@@ -8,6 +9,7 @@ import java.io.IOException
 import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.Optional
 import java.util.function.Consumer
 
 /**
@@ -41,12 +43,13 @@ import java.util.function.Consumer
  * The same split `CppToolchain` uses, because a Rust program is also a native
  * executable with no runtime in front of it:
  *
- *  - **VM options** become **Cargo options**, such as `--release`.
+ *  - **Runtime options** are **Cargo options**, such as `--verbose`.
  *  - **Program arguments** go after `--`, which tells Cargo that everything
  *    after it belongs to your program rather than to Cargo.
  *
  * Working directory and environment variables are applied through
- * [LaunchOptions.applyTo], like every other language.
+ * [LaunchOptions.applyTo], like every other language. The profile and the
+ * toolchain come from the configuration's [RustRunOptions].
  */
 class CargoToolchain : Toolchain {
     override fun compile(project: Project, sourceFiles: List<Path>, output: Consumer<String>): Boolean {
@@ -54,7 +57,11 @@ class CargoToolchain : Toolchain {
 
         // Build just the program being run when we know which it is.
         val target = sourceFiles.singleOrNull()?.let { CargoTargets.targetFor(settings.packageRoot(project), it) }
-        val arguments = listOf("build") + target?.arguments().orEmpty() + settings.featureArguments()
+        val arguments = buildList {
+            addAll(listOf("build"))
+            addAll(target?.arguments().orEmpty())
+            addAll(settings.featureArguments())
+        }
 
         return cargo(project, settings, arguments, output) == 0
     }
@@ -87,20 +94,42 @@ class CargoToolchain : Toolchain {
         onInputReady: Consumer<Writer>
     ): Int {
         val settings = RustSettings.from(project)
-        val packageRoot = settings.packageRoot(project)
         if (reportMissingManifest(settings.manifest(project), output)) return NOT_STARTED
 
-        val target = targetToRun(packageRoot, sourceFile, output) ?: return NOTHING_TO_RUN
+        // Said in the console here, and quietly skipped by the preview.
+        val target  = targetToRun(settings.packageRoot(project), sourceFile, output) ?: return NOTHING_TO_RUN
+        val command = cargoRun(project, settings, target, options)
 
-        val arguments = buildList {
-            add("run")
-            addAll(target.arguments())
-            addAll(settings.featureArguments())
-            addAll(options.runtimeOptions())
+        val process = ProcessBuilder(command.arguments())
+        options.applyTo(process, project.workingDirectory())
+
+        return execute(process, settings, output, onInputReady)
+    }
+
+    /** The `cargo run` command [run] starts, and the run configuration dialog previews. */
+    override fun runCommand(project: Project, sourceFile: Path, options: LaunchOptions): Optional<CommandLine> {
+        val settings = RustSettings.from(project)
+        if (!Files.isRegularFile(settings.manifest(project))) {
+            return Optional.empty()
+        }
+
+        val target = targetToRun(settings.packageRoot(project), sourceFile) {} ?: return Optional.empty()
+
+        return Optional.of(cargoRun(project, settings, target, options))
+    }
+
+    private fun cargoRun(project: Project, settings: RustSettings, target: CargoTargets.Target, options: LaunchOptions): CommandLine {
+        val runOptions = RustRunOptions.from(options.languageOptions())
+
+        val arguments = CommandLine().apply {
+            addAll(target.arguments(),            CommandLine.Origin.ENTRY_POINT)
+            addAll(settings.featureArguments(),   CommandLine.Origin.TOOL)
+            addAll(runOptions.profileArguments(), CommandLine.Origin.LANGUAGE_OPTION)
+            addAll(options.runtimeOptions(),      CommandLine.Origin.RUNTIME_OPTION)
 
             if (options.programArguments().isNotEmpty()) {
                 add("--")
-                addAll(options.programArguments())
+                addAll(options.programArguments(), CommandLine.Origin.PROGRAM_ARGUMENT)
             }
         }
 
@@ -109,12 +138,8 @@ class CargoToolchain : Toolchain {
         // becomes Cargo's. When that is not the package root, Cargo is told
         // where the project is with --manifest-path.
         val directory = (options.workingDirectory() ?: project.workingDirectory()).toAbsolutePath().normalize()
-        val command = cargoCommand(project, settings, directory, arguments)
 
-        val process = ProcessBuilder(command)
-        options.applyTo(process, project.workingDirectory())
-
-        return execute(process, settings, output, onInputReady)
+        return cargoCommand(project, settings, directory, "run", arguments, runOptions.toolchainArgument())
     }
 
     /** Runs a Cargo command from the package root, where `Cargo.toml` is. */
@@ -122,8 +147,9 @@ class CargoToolchain : Toolchain {
         if (reportMissingManifest(settings.manifest(project), output)) return NOT_STARTED
 
         val packageRoot = settings.packageRoot(project)
-        val command = cargoCommand(project, settings, packageRoot, arguments)
-        val process = ProcessBuilder(command).directory(packageRoot.toFile())
+        val rest = CommandLine().addAll(arguments.drop(1), CommandLine.Origin.TOOL)
+        val command = cargoCommand(project, settings, packageRoot, arguments.first(), rest)
+        val process = ProcessBuilder(command.arguments()).directory(packageRoot.toFile())
 
         return execute(process, settings, output, null)
     }
@@ -163,18 +189,26 @@ class CargoToolchain : Toolchain {
         project: Project,
         settings: RustSettings,
         directory: Path,
-        arguments: List<String>
-    ): List<String> = buildList {
-        add(settings.cargoCommand)
-        add(arguments.first())
+        subcommand: String,
+        rest: CommandLine,
+        toolchain: String? = null
+    ): CommandLine {
+        val command = CommandLine()
+        command.add(settings.cargoCommand)
+
+        // rustup's `+nightly` only works straight after `cargo`, before the subcommand.
+        toolchain?.let { command.add(it, CommandLine.Origin.LANGUAGE_OPTION) }
+        command.add(subcommand)
 
         if (directory != settings.packageRoot(project)) {
-            add("--manifest-path")
-            add(settings.manifest(project).toString())
+            command.add("--manifest-path")
+            command.add(settings.manifest(project).toString())
         }
 
-        addAll(settings.commonArguments())
-        addAll(arguments.drop(1))
+        command.addAll(settings.commonArguments(), CommandLine.Origin.TOOL)
+        rest.parts().forEach { command.add(it.text(), it.origin()) }
+
+        return command
     }
 
     /** @return true, after explaining the problem, if there is no `Cargo.toml` where the settings say */

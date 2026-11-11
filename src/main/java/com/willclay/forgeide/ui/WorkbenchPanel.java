@@ -24,14 +24,14 @@ import java.util.Objects;
 /// stripe reach from just under the menu bar to the bottom of the window, as
 /// IntelliJ's tool window stripe does.
 ///
-/// **The bottom area holds one tool at a time.** The console, the TODO list
+/// **The bottom area holds one tool at a time.** The console, the TO-DO list
 /// and anything added later share a single slot under the editor, swapped
 /// with a [CardLayout], the way IntelliJ's bottom tool windows replace each
 /// other. Each tool is registered under an id with [#addBottomTool], and
 /// [#getBottomTool()] is the one place that says which is showing — the
 /// View menu ticks and the side bar buttons are synced from it, never the
 /// other way round. Sharing one slot also means sharing one height, so
-/// switching from the console to the TODO list does not make the editor jump.
+/// switching from the console to the TO-DO list does not make the editor jump.
 public final class WorkbenchPanel extends JPanel
 {
     /// Ids for the bottom tools Forge ships with.
@@ -204,9 +204,9 @@ public final class WorkbenchPanel extends JPanel
 
     /// Shows a bottom tool, replacing whichever was there, or hides it.
     ///
-    /// Hiding a tool that is not the one on screen does nothing: if the TODO
+    /// Hiding a tool that is not the one on screen does nothing: if the TO-DO
     /// list is showing, "hide the console" is already true, and collapsing the
-    /// area would hide the TODO list the user is looking at.
+    /// area would hide the TO-DO list the user is looking at.
     public void setBottomToolVisible(String id, boolean visible)
     {
         if (visible) showBottomTool(id);

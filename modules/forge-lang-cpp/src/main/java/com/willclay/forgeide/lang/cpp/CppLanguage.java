@@ -6,6 +6,7 @@ import com.willclay.forgeide.lang.api.FileIconStyle;
 import com.willclay.forgeide.lang.api.Language;
 import com.willclay.forgeide.lang.api.Lexer;
 import com.willclay.forgeide.lang.api.Toolchain;
+import com.willclay.forgeide.lang.api.run.RunOptionsPage;
 import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage;
 import com.willclay.forgeide.lang.api.templates.FileTemplates;
 import com.willclay.forgeide.workspace.Project;
@@ -31,7 +32,8 @@ public final class CppLanguage implements Language
     /// `CMakeLists.txt` is matched by its whole name, because `.txt` says
     /// nothing about it, and modules such as `FindFoo.cmake` by extension.
     private final FileType cmake = new FileType(
-            "CMake", Set.of("cmake"), Set.of("CMakeLists.txt"), new CMakeLexer());
+            "CMake", Set.of("cmake"), Set.of("CMakeLists.txt"), new CMakeLexer()
+    );
 
     @Override
     public String id()
@@ -135,5 +137,11 @@ public final class CppLanguage implements Language
     public List<LanguageSettingsPage> settingsPages(Project project)
     {
         return List.of(new CppSettingsPage(project.root(), CppSettings.from(project)));
+    }
+
+    @Override
+    public Optional<RunOptionsPage> runOptionsPage(Project project)
+    {
+        return Optional.of(new CppRunOptionsPage());
     }
 }
