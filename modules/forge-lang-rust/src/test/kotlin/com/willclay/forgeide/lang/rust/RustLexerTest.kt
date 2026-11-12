@@ -22,9 +22,9 @@ class RustLexerTest {
     fun lifetimesAreNotCharacterLiterals() {
         val source = "fn first<'a>(s: &'a str) -> char { 'a' }"
 
-        assertToken(source, "'a", TokenType.TYPE)
+        assertToken(source, "'a", TokenType.LIFETIME)
         assertToken(source, "'a'", TokenType.CHARACTER)
-        assertToken("let s: &'static str = \"\";", "'static", TokenType.TYPE)
+        assertToken("let s: &'static str = \"\";", "'static", TokenType.LIFETIME)
         assertToken("let c = '\\n';", "'\\n'", TokenType.CHARACTER)
         assertToken("let crab = '🦀';", "'🦀'", TokenType.CHARACTER)
     }
@@ -95,9 +95,9 @@ class RustLexerTest {
     fun macroCallsIncludeTheirBang() {
         val source = "println!(\"{}\", x);"
 
-        assertToken(source, "println", TokenType.METHOD_CALL)
-        assertToken(source, "!", TokenType.METHOD_CALL)
-        assertToken("let v = vec![1, 2];", "vec", TokenType.METHOD_CALL)
+        assertToken(source, "println", TokenType.MACRO)
+        assertToken(source, "!", TokenType.MACRO)
+        assertToken("let v = vec![1, 2];", "vec", TokenType.MACRO)
         assertToken("if a != b {}", "!=", TokenType.OPERATOR)
         assertToken("if !done {}", "!", TokenType.OPERATOR)
     }
@@ -108,7 +108,7 @@ class RustLexerTest {
 
         assertToken(source, "macro_rules", TokenType.KEYWORD)
         assertToken(source, "!", TokenType.KEYWORD)
-        assertToken(source, "square", TokenType.METHOD_DECLARATION)
+        assertToken(source, "square", TokenType.MACRO)
     }
 
     @Test
@@ -125,24 +125,95 @@ class RustLexerTest {
         assertToken(source, "Player", TokenType.TYPE_DECLARATION)
         assertToken(source, "State", TokenType.TYPE_DECLARATION)
         assertToken(source, "Shape", TokenType.TYPE_DECLARATION)
-        assertToken(source, "i32", TokenType.TYPE)
-        assertToken(source, "Idle", TokenType.TYPE)
+        assertToken(source, "i32", TokenType.PRIMITIVE_TYPE)
+        assertToken(source, "Idle", TokenType.ENUM_MEMBER)
         assertToken(source, "area", TokenType.METHOD_DECLARATION)
         assertToken(source, "update", TokenType.METHOD_DECLARATION)
         assertToken(source, "update", TokenType.METHOD_CALL, occurrence = 2)
         assertToken(source, "Player", TokenType.TYPE, occurrence = 2)
-        assertPlain(source, "health")
+        assertToken(source, "health", TokenType.FIELD)
+        assertToken(source, "health", TokenType.FIELD, occurrence = 2)
     }
 
     @Test
     fun namingConventionsDecideTypes() {
-        assertPlain("const MAX_SPEED: f32 = 1.0;", "MAX_SPEED")
-        assertToken("let x = Some(5);", "Some", TokenType.TYPE)
+        assertToken("const MAX_SPEED: f32 = 1.0;", "MAX_SPEED", TokenType.CONSTANT)
+        assertToken("let x = Some(5);", "Some", TokenType.ENUM_MEMBER)
         assertToken("fn id<T>(t: T) -> T { t }", "T", TokenType.TYPE)
         assertToken("let v = Vec::new();", "Vec", TokenType.TYPE)
         assertToken("let v = Vec::new();", "new", TokenType.METHOD_CALL)
         assertToken("let n = \"5\".parse::<i32>();", "parse", TokenType.METHOD_CALL)
-        assertPlain("use std::io;", "std")
+        assertToken("use std::io;", "std", TokenType.MODULE)
+    }
+
+    @Test
+    fun namesAreColouredByWhatTheyMean() {
+        val source = """
+            use macroquad::prelude::*;
+            const PLAYER_SPEED: f32 = 260.0;
+            struct Player { position: Vec2 }
+            impl Player {
+                fn new() -> Self { Self { position: vec2(1.0, 2.0) } }
+                fn update(&mut self, delta_time: f32) {
+                    let mut direction = Vec2::ZERO;
+                    if is_key_down(KeyCode::W) { direction.y -= 1.0; }
+                    self.position += direction * PLAYER_SPEED * delta_time;
+                    let pair = (1, (2, 3)); let inner = pair.1.0;
+                }
+            }
+            fn other() { let direction = 1; }
+        """.trimIndent()
+
+        assertToken(source, "macroquad", TokenType.MODULE)
+        assertToken(source, "prelude", TokenType.MODULE)
+        assertToken(source, "PLAYER_SPEED", TokenType.CONSTANT)
+        assertToken(source, "PLAYER_SPEED", TokenType.CONSTANT, occurrence = 2)
+        assertToken(source, "position", TokenType.FIELD)
+        assertToken(source, "position", TokenType.FIELD, occurrence = 2)
+        assertToken(source, "position", TokenType.FIELD, occurrence = 3)
+        assertToken(source, "f32", TokenType.PRIMITIVE_TYPE)
+        assertToken(source, "ZERO", TokenType.CONSTANT)
+        assertToken(source, "KeyCode", TokenType.TYPE)
+        assertToken(source, "W", TokenType.ENUM_MEMBER)
+        assertToken(source, "y", TokenType.FIELD, occurrence = 5) // after the y in Player, Player, key, KeyCode
+        assertToken(source, "is_key_down", TokenType.METHOD_CALL)
+
+        // `let mut` underlines the name wherever it is used in its block, and
+        // nowhere else: the parameter and the other function's `direction` are plain.
+        assertToken(source, "direction", TokenType.MUTABLE_VARIABLE)
+        assertToken(source, "direction", TokenType.MUTABLE_VARIABLE, occurrence = 2)
+        assertToken(source, "direction", TokenType.MUTABLE_VARIABLE, occurrence = 3)
+        assertPlain(source, "direction", occurrence = 4)
+        assertPlain(source, "delta_time", occurrence = 2)
+
+        // Tuple indexes stay separate numbers rather than becoming a float.
+        assertToken(source, "1", TokenType.NUMBER, occurrence = 4)
+    }
+
+    @Test
+    fun enumBodiesHoldVariantsAndShadowingEndsMutability() {
+        val source = """
+            enum Shape { #[default] Dot, Circle { radius: f32 }, Square(f32) }
+            fn main() {
+                let mut count = 0;
+                let total = |a: i32, b: i32| a + b;
+                let count = count + 1;
+                count;
+            }
+        """.trimIndent()
+
+        assertToken(source, "Dot", TokenType.ENUM_MEMBER)
+        assertToken(source, "Circle", TokenType.ENUM_MEMBER)
+        assertToken(source, "Square", TokenType.ENUM_MEMBER)
+        assertToken(source, "radius", TokenType.FIELD)
+        // Closure parameters are not fields, even though they sit inside braces.
+        assertPlain(source, "b", occurrence = 1)
+        // A `let` takes effect after its own statement, so the `count` being
+        // added to is still the mutable one; only later uses see the shadow.
+        assertToken(source, "count", TokenType.MUTABLE_VARIABLE)
+        assertPlain(source, "count", occurrence = 2)
+        assertToken(source, "count", TokenType.MUTABLE_VARIABLE, occurrence = 3)
+        assertPlain(source, "count", occurrence = 4)
     }
 
     @Test

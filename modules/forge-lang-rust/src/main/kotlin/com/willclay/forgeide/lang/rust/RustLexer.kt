@@ -7,11 +7,17 @@ import com.willclay.forgeide.lang.api.Lexer
 /**
  * Turns Rust source into a list of coloured spans.
  *
- * Built the same way as `CppLexer`, in two passes. The first scans the whole
- * document once and cuts it into lexemes, trying alternatives in a fixed order
- * so that a comment or a string swallows whatever is inside it before anything
- * else gets to look. The second decides each lexeme's colour by looking only at
- * its neighbours. There is no per-line state to keep aligned with an edit.
+ * Built in two passes. The first scans the whole document once and cuts it
+ * into lexemes, trying alternatives in a fixed order so that a comment or a
+ * string swallows whatever is inside it before anything else gets to look. The
+ * second, the [Classifier], walks those lexemes from top to bottom and decides
+ * each one's colour from its neighbours and from a small stack of the brackets
+ * and blocks it is inside. There is no per-line state to keep aligned with an
+ * edit: every pass starts from the top, so it cannot drift out of step.
+ *
+ * The colours aim to match what a full Rust IDE shows: fields, constants, enum
+ * variants, macros, lifetimes, modules and primitive types each get their own,
+ * and names declared `mut` are underlined wherever they are used.
  *
  * Rust makes the second pass much easier than C++ does. Every function is
  * declared with `fn`, so there is no guessing whether `draw(` is a declaration
@@ -42,10 +48,11 @@ import com.willclay.forgeide.lang.api.Lexer
 class RustLexer : Lexer {
     override fun tokenize(text: String): List<Token> {
         val lexemes = scan(text)
+        val types = Classifier(text, lexemes).classify()
 
         return buildList {
             lexemes.forEachIndexed { index, lexeme ->
-                val type = highlightType(text, lexemes, index)
+                val type = types[index]
                 if (type != null && type != TokenType.PLAIN) {
                     add(Token(type, lexeme.start, lexeme.end))
                 }
@@ -327,6 +334,13 @@ class RustLexer : Lexer {
     private fun numberEnd(text: String, start: Int): Int {
         var index = start
 
+        // `pair.0.1` is two tuple indexes, not the float `0.1`: straight after a
+        // member-access dot, a number is a whole index. (`0..2.5` is a range,
+        // so a `..` in front does not count.)
+        if (start > 0 && text[start - 1] == '.' && (start < 2 || text[start - 2] != '.')) {
+            return digitsEnd(text, start)
+        }
+
         // 0xFF, 0o77, 0b1010. These have no fraction or exponent, and a hex
         // literal's `e` is a digit, so letters, digits and `_` are all of it.
         if (text[index] == '0' && index + 1 < text.length && text[index + 1] in "xob") {
@@ -412,195 +426,558 @@ class RustLexer : Lexer {
 
     // --- Classification --- //
 
-    private fun highlightType(text: String, lexemes: List<Lexeme>, index: Int): TokenType? =
-        when (lexemes[index].kind) {
-            Kind.WHITESPACE, Kind.UNKNOWN -> null
-            Kind.KEYWORD -> TokenType.KEYWORD
-            Kind.LITERAL -> TokenType.LITERAL
-            Kind.NUMBER -> TokenType.NUMBER
-            Kind.STRING -> TokenType.STRING
-            Kind.CHARACTER -> TokenType.CHARACTER
-            // A lifetime sits exactly where a generic parameter does —
-            // `<'a, T>`, `&'a T` — so it reads best in the same colour as `T`.
-            Kind.LIFETIME -> TokenType.TYPE
-            Kind.LINE_COMMENT, Kind.BLOCK_COMMENT -> TokenType.COMMENT
-            Kind.DOC_COMMENT -> TokenType.DOC_COMMENT
+    /**
+     * Decides every lexeme's colour in one walk from the top of the file to the
+     * bottom.
+     *
+     * Most names can be coloured by looking at their neighbours: `fn` before a
+     * name declares a function, `.` before one makes it a field or a method.
+     * A few need a little memory of what came earlier, which the walk keeps as a
+     * stack of [Frame]s, one per open bracket:
+     *
+     *  - **Which brace am I inside?** `name:` at the start of an item inside
+     *    braces is a field — in `struct Player { health: i32 }` and in
+     *    `Player { health: 3 }` alike — while inside parentheses it is a
+     *    parameter. An enum's braces hold variants rather than fields.
+     *  - **Was this name declared `mut`?** Each brace frame records the
+     *    bindings declared in it, so `direction` is underlined everywhere
+     *    after `let mut direction`, until its block closes or a plain `let`
+     *    shadows it.
+     *
+     * Only the *significant* lexemes are walked: comments and whitespace are
+     * dropped into a separate list first, so "the lexeme before this one" is
+     * just `position - 1` instead of a search.
+     *
+     * Half-typed code is the normal state of a file, so nothing here assumes
+     * brackets balance. A closing bracket with no matching opener is ignored,
+     * and an opener that is never closed simply stays on the stack.
+     */
+    private class Classifier(private val text: String, private val lexemes: List<Lexeme>) {
+        /** Positions in [lexemes] of everything except whitespace and comments. */
+        private val code: IntArray = lexemes.indices.filter { !lexemes[it].kind.isTrivia() }.toIntArray()
+
+        /** For each position inside an attribute, where its `#[` is; -1 elsewhere. */
+        private val attributeStart = IntArray(code.size) { -1 }
+
+        private val frames = ArrayList<Frame>()
+
+        /**
+         * Set between a keyword such as `fn`, `if` or `for` and the brace that
+         * opens its body. A `mut` binding declared in that stretch — a
+         * parameter, an `if let` pattern — belongs to the body, not to the
+         * block around it, so it waits in [pending] until the brace arrives.
+         */
+        private var headerOpen = false
+        private val pending = HashMap<String, Boolean>()
+
+        /** Positions that declare a binding, and whether the binding is `mut`. */
+        private val declarations = HashMap<Int, Boolean>()
+
+        /** The subset of [declarations] made by `let`, which only take effect at the statement's `;`. */
+        private val letDeclarations = HashSet<Int>()
+
+        fun classify(): Array<TokenType?> {
+            val types = arrayOfNulls<TokenType>(lexemes.size)
+
+            lexemes.forEachIndexed { index, lexeme ->
+                types[index] = when (lexeme.kind) {
+                    Kind.LINE_COMMENT, Kind.BLOCK_COMMENT -> TokenType.COMMENT
+                    Kind.DOC_COMMENT -> TokenType.DOC_COMMENT
+                    else -> null
+                }
+            }
+
+            markAttributes()
+            frames.add(Frame(Container.FILE))
+
+            for (position in code.indices) {
+                types[code[position]] = typeAt(position)
+                updateStructure(position)
+            }
+
+            return types
+        }
+
+        // --- Colours --- //
+
+        private fun typeAt(position: Int): TokenType? = when (kindAt(position)) {
+            Kind.KEYWORD         -> TokenType.KEYWORD
+            Kind.LITERAL         -> TokenType.LITERAL
+            Kind.NUMBER          -> TokenType.NUMBER
+            Kind.STRING          -> TokenType.STRING
+            Kind.CHARACTER       -> TokenType.CHARACTER
+            Kind.LIFETIME        -> TokenType.LIFETIME
             Kind.ATTRIBUTE_START -> TokenType.ANNOTATION
-            Kind.LEFT_PAREN, Kind.RIGHT_PAREN -> TokenType.PARENTHESES
+            Kind.LEFT_PAREN,   Kind.RIGHT_PAREN   -> TokenType.PARENTHESES
             Kind.LEFT_BRACKET, Kind.RIGHT_BRACKET -> TokenType.BRACKETS
-            Kind.LEFT_BRACE, Kind.RIGHT_BRACE -> TokenType.BRACES
-            Kind.OPERATOR -> operatorType(text, lexemes, index)
-            Kind.SEMICOLON, Kind.COMMA, Kind.COLON,
-            Kind.DOUBLE_COLON, Kind.DOT, Kind.HASH -> TokenType.PUNCTUATION
-            Kind.IDENTIFIER -> identifierType(text, lexemes, index)
+            Kind.LEFT_BRACE,   Kind.RIGHT_BRACE   -> TokenType.BRACES
+            Kind.OPERATOR   -> operatorType(position)
+            Kind.SEMICOLON,    Kind.COMMA, Kind.COLON,
+            Kind.DOUBLE_COLON, Kind.DOT,   Kind.HASH -> TokenType.PUNCTUATION
+            Kind.IDENTIFIER -> identifierType(position)
+            else -> null
         }
 
-    /** The `!` of `println!(...)` is part of the macro's name, so it takes the name's colour. */
-    private fun operatorType(text: String, lexemes: List<Lexeme>, index: Int): TokenType {
-        val name = index - 1
-        val belongsToName = isMacroCall(text, lexemes, name) || isMacroRules(text, lexemes, name)
-
-        return if (belongsToName) identifierType(text, lexemes, name) ?: TokenType.OPERATOR else TokenType.OPERATOR
-    }
-
-    private fun identifierType(text: String, lexemes: List<Lexeme>, index: Int): TokenType? {
-        val lexeme = lexemes[index]
-        val raw = lexeme.text(text).startsWith("r#")
-        val name = lexeme.text(text).removePrefix("r#")
-
-        if (!raw && isContextualKeyword(text, lexemes, index)) return TokenType.KEYWORD
-        if (isAttributeName(lexemes, index)) return TokenType.ANNOTATION
-
-        // Rust names what it is declaring with a keyword, so the word in front
-        // is all it takes. This is the guesswork C++ has to do by parsing.
-        val previous = previousSignificant(lexemes, index)
-        if (isTypeDeclarationKeyword(text, lexemes, previous)) return TokenType.TYPE_DECLARATION
-        if (isKeyword(text, lexemes, previous, "fn")) return TokenType.METHOD_DECLARATION
-        if (previous > 0 && isBang(text, lexemes, previous) && isMacroRules(text, lexemes, previous - 1)) {
-            return TokenType.METHOD_DECLARATION
+        /** The `!` of `println!(...)` is part of the macro's name, so it takes the name's colour. */
+        private fun operatorType(position: Int): TokenType = when {
+            isMacroCall(position  - 1) -> TokenType.MACRO
+            isMacroRules(position - 1) -> TokenType.KEYWORD
+            else -> TokenType.OPERATOR
         }
 
-        if (isMacroCall(text, lexemes, index)) return TokenType.METHOD_CALL
+        /**
+         * The checks run from most to least certain, and the first that matches
+         * wins. A keyword in front of a name is certain; a naming convention is
+         * a strong hint; whether a plain name was declared `mut` comes last,
+         * because it only applies to names nothing else has claimed.
+         */
+        private fun identifierType(position: Int): TokenType? {
+            val word     = wordAt(position)
+            val raw      = word.startsWith("r#")
+            val name     = word.removePrefix("r#")
+            val previous = position - 1
+            val next     = position + 1
 
-        val typeName = isTypeName(name)
-        val next = nextSignificant(lexemes, index)
+            if (!raw && isContextualKeyword(position)) return TokenType.KEYWORD
+            if (isAttributeName(position))             return TokenType.ANNOTATION
 
-        // `Some(x)` and `Point(1, 2)` build a value of a type or variant; they
-        // are not calls of something named after it.
-        if (next >= 0 && lexemes[next].kind == Kind.LEFT_PAREN) {
-            return if (typeName) TokenType.TYPE else TokenType.METHOD_CALL
+            // `player.health` or `player.update()`. Rust has no other use for a
+            // single dot, so whatever follows one is a member.
+            if (kindAt(previous) == Kind.DOT) {
+                val call = kindAt(next) == Kind.LEFT_PAREN || isTurbofish(next)
+                return if (call) {
+                    TokenType.METHOD_CALL
+                }
+                else {
+                    TokenType.FIELD
+                }
+            }
+
+            // Rust names what it is declaring with a keyword, so the word in
+            // front is all it takes.
+            if (isTypeDeclarationKeyword(previous))                                return TokenType.TYPE_DECLARATION
+            if (isKeyword(previous, "fn"))                                         return TokenType.METHOD_DECLARATION
+            if (isBang(previous) && isMacroRules(previous - 1))                    return TokenType.MACRO
+            if (isKeyword(previous, "mod"))                                        return TokenType.MODULE
+            if (isKeyword(previous, "crate") && isKeyword(previous - 1, "extern")) return TokenType.MODULE
+            if (isMacroCall(position))                                             return TokenType.MACRO
+
+            val typeName = isTypeName(name)
+            val frame    = frames.last()
+
+            // `health:` opening an item inside braces: a field being declared
+            // in a struct, or given a value in a struct literal.
+            if (!typeName && kindAt(next) == Kind.COLON && frame.container == Container.BRACE && isItemStart(position)) {
+                return TokenType.FIELD
+            }
+
+            // An item in an enum's braces is a variant: `Idle,`, `Move(i32)`, `Jump { height: f32 }`.
+            if (frame.enumBody && startsUpperCase(name) && isItemStart(position)) return TokenType.ENUM_MEMBER
+
+            if (name in PRIMITIVE_TYPES) return TokenType.PRIMITIVE_TYPE
+
+            pathMemberType(position, name)?.let { return it }
+
+            if (isScreamingCase(name))    return TokenType.CONSTANT
+            if (name in PRELUDE_VARIANTS) return TokenType.ENUM_MEMBER
+
+            // `std::` or `macroquad::` — a lower-case name opening a path is a
+            // module or crate. `parse::<i32>` is a function with type
+            // arguments instead, caught by the turbofish check below.
+            if (!typeName && kindAt(next) == Kind.DOUBLE_COLON && !isOperator(next + 1, "<")) return TokenType.MODULE
+
+            // `Point(1, 2)` builds a value of a tuple struct; it is not a call
+            // of something named after it.
+            if (kindAt(next) == Kind.LEFT_PAREN) return if (typeName) TokenType.TYPE else TokenType.METHOD_CALL
+
+            if (!typeName && isTurbofish(next)) return TokenType.METHOD_CALL
+            if (typeName)                       return TokenType.TYPE
+
+            return if (isMutableBinding(position, name)) TokenType.MUTABLE_VARIABLE else null
         }
 
-        // `parse::<i32>()` — the turbofish puts type arguments between the
-        // name and its parentheses.
-        if (!typeName && isTurbofish(text, lexemes, next)) return TokenType.METHOD_CALL
+        /**
+         * The upper-case name after `Type::`. `KeyCode::W` and `Shape::Circle`
+         * are enum variants, `Vec2::ZERO` is an associated constant, and
+         * `Vec::<i32>` or `T::Output` are types.
+         *
+         * This is the one place where a lexer has to guess: `Self::Item` could
+         * be a variant or an associated type, and only the compiler knows
+         * which. Variants are far more common in game and app code, so they win.
+         */
+        private fun pathMemberType(position: Int, name: String): TokenType? {
+            val separator = position - 1
+            if (kindAt(separator) != Kind.DOUBLE_COLON || !startsUpperCase(name)) return null
 
-        return if (typeName) TokenType.TYPE else null
-    }
+            val owner = separator - 1
+            val ownerName = when (kindAt(owner)) {
+                Kind.IDENTIFIER -> wordAt(owner).removePrefix("r#")
+                Kind.KEYWORD    -> wordAt(owner).takeIf { it == "Self" }
+                else -> null
+            } ?: return null
 
-    /**
-     * Rust's *weak* keywords are only keywords in one position, and ordinary
-     * names everywhere else — `let union = 1;` is fine.
-     */
-    private fun isContextualKeyword(text: String, lexemes: List<Lexeme>, index: Int): Boolean {
-        val next = nextSignificant(lexemes, index)
-        val previous = previousSignificant(lexemes, index)
+            if (ownerName != "Self" && !isTypeName(ownerName)) return null
+            if (isScreamingCase(name))                         return TokenType.CONSTANT
 
-        return when (lexemes[index].text(text)) {
-            "union" -> next >= 0 && lexemes[next].kind == Kind.IDENTIFIER
-            "macro_rules" -> isMacroRules(text, lexemes, index)
-            // &raw const x, &raw mut x
-            "raw" -> isOperator(text, lexemes, previous, "&")
-                    && (isKeyword(text, lexemes, next, "const") || isKeyword(text, lexemes, next, "mut"))
-            // safe fn and safe static, inside an unsafe extern block
-            "safe" -> isKeyword(text, lexemes, next, "fn") || isKeyword(text, lexemes, next, "static")
+            val continuesPath  = kindAt(position + 1) == Kind.DOUBLE_COLON || isOperator(position + 1, "<")
+            val ownerIsGeneric = ownerName.length == 1
+
+            return if (continuesPath || ownerIsGeneric) TokenType.TYPE else TokenType.ENUM_MEMBER
+        }
+
+        /**
+         * Rust's *weak* keywords are only keywords in one position, and ordinary
+         * names everywhere else — `let union = 1;` is fine.
+         */
+        private fun isContextualKeyword(position: Int): Boolean {
+            val next     = position + 1
+            val previous = position - 1
+
+            return when (wordAt(position)) {
+                "union"       -> kindAt(next) == Kind.IDENTIFIER
+                "macro_rules" -> isMacroRules(position)
+                // &raw const x, &raw mut x
+                "raw"  -> isOperator(previous, "&") && (isKeyword(next, "const") || isKeyword(next, "mut"))
+                // safe fn and safe static, inside an unsafe extern block
+                "safe" -> isKeyword(next, "fn") || isKeyword(next, "static")
+                else -> false
+            }
+        }
+
+        private fun isTypeDeclarationKeyword(position: Int): Boolean = when (kindAt(position)) {
+            Kind.KEYWORD    -> wordAt(position) in TYPE_DECLARATION_KEYWORDS
+            Kind.IDENTIFIER -> wordAt(position) == "union" && isContextualKeyword(position)
             else -> false
         }
-    }
 
-    private fun isTypeDeclarationKeyword(text: String, lexemes: List<Lexeme>, index: Int): Boolean {
-        if (index < 0) return false
+        /**
+         * The name an attribute starts with — `derive` in `#[derive(Debug)]`, or
+         * each segment of `#[serde::rename(...)]`. What is inside its parentheses
+         * is ordinary code and keeps its own colours.
+         */
+        private fun isAttributeName(position: Int): Boolean {
+            var cursor = position - 1
 
-        val word = lexemes[index].text(text)
+            while (kindAt(cursor) == Kind.DOUBLE_COLON) {
+                if (kindAt(cursor - 1) != Kind.IDENTIFIER) {
+                    return false
+                }
+                cursor -= 2
+            }
 
-        return when (lexemes[index].kind) {
-            Kind.KEYWORD -> word in TYPE_DECLARATION_KEYWORDS
-            Kind.IDENTIFIER -> word == "union" && isContextualKeyword(text, lexemes, index)
-            else -> false
+            return kindAt(cursor) == Kind.ATTRIBUTE_START
         }
+
+        /** `println!(`, `vec![` or `thread_local! {` — a name, `!` straight after it, then a delimiter. */
+        private fun isMacroCall(position: Int): Boolean {
+            if (kindAt(position) != Kind.IDENTIFIER || !isAdjacentBang(position)) {
+                return false
+            }
+
+            return when (kindAt(position + 2)) {
+                Kind.LEFT_PAREN, Kind.LEFT_BRACKET, Kind.LEFT_BRACE -> true
+                else -> false
+            }
+        }
+
+        /** The `macro_rules` of `macro_rules! name { ... }`, with its `!` straight after it. */
+        private fun isMacroRules(position: Int): Boolean =
+            kindAt(position) == Kind.IDENTIFIER && wordAt(position) == "macro_rules" && isAdjacentBang(position)
+
+        /** A `!` with no space before it: `println!`, not `x !`. */
+        private fun isAdjacentBang(position: Int): Boolean = isBang(position + 1) && code[position + 1] == code[position] + 1
+
+        private fun isBang(position: Int): Boolean         = isOperator(position, "!")
+        private fun isTurbofish(position: Int): Boolean    = kindAt(position) == Kind.DOUBLE_COLON && isOperator(position + 1, "<")
+
+        /**
+         * True when `position` is the first thing in a comma-separated list
+         * inside braces, ignoring any attributes and `pub` in front of it — the
+         * spot where a field or a variant is named.
+         */
+        private fun isItemStart(position: Int): Boolean {
+            var cursor = position - 1
+
+            while (cursor >= 0) {
+                cursor = when {
+                    attributeStart[cursor] >= 0 -> attributeStart[cursor] - 1
+                    isKeyword(cursor, "pub") -> cursor - 1
+                    // pub(crate), pub(super), pub(in path)
+                    kindAt(cursor) == Kind.RIGHT_PAREN && isPubRestriction(cursor) -> openingParen(cursor) - 2
+                    else -> break
+                }
+            }
+
+            return kindAt(cursor) == Kind.LEFT_BRACE || kindAt(cursor) == Kind.COMMA
+        }
+
+        private fun isPubRestriction(closing: Int): Boolean {
+            val opening = openingParen(closing)
+            return opening > 0 && isKeyword(opening - 1, "pub")
+        }
+
+        /** The `(` matching the `)` at `closing`, or -1. Only used on short `pub(...)` groups. */
+        private fun openingParen(closing: Int): Int {
+            var depth = 0
+
+            for (cursor in closing downTo maxOf(0, closing - 16)) {
+                when (kindAt(cursor)) {
+                    Kind.RIGHT_PAREN -> depth++
+                    Kind.LEFT_PAREN  -> if (--depth == 0) return cursor
+                    else -> {}
+                }
+            }
+
+            return -1
+        }
+
+        /**
+         * Whether `name`, at `position`, refers to a `mut` binding. The
+         * innermost declaration wins, so `let x = x;` after `let mut x` stops
+         * the underline, just as it stops `x` being mutable.
+         */
+        private fun isMutableBinding(position: Int, name: String): Boolean {
+            declarations[position]?.let { return it }
+            if (headerOpen) {
+                pending[name]?.let { return it }
+            }
+
+            for (index in frames.indices.reversed()) {
+                frames[index].bindings?.get(name)?.let { return it }
+            }
+
+            return false
+        }
+
+        // --- Structure --- //
+
+        /** Keeps the frame stack and the bindings up to date after `position` is coloured. */
+        private fun updateStructure(position: Int) {
+            when (kindAt(position)) {
+                Kind.LEFT_BRACE -> {
+                    val frame = Frame(Container.BRACE, enumBody = opensEnumBody(position))
+                    if (pending.isNotEmpty()) {
+                        frame.bind(pending)
+                    }
+
+                    pending.clear()
+                    headerOpen = false
+                    frames.add(frame)
+                }
+
+                Kind.LEFT_PAREN                         -> frames.add(Frame(Container.PAREN))
+                Kind.LEFT_BRACKET, Kind.ATTRIBUTE_START -> frames.add(Frame(Container.BRACKET))
+                Kind.RIGHT_BRACE                        -> close(Container.BRACE)
+                Kind.RIGHT_PAREN                        -> close(Container.PAREN)
+                Kind.RIGHT_BRACKET                      -> close(Container.BRACKET)
+
+                Kind.SEMICOLON -> if (frames.last().holdsStatements()) {
+                    frames.last().endStatement()
+                    pending.clear()
+
+                    headerOpen = false
+                }
+
+                Kind.OPERATOR -> if (wordAt(position) == "|") {
+                    when {
+                        frames.last().container == Container.CLOSURE -> frames.removeAt(frames.lastIndex)
+                        startsClosure(position)                      -> frames.add(Frame(Container.CLOSURE))
+                    }
+                }
+
+                Kind.KEYWORD -> when (wordAt(position)) {
+                    "fn", "if", "while", "for", "match" -> headerOpen = true
+
+                    // `let name` shadows any earlier binding of that name.
+                    "let" -> if (kindAt(position + 1) == Kind.IDENTIFIER && !isTypeName(wordAt(position + 1))) {
+                        declarations[position + 1] = false
+                        letDeclarations += position + 1
+                    }
+
+                    // `let mut x`, `mut x: i32`, `ref mut x` — but not the
+                    // `&mut T` reference type or the `&mut x` borrow.
+                    "mut" -> {
+                        val bindsName = kindAt(position + 1) == Kind.IDENTIFIER
+                                && !isTypeName(wordAt(position + 1))
+                                && !isOperator(position - 1, "&")
+                                && !isOperator(position - 1, "&&")
+                                && !isOperator(position - 1, "*")
+                                &&  wordAt(position - 1) != "raw"
+
+                        if (bindsName) {
+                            declarations[position + 1] = true
+
+                            if (isKeyword(position - 1, "let")) {
+                                letDeclarations += position + 1
+                            }
+                        }
+                    }
+                }
+
+                Kind.IDENTIFIER -> declarations[position]?.let { mutable ->
+                    declare(wordAt(position), mutable, afterStatement = position in letDeclarations)
+                }
+
+                else -> {}
+            }
+        }
+
+        /**
+         * @param afterStatement true for a `let`, whose name is not in scope
+         *                       until its statement ends: in
+         *                       `let count = count + 1;` the second `count`
+         *                       is still the old binding
+         */
+        private fun declare(name: String, mutable: Boolean, afterStatement: Boolean) {
+            val inClosure = frames.last().container == Container.CLOSURE
+            val block     = frames.last { it.holdsStatements() }
+
+            when {
+                headerOpen     && !inClosure -> pending[name] = mutable
+                afterStatement && !inClosure -> block.bindAtStatementEnd(name, mutable)
+                else                         -> block.bind(mapOf(name to mutable))
+            }
+        }
+
+        /** Pops back to the innermost open `container`. With none open, the stray closer is ignored. */
+        private fun close(container: Container) {
+            val index = frames.indexOfLast { it.container == container }
+            if (index < 1) {
+                return
+            }
+
+            while (frames.size > index) frames.removeAt(frames.lastIndex)
+        }
+
+        /**
+         * A `|` opens a closure's parameters where an expression could start:
+         * `map(|x| ...)`, `let f = |a: i32| ...`. After a value it is the
+         * bitwise or, as in `flags | MASK`.
+         */
+        private fun startsClosure(position: Int): Boolean {
+            if (position == 0) return true
+
+            return when (kindAt(position - 1)) {
+                Kind.LEFT_PAREN, Kind.LEFT_BRACKET, Kind.LEFT_BRACE,
+                Kind.COMMA,      Kind.SEMICOLON,    Kind.OPERATOR -> true
+
+                Kind.KEYWORD -> wordAt(position - 1) in setOf("move", "return", "async", "else")
+                else         -> false
+            }
+        }
+
+        /**
+         * Looks back from a `{` through the item it opens, stopping at the
+         * previous statement or block. Brackets on the way are skipped whole,
+         * since `[u8; 4]` holds a `;` that ends nothing. Bounded, so a file of
+         * one enormous expression cannot make every brace scan the whole file.
+         */
+        private fun opensEnumBody(brace: Int): Boolean {
+            var depth = 0
+
+            for (cursor in brace - 1 downTo maxOf(0, brace - 256)) {
+                when (kindAt(cursor)) {
+                    Kind.RIGHT_PAREN, Kind.RIGHT_BRACKET -> depth++
+                    Kind.LEFT_PAREN,  Kind.LEFT_BRACKET, Kind.ATTRIBUTE_START -> if (--depth  <  0) return false
+                    Kind.SEMICOLON,   Kind.LEFT_BRACE,   Kind.RIGHT_BRACE     -> if (  depth  == 0) return false
+                    Kind.KEYWORD -> if (depth == 0 && wordAt(cursor) == "enum") return true
+                    else -> {}
+                }
+            }
+
+            return false
+        }
+
+        /** Records which positions sit inside `#[ ... ]`, so [isItemStart] can step over them in one jump. */
+        private fun markAttributes() {
+            var position = 0
+
+            while (position < code.size) {
+                if (kindAt(position) != Kind.ATTRIBUTE_START) {
+                    position++
+                    continue
+                }
+
+                val start = position
+                var depth = 0
+
+                do {
+                    when (kindAt(position)) {
+                        Kind.ATTRIBUTE_START, Kind.LEFT_BRACKET -> depth++
+                        Kind.RIGHT_BRACKET -> depth--
+                        else               -> {}
+                    }
+
+                    attributeStart[position] = start
+                    position++
+                } while (position < code.size && depth > 0)
+            }
+        }
+
+        // --- Lookups --- //
+
+        private fun kindAt(position: Int): Kind? =
+            if (position in code.indices) {
+                lexemes[code[position]].kind
+            }
+            else {
+                null
+            }
+
+        private fun wordAt(position: Int): String =
+            if (position in code.indices) {
+                lexemes[code[position]].text(text)
+            }
+            else {
+                ""
+            }
+
+        private fun isKeyword(position: Int, keyword: String): Boolean =
+            kindAt(position) == Kind.KEYWORD && wordAt(position) == keyword
+
+        private fun isOperator(position: Int, operator: String): Boolean =
+            kindAt(position) == Kind.OPERATOR && wordAt(position) == operator
     }
+
+    private enum class Container { FILE, BRACE, PAREN, BRACKET, CLOSURE }
 
     /**
-     * The name an attribute starts with — `derive` in `#[derive(Debug)]`, or
-     * each segment of `#[serde::rename(...)]`. What is inside its parentheses
-     * is ordinary code and keeps its own colours, the way `CppLexer` colours a
-     * directive word and nothing after it.
+     * One open bracket during the walk.
+     *
+     * @property enumBody true for the braces of `enum Name { ... }`, whose items are variants
+     * @property bindings the names declared directly in this block, and whether
+     *                    each is `mut`; created on first use, since most frames
+     *                    never declare anything
      */
-    private fun isAttributeName(lexemes: List<Lexeme>, index: Int): Boolean {
-        var cursor = previousSignificant(lexemes, index)
+    private class Frame(val container: Container, val enumBody: Boolean = false) {
+        var bindings: HashMap<String, Boolean>? = null
+            private set
 
-        while (cursor >= 0 && lexemes[cursor].kind == Kind.DOUBLE_COLON) {
-            val segment = previousSignificant(lexemes, cursor)
-            if (segment < 0 || lexemes[segment].kind != Kind.IDENTIFIER) return false
-            cursor = previousSignificant(lexemes, segment)
+        /** `let` bindings waiting for the `;` that ends their statement. */
+        private var waiting: HashMap<String, Boolean>? = null
+
+        fun bind(names: Map<String, Boolean>) {
+            (bindings ?: HashMap<String, Boolean>().also { bindings = it }).putAll(names)
         }
 
-        return cursor >= 0 && lexemes[cursor].kind == Kind.ATTRIBUTE_START
-    }
-
-    /** `println!(`, `vec![` or `thread_local! {` — a name, `!` straight after it, then a delimiter. */
-    private fun isMacroCall(text: String, lexemes: List<Lexeme>, index: Int): Boolean {
-        if (index < 0 || lexemes[index].kind != Kind.IDENTIFIER) return false
-        if (index + 1 >= lexemes.size || !isBang(text, lexemes, index + 1)) return false
-
-        val delimiter = nextSignificant(lexemes, index + 1)
-        if (delimiter < 0) return false
-
-        return when (lexemes[delimiter].kind) {
-            Kind.LEFT_PAREN, Kind.LEFT_BRACKET, Kind.LEFT_BRACE -> true
-            else -> false
-        }
-    }
-
-    /** The `macro_rules` of `macro_rules! name { ... }`, with its `!` straight after it. */
-    private fun isMacroRules(text: String, lexemes: List<Lexeme>, index: Int): Boolean =
-        index >= 0
-                && lexemes[index].kind == Kind.IDENTIFIER
-                && lexemes[index].text(text) == "macro_rules"
-                && index + 1 < lexemes.size
-                && isBang(text, lexemes, index + 1)
-
-    private fun isBang(text: String, lexemes: List<Lexeme>, index: Int): Boolean = isOperator(text, lexemes, index, "!")
-
-    private fun isTurbofish(text: String, lexemes: List<Lexeme>, index: Int): Boolean {
-        if (index < 0 || lexemes[index].kind != Kind.DOUBLE_COLON) return false
-
-        return isOperator(text, lexemes, nextSignificant(lexemes, index), "<")
-    }
-
-    /**
-     * Rust's naming conventions are enforced by compiler warnings, so they are
-     * reliable enough to colour by: types and enum variants are `UpperCamelCase`,
-     * a lone capital is a generic parameter, and `SCREAMING_CASE` is a constant,
-     * not a type. The primitive types are the lower-case exceptions.
-     */
-    private fun isTypeName(name: String): Boolean {
-        if (name.isEmpty()) return false
-        if (name in PRIMITIVE_TYPES) return true
-
-        val first = name.codePointAt(0)
-        if (!Character.isUpperCase(first)) return false
-
-        return name.length == Character.charCount(first) || name.any { it.isLowerCase() }
-    }
-
-    private fun isKeyword(text: String, lexemes: List<Lexeme>, index: Int, keyword: String): Boolean =
-        index >= 0 && lexemes[index].kind == Kind.KEYWORD && lexemes[index].text(text) == keyword
-
-    private fun isOperator(text: String, lexemes: List<Lexeme>, index: Int, operator: String): Boolean =
-        index >= 0 && lexemes[index].kind == Kind.OPERATOR && lexemes[index].text(text) == operator
-
-    private fun nextSignificant(lexemes: List<Lexeme>, from: Int): Int {
-        for (cursor in from + 1 until lexemes.size) {
-            if (!lexemes[cursor].kind.isTrivia()) return cursor
+        fun bindAtStatementEnd(name: String, mutable: Boolean) {
+            (waiting ?: HashMap<String, Boolean>().also { waiting = it })[name] = mutable
         }
 
-        return -1
-    }
-
-    private fun previousSignificant(lexemes: List<Lexeme>, from: Int): Int {
-        for (cursor in from - 1 downTo 0) {
-            if (!lexemes[cursor].kind.isTrivia()) return cursor
+        fun endStatement() {
+            waiting?.let { bind(it) }
+            waiting = null
         }
 
-        return -1
+        /** Blocks and the file itself hold statements, and so `let` bindings. */
+        fun holdsStatements(): Boolean = container == Container.BRACE || container == Container.FILE
     }
 
     private enum class Kind {
-        WHITESPACE, LINE_COMMENT, BLOCK_COMMENT, DOC_COMMENT, ATTRIBUTE_START,
-        STRING, CHARACTER, LIFETIME, NUMBER, KEYWORD, LITERAL, IDENTIFIER,
-        LEFT_PAREN, RIGHT_PAREN, LEFT_BRACKET, RIGHT_BRACKET, LEFT_BRACE, RIGHT_BRACE,
-        SEMICOLON, COMMA, COLON, DOUBLE_COLON, DOT, HASH, OPERATOR, UNKNOWN;
+        WHITESPACE, LINE_COMMENT, BLOCK_COMMENT, DOC_COMMENT,   ATTRIBUTE_START,
+        STRING,     CHARACTER,    LIFETIME,      NUMBER,        KEYWORD,    LITERAL,     IDENTIFIER,
+        LEFT_PAREN, RIGHT_PAREN,  LEFT_BRACKET,  RIGHT_BRACKET, LEFT_BRACE, RIGHT_BRACE,
+        SEMICOLON,  COMMA,        COLON,         DOUBLE_COLON,  DOT,        HASH,        OPERATOR,   UNKNOWN;
 
         /** Skipped when looking for a lexeme's neighbours: a comment between `fn` and `main` still declares `main`. */
         fun isTrivia(): Boolean = when (this) {
@@ -615,6 +992,9 @@ class RustLexer : Lexer {
 
     private companion object {
         val LITERALS = setOf("true", "false")
+
+        /** The variants of `Option` and `Result`, which every file can use unqualified. */
+        val PRELUDE_VARIANTS = setOf("Some", "None", "Ok", "Err")
 
         val KEYWORDS = setOf(
             // Strict keywords, as of the 2024 edition.
@@ -645,5 +1025,25 @@ class RustLexer : Lexer {
             "&&", "||", "<<", ">>", "->", "=>", "..",
             "=", "<", ">", "+", "-", "*", "/", "%", "&", "|", "^", "!", "?", "@"
         )
+
+        /**
+         * Rust's naming conventions are enforced by compiler warnings, so they are
+         * reliable enough to colour by: types and enum variants are `UpperCamelCase`
+         * and a lone capital is a generic parameter. `SCREAMING_CASE` is a constant,
+         * not a type, and the primitive types have their own colour.
+         */
+        fun isTypeName(name: String): Boolean {
+            if (name.isEmpty() || !startsUpperCase(name)) {
+                return false
+            }
+
+            return name.length == Character.charCount(name.codePointAt(0)) || name.any { it.isLowerCase() }
+        }
+
+        fun startsUpperCase(name: String): Boolean =
+            name.isNotEmpty() && Character.isUpperCase(name.codePointAt(0))
+
+        /** `MAX_SPEED` or `ZERO`: two or more characters and no lower-case letter. A lone `T` is a type. */
+        fun isScreamingCase(name: String): Boolean = name.length >= 2 && startsUpperCase(name) && name.none { it.isLowerCase() }
     }
 }

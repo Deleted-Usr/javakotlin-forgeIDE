@@ -43,9 +43,12 @@ and `.fs` for shaders. Open files are re-highlighted when the settings are appli
   - `CommandLine.java`: A builder that every toolchain uses to build their terminal commands. Included so commands can
   be visualised in the run configurations dialog.
 
-#### C++ plugin
-- Syntax highlighting for CMake: `CMakeLists.txt` and `.cmake` files now colour commands, keyword arguments,
+#### Language plugins
+- C++: Syntax highlighting for CMake: `CMakeLists.txt` and `.cmake` files now colour commands, keyword arguments,
 variable references, generator expressions, strings, bracket arguments and comments
+- Rust: Syntax highlighting now uses the same kinds of colours as JetBrains RustRover. 8 new values were added to 
+`TokenType.java`: `FIELD`, `CONSTANT`, `ENUM_MEMBER`, `MACRO`, `LIFETIME`, `MODULE`, `PRIMITIVE_TYPE` and `MUTABLE_VARIABLE`.
+These are not Rust-specific, so more language plugins can use them in the future. 
 
 ### Changed
 - Open tabs, the selected tab, tool-window layout, and the active run selection are now saved in each project's `.forge/workspace.json`

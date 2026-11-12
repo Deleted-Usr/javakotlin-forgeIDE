@@ -272,7 +272,9 @@ public final class ThemeService
 
             tokens.put(
                     CustomTheme.tokenKey(type),
-                    new CustomThemeDocument.TokenStyle(CustomTheme.formatColour(style.colour()), style.bold())
+                    new CustomThemeDocument.TokenStyle(
+                            CustomTheme.formatColour(style.colour()), style.bold(), style.underline()
+                    )
             );
         }
 

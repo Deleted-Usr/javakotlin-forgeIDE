@@ -66,7 +66,7 @@ data class CustomThemeDocument(
     fun swingProperties(): Map<String, String> = swing.mapValues { (_, value) -> value.content }
 
     /**
-     * One token type's style. Either half may be left out (null), in which
+     * One token type's style. Any part may be left out (null), in which
      * case the base theme's value is kept. `"colour"` is read as well as
      * `"color"`, whichever the author spells.
      */
@@ -75,7 +75,8 @@ data class CustomThemeDocument(
     @Serializable
     data class TokenStyle(
         @JsonNames("colour") val color: String? = null,
-                             val bold: Boolean? = null
+                             val bold: Boolean? = null,
+                             val underline: Boolean? = null
     )
 
     companion object {

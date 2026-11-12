@@ -62,14 +62,24 @@ public final class TokenTheme
     }
 
     /// One token type's look, in plain values rather than an [AttributeSet].
-    public record TokenStyle(Color colour, boolean bold) { }
+    public record TokenStyle(Color colour, boolean bold, boolean underline)
+    {
+        public TokenStyle(Color colour, boolean bold)
+        {
+            this(colour, bold, false);
+        }
+    }
 
     /// How this theme draws `type`.
     public TokenStyle styleOf(TokenType type)
     {
         AttributeSet attributes = attributesFor(type);
 
-        return new TokenStyle(StyleConstants.getForeground(attributes), StyleConstants.isBold(attributes));
+        return new TokenStyle(
+                StyleConstants.getForeground(attributes),
+                StyleConstants.isBold(attributes),
+                StyleConstants.isUnderline(attributes)
+        );
     }
 
     /// A copy of this theme with some token types restyled. Every type that is
@@ -78,7 +88,7 @@ public final class TokenTheme
     public TokenTheme withStyles(Map<TokenType, TokenStyle> changes)
     {
         Map<TokenType, AttributeSet> restyled = new EnumMap<>(styles);
-        changes.forEach((type, style) -> restyled.put(type, style(style.colour(), style.bold())));
+        changes.forEach((type, style) -> restyled.put(type, style(style.colour(), style.bold(), style.underline())));
 
         return new TokenTheme(restyled);
     }
@@ -141,6 +151,15 @@ public final class TokenTheme
         styles.put(TokenType.OPERATOR,           style(new Color(0x174AD4), false));
         styles.put(TokenType.PUNCTUATION,        style(new Color(0x5C6370), false));
 
+        styles.put(TokenType.FIELD,             style(new Color(0x871094), false));
+        styles.put(TokenType.CONSTANT,          style(new Color(0x871094), false));
+        styles.put(TokenType.ENUM_MEMBER,       style(new Color(0x871094), false));
+        styles.put(TokenType.MACRO,             style(new Color(0x0E7C86), false));
+        styles.put(TokenType.LIFETIME,          style(new Color(0x20999D), false));
+        styles.put(TokenType.MODULE,            style(new Color(0x3F5B8C), false));
+        styles.put(TokenType.PRIMITIVE_TYPE,    style(new Color(0x0033B3), false));
+        styles.put(TokenType.MUTABLE_VARIABLE,  style(new Color(0x2B2B2B), false, true));
+
         return new TokenTheme(styles);
     }
 
@@ -167,6 +186,15 @@ public final class TokenTheme
         styles.put(TokenType.BRACES,             style(new Color(0xE2E4E8), false));
         styles.put(TokenType.OPERATOR,           style(new Color(0xE2E4E8), false));
         styles.put(TokenType.PUNCTUATION,        style(new Color(0xB8BDC6), false));
+
+        styles.put(TokenType.FIELD,             style(new Color(0xCF96C2), false));
+        styles.put(TokenType.CONSTANT,          style(new Color(0xC59BE8), false));
+        styles.put(TokenType.ENUM_MEMBER,       style(new Color(0xC59BE8), false));
+        styles.put(TokenType.MACRO,             style(new Color(0x6FC3B2), false));
+        styles.put(TokenType.LIFETIME,          style(new Color(0xE0A983), false));
+        styles.put(TokenType.MODULE,            style(new Color(0xA9B7D0), false));
+        styles.put(TokenType.PRIMITIVE_TYPE,    style(new Color(0xD99A70), false));
+        styles.put(TokenType.MUTABLE_VARIABLE,  style(new Color(0xE2E4E8), false, true));
 
         return new TokenTheme(styles);
     }
@@ -195,6 +223,15 @@ public final class TokenTheme
         styles.put(TokenType.OPERATOR,           style(new Color(0x89DDFF), false));
         styles.put(TokenType.PUNCTUATION,        style(new Color(0x89DDFF), false));
 
+        styles.put(TokenType.FIELD,             style(new Color(0xF07178), false));
+        styles.put(TokenType.CONSTANT,          style(new Color(0xF78C6C), false));
+        styles.put(TokenType.ENUM_MEMBER,       style(new Color(0xF78C6C), false));
+        styles.put(TokenType.MACRO,             style(new Color(0x80CBC4), false));
+        styles.put(TokenType.LIFETIME,          style(new Color(0xC792EA), false));
+        styles.put(TokenType.MODULE,            style(new Color(0xB2CCD6), false));
+        styles.put(TokenType.PRIMITIVE_TYPE,    style(new Color(0xC792EA), false));
+        styles.put(TokenType.MUTABLE_VARIABLE,  style(new Color(0xEEFFFF), false, true));
+
         return new TokenTheme(styles);
     }
 
@@ -222,6 +259,15 @@ public final class TokenTheme
         styles.put(TokenType.BRACES,             style(new Color(0xA9B1D6), false));
         styles.put(TokenType.OPERATOR,           style(new Color(0x89DDFF), false));
         styles.put(TokenType.PUNCTUATION,        style(new Color(0x89DDFF), false));
+
+        styles.put(TokenType.FIELD,             style(new Color(0x73DACA), false));
+        styles.put(TokenType.CONSTANT,          style(new Color(0xFF9E64), false));
+        styles.put(TokenType.ENUM_MEMBER,       style(new Color(0xFF9E64), false));
+        styles.put(TokenType.MACRO,             style(new Color(0x7DCFFF), false));
+        styles.put(TokenType.LIFETIME,          style(new Color(0xBB9AF7), false));
+        styles.put(TokenType.MODULE,            style(new Color(0xB4F9F8), false));
+        styles.put(TokenType.PRIMITIVE_TYPE,    style(new Color(0x2AC3DE), false));
+        styles.put(TokenType.MUTABLE_VARIABLE,  style(new Color(0xC0CAF5), false, true));
 
         return new TokenTheme(styles);
     }
@@ -252,6 +298,15 @@ public final class TokenTheme
         styles.put(TokenType.OPERATOR,           style(new Color(0x89DCEB), false));
         styles.put(TokenType.PUNCTUATION,        style(new Color(0x9399B2), false));
 
+        styles.put(TokenType.FIELD,             style(new Color(0xB4BEFE), false));
+        styles.put(TokenType.CONSTANT,          style(new Color(0xFAB387), false));
+        styles.put(TokenType.ENUM_MEMBER,       style(new Color(0x94E2D5), false));
+        styles.put(TokenType.MACRO,             style(new Color(0xF5E0DC), false));
+        styles.put(TokenType.LIFETIME,          style(new Color(0xEBA0AC), false));
+        styles.put(TokenType.MODULE,            style(new Color(0xF2CDCD), false));
+        styles.put(TokenType.PRIMITIVE_TYPE,    style(new Color(0xF9E2AF), false));
+        styles.put(TokenType.MUTABLE_VARIABLE,  style(new Color(0xCDD6F4), false, true));
+
         return new TokenTheme(styles);
     }
 
@@ -260,10 +315,19 @@ public final class TokenTheme
     /// the toolkit synthesise a second slant.
     private static AttributeSet style(Color colour, boolean bold)
     {
+        return style(colour, bold, false);
+    }
+
+    /// Underline is used sparingly: by default only for
+    /// [TokenType#MUTABLE_VARIABLE], where it marks values that can change
+    /// without taking a colour away from anything else.
+    private static AttributeSet style(Color colour, boolean bold, boolean underline)
+    {
         SimpleAttributeSet attributes = new SimpleAttributeSet();
 
         StyleConstants.setForeground(attributes, colour);
         StyleConstants.setBold(attributes, bold);
+        StyleConstants.setUnderline(attributes, underline);
 
         return attributes;
     }

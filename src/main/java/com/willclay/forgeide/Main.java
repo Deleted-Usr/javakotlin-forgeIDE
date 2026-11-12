@@ -17,6 +17,7 @@ import javax.swing.*;
 
 /*
  * TODO:
+ *  - RustRover-style inline error or warning descriptions
  *  - Nested folders show as "ui.editor.guides" instead of a tree of nested items
  *  - Types of run configurations (sectioned in the dialog by language)
  *  - TO-DO client/editor

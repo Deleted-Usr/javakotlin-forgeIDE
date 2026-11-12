@@ -13,10 +13,12 @@ import java.nio.file.Path
 /** Atomically persists local history, independently of project workspaces and settings. */
 class SessionService(configDirectory: Path, private val store: JsonFileStore) {
     private val sessionFile = configDirectory.toAbsolutePath().normalize().resolve("session.json")
-    private var session     = load()
 
     private var pendingWorkspaceMigration: Pair<Path, ProjectWorkspace>? = null
     private val pendingRunSelections = mutableMapOf<Path, ProjectWorkspace.RunSelection>()
+
+    // load() can migrate an older session, so its pending state must already exist.
+    private var session = load()
 
     @Synchronized
     fun get(): IDESessionConfiguration = session

@@ -123,8 +123,9 @@ public final class CustomTheme implements Theme
                         + "\" is not a colour. Write it as #RRGGBB, for example #C792EA.");
             }
 
-            boolean bold = entry.bold() == null ? inherited.bold() : entry.bold();
-            changes.put(type.get(), new TokenTheme.TokenStyle(colour, bold));
+            boolean bold      = entry.bold()      == null ? inherited.bold()      : entry.bold();
+            boolean underline = entry.underline() == null ? inherited.underline() : entry.underline();
+            changes.put(type.get(), new TokenTheme.TokenStyle(colour, bold, underline));
         });
 
         return baseTokens.withStyles(changes);
