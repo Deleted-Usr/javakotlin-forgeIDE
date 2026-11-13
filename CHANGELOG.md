@@ -20,6 +20,8 @@ in a new settings option under Settings → General → Editor defaults → “S
 arguments, interface blocks, structs, `gl_` built-ins, preprocessor directives and comments. `.glsl`, the Vulkan stage
 extensions (`.vert`, `.frag`, `.comp`, `.rgen`, ...) and `.vsh`/`.fsh`/`.gsh` open as GLSL by default.
 - GLSL is now a recognised language in markdown documents and is highlighted correctly in a rendered markdown preview.
+- Doxygen syntax (`@p`, `@b`, `@code`, `@brief`, `@pre`, formulas `@f$`, `@f[`, etc...) is now fully supported in the
+inline documentation comments rendering system.
 
 #### Workbench & UI
 - The status bar now shows the project's lines of code, leaving out comments and blank lines. Its tooltip shows the full
