@@ -7,6 +7,7 @@ import com.willclay.forgeide.actions.build.StopAction
 import com.willclay.forgeide.actions.edit.RedoAction
 import com.willclay.forgeide.actions.edit.TextEditAction
 import com.willclay.forgeide.actions.edit.UndoAction
+import com.willclay.forgeide.actions.explorer.CompactFoldersAction
 import com.willclay.forgeide.actions.explorer.CopyPathAction
 import com.willclay.forgeide.actions.explorer.CreateFileAction
 import com.willclay.forgeide.actions.explorer.CreateFromTemplateAction
@@ -162,6 +163,7 @@ class ActionManager(private val context: ActionContext) {
     val copyPathAction           = CopyPathAction(context)
     val revealInFilesAction      = RevealInFilesAction(context)
     val refreshTreeAction        = RefreshTreeAction(context)
+    val compactFoldersAction     = CompactFoldersAction(context)
 
     // Help
     val aboutAction = AboutAction(context)

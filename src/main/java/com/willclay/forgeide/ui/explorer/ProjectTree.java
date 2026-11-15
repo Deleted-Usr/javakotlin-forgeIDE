@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -278,6 +279,59 @@ public final class ProjectTree extends JTree
         model.showRoot(root);
 
         if (root != null) expandRow(0);
+    }
+
+    /// @return true when this folder's row is shown compacted — for a row like
+    ///         `ui.editor.guides`, whichever of the three folders is asked about
+    public boolean isCompact(ProjectItem folder)
+    {
+        return folder != null && model.isCompact(headOf(folder).path());
+    }
+
+    /// Shows these folders, and the folders beneath them, as compacted rows or
+    /// as ordinary nested folders, then redraws with the same folders open and
+    /// the same rows selected.
+    ///
+    /// The view is set on the folder at the top of each row, because that is the
+    /// row the user right-clicked: un-compacting `ui.editor.guides` means
+    /// "show `ui` nested", not "show `guides` nested".
+    public void setCompact(Collection<ProjectItem> folders, boolean compact)
+    {
+        // The top of each selected row is the one folder sure to be on screen
+        // afterwards, whichever way the view went.
+        List<Path> selected = getSelectedItems().stream().map(item -> headOf(item).path()).toList();
+
+        for (ProjectItem folder : folders)
+        {
+            if (folder.isDirectory())
+            {
+                model.setCompact(headOf(folder).path(), compact);
+            }
+        }
+
+        refreshAll();
+        selectItems(selected);
+    }
+
+    /// The views the user has chosen, for saving with the project workspace:
+    /// true for compact, false for nested.
+    public Map<Path, Boolean> getFolderViews()
+    {
+        return model.getFolderViews();
+    }
+
+    /// Restores saved views. Takes effect the next time a root is shown, which
+    /// is why it is called before the project opens rather than after.
+    public void setFolderViews(Map<Path, Boolean> views)
+    {
+        model.setFolderViews(views);
+    }
+
+    private ProjectItem headOf(ProjectItem item)
+    {
+        ProjectTreeNode node = model.findLoadedNode(item.path());
+
+        return node != null ? node.getHead() : item;
     }
 
     /// Re-reads everything currently on screen, keeping the open folders open.

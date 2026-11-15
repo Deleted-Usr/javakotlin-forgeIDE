@@ -2,6 +2,7 @@ package com.willclay.forgeide.ui.explorer;
 
 import com.willclay.forgeide.actions.ActionManager;
 
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JPopupMenu;
 
 /// The explorer's right-click menu.
@@ -29,6 +30,10 @@ public final class ProjectContextMenu extends JPopupMenu
         add(actions.getCopyPathAction());
         add(actions.getRevealInFilesAction());
         addSeparator();
+
+        // A checkbox rather than a plain item: it shows whether the folder is
+        // compacted now, and the tick follows the action's SELECTED_KEY.
+        add(new JCheckBoxMenuItem(actions.getCompactFoldersAction()));
 
         add(actions.getRefreshTreeAction());
     }

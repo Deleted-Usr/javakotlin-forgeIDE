@@ -21,6 +21,11 @@ data class ProjectWorkspace(
 
     /** Missing means not yet migrated; RunSelection(null) explicitly chooses Current File. */
     val runSelection: RunSelection? = null,
+
+    /** Folders the explorer shows as one row (`ui.editor.guides`), inherited by the folders beneath. */
+    val compactFolders: List<Path> = emptyList(),
+    /** Folders switched back to nested inside a compacted one. */
+    val nestedFolders: List<Path>  = emptyList(),
 ) : VersionedJsonDocument {
     init {
         VersionedJsonDocument.requireSupportedVersion("Project Workspace", schemaVersion, CURRENT_SCHEMA_VERSION)

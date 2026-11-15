@@ -35,7 +35,18 @@ public final class TreeExpansionState
         {
             if (paths.nextElement().getLastPathComponent() instanceof ProjectTreeNode node)
             {
-                expanded.add(node.getItem().path());
+                // Every folder in a compacted row, top first. If the rebuild
+                // shows the chain as nested folders instead, each one of them
+                // is open again rather than only the bottom one, which could
+                // not be reached.
+                Path head = node.getHead().path();
+
+                expanded.add(head);
+                for (Path segment : head.relativize(node.getItem().path()))
+                {
+                    head = head.resolve(segment);
+                    expanded.add(head);
+                }
             }
         }
 

@@ -11,6 +11,7 @@ import com.willclay.forgeide.services.settings.SettingsService
 import com.willclay.forgeide.ui.WorkbenchPanel
 import com.willclay.forgeide.ui.editor.CodeEditorPanel
 import com.willclay.forgeide.ui.editor.tabs.ImageTab
+import com.willclay.forgeide.ui.explorer.ProjectTree
 import com.willclay.forgeide.workspace.Project
 import com.willclay.forgeide.workspace.metadata.ProjectWorkspace
 import com.willclay.forgeide.workspace.metadata.ProjectWorkspaceStore
@@ -33,6 +34,7 @@ class ProjectWorkspaceController(
     private val editor: EditorManager,
     private val editorPanel: CodeEditorPanel,
     private val workbench: WorkbenchPanel,
+    private val projectTree: ProjectTree,
 
     private val settings: SettingsService,
     val session: SessionService,
@@ -86,6 +88,9 @@ class ProjectWorkspaceController(
         selectedFile = editor.currentTab?.file,
         layout       = workbench.captureLayout(),
         runSelection = ProjectWorkspace.RunSelection(runConfigurations.activeId),
+
+        compactFolders = projectTree.folderViews.filterValues { it }.keys.sorted(),
+        nestedFolders  = projectTree.folderViews.filterValues { !it }.keys.sorted(),
     )
 
     private data class RestoredFile(
@@ -178,6 +183,12 @@ class ProjectWorkspaceController(
         }
 
         editor.closeFile()
+
+        // Before the project opens, because opening it is what shows the tree.
+        projectTree.setFolderViews(
+            prepared.state.compactFolders.associateWith { true } +
+            prepared.state.nestedFolders.associateWith  { false }
+        )
 
         if (prepared.project == null) {
             workspace.closeProject()

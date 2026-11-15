@@ -184,7 +184,7 @@ public final class TreeSpeedSearch
         TreePath path = tree.getPathForRow(row);
 
         return path != null && path.getLastPathComponent() instanceof ProjectTreeNode node
-                ? node.getItem().name()
+                ? node.getLabel()
                 : "";
     }
 

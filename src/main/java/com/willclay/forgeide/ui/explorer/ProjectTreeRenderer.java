@@ -20,21 +20,32 @@ public final class ProjectTreeRenderer extends DefaultTreeCellRenderer
     }
 
     @Override
-    public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected,
-                                                  boolean expanded, boolean leaf, int row, boolean hasFocus)
+    public Component getTreeCellRendererComponent(
+            JTree tree,
+            Object value,
+            boolean selected,
+            boolean expanded,
+            boolean leaf,
+            int row,
+            boolean hasFocus
+    )
     {
         super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+
         if (value instanceof ProjectTreeNode node)
         {
             ProjectItem item = node.getItem();
-            setText(item.name());
+
+            setText(node.getLabel());
             setIcon(item.isDirectory() ? FileIcons.folder() : FileIcons.forPath(item.path(), item.isSourceFile()));
             setToolTipText(item.path().toString());
+
             if (!selected)
             {
                 setForeground(item.isHidden() ? UIManager.getColor("Label.disabledForeground") : tree.getForeground());
             }
         }
+
         return this;
     }
 }

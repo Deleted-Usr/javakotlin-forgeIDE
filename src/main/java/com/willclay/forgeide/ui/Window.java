@@ -188,6 +188,7 @@ public final class Window extends JFrame
                     editorManager,
                     editorPanel,
                     workbench,
+                    projectTree,
                     settingsService,
                     sessionService,
                     runConfigurationManager,

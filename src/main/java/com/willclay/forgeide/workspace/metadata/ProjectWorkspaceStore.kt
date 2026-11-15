@@ -26,9 +26,11 @@ object ProjectWorkspaceStore {
         fun resolve(path: Path) = root.toAbsolutePath().normalize().resolve(path).normalize()
 
         return saved.copy(
-            openFiles    = saved.openFiles.map(::resolve).distinct(),
-            selectedFile = saved.selectedFile?.let(::resolve),
-            layout       = saved.layout.normalised(),
+            openFiles      = saved.openFiles.map(::resolve).distinct(),
+            selectedFile   = saved.selectedFile?.let(::resolve),
+            layout         = saved.layout.normalised(),
+            compactFolders = saved.compactFolders.map(::resolve).distinct(),
+            nestedFolders  = saved.nestedFolders.map(::resolve).distinct(),
         )
     }
 
@@ -49,9 +51,11 @@ object ProjectWorkspaceStore {
         }
 
         json.write(pathFor(root), workspace.copy(
-            openFiles    = workspace.openFiles.map(::relative).distinct(),
-            selectedFile = workspace.selectedFile?.let(::relative),
-            layout       = workspace.layout.normalised(),
+            openFiles      = workspace.openFiles.map(::relative).distinct(),
+            selectedFile   = workspace.selectedFile?.let(::relative),
+            layout         = workspace.layout.normalised(),
+            compactFolders = workspace.compactFolders.map(::relative).distinct(),
+            nestedFolders  = workspace.nestedFolders.map(::relative).distinct(),
         ))
     }
 }

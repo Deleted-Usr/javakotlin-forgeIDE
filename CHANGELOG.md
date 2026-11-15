@@ -32,6 +32,9 @@ breakdown. It updates when a file is saved, created or deleted.
   - Hovering over sections of the final command will highlight certain parts of the dialog that correspond to what is
   in the command.
   - Language-specific run configuration options
+- Folders can now be compacted in the project explorer: right-click a folder and tick "Compact Nested Folders" to show
+chains of single folders on one row, such as `ui.editor.guides`. The choice is per folder, applies to the folders
+beneath it, and is saved with the project workspace.
 
 #### Settings
 - A new Settings → File Types page chooses which extensions open as GLSL, JSON, TOML or Markdown, such as adding `.vs`

@@ -1,13 +1,16 @@
 package com.willclay.forgeide.ui.explorer;
 
 import com.willclay.forgeide.workspace.ProjectItem;
+import com.willclay.forgeide.workspace.ProjectItemType;
 import com.willclay.forgeide.services.WorkspaceService;
 
 import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
@@ -28,9 +31,21 @@ import java.util.function.BiConsumer;
 /// position jumps — every time a build writes a class file. Diffing also makes
 /// the update idempotent, which is what lets the service and the file watcher
 /// both report the same change without the tree flickering.
+///
+/// **Some folders are compacted.** A chain of folders that each hold nothing
+/// but the next one (`ui/editor/guides`) can be shown as a single row,
+/// `ui.editor.guides`. The user turns this on or off per folder, and the
+/// choice is inherited: compacting `src/main/java` compacts every chain
+/// beneath it, unless a folder further down says otherwise. Only the folders
+/// with an explicit choice are stored, in [#folderViews].
 public final class ProjectTreeModel extends DefaultTreeModel
 {
     private final WorkspaceService service;
+
+    /// The folders the user chose a view for: true for compact, false for
+    /// nested. A folder with no entry takes its parent's view, and the default
+    /// at the top is nested.
+    private final Map<Path, Boolean> folderViews = new HashMap<>();
 
     private BiConsumer<ProjectItem, String> renameHandler = (item, name) -> { };
 
@@ -103,8 +118,84 @@ public final class ProjectTreeModel extends DefaultTreeModel
     public void refresh(Path directory)
     {
         ProjectTreeNode node = findLoadedNode(directory);
+        if (node == null) return;
 
-        if (node != null) syncChildren(node);
+        // A change anywhere in a compacted chain can lengthen or break it: a
+        // file added to `editor` means `ui.editor.guides` becomes `ui.editor`
+        // with two children. The row is swapped for one with the new chain.
+        if (isCompact(node.getHead().path()) && node.getParent() instanceof ProjectTreeNode parent)
+        {
+            ProjectTreeNode fresh = nodeFor(node.getHead());
+
+            if (!sameRow(fresh, node))
+            {
+                int index = parent.getIndex(node);
+
+                removeNodeFromParent(node);
+                insertNodeInto(fresh, parent, index);
+                return;
+            }
+        }
+
+        // The folders in the middle of a chain have no children on screen of
+        // their own; only the bottom one does.
+        if (node.getItem().path().equals(directory)) syncChildren(node);
+    }
+
+    /// @return true when this folder is shown with its single-folder chains
+    ///         merged into one row, either by its own setting or an ancestor's
+    public boolean isCompact(Path folder)
+    {
+        for (Path path = folder; path != null; path = path.getParent())
+        {
+            Boolean view = folderViews.get(path);
+
+            if (view != null)
+            {
+                return view;
+            }
+        }
+
+        return false;
+    }
+
+    /// Records whether this folder, and the folders beneath it, are compacted.
+    ///
+    /// Does not touch the tree: changing a view can reshape every row below
+    /// the folder, so [ProjectTree] rebuilds once after the change instead of
+    /// patching rows here.
+    public void setCompact(Path folder, boolean compact)
+    {
+        // A choice that matches what the folder would inherit anyway is not
+        // stored, so turning a view on and off again leaves nothing behind.
+        boolean inherited = folder.getParent() != null && isCompact(folder.getParent());
+
+        if (compact == inherited)
+        {
+            folderViews.remove(folder);
+        }
+        else
+        {
+            folderViews.put(folder, compact);
+        }
+    }
+
+    /// Every folder with an explicit view, for saving with the project workspace.
+    public Map<Path, Boolean> getFolderViews()
+    {
+        return Map.copyOf(folderViews);
+    }
+
+    /// Replaces the stored views, for restoring a project workspace. Like
+    /// [#setCompact], the tree is not touched; call this before the root is shown.
+    public void setFolderViews(Map<Path, Boolean> views)
+    {
+        folderViews.clear();
+
+        for (Map.Entry<Path, Boolean> entry : views.entrySet())
+        {
+            folderViews.put(entry.getKey().toAbsolutePath().normalize(), entry.getValue());
+        }
     }
 
     /// Applies the difference between what is on disk and what is on screen.
@@ -113,26 +204,69 @@ public final class ProjectTreeModel extends DefaultTreeModel
     /// valid. Insertions then run forwards: both lists are in
     /// `EXPLORER_ORDER`, so the first position where they disagree is
     /// exactly where the missing item belongs.
+    ///
+    /// Rows are compared by the chain they show, not just the folder they start
+    /// at, so a chain that changed shape is replaced rather than kept.
     private void syncChildren(ProjectTreeNode node)
     {
-        List<ProjectItem> onDisk = service.getChildren(node.getItem());
+        List<ProjectTreeNode> wanted = service.getChildren(node.getItem()).stream()
+                .map(this::nodeFor)
+                .toList();
 
         for (int i = node.getChildCount() - 1; i >= 0; i--)
         {
             ProjectTreeNode child = (ProjectTreeNode) node.getChildAt(i);
 
-            if (!onDisk.contains(child.getItem())) removeNodeFromParent(child);
+            if (wanted.stream().noneMatch(row -> sameRow(row, child)))
+            {
+                removeNodeFromParent(child);
+            }
         }
 
-        for (int i = 0; i < onDisk.size(); i++)
+        for (int i = 0; i < wanted.size(); i++)
         {
-            if (i < node.getChildCount() && childItemAt(node, i).equals(onDisk.get(i))) continue;
+            if (i < node.getChildCount() && sameRow((ProjectTreeNode) node.getChildAt(i), wanted.get(i)))
+            {
+                continue;
+            }
 
-            insertNodeInto(new ProjectTreeNode(onDisk.get(i)), node, i);
+            insertNodeInto(wanted.get(i), node, i);
         }
     }
 
-    /// @return the node for this path, or null if it is not on screen or not yet loaded
+    /// Builds the row for an item, following its chain of single folders down
+    /// while the folder it has reached is compacted.
+    ///
+    /// This is the one place compaction costs anything: each step reads one
+    /// more directory. It only happens for compacted folders, and each folder
+    /// passed through is watched, because a file appearing in the middle of a
+    /// chain changes what the row says.
+    private ProjectTreeNode nodeFor(ProjectItem head)
+    {
+        ProjectItem item = head;
+
+        while (item.isDirectory() && item.type() != ProjectItemType.PROJECT && isCompact(item.path()))
+        {
+            List<ProjectItem> children = service.getChildren(item);
+            if (children.size() != 1 || !children.getFirst().isDirectory())
+            {
+                break;
+            }
+
+            service.watch(item);
+            item = children.getFirst();
+        }
+
+        return new ProjectTreeNode(head, item);
+    }
+
+    private static boolean sameRow(ProjectTreeNode a, ProjectTreeNode b)
+    {
+        return a.getHead().equals(b.getHead()) && a.getItem().equals(b.getItem());
+    }
+
+    /// @return the node showing this path — the compacted row, for a folder in
+    ///         the middle of a chain — or null if it is not on screen or not yet loaded
     public ProjectTreeNode findLoadedNode(Path path)
     {
         if (!(getRoot() instanceof ProjectTreeNode root)) return null;
@@ -142,7 +276,7 @@ public final class ProjectTreeModel extends DefaultTreeModel
 
     private static ProjectTreeNode findIn(ProjectTreeNode node, Path path)
     {
-        if (node.getItem().path().equals(path)) return node;
+        if (node.covers(path)) return node;
 
         // Only descend where the answer could be. An unloaded node has no
         // children to search, and a path that is not underneath this one cannot
@@ -157,10 +291,5 @@ public final class ProjectTreeModel extends DefaultTreeModel
         }
 
         return null;
-    }
-
-    private static ProjectItem childItemAt(ProjectTreeNode node, int index)
-    {
-        return ((ProjectTreeNode) node.getChildAt(index)).getItem();
     }
 }
