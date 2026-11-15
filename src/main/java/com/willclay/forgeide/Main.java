@@ -94,7 +94,8 @@ public final class Main
             // A dialog as well: started from ForgeIDE.exe there is no console,
             // so stderr alone would leave the user with nothing at all.
             SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
-                    null, ex.getMessage(), "Forge IDE could not start", JOptionPane.ERROR_MESSAGE)
+                    null, ex.getMessage(), "Forge IDE could not start", JOptionPane.ERROR_MESSAGE
+                )
             );
 
             return;

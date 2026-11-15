@@ -76,6 +76,22 @@ public interface Language
         return new FileIconStyle(letter, FileIconStyle.DEFAULT_COLOUR);
     }
 
+    /// The kind of type `file` declares, which gives it a more specific icon
+    /// than [#fileIcon()]: a class, an interface, an enum and so on.
+    ///
+    /// Optional. Return empty when the file has no main type, such as a script
+    /// or a file of top-level functions, and it keeps the plain language icon.
+    /// [TopLevelCode] does the hard part: it removes comments, strings and
+    /// everything inside braces, so a few patterns over what's left are enough.
+    ///
+    /// Called on a background thread, with the file's text already read. It
+    /// must not touch Swing, and should be quick: it runs for every source file
+    /// the explorer shows.
+    default Optional<DeclarationKind> declarationKind(Path file, String text)
+    {
+        return Optional.empty();
+    }
+
     /// Returns the directory in which this language keeps project sources.
     Path sourceRoot(Project project);
 

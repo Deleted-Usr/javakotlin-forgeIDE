@@ -2,6 +2,7 @@ package com.willclay.forgeide.lang.kotlin
 
 import com.willclay.forgeide.annotations.SourceEquivalent
 import com.willclay.forgeide.annotations.SourceLanguage
+import com.willclay.forgeide.lang.api.DeclarationKind
 import com.willclay.forgeide.lang.api.EntryPoints
 import com.willclay.forgeide.lang.api.FileIconStyle
 import com.willclay.forgeide.lang.api.Language
@@ -52,6 +53,9 @@ class KotlinLanguage : Language {
     @Throws(IOException::class)
     override fun entryPoints(project: Project): List<Path> = EntryPoints.scan(project, this, MAIN_FUNCTION)
     override fun sourceRoot(project:  Project): Path       = KotlinSettings.from(project).jvm.sourceRoot(project)
+
+    override fun declarationKind(file: Path, text: String): Optional<DeclarationKind> =
+        Optional.ofNullable(KotlinDeclarations.kindOf(lexer, file, text))
 
     override fun settingsPages(project:  Project): List<LanguageSettingsPage> = listOf(KotlinSettingsPage(project.root(), KotlinSettings.from(project)))
     override fun runOptionsPage(project: Project): Optional<RunOptionsPage>   = Optional.of(JvmRunOptionsPage("Kotlin"))

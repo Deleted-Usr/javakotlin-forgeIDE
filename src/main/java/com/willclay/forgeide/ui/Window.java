@@ -11,6 +11,7 @@ import com.willclay.forgeide.highlighting.filetypes.FileType;
 import com.willclay.forgeide.highlighting.filetypes.FileTypes;
 import com.willclay.forgeide.lang.LanguageRegistry;
 import com.willclay.forgeide.services.ApplicationShutdown;
+import com.willclay.forgeide.services.declarations.DeclarationService;
 import com.willclay.forgeide.services.linecount.LineCounter;
 import com.willclay.forgeide.services.linecount.LineCountService;
 import com.willclay.forgeide.services.session.SessionService;
@@ -57,6 +58,7 @@ import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /// The editor composition root: it creates the parts, puts
@@ -246,6 +248,17 @@ public final class Window extends JFrame
 
             workspace.addChangeListener(() -> todoService.projectChanged(workspace.getProject()));
             editorManager.addSaveListener(todoService::fileSaved);
+
+            // Type icons: files are read lazily, as their icons are first painted.
+            DeclarationService declarationService = new DeclarationService(languages);
+            FileIcons.useDeclarations(declarationService::kindOf);
+            disposalTasks.add(() -> FileIcons.useDeclarations(file -> Optional.empty()));
+            disposalTasks.add(declarationService::close);
+
+            declarationService.addChangeListener(this::repaint); // the explorer, tabs and breadcrumb all show file icons
+            workspace.addChangeListener(() -> declarationService.projectChanged(workspace.getProject()));
+            editorManager.addSaveListener(declarationService::fileSaved);
+            workspaceService.addListener(declarationService::directoryChanged);
 
             workspace.addChangeListener(() -> lineCountService.projectChanged(workspace.getProject()));
             editorManager.addSaveListener(lineCountService::filesChanged);

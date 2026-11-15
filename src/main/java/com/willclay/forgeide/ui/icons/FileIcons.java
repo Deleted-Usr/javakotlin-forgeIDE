@@ -1,10 +1,12 @@
 package com.willclay.forgeide.ui.icons;
 
 import com.formdev.flatlaf.icons.FlatAbstractIcon;
+import com.willclay.forgeide.lang.api.DeclarationKind;
 import com.willclay.forgeide.lang.api.FileIconStyle;
 import com.willclay.forgeide.lang.api.Language;
 import com.willclay.forgeide.lang.api.templates.TemplateIcon;
 import javax.swing.Icon;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import java.awt.Color;
 import java.awt.Component;
@@ -18,9 +20,12 @@ import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 
 /// Shared, scalable file-type symbols for tree rows, editor tabs and breadcrumbs.
 /// Classification uses the path's name only; it never reads the filesystem.
@@ -33,6 +38,12 @@ import java.util.Map;
 ///
 /// The only extensions still named here are the ones no language owns —
 /// Markdown and configuration files.
+///
+/// **Type icons.** A source file that declares a class, interface, enum and so
+/// on shows a round badge for that kind instead of the page icon, the same
+/// badges the "New ..." dialog uses. Working out the kind means reading the
+/// file, which this class never does: [#useDeclarations(Function)] hands it a
+/// lookup that answers from a cache and reads files on a background thread.
 public final class FileIcons
 {
     private static final Icon MARKDOWN = new FileIcon("M",  "Objects.Blue");
@@ -46,6 +57,15 @@ public final class FileIcons
             "json", CONFIG, "xml", CONFIG, "yaml", CONFIG, "yml", CONFIG,
             "properties", CONFIG, "toml", CONFIG
     );
+
+    /// One badge per kind, in the same letters and colours as the "New ..."
+    /// dialog. Abstract classes are hollow (there is something still to fill
+    /// in) and final classes carry a small pin (nothing more can be attached).
+    private static final Map<DeclarationKind, Icon> KIND_ICONS = kindIcons();
+
+    /// Answers "what does this file declare?" from a cache, or empty if nobody
+    /// has said yet. Set once the main window exists. See [#useDeclarations].
+    private static volatile Function<Path, Optional<DeclarationKind>> declarations = path -> Optional.empty();
 
     /// Extension (lowercase, no dot) to icon. Replaced as a whole rather than
     /// edited, and volatile, so a painting thread never sees it half-built.
@@ -77,6 +97,20 @@ public final class FileIcons
         languageIcons = Map.copyOf(icons);
     }
 
+    /// Lets source files show a badge for the type they declare. `lookup` is
+    /// only called on the EDT and must answer from memory, never by reading the
+    /// file: it runs while a tree row or tab is being painted.
+    public static void useDeclarations(Function<Path, Optional<DeclarationKind>> lookup)
+    {
+        declarations = lookup;
+    }
+
+    /// The badge for a kind of type, for anything that wants to show one.
+    public static Icon forKind(DeclarationKind kind)
+    {
+        return KIND_ICONS.get(kind);
+    }
+
     public static Icon folder() { return FOLDER; }
 
     /// The icon a language describes for its files — the one its source files
@@ -90,7 +124,7 @@ public final class FileIcons
     public static Icon forTemplate(TemplateIcon icon)
     {
         return icon.shape() == TemplateIcon.Shape.TYPE
-                ? new FileIcon(icon.letter(), icon.colourKey(), true)
+                ? new FileIcon(icon.letter(), icon.colourKey(), Badge.FILLED)
                 : new FileIcon(icon.letter(), icon.colourKey());
     }
 
@@ -109,10 +143,14 @@ public final class FileIcons
 
             Icon icon = languages.get(extension);
 
-            if (icon == null)
+            if (icon != null)
             {
-                icon = BUILT_IN.get(extension);
+                // A language's file: show the type it declares, once that is known.
+                Icon kind = kindIcon(path);
+                return kind != null ? kind : icon;
             }
+
+            icon = BUILT_IN.get(extension);
 
             if (icon != null)
             {
@@ -121,6 +159,37 @@ public final class FileIcons
         }
 
         return sourceFile ? SOURCE : FILE;
+    }
+
+    /// Null until the file has been read, and for a file with no main type.
+    /// Off the EDT (a size measured from a background thread, say) it never asks,
+    /// because the lookup's cache belongs to the EDT.
+    private static Icon kindIcon(Path path)
+    {
+        if (!SwingUtilities.isEventDispatchThread())
+        {
+            return null;
+        }
+
+        return declarations.apply(path).map(KIND_ICONS::get).orElse(null);
+    }
+
+    private static Map<DeclarationKind, Icon> kindIcons()
+    {
+        Map<DeclarationKind, Icon> icons = new EnumMap<>(DeclarationKind.class);
+
+        icons.put(DeclarationKind.CLASS,          new FileIcon("C", "Objects.Blue",       Badge.FILLED));
+        icons.put(DeclarationKind.ABSTRACT_CLASS, new FileIcon("C", "Objects.Blue",       Badge.HOLLOW));
+        icons.put(DeclarationKind.FINAL_CLASS,    new FileIcon("C", "Objects.Blue",       Badge.PINNED));
+        icons.put(DeclarationKind.SEALED_CLASS,   new FileIcon("S", "Objects.Green",      Badge.FILLED));
+        icons.put(DeclarationKind.INTERFACE,      new FileIcon("I", "Objects.Green",      Badge.FILLED));
+        icons.put(DeclarationKind.ENUM,           new FileIcon("E", "Objects.YellowDark", Badge.FILLED));
+        icons.put(DeclarationKind.RECORD,         new FileIcon("R", "Objects.Yellow",     Badge.FILLED));
+        icons.put(DeclarationKind.ANNOTATION,     new FileIcon("@", "Objects.Purple",     Badge.FILLED));
+        icons.put(DeclarationKind.OBJECT,         new FileIcon("O", "Objects.Yellow",     Badge.FILLED));
+        icons.put(DeclarationKind.EXCEPTION,      new FileIcon("!", "Objects.Red",        Badge.FILLED));
+
+        return Map.copyOf(icons);
     }
 
     private static String normaliseExtension(String extension)
@@ -133,20 +202,20 @@ public final class FileIcons
     {
         private final String letter;
         private final String colourKey;
-        private final boolean round;
+        private final Badge badge;
 
         private FileIcon(String letter, String colourKey)
         {
-            this(letter, colourKey, false);
+            this(letter, colourKey, Badge.NONE);
         }
 
-        private FileIcon(String letter, String colourKey, boolean round)
+        private FileIcon(String letter, String colourKey, Badge badge)
         {
             super(16, 16, null);
 
             this.letter    = letter;
             this.colourKey = colourKey;
-            this.round     = round;
+            this.badge     = badge;
         }
 
         @Override
@@ -161,12 +230,18 @@ public final class FileIcons
 
             graphics.setColor(colour == null ? Color.GRAY : colour);
 
+            boolean round = badge != Badge.NONE;
             Shape outline = round ? new Ellipse2D.Float(1, 1, 14, 14) : pageOutline(letter == null);
             Area shape    = new Area(outline);
 
+            if (badge == Badge.HOLLOW)
+            {
+                // Just the rim: the shape is still "to be filled in", like the class.
+                shape.subtract(new Area(new Ellipse2D.Float(2.5f, 2.5f, 11, 11)));
+            }
+
             if (letter != null && !letter.isEmpty())
             {
-                // Cut the glyph out of the filled shape so the letter is transparent.
                 Font font = new Font(Font.SANS_SERIF, Font.BOLD, round ? 10 : 9);
 
                 GlyphVector glyphs = font.createGlyphVector(graphics.getFontRenderContext(), letter);
@@ -175,9 +250,28 @@ public final class FileIcons
                 float x = (float) (8 - bounds.getCenterX());
                 float y = (float) ((round ? 8 : 10.5) - bounds.getCenterY());
 
-                Shape glyph = glyphs.getOutline(x, y);
-                shape.subtract(new Area(glyph));
+                Area glyph = new Area(glyphs.getOutline(x, y));
+
+                // A hollow badge has nothing to cut the letter out of, so the
+                // letter is drawn solid inside the rim instead.
+                if (badge == Badge.HOLLOW)
+                {
+                    shape.add(glyph);
+                }
+                else
+                {
+                    shape.subtract(glyph); // the letter shows through as a transparent cut-out
+                }
             }
+
+            if (badge == Badge.PINNED)
+            {
+                // A small dot in the bottom-right corner, with a transparent gap
+                // around it so it reads as a separate mark.
+                shape.subtract(new Area(new Ellipse2D.Float(9.5f, 9.5f, 7, 7)));
+                shape.add(new Area(new Ellipse2D.Float(11, 11, 4.5f, 4.5f)));
+            }
+
             graphics.fill(shape);
         }
 
@@ -200,5 +294,18 @@ public final class FileIcons
             outline.closePath();
             return outline;
         }
+    }
+
+    /// The shape of an icon: a page, or one of the round badges types use.
+    private enum Badge
+    {
+        /// A page (or folder) with the letter cut out: a plain file.
+        NONE,
+        /// A filled circle with the letter cut out: an ordinary type.
+        FILLED,
+        /// A ring with a solid letter: an abstract class.
+        HOLLOW,
+        /// A filled circle with a pin in the corner: a final class.
+        PINNED
     }
 }

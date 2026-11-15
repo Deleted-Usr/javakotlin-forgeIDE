@@ -1,5 +1,6 @@
 package com.willclay.forgeide.lang.java;
 
+import com.willclay.forgeide.lang.api.DeclarationKind;
 import com.willclay.forgeide.lang.api.EntryPoints;
 import com.willclay.forgeide.lang.api.FileIconStyle;
 import com.willclay.forgeide.lang.api.Toolchain;
@@ -109,6 +110,12 @@ public final class JavaLanguage implements Language
     public List<Path> entryPoints(Project project) throws IOException
     {
         return EntryPoints.scan(project, this, MAIN_METHOD);
+    }
+
+    @Override
+    public Optional<DeclarationKind> declarationKind(Path file, String text)
+    {
+        return JavaDeclarations.kindOf(lexer, file, text);
     }
 
     @Override
