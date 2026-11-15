@@ -42,6 +42,7 @@ import javax.swing.*;
  *  - JetBrains Air Style Forge Client (with ForgeIDE integration)
  *  - Custom Text Component to resolve performance issues.
  *  - System Terminal Integration (Keep Current Console and implement a toggle in settings).
+ *  - Custom Refactoring Engine (lotta work!)
  */
 
 /*

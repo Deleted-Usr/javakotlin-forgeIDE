@@ -41,11 +41,17 @@ import java.util.Set;
 /// cached against the width it was measured at.
 public final class DocCommentPainter
 {
-    private static final int VERTICAL_PADDING = 6;
-    private static final int RIGHT_PADDING = 24;
-    private static final int BAR_WIDTH = 2;
-    private static final int BAR_GAP = 10;
-    private static final int MINIMUM_WIDTH = 160;
+    /// Space between the bar and the lines above and below the comment.
+    private static final int LINE_GAP = 4;
+    /// How far the bar reaches past the text at the top and at the bottom.
+    /// The same amount on both sides is what centres the text against the bar.
+    private static final int BAR_OVERHANG = 12;
+    /// Space from the edge of the line to the text: the gap, then the overhang.
+    private static final int VERTICAL_PADDING = LINE_GAP + BAR_OVERHANG;
+    private static final int RIGHT_PADDING    = 24;
+    private static final int BAR_WIDTH        = 2;
+    private static final int BAR_GAP          = 10;
+    private static final int MINIMUM_WIDTH    = 160;
 
     private final ForgeEditorPane pane;
     private final CellRendererPane stamp = new CellRendererPane();
@@ -120,7 +126,7 @@ public final class DocCommentPainter
         int y = line.y + VERTICAL_PADDING;
 
         graphics.setColor(barColour(startOffset + comment.indent().length()));
-        graphics.fillRect(x, y, BAR_WIDTH, rendered.height);
+        graphics.fillRect(x, y - BAR_OVERHANG, BAR_WIDTH, rendered.height + (BAR_OVERHANG * 2));
 
         stamp.paintComponent(
                 graphics,
