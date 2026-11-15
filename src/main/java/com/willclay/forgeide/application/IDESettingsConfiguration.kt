@@ -40,7 +40,10 @@ data class IDESettingsConfiguration(
         fileTypes = fileTypes.normalised()
     )
 
-    fun withTheme(theme: String) = copy(appearance = Appearance(theme = theme))
+    // copy() rather than a new Appearance, so changing one keeps the other.
+    fun withTheme(theme: String) = copy(appearance = appearance.copy(theme = theme))
+
+    fun withIconSet(iconSet: String) = copy(appearance = appearance.copy(iconSet = iconSet))
 
     fun withFileTypes(fileTypes: FileTypeAssociations) = copy(fileTypes = fileTypes)
 
@@ -50,6 +53,7 @@ data class IDESettingsConfiguration(
         const val SHOW_RECENT_PROJECTS   = "show-recent-projects"
         const val OPEN_EMPTY_WINDOW      = "open-empty-window"
         const val DEFAULT_THEME          = "material-darker"
+        const val DEFAULT_ICON_SET       = "atom-material"
 
         const val MARKDOWN_EDITOR  = "editor"
         const val MARKDOWN_SPLIT   = "split"
@@ -72,13 +76,21 @@ data class IDESettingsConfiguration(
         fun defaults() = IDESettingsConfiguration(schemaVersion = CURRENT_SCHEMA_VERSION)
     }
 
+    /**
+     * @property iconSet the id of the file icon set: `forge` for Forge's own
+     *   drawn icons, `atom-material`, or `custom:<folder>` for one in
+     *   `~/.forge/icon-sets`. A settings file from before icon sets has none,
+     *   and gets the default.
+     */
     @JvmRecord
     @Serializable
-    data class Appearance(
-        val theme: String = DEFAULT_THEME,
+    data class Appearance @JvmOverloads constructor(
+        val theme: String   = DEFAULT_THEME,
+        val iconSet: String = DEFAULT_ICON_SET,
     ) {
         fun normalised() = copy(
-            theme = theme.ifBlank { DEFAULT_THEME },
+            theme   = theme.ifBlank { DEFAULT_THEME },
+            iconSet = iconSet.ifBlank { DEFAULT_ICON_SET },
         )
     }
 

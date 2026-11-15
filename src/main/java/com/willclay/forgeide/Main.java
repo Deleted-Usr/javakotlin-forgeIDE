@@ -7,6 +7,7 @@ import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMTMaterialDark
 import com.willclay.forgeide.application.bootstrap.BootstrapException;
 import com.willclay.forgeide.application.bootstrap.BootstrapResult;
 import com.willclay.forgeide.application.bootstrap.ForgeBootstrap;
+import com.willclay.forgeide.services.settings.icons.IconSetRuntime;
 import com.willclay.forgeide.services.settings.theme.Theme;
 import com.willclay.forgeide.services.settings.theme.ThemeService;
 import com.willclay.forgeide.splash.ForgeSplash;
@@ -29,7 +30,6 @@ import javax.swing.*;
  *  - Java + Kotlin and C++ + Rust project templates (after multi-language projects)
  *  - Small hover info dialogs for classes, methods, etc. SHOW DESCRIPTIONS FOR KEYWORDS TOO!!!
  *  - User-defined file templates
- *  - File icons based on type (icons for final classes, abstract classes, interfaces, etc.)
  *  - Build System Support (Gradle/Maven)
  *  - Multi-Language projects (Add language project)
  *  - IntelliJ-style double shift project search function
@@ -108,6 +108,7 @@ public final class Main
                 splash.setStatus("Opening Forge IDE");
                 setLookAndFeel(bootstrap.themes().resolve(bootstrap.settings().getThemeId()));
                 FlatAnimatedLafChange.duration = 300;
+                IconSetRuntime.install(bootstrap.settings(), bootstrap.iconSets());
 
                 StartupController startup = new StartupController(bootstrap);
                 // Reopening a project can show progress or an error dialog. Let

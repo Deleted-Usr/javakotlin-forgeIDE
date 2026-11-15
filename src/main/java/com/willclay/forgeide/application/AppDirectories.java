@@ -8,7 +8,8 @@ import java.nio.file.Paths;
 public record AppDirectories(
         Path configDirectory,
         Path pluginDirectory,
-        Path themeDirectory
+        Path themeDirectory,
+        Path iconSetDirectory
 )
 {
     public static AppDirectories resolve() throws IOException
@@ -18,6 +19,7 @@ public record AppDirectories(
         Path configPath = Paths.get(homePath, ".forge", "config");  // Users/../.forge/config
         Path pluginPath = Paths.get(homePath, ".forge", "plugins"); // Users/../.forge/plugins
         Path themePath  = Paths.get(homePath, ".forge", "themes");  // Users/../.forge/themes
+        Path iconPath   = Paths.get(homePath, ".forge", "icon-sets"); // Users/../.forge/icon-sets
 
         if (!Files.exists(configPath))
         {
@@ -39,6 +41,13 @@ public record AppDirectories(
             Files.createDirectories(themePath);
         }
 
-        return new AppDirectories(configPath, pluginPath, themePath);
+        // Same reason: somewhere obvious to copy an icon set folder into.
+        if (!Files.exists(iconPath))
+        {
+            System.out.println("Creating new icon set path...");
+            Files.createDirectories(iconPath);
+        }
+
+        return new AppDirectories(configPath, pluginPath, themePath, iconPath);
     }
 }

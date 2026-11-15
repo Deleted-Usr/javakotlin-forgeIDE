@@ -4,6 +4,7 @@ import com.formdev.flatlaf.util.UIScale;
 import com.willclay.forgeide.application.IDESettingsConfiguration;
 import com.willclay.forgeide.lang.api.settings.LanguageSettingsPage;
 import com.willclay.forgeide.services.settings.SettingsService;
+import com.willclay.forgeide.services.settings.icons.IconSetCatalog;
 import com.willclay.forgeide.services.settings.theme.ThemeService;
 import com.willclay.forgeide.services.settings.project.ProjectSettingsService;
 import com.willclay.forgeide.ui.Utils;
@@ -34,6 +35,7 @@ public final class SettingsWindow extends JDialog
     private final SettingsService settingsService;
     private final ProjectSettingsService projectService;
     private final ThemeService themeService;
+    private final IconSetCatalog iconSets;
     private final GeneralSettings generalSettings;
     private final FileTypeSettings fileTypeSettings;
     private final ProjectSettings projectSettings;
@@ -47,7 +49,8 @@ public final class SettingsWindow extends JDialog
             Window owner,
             SettingsService settingsService,
             ProjectSettingsService projectService,
-            ThemeService themeService
+            ThemeService themeService,
+            IconSetCatalog iconSets
     )
     {
         super(owner, "IDE Settings", ModalityType.MODELESS);
@@ -59,6 +62,7 @@ public final class SettingsWindow extends JDialog
         this.settingsService = settingsService;
         this.projectService  = projectService;
         this.themeService    = themeService;
+        this.iconSets        = iconSets;
 
         this.generalSettings  = new GeneralSettings();
         this.fileTypeSettings = new FileTypeSettings();
@@ -87,8 +91,8 @@ public final class SettingsWindow extends JDialog
         );
         addPage(
                 "Theme",
-                "How Forge looks. A new theme applies straight away.",
-                new ThemeSettings(themeService),
+                "How Forge looks. A new theme or icon set applies straight away.",
+                new ThemeSettings(themeService, settingsService, iconSets),
                 false
         );
         addPage(

@@ -1,10 +1,14 @@
 package com.willclay.forgeide.ui.settings.theme;
 
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
+import com.willclay.forgeide.services.settings.SettingsService;
+import com.willclay.forgeide.services.settings.icons.IconSetCatalog;
+import com.willclay.forgeide.services.settings.icons.IconSetRuntime;
 import com.willclay.forgeide.services.settings.theme.CustomTheme;
 import com.willclay.forgeide.services.settings.theme.Theme;
 import com.willclay.forgeide.services.settings.theme.ThemeService;
 import com.willclay.forgeide.ui.Utils;
+import com.willclay.forgeide.ui.icons.IconSet;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -18,16 +22,18 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingWorker;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/// Chooses the IDE theme, and looks after the custom theme documents that
-/// themes can also come from. Unlike the other pages, a choice here applies
-/// (and is saved) straight away rather than waiting for Apply.
+/// Chooses the IDE theme and file icon set, and looks after the custom theme
+/// documents that themes can also come from. Unlike the other pages, a choice
+/// here applies (and is saved) straight away rather than waiting for Apply.
 ///
 /// The page only asks [ThemeService] to do things: reading and writing the
 /// documents happens there, off the Event Dispatch Thread. Whenever the service
@@ -35,11 +41,17 @@ import java.util.Objects;
 public final class ThemeSettings extends JPanel
 {
     private final ThemeService service;
+    private final SettingsService settings;
+    private final IconSetCatalog iconSetCatalog;
+
+    private final JComboBox<IconSet> iconSets = new JComboBox<>();
+    private final JLabel iconSetCredit        = new JLabel();
+    private final JButton reloadIconSets      = new JButton("Reload");
 
     private final JComboBox<Theme> themes = new JComboBox<>();
     private final JButton editButton      = new JButton("Edit Document");
     private final JTextArea problems      = new JTextArea(4, 40);
-    private final JPanel problemsSection  = Utils.createSettingsSection("Problems in theme documents");
+    private final JPanel problemsSection  = Utils.createSettingsSection("Problems reading themes or icon sets");
     private final Runnable refresher      = this::refresh;
 
     /// What the list was last built from, so it is only rebuilt when that changes.
@@ -49,11 +61,13 @@ public final class ThemeSettings extends JPanel
     /// mistaken for the user choosing a theme.
     private boolean refreshing;
 
-    public ThemeSettings(ThemeService service)
+    public ThemeSettings(ThemeService service, SettingsService settings, IconSetCatalog iconSetCatalog)
     {
         super(new BorderLayout());
 
-        this.service = Objects.requireNonNull(service, "themeService");
+        this.service        = Objects.requireNonNull(service,        "themeService");
+        this.settings       = Objects.requireNonNull(settings,       "settings");
+        this.iconSetCatalog = Objects.requireNonNull(iconSetCatalog, "iconSetCatalog");
 
         themes.setRenderer(new ThemeRenderer());
         themes.addActionListener(event -> themeChosen());
@@ -64,6 +78,7 @@ public final class ThemeSettings extends JPanel
         JPanel page = Utils.createSettingsPage();
         Utils.addSettingsSection(page, colourSection);
         Utils.addSettingsSection(page, createCustomSection());
+        Utils.addSettingsSection(page, createIconSection());
         Utils.addSettingsSection(page, createProblemsSection());
 
         add(page, BorderLayout.NORTH);
@@ -104,6 +119,38 @@ public final class ThemeSettings extends JPanel
         Utils.addSettingsFormRow(section, 0, "Folder:", Utils.readOnlyField(service.getCatalog().directory().toString()));
         addFullWidthRow(section, 1, buttons);
         addFullWidthRow(section, 2, hint);
+
+        return section;
+    }
+
+    /// The icon set choice. Saved as soon as it changes, like the theme.
+    private JPanel createIconSection()
+    {
+        iconSets.addActionListener(event -> iconSetChosen());
+
+        reloadIconSets.setToolTipText("Read the icon set folders again, after adding or changing one");
+        reloadIconSets.addActionListener(event -> reloadIconSets());
+
+        iconSetCredit.putClientProperty("FlatLaf.styleClass", "small");
+        iconSetCredit.putClientProperty("FlatLaf.style", "foreground: $Label.disabledForeground");
+
+        JLabel hint = new JLabel("<html>An icon set is a folder of SVGs plus an icon-set.properties file. "
+                + "Copy one into the folder above and press Reload. "
+                + "Anything a set leaves out keeps Forge's own icon.</html>");
+        hint.putClientProperty("FlatLaf.styleClass", "small");
+        hint.putClientProperty("FlatLaf.style", "foreground: $Label.disabledForeground");
+
+        JPanel buttons = new JPanel();
+        buttons.setLayout(new BoxLayout(buttons, BoxLayout.X_AXIS));
+        buttons.add(reloadIconSets);
+        buttons.add(Box.createHorizontalGlue());
+
+        JPanel section = Utils.createSettingsSection("File icons");
+        Utils.addCompactSettingsFormRow(section, 0, "Icon set:", iconSets);
+        addFullWidthRow(section, 1, iconSetCredit);
+        Utils.addSettingsFormRow(section, 2, "Folder:", Utils.readOnlyField(iconSetCatalog.directory().toString()));
+        addFullWidthRow(section, 3, buttons);
+        addFullWidthRow(section, 4, hint);
 
         return section;
     }
@@ -159,8 +206,11 @@ public final class ThemeSettings extends JPanel
 
         editButton.setEnabled(current instanceof CustomTheme);
 
+        refreshIconSets();
+
         // Bullets show where one problem ends once a long one has wrapped.
-        List<String> found = service.getCatalog().problems();
+        List<String> found = new ArrayList<>(service.getCatalog().problems());
+        found.addAll(iconSetCatalog.problems());
         problems.setText(String.join("\n", found.stream().map(problem -> "• " + problem).toList()));
         problems.setCaretPosition(0);
         problemsSection.setVisible(!found.isEmpty());
@@ -175,6 +225,77 @@ public final class ThemeSettings extends JPanel
         {
             if (!service.setTheme(theme)) themes.setSelectedItem(service.getTheme());
         }
+    }
+
+    /// Lists the catalog's icon sets and selects the saved one. The saved id is
+    /// resolved the same way the runtime does, so a set whose folder has gone
+    /// shows the one actually in use.
+    private void refreshIconSets()
+    {
+        IconSet current = iconSetCatalog.resolve(settings.get().appearance().iconSet());
+
+        refreshing = true;
+        try
+        {
+            iconSets.setModel(new DefaultComboBoxModel<>(iconSetCatalog.sets().toArray(IconSet[]::new)));
+            iconSets.setSelectedItem(current);
+        }
+        finally
+        {
+            refreshing = false;
+        }
+
+        showCredit(current);
+    }
+
+    private void iconSetChosen()
+    {
+        if (refreshing || !(iconSets.getSelectedItem() instanceof IconSet chosen)) return;
+        if (chosen.id().equals(settings.get().appearance().iconSet()))             return;
+
+        try
+        {
+            // Saving tells IconSetRuntime, which swaps the icons and repaints.
+            settings.save(settings.get().withIconSet(chosen.id()));
+            showCredit(chosen);
+        }
+        catch (IOException e)
+        {
+            Utils.showErrorMessage(this, "Could not save the icon set: " + e.getMessage());
+            refreshIconSets();
+        }
+    }
+
+    private void showCredit(IconSet set)
+    {
+        iconSetCredit.setText(set.credit());
+        iconSetCredit.setVisible(!set.credit().isEmpty());
+    }
+
+    /// Reads the folders on a background thread, then re-applies the chosen
+    /// set, so changes to its SVGs or properties file show up.
+    private void reloadIconSets()
+    {
+        reloadIconSets.setEnabled(false);
+
+        new SwingWorker<Void, Void>()
+        {
+            @Override
+            protected Void doInBackground()
+            {
+                iconSetCatalog.reload();
+                return null;
+            }
+
+            @Override
+            protected void done()
+            {
+                reloadIconSets.setEnabled(true);
+                IconSetRuntime.apply(settings, iconSetCatalog);
+
+                refresh();
+            }
+        }.execute();
     }
 
     private void createTheme()

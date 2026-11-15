@@ -179,7 +179,7 @@ public final class Window extends JFrame
             ThemeService themeService             = new ThemeService(this, editorPanel, editorManager, settingsService, bootstrap.themes());
             ProjectSettingsService projectService = new ProjectSettingsService(workspaceService);
 
-            SettingsDialogController settingsDialogController = new SettingsDialogController(this, settingsService, projectService, themeService);
+            SettingsDialogController settingsDialogController = new SettingsDialogController(this, settingsService, projectService, themeService, bootstrap.iconSets());
 
             RunConfigurationManager runConfigurationManager  = new RunConfigurationManager(workspaceService);
             RunConfigDialogController configDialogController = new RunConfigDialogController(this, runConfigurationManager);

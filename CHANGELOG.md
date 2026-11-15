@@ -35,11 +35,19 @@ breakdown. It updates when a file is saved, created or deleted.
 - Folders can now be compacted in the project explorer: right-click a folder and tick "Compact Nested Folders" to show
 chains of single folders on one row, such as `ui.editor.guides`. The choice is per folder, applies to the folders
 beneath it, and is saved with the project workspace.
+- Java and Kotlin files show what they declare in their icon: class, abstract class, final class, sealed class,
+interface, enum, record, annotation, Kotlin object or exception. Files are read in the background as they appear, and
+icons update when a file is saved or changed.
+- File icon sets. Forge now ships with icons from Atom Material Icons (MIT), and Forge's own drawn icons fill in anything a
+set doesn't cover. Your own sets go in `~/.forge/icon-sets`: each is a folder of SVGs plus an `icon-set.properties`
+file, with optional `_dark` variants.
 
 #### Settings
 - A new Settings → File Types page chooses which extensions open as GLSL, JSON, TOML or Markdown, such as adding `.vs`
 and `.fs` for shaders. Open files are re-highlighted when the settings are applied
 - A new default markdown tab view setting under Settings → General → Editor defaults → "Default markdown view"
+- Settings → Theme → File icons chooses the icon set and applies it straight away. A Reload button picks up new or
+changed sets in `~/.forge/icon-sets`.
 
 #### Backend
 - Language API:
@@ -47,6 +55,8 @@ and `.fs` for shaders. Open files are re-highlighted when the settings are appli
   the same core 4 elements: an entry point, program arguments, a working directory, and environment variables.
   - `CommandLine.java`: A builder that every toolchain uses to build their terminal commands. Included so commands can
   be visualised in the run configurations dialog.
+  - `Language.declarationKind(file, text)` and `DeclarationKind`: a language says what type a file declares, for its
+  icon. `TopLevelCode` strips comments, strings and bodies so a few patterns are enough to answer.
 
 #### Language plugins
 - C++: Syntax highlighting for CMake: `CMakeLists.txt` and `.cmake` files now colour commands, keyword arguments,

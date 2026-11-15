@@ -6,6 +6,7 @@ import com.willclay.forgeide.json.KotlinxJsonCodec
 import com.willclay.forgeide.lang.LanguageRegistry
 import com.willclay.forgeide.services.session.SessionService
 import com.willclay.forgeide.services.settings.SettingsService
+import com.willclay.forgeide.services.settings.icons.IconSetCatalog
 import com.willclay.forgeide.services.settings.theme.ThemeCatalog
 
 import java.io.IOException
@@ -64,11 +65,19 @@ class ForgeBootstrap {
         themes.reload()
         themes.problems().forEach { warnings += BootstrapWarning("Theme", it) }
 
+        // Phase 5 - Icon sets: only small properties files are read here; the
+        // SVGs are parsed later, as each icon is first painted.
+        progress.phase("Loading icon sets")
+        val iconSets = IconSetCatalog(directories.iconSetDirectory())
+        iconSets.reload()
+        iconSets.problems().forEach { warnings += BootstrapWarning("Icon set", it) }
+
         return BootstrapResult(
             directories,
             settings,
             session,
             themes,
+            iconSets,
             registry,
             discovered.classLoader,
             warnings

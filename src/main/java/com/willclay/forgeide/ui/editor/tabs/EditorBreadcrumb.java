@@ -2,6 +2,7 @@ package com.willclay.forgeide.ui.editor.tabs;
 
 import com.formdev.flatlaf.util.UIScale;
 import com.willclay.forgeide.ui.icons.FileIcons;
+import javax.swing.Icon;
 import javax.swing.JLabel;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
@@ -13,9 +14,16 @@ import java.util.List;
 
 /// Displays the active document's location without reading the filesystem.
 /// Parent segments collapse first in narrow editors; the tooltip keeps the full path.
+///
+/// The icon is looked up each time it is painted rather than stored, like the
+/// tabs and the explorer do: a file's icon can change while it is open (saving
+/// it as an interface, or choosing another icon set).
 public final class EditorBreadcrumb extends JLabel
 {
     private List<String> segments = List.of();
+
+    private boolean showingTab;
+    private Path file;
 
     public EditorBreadcrumb()
     {
@@ -30,17 +38,21 @@ public final class EditorBreadcrumb extends JLabel
     public void showFile(Path root, EditorTab tab)
     {
         setVisible(tab != null);
+
+        showingTab = tab != null;
+        file       = tab == null ? null : tab.getFile();
+
         if (tab == null)
         {
             segments = List.of();
+
             setText("");
             setToolTipText(null);
-            setIcon(null);
             getAccessibleContext().setAccessibleName("File location");
+
             return;
         }
-        Path file = tab.getFile();
-        setIcon(FileIcons.forPath(file));
+
         if (file == null)
         {
             segments = List.of(tab.getDisplayName());
@@ -48,30 +60,60 @@ public final class EditorBreadcrumb extends JLabel
         }
         else
         {
-            Path absolute = file.toAbsolutePath().normalize();
+            Path absolute  = file.toAbsolutePath().normalize();
             Path displayed = root != null && absolute.startsWith(root) ? root.relativize(absolute) : absolute;
+
             List<String> names = new ArrayList<>();
-            if (displayed.isAbsolute()) names.add(displayed.getRoot().toString());
-            for (Path part : displayed) names.add(part.toString());
+
+            if (displayed.isAbsolute())
+            {
+                names.add(displayed.getRoot().toString());
+            }
+
+            for (Path part : displayed)
+            {
+                names.add(part.toString());
+            }
+
             segments = List.copyOf(names);
             setToolTipText(absolute.toString());
         }
+
         getAccessibleContext().setAccessibleName(String.join(" > ", segments));
         refreshText();
     }
 
     private void refreshText()
     {
-        if (segments.isEmpty()) return;
-        int available = Math.max(0, getWidth() - getInsets().left - getInsets().right
-                - getIconTextGap() - (getIcon() == null ? 0 : getIcon().getIconWidth()));
+        if (segments.isEmpty())
+        {
+            return;
+        }
+
+        int available = Math.max(
+                0,
+                getWidth()        -
+                getInsets().left  -
+                getInsets().right -
+                getIconTextGap()  -
+                (getIcon() == null ? 0 : getIcon().getIconWidth())
+        );
+
         FontMetrics metrics = getFontMetrics(getFont());
-        String text = String.join("  ›  ", segments);
+        String text         = String.join("  ›  ", segments);
+
         for (int start = 1; start < segments.size() && metrics.stringWidth(text) > available; start++)
         {
             text = "…  ›  " + String.join("  ›  ", segments.subList(start, segments.size()));
         }
+
         setText(text);
+    }
+
+    @Override
+    public Icon getIcon()
+    {
+        return showingTab ? FileIcons.forPath(file) : null;
     }
 
     @Override

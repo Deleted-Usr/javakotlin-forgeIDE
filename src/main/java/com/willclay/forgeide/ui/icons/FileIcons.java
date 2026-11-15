@@ -44,6 +44,11 @@ import java.util.function.Function;
 /// badges the "New ..." dialog uses. Working out the kind means reading the
 /// file, which this class never does: [#useDeclarations(Function)] hands it a
 /// lookup that answers from a cache and reads files on a background thread.
+///
+/// **Icon sets.** Everything above is Forge's own drawn icons. An [IconSet]
+/// chosen in Settings can replace any of them by key. This class always asks
+/// the set first and falls back to its drawing when the set has no icon for
+/// that key, so a set never leaves a file without an icon.
 public final class FileIcons
 {
     private static final Icon MARKDOWN = new FileIcon("M",  "Objects.Blue");
@@ -71,7 +76,18 @@ public final class FileIcons
     /// edited, and volatile, so a painting thread never sees it half-built.
     private static volatile Map<String, Icon> languageIcons = Map.of();
 
+    /// The chosen icon set. Starts as Forge's own icons, so anything painted
+    /// before settings are applied still has an icon.
+    private static volatile IconSet iconSet = IconSet.FORGE;
+
     private FileIcons() { }
+
+    /// Switches every file and folder icon to `set`, with Forge's own icons
+    /// filling any gaps. Call on the EDT, then repaint whatever shows icons.
+    public static void useIconSet(IconSet set)
+    {
+        iconSet = set == null ? IconSet.FORGE : set;
+    }
 
     /// Builds the icon table from the installed languages. Call once, after
     /// the languages are discovered and before anything is painted.
@@ -105,13 +121,13 @@ public final class FileIcons
         declarations = lookup;
     }
 
-    /// The badge for a kind of type, for anything that wants to show one.
+    /// The icon for a kind of type, for anything that wants to show one.
     public static Icon forKind(DeclarationKind kind)
     {
-        return KIND_ICONS.get(kind);
+        return fromSet("kind." + kind.name().toLowerCase(Locale.ROOT), KIND_ICONS.get(kind));
     }
 
-    public static Icon folder() { return FOLDER; }
+    public static Icon folder() { return fromSet("folder", FOLDER); }
 
     /// The icon a language describes for its files — the one its source files
     /// show in the explorer.
@@ -133,6 +149,11 @@ public final class FileIcons
     public static Icon forPath(Path path, boolean sourceFile)
     {
         String name = path == null || path.getFileName() == null ? "" : path.getFileName().toString().toLowerCase(Locale.ROOT);
+        IconSet set = iconSet;
+
+        // A whole name first, so `build.gradle.kts` can look different from other `.kts` files.
+        Icon named = setIcon(set, "filename." + name);
+        if (named != null) return named;
 
         // Try every suffix, longest first, so a language can claim a compound
         // extension such as `.d.ts` as well as an ordinary one.
@@ -140,25 +161,35 @@ public final class FileIcons
         for (int dot = name.indexOf('.'); dot >= 0; dot = name.indexOf('.', dot + 1))
         {
             String extension = name.substring(dot + 1);
+            Icon drawn = languages.get(extension);
 
-            Icon icon = languages.get(extension);
-
-            if (icon != null)
+            if (drawn != null)
             {
                 // A language's file: show the type it declares, once that is known.
                 Icon kind = kindIcon(path);
-                return kind != null ? kind : icon;
+                if (kind != null)
+                {
+                    return kind;
+                }
+            }
+            else
+            {
+                drawn = BUILT_IN.get(extension);
             }
 
-            icon = BUILT_IN.get(extension);
-
-            if (icon != null)
+            Icon fromSet = setIcon(set, "ext." + extension);
+            if (fromSet != null)
             {
-                return icon;
+                return fromSet;
+            }
+
+            if (drawn != null)
+            {
+                return drawn;
             }
         }
 
-        return sourceFile ? SOURCE : FILE;
+        return fromSet("file", sourceFile ? SOURCE : FILE);
     }
 
     /// Null until the file has been read, and for a file with no main type.
@@ -171,7 +202,22 @@ public final class FileIcons
             return null;
         }
 
-        return declarations.apply(path).map(KIND_ICONS::get).orElse(null);
+        return declarations.apply(path).map(FileIcons::forKind).orElse(null);
+    }
+
+    /// The set's icon for `key`, or `drawn` when the set has none.
+    private static Icon fromSet(String key, Icon drawn)
+    {
+        Icon icon = setIcon(iconSet, key);
+        return icon != null ? icon : drawn;
+    }
+
+    /// Off the EDT, sets are not asked: their icons are made lazily, on the EDT.
+    /// Every set icon is 16x16, the same as the drawn ones, so a size measured
+    /// from the drawn icon is still right.
+    private static Icon setIcon(IconSet set, String key)
+    {
+        return SwingUtilities.isEventDispatchThread() ? set.icon(key) : null;
     }
 
     private static Map<DeclarationKind, Icon> kindIcons()

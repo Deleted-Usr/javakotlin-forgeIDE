@@ -35,9 +35,12 @@ import java.util.concurrent.Executors;
 /// hands its answer back with `invokeLater`. One thread is enough: each file is
 /// small, and it stops opening a large folder from starting dozens of reads at once.
 ///
-/// **Staying current.** A saved file, or a folder the file watcher reports as
-/// changed, is read again. The old answer stays on screen until the new one
-/// arrives, so icons don't flicker while you type and save.
+/// **Staying current.** A file saved in Forge is read again, and so is every
+/// file in a folder the file watcher reports. The watcher only reports files
+/// being created or deleted (see `FileWatcher`), so an edit made in another
+/// program to a file that already exists is not noticed yet. The old answer
+/// stays on screen until the new one arrives, so icons don't flicker while you
+/// type and save.
 public final class DeclarationService
 {
     /// Larger files are skipped. Real source files are far smaller; this keeps a
@@ -101,8 +104,8 @@ public final class DeclarationService
         onEdt(() -> refresh(file.toAbsolutePath().normalize()));
     }
 
-    /// Something in `directory` was created, changed or deleted, perhaps outside
-    /// Forge. Every known file directly in it is read again. May be called from
+    /// Something in `directory` was created or deleted, perhaps outside Forge
+    /// (a git checkout, say). Every known file directly in it is read again. May be called from
     /// any thread: the file watcher calls from its own.
     public void directoryChanged(Path directory)
     {
@@ -190,7 +193,7 @@ public final class DeclarationService
         Optional<DeclarationKind> previous = kinds.put(file, kind);
 
         // A first answer of "no type" changes nothing on screen: the plain icon is already showing.
-        boolean changed = previous.isEmpty() ? kind.isPresent() : !kind.equals(previous);
+        boolean changed = previous == null ? kind.isPresent() : !kind.equals(previous);
 
         if (changed)
         {
