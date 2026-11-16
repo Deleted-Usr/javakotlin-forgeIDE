@@ -27,7 +27,7 @@ data class ProjectConfiguration(
     val workingDirectory: Path = Path.of("."),
 
     val fileHandling: FileHandling  = FileHandling.defaults(),
-    val excludedPaths: List<String> = listOf(".git", ".forge"),
+    val excludedPaths: List<String> = listOf(".git", ".idea"),
     val languageSettings: Map<String, @Serializable(with = JsonValueMapSerializer::class) Map<String, Any?>> = emptyMap(),
 ) : VersionedJsonDocument {
     init {

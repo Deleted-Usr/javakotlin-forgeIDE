@@ -39,5 +39,18 @@ public enum DeclarationKind
     OBJECT,
 
     /// A class used to report errors: one that extends an exception or error type.
-    EXCEPTION
+    EXCEPTION,
+
+    /// A plain bundle of data whose members are public unless you say otherwise:
+    /// a C++ `struct` (and, one day, a Rust or C# struct).
+    STRUCT,
+
+    /// A type whose members all share the same memory, so only one holds a value
+    /// at a time: a C++ `union`.
+    UNION,
+
+    /// Not a type, but a named scope that groups code: a C++ `namespace`. Used
+    /// for a file whose main content is a namespace named after the file, such
+    /// as `math.h` holding `namespace math { ... }` full of functions.
+    NAMESPACE
 }

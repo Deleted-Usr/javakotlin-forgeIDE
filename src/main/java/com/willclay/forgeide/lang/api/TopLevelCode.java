@@ -38,16 +38,7 @@ public final class TopLevelCode
 
     public static String of(Lexer lexer, String text)
     {
-        char[] code = text.toCharArray();
-
-        for (Token token : lexer.tokenize(text))
-        {
-            switch (token.type())
-            {
-                case COMMENT, DOC_COMMENT, TODO, STRING, CHARACTER -> blank(code, token.start(), token.end());
-                default -> { }
-            }
-        }
+        char[] code = withoutCommentsAndStrings(lexer, text).toCharArray();
 
         int depth = 0;
         for (int i = 0; i < code.length; i++)
@@ -72,6 +63,28 @@ public final class TopLevelCode
             }
 
             if (depth > 0 && c != '\n') code[i] = ' ';
+        }
+
+        return new String(code);
+    }
+
+    /// Pass 1 on its own: comments, strings and character literals become
+    /// spaces, and everything else, braces included, is left alone.
+    ///
+    /// For a language whose braces don't all mean "a body", such as C++, where
+    /// a type's body and a namespace's both use them, and only a type's should
+    /// be hidden.
+    public static String withoutCommentsAndStrings(Lexer lexer, String text)
+    {
+        char[] code = text.toCharArray();
+
+        for (Token token : lexer.tokenize(text))
+        {
+            switch (token.type())
+            {
+                case COMMENT, DOC_COMMENT, TODO, STRING, CHARACTER -> blank(code, token.start(), token.end());
+                default -> { }
+            }
         }
 
         return new String(code);

@@ -27,7 +27,7 @@ inline documentation comments rendering system.
 - The status bar now shows the project's lines of code, leaving out comments and blank lines. Its tooltip shows the full
 breakdown. It updates when a file is saved, created or deleted.
 - Major run configurations dialog redesign:
-  - The dialog now ends with "What Forge will run": the real command for the current settings, updated as a command is
+  - The dialog now ends with "What Forge will run": the real command for the current settings, updated as the config is
   being typed.
   - Hovering over sections of the final command will highlight certain parts of the dialog that correspond to what is
   in the command.
@@ -41,6 +41,14 @@ icons update when a file is saved or changed.
 - File icon sets. Forge now ships with icons from Atom Material Icons (MIT), and Forge's own drawn icons fill in anything a
 set doesn't cover. Your own sets go in `~/.forge/icon-sets`: each is a folder of SVGs plus an `icon-set.properties`
 file, with optional `_dark` variants.
+  - Atom Material's own icons for Java and Kotlin types, with Kotlin's distinct set and IntelliJ's final-class
+  marker (icons can be layered: `class.svg + finalMark.svg`).
+  - Folder icons chosen by name with IntelliJ-style regex patterns, so `src`, `tests`, `docs`, `out`, `libs`, `.idea`
+  and others each get their own icon. Folders have open and closed versions, and the project root has its own icon.
+  - A `.forge` folder icon of Forge's own: the anvil and ingot from the app icon, in Atom Material's folder shape.
+
+#### Projects
+- Projects now hide `.idea` by default instead of `.forge`
 
 #### Settings
 - A new Settings → File Types page chooses which extensions open as GLSL, JSON, TOML or Markdown, such as adding `.vs`
@@ -57,8 +65,13 @@ changed sets in `~/.forge/icon-sets`.
   be visualised in the run configurations dialog.
   - `Language.declarationKind(file, text)` and `DeclarationKind`: a language says what type a file declares, for its
   icon. `TopLevelCode` strips comments, strings and bodies so a few patterns are enough to answer.
+  - `DeclarationKind` gained `STRUCT`, `UNION` and `NAMESPACE`, and `TopLevelCode.withoutCommentsAndStrings()` is
+  public for languages whose braces don't all open a body.
 
 #### Language plugins
+- C++: Headers show what they declare in their icon: class, abstract class (one with a pure virtual method), final
+class, struct, union, enum, exception, or a namespace named after the file. Types inside namespaces are found, and
+`snake_case` file names match `PascalCase` types. The C++ icons were drawn for Forge in Atom Material's style.
 - C++: Syntax highlighting for CMake: `CMakeLists.txt` and `.cmake` files now colour commands, keyword arguments,
 variable references, generator expressions, strings, bracket arguments and comments
 - Rust: Syntax highlighting now uses the same kinds of colours as JetBrains RustRover. 8 new values were added to 

@@ -76,6 +76,10 @@ public final class FileIcons
     /// edited, and volatile, so a painting thread never sees it half-built.
     private static volatile Map<String, Icon> languageIcons = Map.of();
 
+    /// Extension to the id of the language that owns it (`kt` to `kotlin`), so
+    /// an icon set can give one language's types their own look.
+    private static volatile Map<String, String> languageIds = Map.of();
+
     /// The chosen icon set. Starts as Forge's own icons, so anything painted
     /// before settings are applied still has an icon.
     private static volatile IconSet iconSet = IconSet.FORGE;
@@ -97,9 +101,15 @@ public final class FileIcons
     public static void registerLanguages(Collection<? extends Language> languages)
     {
         Map<String, Icon> icons = new HashMap<>();
+        Map<String, String> ids = new HashMap<>();
 
         for (Language language : languages)
         {
+            for (String extension : language.extensions())
+            {
+                ids.putIfAbsent(normaliseExtension(extension), language.id());
+            }
+
             FileIconStyle style = language.fileIcon();
             if (style == null) continue;
 
@@ -111,6 +121,7 @@ public final class FileIcons
         }
 
         languageIcons = Map.copyOf(icons);
+        languageIds   = Map.copyOf(ids);
     }
 
     /// Lets source files show a badge for the type they declare. `lookup` is
@@ -124,10 +135,52 @@ public final class FileIcons
     /// The icon for a kind of type, for anything that wants to show one.
     public static Icon forKind(DeclarationKind kind)
     {
-        return fromSet("kind." + kind.name().toLowerCase(Locale.ROOT), KIND_ICONS.get(kind));
+        return fromSet("kind." + kindKey(kind), KIND_ICONS.get(kind));
     }
 
+    /// The icon for a kind of type in one language. An icon set can give a
+    /// language its own look with `kind.<language id>.<kind>`, such as
+    /// `kind.kotlin.interface`; otherwise this is the same as [#forKind(DeclarationKind)].
+    public static Icon forKind(DeclarationKind kind, String languageId)
+    {
+        Icon own = languageId == null ? null : setIcon(iconSet, "kind." + languageId + "." + kindKey(kind));
+        return own != null ? own : forKind(kind);
+    }
+
+    /// A plain, closed folder, for places that show "a folder" in general.
     public static Icon folder() { return fromSet("folder", FOLDER); }
+
+    /// The icon for one folder in a tree.
+    ///
+    /// The icon set decides from the folder's name (see [IconSet#folderKey]),
+    /// so `src` and `tests` can look different. Each icon has an open version
+    /// for an expanded folder when the set provides one, and the project's own
+    /// root folder has an icon of its own.
+    ///
+    /// @param open        whether the folder is expanded
+    /// @param projectRoot whether this is the top folder of the project
+    public static Icon forFolder(Path folder, boolean open, boolean projectRoot)
+    {
+        IconSet set = iconSet;
+        String name = folder == null || folder.getFileName() == null ? "" : folder.getFileName().toString();
+        String key  = projectRoot ? "folder.root" : set.folderKey(name);
+
+        Icon icon = key == null ? null : openOrClosed(set, key, open);
+        if (icon == null) icon = openOrClosed(set, "folder", open);
+
+        return icon != null ? icon : FOLDER;
+    }
+
+    private static Icon openOrClosed(IconSet set, String key, boolean open)
+    {
+        Icon icon = open ? setIcon(set, key + ".open") : null;
+        return icon != null ? icon : setIcon(set, key);
+    }
+
+    private static String kindKey(DeclarationKind kind)
+    {
+        return kind.name().toLowerCase(Locale.ROOT);
+    }
 
     /// The icon a language describes for its files — the one its source files
     /// show in the explorer.
@@ -166,7 +219,7 @@ public final class FileIcons
             if (drawn != null)
             {
                 // A language's file: show the type it declares, once that is known.
-                Icon kind = kindIcon(path);
+                Icon kind = kindIcon(path, languageIds.get(extension));
                 if (kind != null)
                 {
                     return kind;
@@ -195,14 +248,14 @@ public final class FileIcons
     /// Null until the file has been read, and for a file with no main type.
     /// Off the EDT (a size measured from a background thread, say) it never asks,
     /// because the lookup's cache belongs to the EDT.
-    private static Icon kindIcon(Path path)
+    private static Icon kindIcon(Path path, String languageId)
     {
         if (!SwingUtilities.isEventDispatchThread())
         {
             return null;
         }
 
-        return declarations.apply(path).map(FileIcons::forKind).orElse(null);
+        return declarations.apply(path).map(kind -> forKind(kind, languageId)).orElse(null);
     }
 
     /// The set's icon for `key`, or `drawn` when the set has none.
@@ -234,6 +287,10 @@ public final class FileIcons
         icons.put(DeclarationKind.ANNOTATION,     new FileIcon("@", "Objects.Purple",     Badge.FILLED));
         icons.put(DeclarationKind.OBJECT,         new FileIcon("O", "Objects.Yellow",     Badge.FILLED));
         icons.put(DeclarationKind.EXCEPTION,      new FileIcon("!", "Objects.Red",        Badge.FILLED));
+        // Struct shares sealed's letter; no language has both, so they never sit side by side.
+        icons.put(DeclarationKind.STRUCT,         new FileIcon("S", "Objects.Blue",       Badge.FILLED));
+        icons.put(DeclarationKind.UNION,          new FileIcon("U", "Objects.Purple",     Badge.FILLED));
+        icons.put(DeclarationKind.NAMESPACE,      new FileIcon("N", "Objects.Grey",       Badge.FILLED));
 
         return Map.copyOf(icons);
     }

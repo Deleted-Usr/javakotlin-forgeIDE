@@ -1,6 +1,7 @@
 package com.willclay.forgeide.lang.cpp;
 
 import com.willclay.forgeide.highlighting.filetypes.FileType;
+import com.willclay.forgeide.lang.api.DeclarationKind;
 import com.willclay.forgeide.lang.api.EntryPoints;
 import com.willclay.forgeide.lang.api.FileIconStyle;
 import com.willclay.forgeide.lang.api.Language;
@@ -92,6 +93,12 @@ public final class CppLanguage implements Language
     public Optional<FileTemplates> fileTemplates()
     {
         return Optional.of(CppTemplates.ALL);
+    }
+
+    @Override
+    public Optional<DeclarationKind> declarationKind(Path file, String text)
+    {
+        return CppDeclarations.kindOf(lexer, file, text);
     }
 
     @Override

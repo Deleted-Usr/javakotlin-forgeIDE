@@ -37,7 +37,10 @@ public final class ProjectTreeRenderer extends DefaultTreeCellRenderer
             ProjectItem item = node.getItem();
 
             setText(node.getLabel());
-            setIcon(item.isDirectory() ? FileIcons.folder() : FileIcons.forPath(item.path(), item.isSourceFile()));
+            // A compacted row ("ui.editor.guides") is named, and so drawn, after its deepest folder.
+            setIcon(item.isDirectory()
+                    ? FileIcons.forFolder(item.path(), expanded, node.isRoot())
+                    : FileIcons.forPath(item.path(), item.isSourceFile()));
             setToolTipText(item.path().toString());
 
             if (!selected)
