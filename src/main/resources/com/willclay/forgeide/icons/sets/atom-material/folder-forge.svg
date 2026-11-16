@@ -1,0 +1,13 @@
+<!--
+  - The .forge folder: Forge's anvil and ingot, traced from the app icon
+  - (packaging/icon/forge_icon_generator.kts), in Atom Material's folder shape
+  - (MIT, Elior "Mallowigi" Boukhobza). Drawn for Forge.
+  -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16px" height="16px">
+  <path d="m10 4h-6c-1.11 0-2 0.89-2 2v12c0 1.097 0.903 2 2 2h16c1.097 0 2-0.903 2-2v-10c0-1.11-0.9-2-2-2h-8l-2-2z" fill="#FF7A1A" fill-rule="evenodd" data-folderColor="Forge"/>
+  <!-- The mark sits wholly inside the folder, so it reads on light and dark themes. -->
+  <g transform="matrix(0.075 0 0 0.075 5.6 3.6)">
+    <path d="M212 112L212 144Q188 148 182 164L182 178Q182 186 200 190L210 196L210 212L78 212L78 196L88 190Q106 186 106 178L106 164Q100 150 80 146Q60 140 40 112Z" fill="#ECEFF1" data-folderIconColor="Forge"/>
+    <rect x="104" y="70" width="104" height="28" rx="8" fill="#FFE082"/>
+  </g>
+</svg>
