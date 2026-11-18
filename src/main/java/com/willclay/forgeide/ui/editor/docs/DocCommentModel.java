@@ -18,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.UnaryOperator;
 
 /// Which doc comments a document has, and which of them are currently shown
 /// rendered rather than as source.
@@ -71,6 +72,17 @@ public final class DocCommentModel
     private BitSet hidden = new BitSet();
 
     private boolean renderByDefault;
+
+    /// Turns a comment's source into Markdown. Set from the document's lexer
+    /// (see [com.willclay.forgeide.lang.api.Lexer#docCommentMarkdown(String)]),
+    /// because only the language knows how its doc comments are written.
+    private UnaryOperator<String> markdownConverter = DocCommentMarkdown::toMarkdown;
+
+    /// Call [#recompute(StyledDocument)] afterwards for existing comments to be read again.
+    public void setMarkdownConverter(UnaryOperator<String> converter)
+    {
+        markdownConverter = Objects.requireNonNull(converter, "converter");
+    }
 
     public void addChangeListener(Runnable listener)
     {
@@ -194,7 +206,7 @@ public final class DocCommentModel
     /// applied, and finds nothing before then.
     public void recompute(StyledDocument document)
     {
-        comments = document.getLength() > MAXIMUM_LENGTH ? Map.of() : findComments(document);
+        comments = document.getLength() > MAXIMUM_LENGTH ? Map.of() : findComments(document, markdownConverter);
 
         update(document);
     }
@@ -246,7 +258,7 @@ public final class DocCommentModel
     /// between them starts a new comment. A TO-DO inside a comment is coloured
     /// differently and splits its run in two, so a TO-DO run that touches the
     /// comment is part of it as well.
-    private static Map<Integer, DocComment> findComments(StyledDocument document)
+    private static Map<Integer, DocComment> findComments(StyledDocument document, UnaryOperator<String> converter)
     {
         String text = textOf(document);
         if (text == null) return Map.of();
@@ -276,7 +288,7 @@ public final class DocCommentModel
                 }
                 else if (type == TokenType.DOC_COMMENT)
                 {
-                    addComment(found, root, text, groupStart, groupEnd);
+                    addComment(found, root, text, groupStart, groupEnd, converter);
 
                     groupStart = offset;
                     groupEnd   = end;
@@ -284,14 +296,14 @@ public final class DocCommentModel
             }
             else if (!text.substring(offset, end).isBlank())
             {
-                addComment(found, root, text, groupStart, groupEnd);
+                addComment(found, root, text, groupStart, groupEnd, converter);
                 groupStart = -1;
             }
 
             offset = end;
         }
 
-        addComment(found, root, text, groupStart, groupEnd);
+        addComment(found, root, text, groupStart, groupEnd, converter);
         return found;
     }
 
@@ -302,7 +314,7 @@ public final class DocCommentModel
         return gap.isBlank() && gap.chars().filter(character -> character == '\n').count() <= 1;
     }
 
-    private static void addComment(Map<Integer, DocComment> found, Element root, String text, int start, int end)
+    private static void addComment(Map<Integer, DocComment> found, Element root, String text, int start, int end, UnaryOperator<String> converter)
     {
         if (start < 0 || end <= start)
         {
@@ -322,7 +334,7 @@ public final class DocCommentModel
             return;
         }
 
-        String markdown = DocCommentMarkdown.toMarkdown(text.substring(start, end));
+        String markdown = converter.apply(text.substring(start, end));
 
         if (markdown.isBlank())
         {

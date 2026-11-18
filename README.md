@@ -98,7 +98,8 @@ Javadoc (Java) and KDoc (Kotlin).
 | Kotlin            | Optional `forge-lang-kotlin` plugin | File templates, syntax highlighting, and Kotlin/JVM build and run through an external Kotlin compiler.              |
 | C++               | Optional `forge-lang-cpp` plugin    | File templates, syntax highlighting, and build and run through CMake or direct `g++` compilation.                   |
 | Rust              | Optional `forge-lang-rust` plugin   | Editing scaffold: `.rs` files, starter content and a `src` source root. Syntax highlighting and build/run are not implemented yet. |
-| Python, Lua       | Unfinished source implementations   | Not registered as available languages; their lexers and toolchains are not implemented.                             |
+| Python            | Optional `forge-lang-python` plugin | File templates, syntax highlighting, and run, syntax check (`compileall`) and clean through a Python interpreter, using the project's `.venv` when it has one. |
+| Lua               | Unfinished source implementation    | Not registered as an available language; its lexer and toolchain are not implemented.                               |
 
 Language plugins are discovered at startup through Java's `ServiceLoader`. The built-in
 Java provider is registered in
@@ -254,7 +255,7 @@ com.willclay.forgeide                 Main application (src/main/java/)
 │   │   └── templates/               FileTemplate, FileTemplates, TemplateRequest
 │   ├── java/                        JavaLanguage, JavaLexer, JavacToolchain, InProcessJavaCompiler, JavaTemplates
 │   ├── jvm/                         JvmSettings, JvmClassPath — shared JVM configuration
-│   └── python/, lua/                Unfinished language stubs (not registered)
+│   └── lua/                         Unfinished language stub (not registered)
 ├── layouts/                         ColumnLayout, MinimapScrollPaneLayout
 ├── markdown/                        Markdown (parser bridge), MarkdownPane, MarkdownView, RichText, code/
 ├── services/                        ActionContext, WorkspaceService, ApplicationShutdown

@@ -149,6 +149,7 @@ public class EditorTab extends JPanel
     public void setLexer(Lexer lexer)
     {
         highlighter.setLexer(lexer);
+        textPane.getDocCommentModel().setMarkdownConverter(lexer::docCommentMarkdown);
         highlighter.refreshAll(textPane);
         textPane.refreshFolding();
     }

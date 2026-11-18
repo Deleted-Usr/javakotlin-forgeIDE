@@ -9,6 +9,17 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- The full Python plugin. Featuring:
+  - Syntax highlighting for `.py` files 
+  - Python language settings 
+  - Running Python files/projects via the python interpreter of your choice 
+  - Full doc-string rendering using Forge's inline documentation comment model
+  - Custom python file icons for both the bundled atom icons, and Forge's in-house icons
+    - Type icons for classes, abstract classes, `Protocol`s, enums, records (`@dataclass`, `NamedTuple`) and
+    exceptions, drawn in Atom Material's style and Python's colours
+    - Atom icons for `requirements.txt`, `pyproject.toml`, `Pipfile`, `.python-version`, `pytest.ini` and `py.typed`,
+    and folder icons for `__pycache__`, virtual environments and `env`
+
 #### Projects
 - A searchable Recent Projects dialog under File, with an optional startup setting, project creation/opening,
 and removal from recent history without deleting files.
@@ -67,6 +78,9 @@ changed sets in `~/.forge/icon-sets`.
   icon. `TopLevelCode` strips comments, strings and bodies so a few patterns are enough to answer.
   - `DeclarationKind` gained `STRUCT`, `UNION` and `NAMESPACE`, and `TopLevelCode.withoutCommentsAndStrings()` is
   public for languages whose braces don't all open a body.
+  - Lexer now has a new default method `docCommentMarkdown(comment)`. It calls the existing `DocCommentMarkdown.toMarkdown`,
+  so Java, Kotlin, Rust and C++ behave exactly as before. EditorTab.setLexer hands that method to DocCommentModel, which 
+  uses it instead of calling the converter directly.
 
 #### Language plugins
 - C++: Headers show what they declare in their icon: class, abstract class (one with a pure virtual method), final

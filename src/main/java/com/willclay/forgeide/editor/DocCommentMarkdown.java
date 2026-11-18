@@ -33,8 +33,8 @@ import java.util.regex.Pattern;
 /// **Why this lives in the core and not in each language plugin.** These
 /// comment syntaxes are shared by every language that currently emits doc
 /// comments (Java, Kotlin, Rust, C++). A language whose doc comments look
-/// nothing like this — Python docstrings, say — will need a hook on the
-/// `Language` API instead; that is the moment to add one, not before.
+/// nothing like this, such as Python's docstrings, overrides
+/// [com.willclay.forgeide.lang.api.Lexer#docCommentMarkdown(String)] instead.
 ///
 /// No Swing here, so the conversion can be read (and tested) on its own.
 public final class DocCommentMarkdown

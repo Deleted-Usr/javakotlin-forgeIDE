@@ -56,7 +56,8 @@ tasks.register("buildAllJars") {
         ":jar",
         ":modules:forge-lang-kotlin:jar",
         ":modules:forge-lang-cpp:jar",
-        ":modules:forge-lang-rust:jar"
+        ":modules:forge-lang-rust:jar",
+        ":modules:forge-lang-python:jar"
     )
 }
 
@@ -87,7 +88,7 @@ tasks.register<Sync>("syncDistLibraries") {
 }
 
 
-// ForgeIDE loads Kotlin, C++ and Rust from ~/.forge/plugins, not from the build
+// ForgeIDE loads Kotlin, C++, Rust and Python from ~/.forge/plugins, not from the build
 // output, so a plugin change does nothing until its JAR is copied there. Old
 // copies are removed first: two JARs for the same language would register it
 // twice, which LanguageRegistry rejects at startup.
@@ -98,7 +99,8 @@ tasks.register("installPlugins") {
     val pluginJars = listOf(
         ":modules:forge-lang-kotlin:jar",
         ":modules:forge-lang-cpp:jar",
-        ":modules:forge-lang-rust:jar"
+        ":modules:forge-lang-rust:jar",
+        ":modules:forge-lang-python:jar"
     )
     dependsOn(pluginJars)
 

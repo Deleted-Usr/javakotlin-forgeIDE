@@ -4,4 +4,5 @@ include(
     "modules:forge-lang-kotlin",
     "modules:forge-lang-cpp",
     "modules:forge-lang-rust",
+    "modules:forge-lang-python",
 )
